@@ -78,4 +78,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                              @Param("tagName") String tagName,
                              @Param("status") PostStatus status,
                              Pageable pageable);
+
+    @Query("SELECT t.name FROM PostTag pt JOIN pt.tag t WHERE pt.post.id = :postId")
+    List<String> findTagsByPostId(@Param("postId") Long postId);
 }

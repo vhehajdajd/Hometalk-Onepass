@@ -386,26 +386,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-tagInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        e.preventDefault(); // 폼 제출 방지
-        const tagName = tagInput.value.trim();
+if (tagInput) {
+    tagInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const tagName = tagInput.value.trim();
 
-        if (tagName.length > 15) {
-            alert("태그는 최대 20자까지만 입력 가능합니다.");
-            return;
-        }
+            if (tagName.length > 15) {
+                alert("태그는 최대 20자까지만 입력 가능합니다.");
+                return;
+            }
 
-        if (tagName && !tags.includes(tagName)) {
-            tags.push(tagName);
-            renderTags();
+            if (tagName && !tags.includes(tagName)) {
+                tags.push(tagName);
+                renderTags();
+            }
+            tagInput.value = '';
+            return false;
         }
-        tagInput.value = '';
-        return false;
-    }
-});
+    });
+}
 
 function renderTags() {
+    if (!tagList || !hiddenTags) return;
+
     tagList.innerHTML = '';
     hiddenTags.innerHTML = '';
 

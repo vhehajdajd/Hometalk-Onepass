@@ -221,8 +221,8 @@ public class PostController {
         model.addAttribute("comments", comments);
 
         // 태그
-        List<String> boardTags = postService.getTagsByBoardId(board.getId());
-        model.addAttribute("boardTags", boardTags);
+        List<String> postTags = postService.getTagsByPostId(id);
+        model.addAttribute("postTags", postTags);
         return "community/postDetail";
     }
 

@@ -93,9 +93,9 @@
                     <div class="page-body" style="white-space: pre-wrap; word-break: break-all;">
                         <div th:utext="${post.content}">게시글 내용</div>
                     </div>
-                    <div class="tag-filter-container" th:if="${boardTags != null and !boardTags.isEmpty()}" style="padding: 15px 25px; background: #fdfdfd; border-bottom: 1px solid #eee;">
+                    <div class="tag-filter-container" th:if="${postTags != null and !postTags.isEmpty()}" style="padding: 15px 25px; background: #fdfdfd; border-bottom: 1px solid #eee;">
                         <span style="font-size: 13px; color: #888; margin-right: 12px;"><i class="fa-solid fa-tags"></i></span>
-                        <div th:replace="~{community/fragments/postTag :: tagList(tags=${boardTags}, boardCode=${currentBoardCode})}" style="display: inline-block;"></div>
+                        <div th:replace="~{community/fragments/postTag :: tagList(tags=${postTags}, boardCode=${currentBoardCode})}" style="display: inline-block;"></div>
                     </div>
 
                     <hr>

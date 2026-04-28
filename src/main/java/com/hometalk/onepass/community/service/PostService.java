@@ -196,4 +196,8 @@ public class PostService {
         return tagRepository.findAllTagNamesByBoardId(boardId);
     }
 
+    public List<String> getTagsByPostId(Long postId) {
+        return postRepository.findTagsByPostId(postId);
+    }
+
 }
