@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -38,10 +39,16 @@ public class VehicleController {
     @PostMapping("/vehicle/register")
     public String vehicleRegister(
             @ModelAttribute VehicleRegisterRequest request,
-            @RequestParam(value = "documents") List<MultipartFile> documents) {
-        Long userId = null; // TODO: JWT 연동 후 추출
-        vehicleService.register(userId, request, documents);
-        return "redirect:/parking/vehicle";
+            @RequestParam(value = "documents") List<MultipartFile> documents,
+            Model model) {
+        try {
+            Long userId = null; // TODO: JWT 연동 후 추출
+            vehicleService.register(userId, request, documents);
+            return "redirect:/parking/vehicle";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "parking/vehicle-register";
+        }
     }
 
     // 반려 사유 조회 (JSON)
@@ -66,8 +73,26 @@ public class VehicleController {
     @PostMapping("/vehicle/reapply/{vehicleId}")
     public String vehicleReapply(
             @PathVariable Long vehicleId,
-            @RequestParam(value = "documents") List<MultipartFile> documents) {
-        vehicleService.reapply(vehicleId, documents);
-        return "redirect:/parking/vehicle";
+            @RequestParam(value = "documents") List<MultipartFile> documents,
+            Model model) {
+        try {
+            vehicleService.reapply(vehicleId, documents);
+            return "redirect:/parking/vehicle";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "parking/vehicle-reapply";
+        }
+    }
+
+    // 차량 삭제
+    @PostMapping("/vehicle/delete/{vehicleId}")
+    @ResponseBody
+    public ResponseEntity<Void> deleteVehicle(@PathVariable Long vehicleId) {
+        try {
+            vehicleService.delete(vehicleId);
+            return ResponseEntity.ok().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

@@ -6,8 +6,10 @@ import com.hometalk.onepass.auth.repository.UserRepository;
 import com.hometalk.onepass.parking.dto.request.VehicleRegisterRequest;
 import com.hometalk.onepass.parking.dto.response.VehicleApprovalResponse;
 import com.hometalk.onepass.parking.dto.response.VehicleResponse;
+import com.hometalk.onepass.parking.entity.ParkingLog;
 import com.hometalk.onepass.parking.entity.Vehicle;
 import com.hometalk.onepass.parking.entity.VehicleApproval;
+import com.hometalk.onepass.parking.repository.ParkingLogRepository;
 import com.hometalk.onepass.parking.repository.VehicleApprovalRepository;
 import com.hometalk.onepass.parking.repository.VehicleRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,16 +30,12 @@ public class VehicleServiceImpl implements VehicleService {
     private final VehicleRepository vehicleRepository;
     private final VehicleApprovalRepository vehicleApprovalRepository;
     private final FileStorageService fileStorageService;
-    private final UserRepository userRepository; // TODO: JWT 연동 후 제거
+    private final UserRepository userRepository;
+    private final ParkingLogRepository parkingLogRepository;
 
     // 차량 등록
     @Override
     public VehicleResponse register(Long userId, VehicleRegisterRequest request, List<MultipartFile> documents) {
-        // TODO: JWT 연동 후 아래로 교체
-        // User user = userRepository.findById(userId)
-        //     .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
-        // Household household = user.getHousehold();
-
         User user = userRepository.findById(1L) // TODO: JWT 연동 후 제거
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
         Household household = user.getHousehold();
@@ -66,7 +64,6 @@ public class VehicleServiceImpl implements VehicleService {
             throw new IllegalArgumentException("첨부 서류는 필수입니다.");
         }
 
-        // 여러 파일 경로 합쳐서 저장
         String documentPath = String.join(",", documentPaths);
 
         // 승인 이력 생성
@@ -80,10 +77,6 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     @Transactional(readOnly = true)
     public List<VehicleResponse> getHouseholdVehicles(Long householdId) {
-        // TODO: JWT 연동 후 아래 주석 해제
-        // Household household = householdRepository.findById(householdId)
-        //     .orElseThrow(() -> new EntityNotFoundException("세대를 찾을 수 없습니다."));
-
         User user = userRepository.findById(1L) // TODO: JWT 연동 후 제거
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
         Household household = user.getHousehold();
@@ -112,7 +105,6 @@ public class VehicleServiceImpl implements VehicleService {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new EntityNotFoundException("차량을 찾을 수 없습니다."));
 
-        // 서류 저장
         List<String> documentPaths = fileStorageService.saveDocuments(documents);
         if (documentPaths.isEmpty()) {
             throw new IllegalArgumentException("첨부 서류는 필수입니다.");
@@ -144,10 +136,7 @@ public class VehicleServiceImpl implements VehicleService {
     // 관리자 - 차량 승인
     @Override
     public void approve(Long userId, Long approvalId) {
-        // TODO: JWT 연동 후 아래 주석 해제
-        // User user = userRepository.findById(userId)
-        //     .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
-        User user = null;
+        User user = null; // TODO: JWT 연동 후 추출
 
         VehicleApproval approval = vehicleApprovalRepository.findById(approvalId)
                 .orElseThrow(() -> new EntityNotFoundException("승인 이력을 찾을 수 없습니다."));
@@ -159,10 +148,7 @@ public class VehicleServiceImpl implements VehicleService {
     // 관리자 - 차량 반려
     @Override
     public void reject(Long userId, Long approvalId, String rejectReason) {
-        // TODO: JWT 연동 후 아래 주석 해제
-        // User user = userRepository.findById(userId)
-        //     .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
-        User user = null;
+        User user = null; // TODO: JWT 연동 후 추출
 
         VehicleApproval approval = vehicleApprovalRepository.findById(approvalId)
                 .orElseThrow(() -> new EntityNotFoundException("승인 이력을 찾을 수 없습니다."));
@@ -171,11 +157,37 @@ public class VehicleServiceImpl implements VehicleService {
         approval.getVehicle().reject();
     }
 
+    // 차량 단건 조회
     @Override
     @Transactional(readOnly = true)
     public VehicleResponse getVehicle(Long vehicleId) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new EntityNotFoundException("차량을 찾을 수 없습니다."));
         return new VehicleResponse(vehicle);
+    }
+
+    // 입주자 차량 삭제
+    @Override
+    public void delete(Long vehicleId) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new EntityNotFoundException("차량을 찾을 수 없습니다."));
+
+        // 주차 중인 차량은 삭제 불가
+        parkingLogRepository.findByVehicleNumberAndStatus(
+                        vehicle.getVehicleNumber(), ParkingLog.ParkingStatus.PARKED)
+                .ifPresent(l -> {
+                    throw new IllegalStateException("주차 중인 차량은 삭제할 수 없습니다.");
+                });
+
+        vehicle.softDelete();
+    }
+
+    // 관리자 차량 삭제
+    @Override
+    public void adminDelete(Long vehicleId) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new EntityNotFoundException("차량을 찾을 수 없습니다."));
+
+        vehicle.softDelete();
     }
 }

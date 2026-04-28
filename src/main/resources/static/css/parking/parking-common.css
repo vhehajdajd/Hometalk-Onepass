@@ -6,7 +6,7 @@
 /* ---------- CSS 변수 ---------- */
 :root {
   --color-btn:            #4073C9;
-  --color-btn-secondary:  #9EBFDB;
+  --color-btn-secondary:  #032154;
   --color-btn-point:      #EB6E57;
   --color-point-text:     #7ED3D9;
   --color-text:           #170124;
@@ -16,34 +16,36 @@
 
   --color-border: #E2E8F0;
 
-  --radius-sm:  6px;
-  --radius-md:  10px;
-  --radius-lg:  16px;
-
-  --shadow-card: 0 4px 30px rgba(0, 0, 0, 0.05);
-  --transition:  0.2s ease;
+  --radius-sm:  4px;
+  --radius-md:  4px;
+  --radius-lg:  4px;
 }
 
 /* ---------- 페이지 배경 ---------- */
 body {
-    font-family: 'Pretendard', sans-serif;
-    background-color: #FAF4F0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #ffffff;
     color: var(--text-dark);
     line-height: 1.6;
     min-height: 100vh;
 }
 
-/* ── 팀 기준 컨테이너 (수정 금지) ── */
+/* ── 팀 기준 컨테이너 ── */
 .container {
     width: calc(100% - 40px);
-    max-width: 1100px;
+    width: 1400px;
+    margin: 20px auto;
     background: white;
     padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box; /* 패딩이 너비를 잡아먹지 않게 함 */
 }
 
-.main-wrapper { min-height: calc(100vh - 80px); }
+
+/* 부모가 자식을 압축하지 못하도록 설정 */
+.main-wrapper {
+    display: block;
+    width: 100%;
+}
 
 /* ---------- 페이지 타이틀 ---------- */
 .page-title {
@@ -52,9 +54,22 @@ body {
   color: var(--color-main);
   margin: 0 0 40px 0;
   padding-bottom: 16px;
-  border-bottom: 2px solid #f1f5f9;
-  text-align: center;
-  width: 1000px;
+  border-bottom: none;
+  text-align: left;
+  width: 100%;
+  position: relative;
+}
+
+/* 페이지 타이틀 아래 밑줄 설정 */
+.page-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  /* 컨테이너 끝까지 닿게 하려면 -40px 유지,
+     제목 너비만큼만 하고 싶으면 left: 0; right: 0; */
+  left: -40px;
+  right: -40px;
+  border-bottom: 2px solid #f1f5f9; /* 테이블 헤더와 같은 진한 색으로 변경 */
 }
 
 /* =============================================
@@ -64,77 +79,68 @@ body {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 24px;
+  table-layout: fixed; /* 칸 너비를 일정하게 유지 */
+   border-left: none;
+    border-right: none;
 }
 
 .park-table thead th {
-  padding: 10px 16px;
-  border-bottom: 2px solid var(--color-main);
-  font-size: 13px;
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--color-main); /* 헤더 아래쪽 선 */
   font-weight: 600;
-  color: var(--color-text);
+  text-align: center !important;
+  border-left: none;
+  border-right: none;
+}
+.park-table tbody tr {
+  /* 모든 행 아래에 선을 긋습니다 */
+  border-bottom: 1px solid var(--color-border) !important;
+  transition: background 0.15s;
+}
+.park-table tbody td {
+  padding: 14px 16px;
+  text-align: center !important;
   vertical-align: middle;
-  background: #ffffff;
+    border-left: none;
+    border-right: none;
 }
-
-.park-table thead th:nth-child(1) { width: 250px; text-align: center; }
-
-.park-table thead th:nth-child(2),
-.park-table thead th:nth-child(3),
-.park-table thead th:nth-child(4),
-.park-table thead th:nth-child(5) {
-  width: 190px;
-  text-align: center;
-}
-
-.park-table thead th:last-child {
-  width: 130px;
-  text-align: center;
-}
-
+/* 내용 줄(tr) 설정 */
 .park-table tbody tr {
   border-bottom: 1px solid var(--color-border);
   transition: background 0.15s;
-  text-align: center;
 }
 
 .park-table tbody tr:last-child { border-bottom: none; }
-
 .park-table tbody tr:hover { background: #f5f8ff; }
 
+/* 데이터 셀(td) 공통 설정 */
 .park-table tbody td {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--color-border);
-  font-size: 13px;
+  font-size: 15px;
   color: var(--color-text);
-  vertical-align: middle;
+  border-left: none;
+  border-right: none;
 }
 
+/* 1번 열 (차량 번호) */
 .park-table tbody td:nth-child(1) {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
 }
 
+/* 3, 4, 5번 열 (시간 및 구분) */
 .park-table tbody td:nth-child(3),
 .park-table tbody td:nth-child(4),
 .park-table tbody td:nth-child(5) {
-  width: 120px;
-  text-align: center;
+  width: 190px;
   color: #aaa;
-  font-size: 12px;
+  font-size: 15px;
 }
 
-.park-table tbody td:last-child {
-  width: 80px;
-  text-align: center;
-  color: #aaa;
-  font-size: 12px;
-}
 
+/* 데이터 없을 때 */
 .park-table tbody td[colspan] {
-  text-align: center;
   padding: 48px 16px;
   color: #aaa;
-  font-size: 13px;
   border-bottom: none;
 }
 
@@ -146,7 +152,7 @@ body {
   min-width: 70px;
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-align: center;
@@ -174,6 +180,7 @@ body {
 
 .btn-reapply {
   padding: 6px 14px;
+  width: 70px;
   background-color: var(--color-btn-point);
   color: #ffffff;
   border: none;
@@ -190,8 +197,9 @@ body {
 }
 
 .btn-add {
+  /* 기존 스타일 유지 */
   padding: 10px 20px;
-  background-color: #4073C9;
+  background-color: var(--color-btn-secondary);
   color: #ffffff;
   border: none;
   border-radius: var(--radius-sm);
@@ -199,12 +207,18 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: opacity var(--transition), transform var(--transition);
+
+  /* 추가: 버튼이 무조건 보이게 처리 */
+  display: block;
+  visibility: visible;
+  opacity: 1;
 }
 
 .btn-add:hover {
   opacity: 0.88;
   transform: translateY(-1px);
 }
+
 
 .btn-ghost {
   padding: 8px 16px;
@@ -226,10 +240,11 @@ body {
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 16px;
-  gap: 8px;
+  margin-top: 30px; /* 위쪽 여백 확보 */
+  width: 100%;      /* 가로 폭 꽉 채우기 */
+  clear: both;      /* 주변 플로팅 요소 영향 제거 */
+  gap: 8px
 }
-
 /* =============================================
    모달
    ============================================= */
@@ -372,7 +387,7 @@ body {
 }
 
 .form-actions .btn-cancel {
-  padding: 10px 20px;
+  padding: 10px 12px;
   background-color: #ffffff;
   color: #666;
   border: 1px solid var(--color-border);
@@ -427,7 +442,7 @@ body {
 
 #fileTable thead th {
   padding: 10px 14px;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--color-main);
   text-align: left;
@@ -449,7 +464,7 @@ body {
 
 #fileTable tbody td {
   padding: 10px 14px;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--color-text);
   vertical-align: middle;
 }
@@ -530,9 +545,9 @@ body {
 }
 
 .type-btn.active {
-  background-color: var(--color-main);
+  background-color: var(--color-btn);
   color: #ffffff;
-  border-color: var(--color-main);
+  border-color: var(--color-btn);
   font-weight: 600;
 }
 
@@ -611,27 +626,6 @@ body {
   border-bottom: none;
 }
 
-.page-title {
-    font-size: 30px;
-    font-weight: 700;
-    color: var(--color-main);
-    margin: 0 0 40px 0;
-    padding-bottom: 16px;
-    border-bottom: none;  /* 기존 border 제거 */
-    text-align: center;
-    width: 1000px;
-    position: relative;
-}
-
-.page-title::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: -10px;
-  right: 30px;
-  border-bottom: 3px solid #f1f5f9;
-}
-
 
 .page-header button {
   padding: 10px 20px;
@@ -662,7 +656,7 @@ body {
 #reservationTable thead th {
   padding: 10px 16px;
   border-bottom: 2px solid var(--color-main);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--color-text);
   text-align: center;
@@ -681,14 +675,14 @@ body {
 
 #reservationTable tbody td {
   padding: 14px 16px;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--color-text);
   vertical-align: middle;
 }
 
 /* 차량번호 강조 */
 #reservationTable tbody td:nth-child(1) {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
 }
 
@@ -696,7 +690,7 @@ body {
 #reservationTable tbody td:nth-child(3),
 #reservationTable tbody td:nth-child(4) {
   color: #aaa;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 /* 데이터 없을 때 */
@@ -704,7 +698,7 @@ body {
   text-align: center;
   padding: 48px 16px;
   color: #aaa;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 /* 상태 배지 */
@@ -713,7 +707,7 @@ body {
   min-width: 70px;
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   text-align: center;
 }
@@ -735,9 +729,9 @@ body {
 
 /* 수정·취소 버튼 */
 #reservationTable tbody td:last-child {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
+  display: table-cell;  /* flex → table-cell */
+  text-align: center;
+  vertical-align: middle;
 }
 
 #reservationTable tbody td button {
@@ -779,7 +773,7 @@ body {
   padding: 8px 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: 15px;
   color: var(--color-text);
   background-color: #ffffff;
   cursor: pointer;
@@ -794,7 +788,7 @@ body {
 
 /* 취소 버튼 */
 .form-actions button[type="button"]:not(#submitBtn) {
-  padding: 10px 20px;
+  padding: 12px 20px;
   background-color: #ffffff;
   color: #666;
   border: 1px solid var(--color-border);
@@ -822,7 +816,7 @@ body {
 }
 
 #submitBtn:hover {
-  background-color: var(--color-sub);
+  opacity: 0.88;
 }
 
 #submitBtn:disabled {
@@ -846,7 +840,7 @@ body {
   padding: 8px 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: 15px;
   color: var(--color-text);
   background-color: #ffffff;
   outline: none;
@@ -883,7 +877,7 @@ body {
 
 .vehicle-info-box p {
   margin: 0 0 8px 0;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--color-text);
   display: flex;
   gap: 16px;
@@ -948,7 +942,7 @@ body {
 }
 
 .time-label {
-  font-size: 12px;
+  font-size: 15px;
   color: #888;
   font-weight: 600;
 }
@@ -996,7 +990,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--color-text);
   cursor: pointer;
@@ -1174,9 +1168,9 @@ body {
 
 /* 관리 열 버튼 가로 배치 */
 .park-table tbody td:last-child {
-  display: flex;
   justify-content: center;
   align-items: center;
+  text-align: center;
   gap: 6px;
   flex-wrap: nowrap;
 }
@@ -1195,7 +1189,7 @@ body {
 }
 
 .result-item p { margin: 0 0 8px 0; font-weight: 600; }
-.result-item ul { margin: 0 0 12px 0; padding-left: 20px; color: #666; font-size: 13px; }
+.result-item ul { margin: 0 0 12px 0; padding-left: 20px; color: #666; font-size: 14px; }
 .result-item li { margin-bottom: 4px; }
 
 /* ── 드롭다운 ── */
@@ -1218,8 +1212,10 @@ body {
 /* 출차 페이지 관리 열에만 적용 */
 .exit-table tbody td:last-child {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  text-align: center;
   gap: 6px;
   flex-wrap: nowrap;
 }
@@ -1235,4 +1231,33 @@ body {
 .park-table tbody td.pk-empty {
   display: table-cell;
   text-align: center;
+}
+
+/* 삭제 버튼 */
+.btn-delete {
+  padding: 6px 14px;
+  width: 70px;
+  background-color: #ffffff;
+  color: var(--color-btn-point);
+  border: 1.5px solid var(--color-btn-point);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-delete:hover {
+  background-color: #fdecea;
+}
+
+/* number input 스핀 버튼 제거 */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
 }

@@ -34,4 +34,10 @@ public interface VehicleService {
 
     // 관리자 - 차량 반려
     void reject(Long userId, Long approvalId, String rejectReason);
+
+    // 입주자 차량 삭제
+    void delete(Long vehicleId);
+
+    // 관리자 차량 삭제
+    void adminDelete(Long vehicleId);
 }

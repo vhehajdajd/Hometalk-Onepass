@@ -6,85 +6,91 @@
   <title>입차</title>
   <meta name="_csrf" th:content="${_csrf.token}">
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
-  <style>
-    /* CSS는 나중에 추가 */
-  </style>
+  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
 </head>
 <body>
 
-<div class="container">
+<div class="main-layout" style="display: flex;">
 
-  <!-- 입차 처리 퀵서치 -->
-  <div class="section">
-    <h2 class="page-title">입차</h2>
+    <!-- 메인 콘텐츠 -->
+    <main class="content" style="flex: 1;">
+      <div class="container">
 
-    <div class="form-group">
-      <label for="vehicleNumber">차량 번호</label>
-      <div class="search-group">
-        <input
-                type="text"
-                id="vehicleNumber"
-                placeholder="차량 번호 4자리 입력"
-                maxlength="4"
-        >
+        <!-- 입차 처리 퀵서치 -->
+        <div class="section">
+          <h2 class="page-title">입차</h2>
+
+          <div class="form-group">
+            <label for="vehicleNumber">차량 번호</label>
+            <div class="search-group">
+              <input
+                      type="text"
+                      id="vehicleNumber"
+                      placeholder="차량 번호 4자리 입력"
+                      maxlength="4"
+              >
+              <button type="button" onclick="searchVehicle()">조회</button>
+            </div>
+            <span class="error-msg" id="searchError"></span>
+          </div>
+
+          <div id="searchResult"></div>
+        </div>
+
+        <!-- 오늘 입차 예정 차량 목록 -->
+        <div class="section" style="margin-top: 40px;">
+          <h2 class="page-title">오늘 입차 예정 차량</h2>
+
+          <!-- 탭 -->
+          <div class="tab-group">
+            <button type="button" class="tab-btn active" onclick="switchTab('visit', event)">방문 차량</button>
+            <button type="button" class="tab-btn" onclick="switchTab('resident', event)">입주자 차량</button>
+          </div>
+
+          <!-- 방문 차량 탭 -->
+          <div id="visitTab">
+            <table class="park-table">
+              <thead>
+              <tr>
+                <th>차량 번호</th>
+                <th>방문세대</th>
+                <th>방문목적</th>
+                <th>방문 예정 시각</th>
+                <th>관리</th>
+              </tr>
+              </thead>
+              <tbody id="visitList">
+              <tr>
+                <td colspan="5" class="pk-empty">오늘 방문 예정 차량이 없습니다.</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 입주자 차량 탭 -->
+          <div id="residentTab" style="display:none;">
+            <table class="park-table">
+              <thead>
+              <tr>
+                <th>차량 번호</th>
+                <th>세대</th>
+                <th>등록자</th>
+                <th>차량 모델</th>
+                <th>관리</th>
+              </tr>
+              </thead>
+              <tbody id="residentList">
+              <tr>
+                <td colspan="5" class="pk-empty">등록된 입주자 차량이 없습니다.</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
-      <span class="error-msg" id="searchError"></span>
-    </div>
-
-    <div id="searchResult"></div>
-  </div>
-
-  <!-- 오늘 입차 예정 차량 목록 -->
-  <div class="section">
-    <h2 class="page-title">오늘 입차 예정 차량</h2>
-
-    <!-- 탭 -->
-    <div class="tab-group">
-      <button type="button" class="tab-btn active" onclick="switchTab('visit', event)">방문 차량</button>
-      <button type="button" class="tab-btn" onclick="switchTab('resident', event)">입주자 차량</button>
-    </div>
-
-    <!-- 방문 차량 탭 -->
-    <div id="visitTab">
-      <table>
-        <thead>
-        <tr>
-          <th>차량 번호</th>
-          <th>방문세대</th>
-          <th>방문목적</th>
-          <th>방문 예정 시각</th>
-          <th>관리</th>
-        </tr>
-        </thead>
-        <tbody id="visitList">
-        <tr>
-          <td colspan="5">오늘 방문 예정 차량이 없습니다.</td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- 입주자 차량 탭 -->
-    <div id="residentTab" style="display:none;">
-      <table>
-        <thead>
-        <tr>
-          <th>차량 번호</th>
-          <th>세대</th>
-          <th>등록자</th>
-          <th>차량 모델</th>
-          <th>관리</th>
-        </tr>
-        </thead>
-        <tbody id="residentList">
-        <tr>
-          <td colspan="5">등록된 입주자 차량이 없습니다.</td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
+    </main>
 </div>
 
 <script th:inline="javascript">
@@ -156,8 +162,8 @@
               if (data.length === 0) {
                   searchResult.innerHTML = `
                       <div class="result-item">
-                          <span>*결과 : 미등록 차량입니다.</span>
-                          <button type="button" class="manual-btn"
+                          <p>*결과 : 미등록 차량입니다.</p>
+                          <button type="button" class="pk-btn pk-btn-secondary"
                                   onclick="location.href='${contextPath}staff/manual-entry'">수동 입차</button>
                       </div>
                   `;
@@ -170,14 +176,14 @@
 
                   if (vehicle.type === 'RESERVATION') {
                       div.innerHTML = `
-                          <span>*결과 : ${vehicle.household} ${vehicle.purpose} 차량입니다.</span>
-                          <button type="button" class="entry-btn"
+                          <p>*결과 : ${vehicle.household} ${vehicle.purpose} 차량입니다.</p>
+                          <button type="button" class="pk-btn pk-btn-primary"
                                   onclick="processEntry(${vehicle.reservationId}, 'RESERVATION', this)">입차 처리</button>
                       `;
                   } else if (vehicle.type === 'RESIDENT') {
                       div.innerHTML = `
-                          <span>*결과 : ${vehicle.household} 입주자 차량입니다.</span>
-                          <button type="button" class="entry-btn"
+                          <p>*결과 : ${vehicle.household} 입주자 차량입니다.</p>
+                          <button type="button" class="pk-btn pk-btn-primary"
                                   onclick="processEntry(${vehicle.vehicleId}, 'RESIDENT', this)">입차 처리</button>
                       `;
                   }
@@ -238,7 +244,7 @@
               visitList.innerHTML = '';
 
               if (data.length === 0) {
-                  visitList.innerHTML = '<tr><td colspan="5">오늘 방문 예정 차량이 없습니다.</td></tr>';
+                  visitList.innerHTML = '<tr><td colspan="5" class="pk-empty">오늘 방문 예정 차량이 없습니다.</td></tr>';
                   return;
               }
 
@@ -250,7 +256,7 @@
                       <td>${vehicle.purpose}</td>
                       <td>${vehicle.reservedAt}</td>
                       <td>
-                          <button type="button" class="entry-btn"
+                          <button type="button" class="pk-btn pk-btn-primary"
                                   onclick="processEntry(${vehicle.reservationId}, 'RESERVATION', this)">
                               입차 처리
                           </button>
@@ -276,7 +282,7 @@
               residentList.innerHTML = '';
 
               if (data.length === 0) {
-                  residentList.innerHTML = '<tr><td colspan="5">등록된 입주자 차량이 없습니다.</td></tr>';
+                  residentList.innerHTML = '<tr><td colspan="5" class="pk-empty">등록된 입주자 차량이 없습니다.</td></tr>';
                   return;
               }
 
@@ -288,7 +294,7 @@
                       <td>${vehicle.userName}</td>
                       <td>${vehicle.model ?? '-'}</td>
                       <td>
-                          <button type="button" class="entry-btn"
+                          <button type="button" class="pk-btn pk-btn-primary"
                                   onclick="processEntry(${vehicle.vehicleId}, 'RESIDENT', this)">
                               입차 처리
                           </button>

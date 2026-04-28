@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,17 +66,23 @@ public class StaffEntryService {
                     throw new IllegalStateException("입차 처리할 수 없는 예약 상태입니다.");
                 }
 
-                // 2. 차량번호 정규화
+                // 2. 예약 시간 30분 전후 체크
+                LocalDateTime reservedAt = reservation.getReservedAt();
+                LocalDateTime now = LocalDateTime.now();
+                if (now.isBefore(reservedAt.minusMinutes(30)) || now.isAfter(reservedAt.plusMinutes(30))) {
+                    throw new IllegalStateException("예약 시간 30분 전후에만 입차 가능합니다.");
+                }
+
+                // 3. 차량번호 정규화
                 String vehicleNumber = reservation.getVehicleNumber().replace(" ", "");
 
-                // 3. 입차 중복 방지
+                // 4. 입차 중복 방지
                 parkingLogRepository
                         .findByVehicleNumberAndStatus(vehicleNumber, ParkingLog.ParkingStatus.PARKED)
                         .ifPresent(l -> {
                             throw new IllegalStateException("이미 입차된 차량입니다.");
                         });
 
-                // ParkingLog 생성자에서 reservation.enter() 처리
                 ParkingLog log = new ParkingLog(
                         null,
                         vehicleNumber,
@@ -192,5 +199,4 @@ public class StaffEntryService {
     private boolean hasText(String str) {
         return str != null && !str.isBlank();
     }
-
 }

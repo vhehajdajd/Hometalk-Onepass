@@ -49,4 +49,12 @@ public class AdminVehicleController {
         vehicleService.reject(userId, request.getApprovalId(), request.getRejectReason());
         return ResponseEntity.ok().build();
     }
+
+    // 관리자 차량 삭제
+    @PostMapping("/vehicle/approval/delete/{vehicleId}")
+    @ResponseBody
+    public ResponseEntity<Void> deleteVehicle(@PathVariable Long vehicleId) {
+        vehicleService.adminDelete(vehicleId);
+        return ResponseEntity.ok().build();
+    }
 }

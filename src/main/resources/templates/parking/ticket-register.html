@@ -14,6 +14,26 @@
 <div class="container">
   <h2 class="page-title">차량 티켓 등록</h2>
 
+  <!-- 잔여 티켓 현황 -->
+  <div class="time-calc-box" style="margin-bottom: 24px;">
+    <div class="time-item">
+      <span class="time-label">이번 달 1일권</span>
+      <span class="time-value">
+        <span th:each="ticket : ${tickets}" th:if="${ticket.ticketType == 'DAY'}"
+              th:text="${ticket.remainingCount} + '개'">0개</span>
+        <span th:if="${#lists.isEmpty(tickets)}">0개</span>
+      </span>
+    </div>
+    <div class="time-item">
+      <span class="time-label">이번 달 1시간권</span>
+      <span class="time-value">
+        <span th:each="ticket : ${tickets}" th:if="${ticket.ticketType == 'HOUR'}"
+              th:text="${ticket.remainingCount} + '개'">0개</span>
+        <span th:if="${#lists.isEmpty(tickets)}">0개</span>
+      </span>
+    </div>
+  </div>
+
   <!-- 차량 번호 검색 -->
   <div class="form-group">
     <label for="vehicleNumber">차량 번호</label>
@@ -59,6 +79,11 @@
         <span class="time-label">남은시간</span>
         <span id="remainingTime" class="time-value"></span>
       </div>
+      <div class="time-item" id="neededTimeBox"
+           style="flex-direction: column; align-items: center;">
+        <span class="time-label" style="color: var(--color-btn-point);">추가필요</span>
+        <span id="neededTime" class="time-value" style="color: var(--color-btn-point);">-</span>
+      </div>
     </div>
 
     <!-- 티켓 적용 -->
@@ -93,7 +118,16 @@
       <!-- 수량 조절 + 적용 버튼 -->
       <div class="ticket-apply-group">
         <button type="button" onclick="decreaseCount()">-</button>
-        <span id="ticketCount">1</span>
+        <input
+                type="number"
+                id="ticketCount"
+                value="1"
+                min="1"
+                style="width: 50px; text-align: center; font-size: 16px; font-weight: 700;
+                 color: var(--color-main); border: 1px solid var(--color-border);
+                 border-radius: var(--radius-sm); padding: 4px 8px;"
+                oninput="handleCountInput(this)"
+        >
         <button type="button" onclick="increaseCount()">+</button>
         <button type="button" id="applyBtn" disabled onclick="applyTicket(this)">적용</button>
       </div>
@@ -136,8 +170,8 @@
       fetch(`${contextPath}parking/ticket/search?keyword=${keyword}`)
           .then(async res => {
               if (!res.ok) {
-                  const msg = await res.text();
-                  throw new Error(msg || '서버 오류');
+                  const data = await res.json();
+                  throw new Error(data.message || '조회된 차량이 없습니다.');
               }
               return res.json();
           })
@@ -156,28 +190,72 @@
               document.getElementById('totalTime').textContent = data.totalTime;
               document.getElementById('appliedTime').textContent = data.appliedTime;
               document.getElementById('remainingTime').textContent = data.remainingTime;
+              document.getElementById('neededTime').textContent = data.neededTime ?? '0분';
 
               dayRemainingCount = data.dayRemaining ?? 0;
               hourRemainingCount = data.hourRemaining ?? 0;
 
-              // 개수로 표시
-              document.getElementById('dayRemaining').textContent = `이번 달 남은 ${dayRemainingCount}개`;
-              document.getElementById('hourRemaining').textContent = `이번 달 남은 ${hourRemainingCount}개`;
+              document.getElementById('dayRemaining').textContent = `이번 달 남은 티켓 ${dayRemainingCount}개`;
+              document.getElementById('hourRemaining').textContent = `이번 달 남은 티켓 ${hourRemainingCount}개`;
 
               unregisteredBox.style.display = data.unregistered ? 'block' : 'none';
+
+              // 적용된 티켓 취소 버튼 표시
+              document.getElementById('dayCancelBtn').style.display = data.dayApplied ? 'block' : 'none';
+              document.getElementById('hourCancelBtn').style.display = data.hourApplied ? 'block' : 'none';
 
               document.getElementById('searchResult').style.display = 'block';
           })
           .catch(err => {
               console.error(err);
-              searchError.textContent = '조회 중 오류가 발생했습니다.';
+              searchError.textContent = err.message || '조회 중 오류가 발생했습니다.';
+              document.getElementById('searchResult').style.display = 'none';
           });
+  }
+
+  function toMinutes(text) {
+      const hourMatch = text.match(/(\d+)시간/);
+      const minMatch = text.match(/(\d+)분/);
+      const hours = hourMatch ? parseInt(hourMatch[1]) : 0;
+      const mins = minMatch ? parseInt(minMatch[1]) : 0;
+      return hours * 60 + mins;
+  }
+
+  function updateNeededTime() {
+      const totalText = document.getElementById('totalTime').textContent;
+      const appliedText = document.getElementById('appliedTime').textContent;
+
+      const totalMinutes = toMinutes(totalText);
+      const appliedMinutes = toMinutes(appliedText);
+
+      let addMinutes = 0;
+      if (selectedTicketType === 'DAY') {
+          addMinutes = ticketCount * 1440;
+      } else {
+          addMinutes = ticketCount * 60;
+      }
+
+      const newApplied = appliedMinutes + addMinutes;
+      const needed = Math.max(0, totalMinutes - newApplied);
+      const h = Math.floor(needed / 60);
+      const m = needed % 60;
+      const neededText = needed > 0 ? (h > 0 ? `${h}시간 ${m}분` : `${m}분`) : '0분';
+      document.getElementById('neededTime').textContent = neededText;
+  }
+
+  function handleCountInput(input) {
+      let val = parseInt(input.value);
+      if (isNaN(val) || val < 1) val = 1;
+      if (val > maxCount) val = maxCount;
+      input.value = val;
+      ticketCount = val;
+      updateNeededTime();
   }
 
   function selectTicket(type) {
       selectedTicketType = type;
       ticketCount = 1;
-      document.getElementById('ticketCount').textContent = ticketCount;
+      document.getElementById('ticketCount').value = 1;
       document.getElementById('ticketHint').textContent = '';
 
       if (type === 'DAY') {
@@ -187,26 +265,29 @@
       }
 
       document.getElementById('applyBtn').disabled = false;
+      updateNeededTime();
   }
 
   function increaseCount() {
       if (ticketCount < maxCount) {
           ticketCount++;
-          document.getElementById('ticketCount').textContent = ticketCount;
+          document.getElementById('ticketCount').value = ticketCount;
+          updateNeededTime();
       }
   }
 
   function decreaseCount() {
       if (ticketCount > 1) {
           ticketCount--;
-          document.getElementById('ticketCount').textContent = ticketCount;
+          document.getElementById('ticketCount').value = ticketCount;
+          updateNeededTime();
       }
   }
 
   function resetTicketUI() {
       selectedTicketType = null;
       ticketCount = 1;
-      document.getElementById('ticketCount').textContent = 1;
+      document.getElementById('ticketCount').value = 1;
       document.querySelectorAll('input[name="ticketType"]').forEach(r => r.checked = false);
       document.getElementById('applyBtn').disabled = true;
       document.getElementById('ticketHint').textContent = '';
@@ -231,8 +312,8 @@
       })
           .then(async res => {
               if (!res.ok) {
-                  const msg = await res.text();
-                  throw new Error(msg || '서버 오류');
+                  const data = await res.json();
+                  throw new Error(data.message || '서버 오류');
               }
               alert('티켓이 적용되었습니다.');
 
@@ -247,7 +328,7 @@
           })
           .catch(err => {
               console.error(err);
-              alert('티켓 적용 중 오류가 발생했습니다.');
+              alert('티켓 적용 중 오류가 발생했습니다: ' + err.message);
           })
           .finally(() => {
               btn.disabled = false;
@@ -272,8 +353,8 @@
       })
           .then(async res => {
               if (!res.ok) {
-                  const msg = await res.text();
-                  throw new Error(msg || '서버 오류');
+                  const data = await res.json();
+                  throw new Error(data.message || '서버 오류');
               }
               alert('티켓 적용이 취소되었습니다.');
 
@@ -287,7 +368,7 @@
           })
           .catch(err => {
               console.error(err);
-              alert('취소 처리 중 오류가 발생했습니다.');
+              alert('취소 처리 중 오류가 발생했습니다: ' + err.message);
           })
           .finally(() => {
               btn.disabled = false;
@@ -295,7 +376,8 @@
   }
 
   function goRegister() {
-      location.href = `${contextPath}parking/unregistered`;
+    const vehicleNumber = document.getElementById('resultVehicleNumber').textContent;
+    location.href = `${contextPath}parking/unregistered?vehicleNumber=${encodeURIComponent(vehicleNumber)}`;
   }
 </script>
 
