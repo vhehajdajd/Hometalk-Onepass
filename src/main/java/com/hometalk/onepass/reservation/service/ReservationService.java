@@ -94,4 +94,13 @@ public class ReservationService {
         Reservation reservation = findOne(id);
         reservation.cancel();
     }
+
+    /** * 관리자용: 모든 예약 내역을 최신순으로 조회
+     * 에러 해결 부분
+     */
+    public List<ReservationResponseDto> findAllWithDetails() {
+        return reservationRepository.findAllByOrderByIdDesc().stream()
+                .map(ReservationResponseDto::fromEntity)
+                .toList();
+    }
 }

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>One Pass - 시설 예약</title>
+  <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
+</head>
+<body>
+<div class="container">
+  <h1 class="module-title">시설 예약</h1>
+
+  <form th:action="@{/api/reservations}" method="post">
+    <input type="hidden" id="hidden-facility" name="facilityName">
+    <input type="hidden" id="hidden-date" name="reservationDate">
+
+    <div id="step1" class="step-section active">
+      <label class="label-text">1. 시설을 선택해주세요</label>
+      <div class="facility-list">
+        <div class="facility-item" onclick="selectFacility('테니스장 A코트')">테니스장 A코트</div>
+        <div class="facility-item" onclick="selectFacility('독서실 15번석')">독서실 15번석</div>
+        <div class="facility-item" onclick="selectFacility('게스트하우스 101호')">게스트하우스 101호</div>
+      </div>
+    </div>
+
+    <div id="step2" class="step-section">
+      <label class="label-text">2. 날짜를 선택해주세요 (<span id="selected-facility-name" style="color:var(--color-btn-point)"></span>)</label>
+      <div class="summary-card">
+        <input type="date" id="resDate" class="input-field" onchange="selectDate(this.value)">
+      </div>
+      <div class="btn-group">
+        <button type="button" class="btn btn-point" onclick="prevStep(1)">이전으로</button>
+      </div>
+    </div>
+
+    <div id="step3" class="step-section">
+      <label class="label-text">3. 예약 시간 및 상세 확인</label>
+      <div class="summary-card">
+        <div class="time-display-box">
+          <span id="display-date-text" class="time-range-text">날짜 선택 전</span>
+          <div style="margin-top:10px; font-size: 22px; font-weight:700;">
+            <span id="display-time">00:00</span> → <span id="end-time">00:00</span>
+          </div>
+        </div>
+
+        <label class="label-text">시작 시간 선택</label>
+        <div class="time-grid">
+          <th:block th:each="hour : ${#numbers.sequence(9, 21)}">
+            <label class="time-chip-label">
+              <input type="radio" name="startTime" class="time-radio"
+                     th:value="${#numbers.formatInteger(hour, 2) + ':00'}"
+                     onchange="updateTimeDisplay(this.value)">
+              <div class="time-chip" th:text="${#numbers.formatInteger(hour, 2) + ':00'}">00:00</div>
+            </label>
+          </th:block>
+        </div>
+
+        <div class="btn-group">
+          <button type="button" class="btn btn-point" onclick="prevStep(2)">이전</button>
+          <button type="submit" class="btn btn-main">최종 예약 신청</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  // 시설 선택 로직
+  function selectFacility(name) {
+    document.getElementById('hidden-facility').value = name;
+    document.getElementById('selected-facility-name').innerText = name;
+    nextStep(2);
+  }
+
+  // 날짜 선택 로직
+  function selectDate(val) {
+    if(!val) return;
+
+    // 날짜 포맷팅 (예: 2026-04-29 -> 04월 29일 (수))
+    const date = new Date(val);
+    const week = ['일', '월', '화', '수', '목', '금', '토'];
+    const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')}월 ${String(date.getDate()).padStart(2, '0')}일 (${week[date.getDay()]})`;
+
+    document.getElementById('hidden-date').value = val;
+    document.getElementById('display-date-text').innerText = formattedDate;
+    nextStep(3);
+  }
+
+  // 단계 이동 함수
+  function nextStep(step) {
+    document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + step).classList.add('active');
+    window.scrollTo(0, 0); // 화면 상단으로 이동 (모바일 배려)
+  }
+
+  function prevStep(step) {
+    document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + step).classList.add('active');
+  }
+
+  // 시간 표시 업데이트
+  function updateTimeDisplay(val) {
+    document.getElementById('display-time').innerText = val;
+    let hour = parseInt(val.split(':')[0]);
+    document.getElementById('end-time').innerText = (hour + 1).toString().padStart(2, '0') + ":00";
+
+    // 선택 시 시각적 피드백 (active 클래스 처리)
+    document.querySelectorAll('.time-chip').forEach(chip => chip.classList.remove('active'));
+    event.target.nextElementSibling.classList.add('active');
+  }
+</script>
+</body>
+</html>
