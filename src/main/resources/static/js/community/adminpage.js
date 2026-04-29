@@ -1,46 +1,65 @@
-// 1. 카테고리 추가 버튼 클릭 시
-document.getElementById('btn-add-category').addEventListener('click', () => {
+// 모달 열기
+function openCreateModal() {
+    document.getElementById('createModal').classList.add('show');
+}
+
+// 모달 닫기
+function closeModal() {
+    const modal = document.getElementById('createModal');
+    modal.classList.remove('show');
+
+    document.getElementById('createBoardForm').reset();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('category-container');
-    const newItem = document.querySelector('.category-item').cloneNode(true);
+    const addBtn = document.getElementById('btn-add-category');
 
-    // 입력값 초기화 및 삭제 버튼 활성화
-    newItem.querySelectorAll('input').forEach(input => {
-        input.value = '';
-        input.classList.remove('error'); // 이전 에러 표시 제거
-    });
+    // 1. 카테고리 추가 로직
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            const items = document.querySelectorAll('.category-item');
+            if (items.length > 0) {
+                // 첫 번째 아이템 복사
+                const newItem = items[0].cloneNode(true);
 
-    const removeBtn = newItem.querySelector('.btn-remove');
-    removeBtn.disabled = false; // 추가된 칸은 삭제 가능
-    removeBtn.addEventListener('click', () => newItem.remove());
+                // 입력값 초기화 및 스타일 리셋
+                const input = newItem.querySelector('input[name="categoryNames"]');
+                input.value = '';
+                input.classList.remove('error');
 
-    container.appendChild(newItem);
-});
+                // 삭제 버튼 활성화 및 기능 부여
+                const removeBtn = newItem.querySelector('.btn-remove');
+                removeBtn.disabled = false;
+                removeBtn.onclick = function() {
+                    newItem.remove();
+                };
 
-// 2. 저장 버튼 클릭 시 유효성 검사
-document.getElementById('btn-submit').addEventListener('click', () => {
-    let isValid = true;
-    const categoryInputs = document.querySelectorAll('input[name="categoryNames"]');
-
-    categoryInputs.forEach(input => {
-        if (input.value.trim() === "") {
-            input.classList.add('error'); // 코랄색 테두리 활성화
-            isValid = false;
-        } else {
-            input.classList.remove('error');
-        }
-    });
-
-    if (!isValid) {
-        alert("카테고리명은 필수입니다.");
-        return;
+                container.appendChild(newItem);
+                input.focus(); // 추가 후 바로 입력 가능하게 포커스
+            }
+        });
     }
 
-    // 유효성 검사 통과 시 Fetch API로 서버에 데이터 전송
-    // AdminBoardCreateRequestDTO 형태에 맞춰서 JSON 구성
+    // 2. 폼 전송 전 유효성 검사
+    document.getElementById('createBoardForm')
+        .addEventListener('submit', (e) => {
+
+            const inputs = document.querySelectorAll('input[name="categoryNames"]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('error');
+                    isValid = false;
+                } else {
+                    input.classList.remove('error');
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault(); // 제출 막기
+                alert("카테고리명을 모두 입력해주세요.");
+            }
+        });
 });
-
-
-function toggleCreateForm() {
-    const form = document.getElementById('createFormArea');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-}

@@ -6,6 +6,7 @@ import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.enums.PostStatus;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -27,6 +28,10 @@ public class PostRequestDTO {
 
     private List<String> tags;
 
+    public List<String> getTags() {
+        return tags == null ? new ArrayList<>() : tags;
+    }
+
     public Post toEntity(Category category, Board board, User writer) {
         return Post.builder().title(this.title)
                 .content(this.content).pinned(this.pinned)
@@ -35,6 +40,7 @@ public class PostRequestDTO {
                 .writer(writer)
                 .category(category)
                 .board(board)
+                .hasImage(false)
                 .build();
     }
 }

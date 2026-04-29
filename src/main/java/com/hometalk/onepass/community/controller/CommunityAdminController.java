@@ -2,14 +2,13 @@ package com.hometalk.onepass.community.controller;
 
 import com.hometalk.onepass.community.dto.AdminBoardRqDTO;
 import com.hometalk.onepass.community.dto.AdminBoardRsDTO;
+import com.hometalk.onepass.community.dto.response.PostResponseDTO;
 import com.hometalk.onepass.community.service.BoardService;
 import com.hometalk.onepass.community.service.CommunityAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,9 +28,39 @@ public class CommunityAdminController {
         return "community/admin-management";
     }
 
+    // 2. 게시판 생성 (카테고리 포함)
     @PostMapping("/create")
-    public String createBoard(AdminBoardRqDTO adminBoardRqDTO) {
-        communityAdminService.createBoardWithCategories(adminBoardRqDTO);
+    public String createBoard(@ModelAttribute AdminBoardRqDTO adminBoardRqDTO) {
+        communityAdminService.createBoard(adminBoardRqDTO);
+        return "redirect:/community/admin";
+    }
+
+    // 3. 게시판 삭제
+    @PostMapping("/delete/{id}")
+    public String deleteBoard(@PathVariable Long id) {
+        communityAdminService.deleteBoard(id);
+        return "redirect:/community/admin";
+    }
+
+    // 4. 숨김/삭제 게시글 관리 페이지
+    @GetMapping("/posts")
+    public String managedPostsPage(Model model) {
+        List<PostResponseDTO> managedPosts = communityAdminService.getAdminManagedPosts();
+        model.addAttribute("posts", managedPosts);
+        return "community/admin-posts"; // 별도의 관리 페이지 뷰
+    }
+
+    // 5. 카테고리 이름 수정 (AJAX로 처리할 경우 @ResponseBody 사용 가능)
+    @PostMapping("/category/update/{id}")
+    public String updateCategory(@PathVariable Long id, @RequestParam String newName) {
+        communityAdminService.updateCategory(id, newName);
+        return "redirect:/community/admin";
+    }
+
+    // 6. 카테고리 삭제
+    @PostMapping("/category/delete/{id}")
+    public String deleteCategory(@PathVariable Long id) {
+        communityAdminService.deleteCategory(id);
         return "redirect:/community/admin";
     }
 }

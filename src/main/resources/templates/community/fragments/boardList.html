@@ -7,7 +7,6 @@
         <tr>
             <th>ID</th>
             <th>게시판 명</th>
-            <th>코드</th>
             <th>카테고리 수</th>
             <th>관리</th>
         </tr>
@@ -22,18 +21,70 @@
             <td class="board-name">
                 <strong th:text="${board.name}">광장</strong>
             </td>
-            <td th:text="${board.code}">square</td>
             <td>
-                <span class="badge-count" th:text="${board.categories.size()} + '개'">3개</span>
+                <span class="badge-count" th:text="${#lists.size(board.categories)} + '개'">3개</span>
             </td>
             <td class="action-btns">
-                <a class="btn-manage" th:href="@{/community/admin/create}">
-                    관리
-                </a>
+                <button type="button" class="btn-edit"
+                        th:onclick="openEditModal([[${board.id}]], [[${board.name}]])"
+                    수정
+                </button>
+                <form th:if="${!board.isSystem}"
+                      th:action="@{/community/admin/board/delete/{id}(id=${board.id})}"
+                      method="post" style="display:inline;"
+                      onsubmit="return confirm('게시판을 삭제하면 내부 카테고리와 글이 모두 영향받을 수 있습니다. 정말 삭제하시겠습니까?');">
+                    <button type="submit" class="btn-delete">삭제</button>
+                </form>
+
+                <small th:if="${board.isSystem}" class="text-locked">수정불가</small>
             </td>
         </tr>
         </tbody>
     </table>
+
+    <script>
+        function toggleCreateForm() {
+        const form = document.getElementById('createFormContainer');
+        const btn = document.getElementById('btnToggleForm');
+
+        if (form.style.display === 'none') {
+            form.style.display = 'block';
+            btn.innerText = '× 닫기';
+            btn.classList.add('active');
+        } else {
+            form.style.display = 'none';
+            btn.innerText = '+ 새 게시판 등록';
+            btn.classList.remove('active');
+            }
+        }
+
+        function openEditModal(boardId, boardName) {
+            // 1. 모달의 기본 제목과 게시판 ID 세팅
+            document.getElementById('editBoardId').value = boardId;
+            document.getElementById('editBoardName').value = boardName;
+
+            // 2. 해당 게시판의 카테고리 목록을 서버에서 비동기로 가져오기 (fetch 사용)
+            fetch(`/admin/community/boards/${boardId}/categories`)
+                .then(res => res.json())
+                .then(categories => {
+                const listArea = document.getElementById('currentCategoryList');
+                listArea.innerHTML = ''; // 기존 내용 초기화
+
+                categories.forEach(cat => {
+                    // "all" 코드가 아닌 것만 수정/삭제 가능하게 표시
+                    if(cat.code !== 'all') {
+                        const tag = document.createElement('span');
+                        tag.className = 'category-tag';
+                        tag.innerHTML = `${cat.name} <i class="delete-icon" onclick="removeCategory(${cat.id})">×</i>`;
+                        listArea.appendChild(tag);
+                    }
+                });
+            });
+
+            // 3. 모달 띄우기
+            document.getElementById('editBoardModal').style.display = 'block';
+        }
+    </script>
 </div>
 
 </html>

@@ -11,4 +11,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     // 코드로 게시판 Entity 조회
     Optional<Board> findByCode(String code);
+
+    boolean existsByCode(String code);
+
 }

@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -53,9 +54,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "AND p.postStatus = :status " +
             "AND p.writer.nickname LIKE %:keyword%")
     Page<Post> findByNickname(@Param("board") Board board,
-                            @Param("keyword") String keyword,
-                            @Param("status") PostStatus status,
-                            Pageable pageable);
+                              @Param("keyword") String keyword,
+                              @Param("status") PostStatus status,
+                              Pageable pageable);
 
     // 제목 + 내용
     @Query("SELECT p FROM Post p WHERE p.board = :board " +
@@ -81,4 +82,17 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("SELECT t.name FROM PostTag pt JOIN pt.tag t WHERE pt.post.id = :postId")
     List<String> findTagsByPostId(@Param("postId") Long postId);
+
+    // 특정 상태(숨김, 삭제 등)인 게시글만 모아보기
+    List<Post> findAllByPostStatusInOrderByCreatedAtDesc(List<PostStatus> statuses);
+
+    // 삭제 상태이면서 업데이트 날짜(삭제 시점)가 특정 날짜 이전인 데이터 조회
+    List<Post> findAllByPostStatusAndUpdatedAtBefore(PostStatus status, LocalDateTime dateTime);
+
+
+    // 최신순 상위 3개
+    List<Post> findTop3ByPostStatusOrderByCreatedAtDesc(PostStatus status);
+
+    // 조회수 정렬
+    List<Post> findTop5ByPostStatusOrderByViewCountDesc(PostStatus status);
 }

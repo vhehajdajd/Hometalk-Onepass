@@ -2,6 +2,7 @@ package com.hometalk.onepass.community.service;
 
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.UserRepository;
+import com.hometalk.onepass.community.dto.CommunityPostResponseDTO;
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
 import com.hometalk.onepass.community.dto.response.PostListResponse;
 import com.hometalk.onepass.community.dto.response.PostResponseDTO;
@@ -22,7 +23,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -74,20 +74,23 @@ public class PostService {
         }
 
         // 태그
-        if (dto.getTags() != null && !dto.getTags().isEmpty()) {
-            for (String tagName : dto.getTags()) {
-                Tag tag = tagRepository.findByName(tagName)
-                        .orElseGet(() -> tagRepository.save(Tag.builder().name(tagName).build()));
-
-                // 중간 엔티티 생성 및 Post에 추가
-                PostTag postTag = PostTag.builder()
-                        .post(post)
-                        .tag(tag)
-                        .build();
-                post.addPostTag(postTag);
-            }
+        List<String> tags = dto.getTags() != null ? dto.getTags() : List.of();
+        for (String tagName : tags) {
+            if (tagName == null) continue;
+            String cleanTag = tagName.trim();
+            if (cleanTag.isEmpty()) continue;
+            Tag tag = tagRepository.findByName(cleanTag)
+                    .orElseGet(() -> tagRepository.save(
+                            Tag.builder()
+                                    .name(cleanTag)
+                                    .build()
+                    ));
+            PostTag postTag = PostTag.builder()
+                    .post(post)
+                    .tag(tag)
+                    .build();
+            post.addPostTag(postTag);
         }
-
         return post.getId();
     }
 
@@ -200,4 +203,34 @@ public class PostService {
         return postRepository.findTagsByPostId(postId);
     }
 
+
+
+    @Transactional(readOnly = true)
+    public List<CommunityPostResponseDTO> getRecentPosts() {
+        List<Post> posts = postRepository
+                .findTop3ByPostStatusOrderByCreatedAtDesc(PostStatus.ACTIVE);
+
+        return posts.stream()
+                .map(post -> new CommunityPostResponseDTO(
+                        post.getId(),
+                        post.getTitle(),
+                        post.getCategory().getName(),
+                        post.getCategory().getCode()
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CommunityPostResponseDTO> getPopularPosts() {
+        List<Post> posts = postRepository
+                .findTop5ByPostStatusOrderByViewCountDesc(PostStatus.ACTIVE);
+        return posts.stream()
+                .map(post -> new CommunityPostResponseDTO(
+                        post.getId(),
+                        post.getTitle(),
+                        post.getCategory().getName(),
+                        post.getCategory().getCode()
+                ))
+                .toList();
+    }
 }

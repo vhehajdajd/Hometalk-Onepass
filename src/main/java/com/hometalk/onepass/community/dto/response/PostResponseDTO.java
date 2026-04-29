@@ -31,9 +31,13 @@ public class PostResponseDTO {
     private boolean pinned;
     private boolean isDeleted;
 
+    private boolean hasImage;
+
     // 1. 시스템 관리 상태
     private String postStatus;                  // 로직용 - "ACTIVE", "HIDDEN" (CSS 클래스나 조건문용)
     private String postStatusDescription;       // 표시용 - "활성", "숨김" (사용자 화면 출력용)
+
+    private boolean canModify;
 
     // 2. 나눔 게시글 상태
     private String marketStatus;                // 로직용: "SHARED", "SOLD"
@@ -45,6 +49,8 @@ public class PostResponseDTO {
         this.title = post.getTitle();
         this.content = post.getContent();
         this.pinned = post.isPinned();
+
+        this.hasImage = post.isHasImage();
 
         if (post.getCategory() != null) {
             this.categoryId = post.getCategory().getId();
@@ -80,5 +86,21 @@ public class PostResponseDTO {
             this.marketStatusDescription = post.getMarketStatus().getDescription();
         }
 
+    }
+
+    public static PostResponseDTO from(Post post) {
+        // 1. 기존 생성자를 호출하여 모든 기본 필드를 채운 DTO 생성
+        PostResponseDTO dto = new PostResponseDTO(post);
+
+        // 2. 시스템 게시판(수정 불가) 여부 판별
+        // Post -> Category -> Board 순으로 접근
+        List<String> systemBoards = List.of("square", "market", "talk");
+        String boardCode = (post.getCategory() != null && post.getCategory().getBoard() != null)
+                ? post.getCategory().getBoard().getCode()
+                : "";
+
+        dto.setCanModify(!systemBoards.contains(boardCode));
+
+        return dto;
     }
 }

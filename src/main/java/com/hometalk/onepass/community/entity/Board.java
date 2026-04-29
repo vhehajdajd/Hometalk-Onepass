@@ -22,6 +22,9 @@ public class Board {
     @Column(unique = true, nullable = false, updatable = false)
     private String code;        // URL용
 
+    @Column(name = "is_system")
+    private boolean system = false; // 기본값 false, 초기 데이터만 true로 설정
+
     @OneToMany(mappedBy = "board", fetch = FetchType.LAZY)
     private List<Category> categories;
 

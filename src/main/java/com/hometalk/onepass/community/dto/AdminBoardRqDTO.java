@@ -1,5 +1,6 @@
 package com.hometalk.onepass.community.dto;
 
+import com.hometalk.onepass.community.entity.Board;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,4 +19,12 @@ public class AdminBoardRqDTO {
     private List<String> categoryNames;
     private List<String> categoryCodes;
     private List<String> categoryColors;
+
+    public Board toEntity() {
+        return Board.builder()
+                .name(this.boardName)
+                .code(this.boardCode)
+                .system(false) // 관리자가 직접 '생성'하는 게시판은 무조건 false로 고정
+                .build();
+    }
 }

@@ -46,7 +46,12 @@ public class Post extends BaseSoftDeleteEntity {
     @Builder.Default
     private Integer commentCount = 0;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean hasImage = false;
+
     // Post가 1인 관계
+    @Builder.Default
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PostTag> postTags = new ArrayList<>();
 

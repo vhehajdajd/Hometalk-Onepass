@@ -7,30 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const titleInput = document.getElementById('title');
     if (titleInput) {
         titleInput.addEventListener('input', updateCharCount);
+        document.getElementById('charCount').innerText = titleInput.value.length;
     }
 
-    // 2. Quill 에디터 초기화
+/*    // 2. Quill 에디터 초기화
     if (document.getElementById('editor')) {
-        initQuillEditor();
+        initQuill();
     }
 
     // 2-1. 폼 제출 시 Quill 내용 처리
-    const postForm = document.getElementById('postForm');
-    if (postForm) {
-        postForm.addEventListener('submit', function(e) {
-            // 에디터 내용을 hidden input에 담기
-            const contentInput = document.getElementById('content');
-            if (quill && contentInput) {
-                const html = quill.root.innerHTML;
-                if (html === '<p><br></p>') {
-                    alert('내용을 입력해주세요.');
-                    e.preventDefault();
-                    return;
-                }
-                contentInput.value = html;
-            }
-        });
-    }
+    document.getElementById('postForm')?.addEventListener('submit', () => {
+        const contentInput = document.getElementById('content');
+        if (quill) {
+            contentInput.value = quill.root.innerHTML;
+        }
+    });
+*/
 
     // 3. 임시저장 목록 모달 열기
     const btnLoadTemp = document.getElementById('btnLoadTemp');
@@ -65,26 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ================================================
     [2] Quill 에디터 설정 & 이미지 업로드
 =================================================== */
-if (!window.Quill) {
-    window.Quill = Quill;
-}
-
-if (typeof ImageResize === 'undefined' && window.ImageResize) {
-    ImageResize = window.ImageResize;
-}
 
 let quill;
 
-function initQuillEditor() {
-    if (typeof ImageResize !== 'undefined') {
-        Quill.register('modules/imageResize', ImageResize.default || ImageResize);
-    } else {
-        console.warn("ImageResize 라이브러리를 찾을 수 없습니다. 리사이즈 기능 없이 에디터를 실행합니다.");
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    initQuill();
+});
+
+function initQuill() {
+    const editor = document.getElementById('editor');
+    if (!editor) return;
     quill = new Quill('#editor', {
         theme: 'snow',
         modules: {
-            ...(typeof ImageResize !== 'undefined' && { imageResize: { displaySize: true } }),
             toolbar: {
                 container: [
                     ['bold', 'italic', 'underline'],
@@ -94,11 +79,15 @@ function initQuillEditor() {
                     ['link', 'image']
                 ],
                 handlers: {
-                    image: imageHandler // 이미지 업로드 커스텀 핸들러
+                    image: imageHandler
                 }
             }
         }
     });
+    const content = document.getElementById('content')?.value;
+    if (content && content.trim() !== '') {
+        quill.root.innerHTML = content;
+    }
 }
 
 function imageHandler() {
@@ -155,9 +144,13 @@ function saveTemp() {
         return;
     }
 
-    if (confirm("현재 내용을 임시저장하시겠습니까?")) {
+    if (confirm("임시저장하시겠습니까?")) {
+        const contentInput = document.getElementById('content');
+        if (quill && contentInput) {
+            contentInput.value = quill.root.innerHTML;
+        }
+        // 임시저장 시 상태값 세팅
         document.getElementById('isTemp').value = "true";
-        alert("임시저장 되었습니다.");
         document.getElementById('postForm').submit();
     }
 }

@@ -4,6 +4,7 @@ import com.hometalk.onepass.community.dto.response.CommentRsDTO;
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
 import com.hometalk.onepass.community.dto.response.*;
 import com.hometalk.onepass.community.enums.PostStatus;
+import com.hometalk.onepass.community.exception.PostNotFoundException;
 import com.hometalk.onepass.community.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -83,20 +84,29 @@ public class PostController {
     @GetMapping("/{boardCode}/edit/{id}")
     public String postForm(@PathVariable String boardCode,
                            @PathVariable Long id,
-                           Model model) {
+                           Model model,
+                           RedirectAttributes redirectAttributes) {
         // 공통 레이아웃(배너) 데이터
         BoardResponseDTO board = boardService.findByCode(boardCode);
         addLayoutAttributes(board, null, model, true); // 배너와 헤더는 나오지만 목록은 안 가져옴
 
         // ID가 있으면 - 임시저장 불러오기
-        if (id != null) {
-            PostRequestDTO post = postService.getPostForEdit(id, boardCode);
-            model.addAttribute("post", post);
-            model.addAttribute("postId", id);
-        } else {
-            model.addAttribute("post", new PostRequestDTO());
-            model.addAttribute("postId", null);
+        try {
+            if (id != null) {
+                PostRequestDTO post = postService.getPostForEdit(id, boardCode);
+                model.addAttribute("post", post);
+                model.addAttribute("postId", id);
+
+                System.out.println("컨트롤러 로드 내용 확인: " + post.getContent());
+            } else {
+                model.addAttribute("post", new PostRequestDTO());
+                model.addAttribute("postId", null);
+            }
+        } catch (PostNotFoundException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "존재하지 않거나 삭제된 게시글입니다.");
+            return "redirect:/hometop/community/square/all";
         }
+
         int tempCount = postService.getTempPostCount(boardCode);
         model.addAttribute("tempCount", tempCount);
 
