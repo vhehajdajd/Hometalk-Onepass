@@ -28,21 +28,29 @@ public class CommunityAdminController {
         return "community/admin-management";
     }
 
-    // 2. 게시판 생성 (카테고리 포함)
-    @PostMapping("/create")
+    // 상세 조회
+    @GetMapping("/board/detail/{id}")
+    public String getBoardDetail(@PathVariable Long id, Model model) {
+        AdminBoardRsDTO boardDetail = communityAdminService.getAdminBoardDetail(id);
+        model.addAttribute("board", boardDetail);
+        return "community/board_detail"; // 상세 페이지 뷰 이름
+    }
+
+    // 게시판 생성 (카테고리 포함)
+    @PostMapping("/board/create")
     public String createBoard(@ModelAttribute AdminBoardRqDTO adminBoardRqDTO) {
         communityAdminService.createBoard(adminBoardRqDTO);
         return "redirect:/community/admin";
     }
 
-    // 3. 게시판 삭제
-    @PostMapping("/delete/{id}")
+    // 게시판 삭제
+    @PostMapping("/board/delete/{id}")
     public String deleteBoard(@PathVariable Long id) {
         communityAdminService.deleteBoard(id);
         return "redirect:/community/admin";
     }
 
-    // 4. 숨김/삭제 게시글 관리 페이지
+    // 숨김/삭제 게시글 관리 페이지
     @GetMapping("/posts")
     public String managedPostsPage(Model model) {
         List<PostResponseDTO> managedPosts = communityAdminService.getAdminManagedPosts();
@@ -50,17 +58,26 @@ public class CommunityAdminController {
         return "community/admin-posts"; // 별도의 관리 페이지 뷰
     }
 
-    // 5. 카테고리 이름 수정 (AJAX로 처리할 경우 @ResponseBody 사용 가능)
+    // 카테고리 생성
+    @PostMapping("/category/create")
+    public String createCategory(@RequestParam Long boardId, @RequestParam String name) {
+        communityAdminService.addCategory(boardId, name);
+        return "redirect:/community/admin/board/detail/" + boardId;
+    }
+
+    // 카테고리 이름 수정 (AJAX로 처리할 경우 @ResponseBody 사용 가능)
     @PostMapping("/category/update/{id}")
-    public String updateCategory(@PathVariable Long id, @RequestParam String newName) {
+    public String updateCategory(@PathVariable Long id,
+                                 @RequestParam("name") String newName,
+                                 @RequestParam Long boardId) {
         communityAdminService.updateCategory(id, newName);
-        return "redirect:/community/admin";
+        return "redirect:/community/admin/board/detail/" + boardId;
     }
 
     // 6. 카테고리 삭제
     @PostMapping("/category/delete/{id}")
-    public String deleteCategory(@PathVariable Long id) {
+    public String deleteCategory(@PathVariable Long id, @RequestParam Long boardId) {
         communityAdminService.deleteCategory(id);
-        return "redirect:/community/admin";
+        return "redirect:/community/admin/board/detail/" + boardId;
     }
 }

@@ -5,7 +5,6 @@
     <table class="admin-management-table">
         <thead>
         <tr>
-            <th>ID</th>
             <th>게시판 명</th>
             <th>카테고리 수</th>
             <th>관리</th>
@@ -17,7 +16,6 @@
         </tr>
 
         <tr th:each="board : ${boards}">
-            <td th:text="${board.id}">1</td>
             <td class="board-name">
                 <strong th:text="${board.name}">광장</strong>
             </td>
@@ -25,18 +23,11 @@
                 <span class="badge-count" th:text="${#lists.size(board.categories)} + '개'">3개</span>
             </td>
             <td class="action-btns">
-                <button type="button" class="btn-edit"
-                        th:onclick="openEditModal([[${board.id}]], [[${board.name}]])"
-                    수정
-                </button>
-                <form th:if="${!board.isSystem}"
-                      th:action="@{/community/admin/board/delete/{id}(id=${board.id})}"
-                      method="post" style="display:inline;"
-                      onsubmit="return confirm('게시판을 삭제하면 내부 카테고리와 글이 모두 영향받을 수 있습니다. 정말 삭제하시겠습니까?');">
-                    <button type="submit" class="btn-delete">삭제</button>
-                </form>
-
-                <small th:if="${board.isSystem}" class="text-locked">수정불가</small>
+                <a th:href="@{/community/admin/board/detail/{id}(id=${board.id})}"
+                   class="btn-detail"
+                   style="text-decoration: none; padding: 6px 12px; background: #4e73df; color: white; border-radius: 4px;">
+                    상세
+                </a>
             </td>
         </tr>
         </tbody>

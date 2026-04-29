@@ -22,7 +22,7 @@ import java.util.List;
         @Index(name = "idx_post_user",columnList = "user_id, created_at DESC"),
         @Index(name = "idx_post_category", columnList = "category_id, created_at DESC"),
 })
-@SQLDelete(sql = "UPDATE posts SET deleted_at = CURRENT_TIMESTAMP, status = 'DELETED' WHERE id = ?")        // delete() 호출 시 실행될 SQL 문
+@SQLDelete(sql = "UPDATE posts SET deleted_at = CURRENT_TIMESTAMP, post_status = 'DELETED' WHERE id = ?")        // delete() 호출 시 실행될 SQL 문
 @SQLRestriction("deleted_at IS NULL")
 public class Post extends BaseSoftDeleteEntity {
     @Id
