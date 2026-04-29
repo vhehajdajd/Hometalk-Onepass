@@ -90,7 +90,7 @@
 
                     <hr>
 
-                    <div class="page-body" style="white-space: pre-wrap; word-break: break-all;">
+                    <div class="page-body post-content" style="word-break: break-all;"> <!-- white-space: pre-wrap; 보고 추가하기 -->
                         <div th:utext="${post.content}">게시글 내용</div>
                     </div>
                     <div class="tag-filter-container" th:if="${postTags != null and !postTags.isEmpty()}" style="padding: 15px 25px; background: #fdfdfd; border-bottom: 1px solid #eee;">

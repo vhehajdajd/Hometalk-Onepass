@@ -260,3 +260,12 @@
 .pagination-wrapper {
     width: 100% !important;
 }
+
+.img-icon-grey {
+    color: #adb5bd; /* 부드러운 회색 */
+    font-size: 0.9em;
+    margin-left: 5px;
+    vertical-align: middle;
+    display: inline-flex;
+    align-items: center;
+}

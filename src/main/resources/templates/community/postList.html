@@ -125,6 +125,7 @@
                                        th:text="${post.title}"></a> <span th:if="${post.commentCount > 0}"
                                           th:text="'[' + ${post.commentCount} + ']'"
                                           class="comment-count-inline"></span>
+                                    <span th:if="${post.hasImage}" class="img-icon-grey"><i class="fa-regular fa-image"></i>️</span>
                                 </td>
                                 <td th:text="${post.viewCount}" class="view-count"></td>
                                 <td th:text="${post.writer}">작성자</td>

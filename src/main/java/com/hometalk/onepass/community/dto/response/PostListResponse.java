@@ -24,6 +24,7 @@ public class PostListResponse {
     private LocalDateTime createdAt;
     private int viewCount;
     private int commentCount;
+    private boolean hasImage;
 
     private List<String> tags;
 
@@ -38,6 +39,7 @@ public class PostListResponse {
         this.createdAt = post.getCreatedAt();
         this.viewCount = post.getViewCount();
         this.commentCount = post.getComments().size();
+        this.hasImage = post.getContent() != null && post.getContent().contains("<img");
         if (post.getPostTags() != null && !post.getPostTags().isEmpty()) {
             this.tags = post.getPostTags().stream()
                     .map(pt -> pt.getTag().getName())
@@ -49,5 +51,9 @@ public class PostListResponse {
 
     public String getCategoryCode() {
         return categoryCode;
+    }
+
+    public boolean isHasImage() {
+        return this.hasImage;
     }
 }

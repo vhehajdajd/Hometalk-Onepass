@@ -65,10 +65,26 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ================================================
     [2] Quill 에디터 설정 & 이미지 업로드
 =================================================== */
+if (!window.Quill) {
+    window.Quill = Quill;
+}
+
+if (typeof ImageResize === 'undefined' && window.ImageResize) {
+    ImageResize = window.ImageResize;
+}
+
+let quill;
+
 function initQuillEditor() {
+    if (typeof ImageResize !== 'undefined') {
+        Quill.register('modules/imageResize', ImageResize.default || ImageResize);
+    } else {
+        console.warn("ImageResize 라이브러리를 찾을 수 없습니다. 리사이즈 기능 없이 에디터를 실행합니다.");
+    }
     quill = new Quill('#editor', {
         theme: 'snow',
         modules: {
+            ...(typeof ImageResize !== 'undefined' && { imageResize: { displaySize: true } }),
             toolbar: {
                 container: [
                     ['bold', 'italic', 'underline'],
@@ -101,7 +117,7 @@ function imageHandler() {
         const header = document.querySelector('meta[name="_csrf_header"]')?.content;
 
         try {
-            const res = await fetch('/notice/image-upload', { // 경로 본인 프로젝트에 맞게 수정
+            const res = await fetch('/hometop/community/image-upload', {
                 method: 'POST',
                 headers: { [header]: token },
                 body: formData

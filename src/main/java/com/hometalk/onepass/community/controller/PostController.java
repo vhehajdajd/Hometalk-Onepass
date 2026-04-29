@@ -4,13 +4,12 @@ import com.hometalk.onepass.community.dto.response.CommentRsDTO;
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
 import com.hometalk.onepass.community.dto.response.*;
 import com.hometalk.onepass.community.enums.PostStatus;
-import com.hometalk.onepass.community.service.BoardService;
-import com.hometalk.onepass.community.service.CategoryService;
-import com.hometalk.onepass.community.service.CommentService;
-import com.hometalk.onepass.community.service.PostService;
+import com.hometalk.onepass.community.service.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.util.StringUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +17,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 @Controller
 @RequiredArgsConstructor
@@ -31,6 +32,7 @@ public class PostController {
     private final BoardService boardService;
     private final CategoryService categoryService;
     private final CommentService commentService;
+    private final FileService fileService;
 
     // 게시판 목록
     // 게시판별 메인 (카테고리 '전체' 상태)
@@ -224,6 +226,39 @@ public class PostController {
         List<String> postTags = postService.getTagsByPostId(id);
         model.addAttribute("postTags", postTags);
         return "community/postDetail";
+    }
+
+    // 이미지
+    @Value("${file.upload.path}")
+    private String uploadPath;
+
+    @PostMapping("/image-upload")
+    @ResponseBody
+    public Map<String, String> uploadImage(@RequestParam("file") MultipartFile file,
+                                           HttpServletRequest request) {
+        try {
+            // 1. 설정된 경로(uploadPath)가 없으면 생성
+            File dir = new File(uploadPath);
+            if (!dir.exists()) dir.mkdirs();
+
+            // 2. 파일명 중복 방지 (UUID)
+            String original = file.getOriginalFilename();
+            String fileName = UUID.randomUUID() + "_" + (original != null ? original : "image");
+            File dest = new File(dir, fileName);
+
+            // 3. 실제 폴더에 저장
+            file.transferTo(dest.getAbsoluteFile());
+
+            // 4. 브라우저가 접근할 URL 생성
+            String contextPath = request.getContextPath(); // "/hometop"
+            Map<String, String> result = new HashMap<>();
+            result.put("url", contextPath + "/uploads/" + fileName);
+
+            return result;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("이미지 업로드 실패: " + e.getMessage());
+        }
     }
 
 
