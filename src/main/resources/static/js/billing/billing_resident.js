@@ -20,87 +20,22 @@ let rOpenPanel = null;
 document.addEventListener('DOMContentLoaded', () => {
     // 초기 데이터는 Thymeleaf 서버사이드로 이미 렌더링됨
     // 필터 변경 시 API 재조회
-    document.addEventListener('click', e => {
-        if (!e.target.closest('.panel-wrap')) closeAllPanels();
-    });
 });
 
 /* ================================================================
-   필터 패널
+   필터 드롭다운
 ================================================================ */
-function togglePanel(name) {
-    if (rOpenPanel === name) { closeAllPanels(); return; }
-    closeAllPanels();
-    rOpenPanel = name;
-    if (name === 'year')   buildYearGrid();
-    if (name === 'month')  buildMonthGrid();
-    if (name === 'status') buildStatusGrid();
+function onFilterChange() {
+    const year   = document.getElementById('selYear').value;
+    const month  = document.getElementById('selMonth').value;
+    const status = document.getElementById('selStatus').value;
 
-    const panelMap = { year:'panelYear', month:'panelMonth', status:'panelStatus' };
-    const btnMap   = { year:'btnYear',   month:'btnMonth',   status:'btnStatus'   };
-    document.getElementById(panelMap[name]).style.display = 'block';
-    document.getElementById(btnMap[name]).classList.add('active');
+    rSelYear   = year   ? parseInt(year)   : null;
+    rSelMonth  = month  ? parseInt(month)  : null;
+    rSelStatus = status || null;
+
+    fetchBillingList(true);
 }
-
-function closeAllPanels() {
-    ['panelYear','panelMonth','panelStatus'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-    });
-    ['btnYear','btnMonth','btnStatus'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-    });
-    rOpenPanel = null;
-}
-
-function buildYearGrid() {
-    document.getElementById('yearGrid').innerHTML =
-        `<button class="chip full${rSelYear===null?' selected':''}" onclick="pickYear(null)">전체</button>`
-        + YEARS_R.map(y =>
-            `<button class="chip${y===rSelYear?' selected':''}" onclick="pickYear(${y})">${y}년</button>`
-        ).join('');
-}
-
-function buildMonthGrid() {
-    document.getElementById('monthGrid').innerHTML =
-        `<button class="chip full${rSelMonth===null?' selected':''}" onclick="pickMonth(null)">전체</button>`
-        + MONTHS_R.map((m, i) =>
-            `<button class="chip${rSelMonth===i+1?' selected':''}" onclick="pickMonth(${i+1})">${m}</button>`
-        ).join('');
-}
-
-function buildStatusGrid() {
-    const opts = [
-        { val: null,     label: '전체 상태' },
-        { val: 'UNPAID', label: '미납'      },
-        { val: 'PAID',   label: '납부완료'  },
-    ];
-    document.getElementById('statusGrid').innerHTML =
-        opts.map(o =>
-            `<button class="chip${rSelStatus===o.val?' selected':''}"
-                onclick="pickStatus(${o.val===null?'null':`'${o.val}'`},'${o.label}')">${o.label}</button>`
-        ).join('');
-}
-
-function pickYear(y) {
-    rSelYear = y;
-    document.getElementById('lblYear').textContent = y ? y + '년' : '전체';
-    closeAllPanels(); fetchBillingList(true);
-}
-
-function pickMonth(m) {
-    rSelMonth = m;
-    document.getElementById('lblMonth').textContent = m ? MONTHS_R[m-1] : '전체 월';
-    closeAllPanels(); fetchBillingList(true);
-}
-
-function pickStatus(s, label) {
-    rSelStatus = s;
-    document.getElementById('lblStatus').textContent = label;
-    closeAllPanels(); fetchBillingList(true);
-}
-
 /* ================================================================
    API 조회
 ================================================================ */

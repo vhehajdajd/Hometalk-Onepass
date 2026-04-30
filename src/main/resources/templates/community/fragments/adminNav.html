@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<nav th:fragment="adminNav(activeTab)" class="admin-tab-nav"
+     sec:authorize="hasRole('ADMIN')">
+    <style>
+        .admin-tab-nav {
+            display: flex;
+            gap: 20px;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tab-item {
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #666;
+        }
+
+        .tab-item.active {
+            color: #1890ff; /* 딥블루 또는 포인트 컬러 */
+            border-bottom: 2px solid #1890ff;
+            font-weight: bold;
+        }
+    </style>
+
+    <a th:href="@{/community/admin}"
+       class="tab-item"
+       th:classappend="${activeTab == 'management'} ? 'active' : ''">게시판/카테고리 설정</a>
+
+    <a th:href="@{/community/admin/posts}"
+       class="tab-item"
+       th:classappend="${activeTab == 'posts'} ? 'active' : ''">숨김/삭제 게시글 관리</a>
+</nav>
+</html>

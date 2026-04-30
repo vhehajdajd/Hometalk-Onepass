@@ -28,6 +28,14 @@ public class VehicleController {
         return "parking/vehicle-status";
     }
 
+    // 세대 차량 목록 조회 (JSON - 대시보드용)
+    @GetMapping("/vehicle/list")
+    @ResponseBody
+    public ResponseEntity<List<VehicleResponse>> getVehicleList() {
+        Long householdId = 1L; // TODO: JWT 연동 후 추출
+        return ResponseEntity.ok(vehicleService.getHouseholdVehicles(householdId));
+    }
+
     // 차량 등록 페이지
     @GetMapping("/vehicle/register")
     public String vehicleRegisterPage(Model model) {
@@ -38,10 +46,16 @@ public class VehicleController {
     @PostMapping("/vehicle/register")
     public String vehicleRegister(
             @ModelAttribute VehicleRegisterRequest request,
-            @RequestParam(value = "documents") List<MultipartFile> documents) {
-        Long userId = null; // TODO: JWT 연동 후 추출
-        vehicleService.register(userId, request, documents);
-        return "redirect:/parking/vehicle";
+            @RequestParam(value = "documents") List<MultipartFile> documents,
+            Model model) {
+        try {
+            Long userId = null; // TODO: JWT 연동 후 추출
+            vehicleService.register(userId, request, documents);
+            return "redirect:/parking/vehicle";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "parking/vehicle-register";
+        }
     }
 
     // 반려 사유 조회 (JSON)
@@ -66,8 +80,26 @@ public class VehicleController {
     @PostMapping("/vehicle/reapply/{vehicleId}")
     public String vehicleReapply(
             @PathVariable Long vehicleId,
-            @RequestParam(value = "documents") List<MultipartFile> documents) {
-        vehicleService.reapply(vehicleId, documents);
-        return "redirect:/parking/vehicle";
+            @RequestParam(value = "documents") List<MultipartFile> documents,
+            Model model) {
+        try {
+            vehicleService.reapply(vehicleId, documents);
+            return "redirect:/parking/vehicle";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "parking/vehicle-reapply";
+        }
+    }
+
+    // 차량 삭제
+    @PostMapping("/vehicle/delete/{vehicleId}")
+    @ResponseBody
+    public ResponseEntity<Void> deleteVehicle(@PathVariable Long vehicleId) {
+        try {
+            vehicleService.delete(vehicleId);
+            return ResponseEntity.ok().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

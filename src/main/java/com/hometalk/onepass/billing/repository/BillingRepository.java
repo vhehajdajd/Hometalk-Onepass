@@ -15,6 +15,15 @@ import java.util.Optional;
 public interface BillingRepository extends JpaRepository<Billing, Long> {
 
     // ─────────────────────────────────────────────────────────
+    // 대시보드 - 관리자 특정 월의 '미납 총액' 합계
+    // ─────────────────────────────────────────────────────────
+    @Query("SELECT SUM(b.totalAmount) FROM Billing b " +
+            "WHERE b.billingMonth = :billingMonth AND b.status = :status")
+    Long sumTotalAmountByBillingMonthAndStatus(@Param("billingMonth") String billingMonth
+            , @Param("status") BillingStatus status);
+
+
+    // ─────────────────────────────────────────────────────────
     // 입주민 목록 (필터 + 페이징)
     // ─────────────────────────────────────────────────────────
 
@@ -172,5 +181,7 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             @Param("month")    String month
     );
 
-
+    // BillingRepository.java
+    List<Billing> findAllByHouseholdIdOrderByStatusDescBillingMonthAsc(Long householdId);
+    
 }

@@ -32,14 +32,14 @@ public class CustomOAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSucc
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
 
-        // OAuth2AuthenticationToken에서 현재 로그인한 공급자(kakao, naver)를 식별한다.
+        // OAuth2AuthenticationToken에서 현재 로그인한 공급자를 식별한다.
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String registrationId = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
         SocialAccount.Platform platform = SocialAccount.Platform.valueOf(registrationId.toUpperCase());
 
         String email = "";
 
-        // 1. 데이터 추출 (카카오 vs 네이버)
+        // 1. 데이터 추출
         if (platform == SocialAccount.Platform.KAKAO) {
             Map<String, Object> kakaoAccount = (Map<String, Object>) oAuth2User.getAttributes().get("kakao_account");
             email = (String) kakaoAccount.get("email");
@@ -49,6 +49,9 @@ public class CustomOAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSucc
             // 네이버는 'response' 안에 실제 정보가 들어있음
             Map<String, Object> responseMap = (Map<String, Object>) oAuth2User.getAttributes().get("response");
             email = (String) responseMap.get("email");
+        }
+        else if (platform == SocialAccount.Platform.GOOGLE) {
+            email = (String) oAuth2User.getAttributes().get("email");
         }
 
         // 현재 프로젝트는 소셜 계정을 email + platform 조합으로 저장하고 있으므로
@@ -79,7 +82,7 @@ public class CustomOAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSucc
             log.info("기존 유저 -> 메인 페이지로 이동");
             String redirectUrl = UriComponentsBuilder.fromUriString(getBaseUrl(request))
                     .path(request.getContextPath())
-                    .path("/index")
+                    .path("/dashboard")
                     .build()
                     .toUriString();
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);

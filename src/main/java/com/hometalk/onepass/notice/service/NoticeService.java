@@ -8,9 +8,12 @@ import com.hometalk.onepass.notice.dto.NoticeListResponseDto;
 import com.hometalk.onepass.notice.dto.NoticeRequestDto;
 import com.hometalk.onepass.notice.entity.Attachment;
 import com.hometalk.onepass.notice.entity.Notice;
+import com.hometalk.onepass.notice.entity.NoticeStatus;
+import com.hometalk.onepass.notice.entity.ReadLog;
 import com.hometalk.onepass.notice.exception.NoticeNotFoundException;
 import com.hometalk.onepass.notice.repository.AttachmentRepository;
 import com.hometalk.onepass.notice.repository.NoticeRepository;
+import com.hometalk.onepass.notice.repository.ReadLogRepository;
 import com.hometalk.onepass.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +32,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +43,7 @@ public class NoticeService {
     private final AttachmentRepository attachmentRepository;
     private final LocalAccountRepository localAccountRepository;
     private final ScheduleRepository scheduleRepository;
+    private final ReadLogRepository readLogRepository;
 
     @Value("${file.upload.path}")
     private String uploadPath;
@@ -56,7 +61,7 @@ public class NoticeService {
     public Page<NoticeListResponseDto> getNoticeList(int page) {
         Pageable pageable = PageRequest.of(page, 10,
                 Sort.by("isPinned").descending().and(Sort.by("createdAt").descending()));
-        Page<Notice> notices = noticeRepository.findAll(pageable);
+        Page<Notice> notices = noticeRepository.findByStatus(NoticeStatus.PUBLISHED, pageable);
         return notices.map(notice -> new NoticeListResponseDto(
                 notice.getId(),
                 notice.getTitle(),
@@ -69,8 +74,8 @@ public class NoticeService {
     }
 
     // ── 공지 작성 ─────────────────────────────────────────────────────────────
-    public Long createNotice(NoticeRequestDto noticeRequestDto, MultipartFile file) {
-        if (noticeRequestDto.getBadge() == null) {
+    public Long createNotice(NoticeRequestDto noticeRequestDto, List<MultipartFile> files) {
+        if (NoticeStatus.PUBLISHED.equals(noticeRequestDto.getStatus()) && noticeRequestDto.getBadge() == null) {
             throw new IllegalArgumentException("분류를 선택해주세요.");
         }
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -84,12 +89,15 @@ public class NoticeService {
                 noticeRequestDto.getContent(),
                 Boolean.TRUE.equals(noticeRequestDto.getIsPinned()),
                 noticeRequestDto.getBadge(),
-                user
+                user,
+                noticeRequestDto.getStatus() != null ? noticeRequestDto.getStatus() : NoticeStatus.PUBLISHED
         );
         noticeRepository.save(notice);
 
-        if (file != null && !file.isEmpty()) {
-            saveFile(file, notice);
+        if (files != null) {
+            for (MultipartFile file : files) {
+                if (!file.isEmpty()) saveFile(file, notice);
+            }
         }
         return notice.getId();
     }
@@ -115,11 +123,11 @@ public class NoticeService {
     }
 
     // ── 공지 수정 ─────────────────────────────────────────────────────────────
-    public Long updateNotice(Long id, NoticeRequestDto noticeRequestDto, MultipartFile file) {
+    public Long updateNotice(Long id, NoticeRequestDto noticeRequestDto, List<MultipartFile> files) {
         Notice notice = noticeRepository.findById(id)
                 .orElseThrow(() -> new NoticeNotFoundException(id));
 
-        if (noticeRequestDto.getBadge() == null) {
+        if (NoticeStatus.PUBLISHED.equals(noticeRequestDto.getStatus()) && noticeRequestDto.getBadge() == null) {
             throw new IllegalArgumentException("분류를 선택해주세요.");
         }
 
@@ -127,17 +135,23 @@ public class NoticeService {
                 noticeRequestDto.getTitle(),
                 noticeRequestDto.getContent(),
                 Boolean.TRUE.equals(noticeRequestDto.getIsPinned()),
-                noticeRequestDto.getBadge()
+                noticeRequestDto.getBadge(),
+                noticeRequestDto.getStatus() != null ? noticeRequestDto.getStatus() : NoticeStatus.PUBLISHED
         );
 
-        if (file != null && !file.isEmpty()) {
-            List<Attachment> existing = attachmentRepository.findByNotice(notice);
-            for (Attachment att : existing) {
-                File attFile = new File(att.getFilePath());
-                if (attFile.exists()) attFile.delete();
+        if (files != null) {
+            boolean hasNewFile = files.stream().anyMatch(f -> !f.isEmpty());
+            if (hasNewFile) {
+                List<Attachment> existing = attachmentRepository.findByNotice(notice);
+                for (Attachment att : existing) {
+                    File attFile = new File(att.getFilePath());
+                    if (attFile.exists()) attFile.delete();
+                }
+                attachmentRepository.deleteByNotice(notice);
+                for (MultipartFile file : files) {
+                    if (!file.isEmpty()) saveFile(file, notice);
+                }
             }
-            attachmentRepository.deleteByNotice(notice);
-            saveFile(file, notice);
         }
         return notice.getId();
     }
@@ -150,6 +164,8 @@ public class NoticeService {
         // 연결된 일정 먼저 삭제
         scheduleRepository.findFirstByNotice(notice)
                 .ifPresent(scheduleRepository::delete);
+
+        readLogRepository.deleteByNotice(notice);
 
         List<Attachment> attachments = attachmentRepository.findByNotice(notice);
         for (Attachment attachment : attachments) {
@@ -165,7 +181,22 @@ public class NoticeService {
         Notice notice = noticeRepository.findById(id)
                 .orElseThrow(() -> new NoticeNotFoundException(id));
 
-        notice.increaseViewCount();
+        // 읽음 처리 + 조회수 증가
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                LocalAccount account = localAccountRepository.findByLoginId(auth.getName()).orElse(null);
+                if (account != null) {
+                    User user = account.getUser();
+                    if (!readLogRepository.existsByUserAndNotice(user, notice)) {
+                        notice.increaseViewCount();
+                        readLogRepository.save(new ReadLog(user, notice));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // 읽음 처리 실패해도 공지 조회는 정상 동작
+        }
 
         return new NoticeDetailResponseDto(
                 notice.getId(),
@@ -217,13 +248,11 @@ public class NoticeService {
                 Sort.by("isPinned").descending().and(Sort.by("createdAt").descending()));
 
         Page<Notice> notices;
-
         if ("title".equals(searchType)) {
-            // 제목만 검색
-            notices = noticeRepository.findByTitleContaining(keyword, pageable);
+            notices = noticeRepository.findByStatusAndTitleContaining(NoticeStatus.PUBLISHED, keyword, pageable);
         } else {
-            // 제목+내용 검색 (기본값)
-            notices = noticeRepository.findByTitleContainingOrContentContaining(keyword, keyword, pageable);
+            notices = noticeRepository.findByStatusAndTitleContainingOrStatusAndContentContaining(
+                    NoticeStatus.PUBLISHED, keyword, NoticeStatus.PUBLISHED, keyword, pageable);
         }
 
         return notices.map(notice -> new NoticeListResponseDto(
@@ -275,4 +304,60 @@ public class NoticeService {
         return noticeRepository.findById(id)
                 .orElseThrow(() -> new NoticeNotFoundException(id));
     }
+
+    @Transactional(readOnly = true)
+    public List<NoticeDetailResponseDto> getDraftList() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        LocalAccount account = localAccountRepository.findByLoginId(auth.getName())
+                .orElseThrow(() -> new RuntimeException("로그인 정보를 찾을 수 없습니다."));
+        User user = account.getUser();
+
+        return noticeRepository.findByUserAndStatusOrderByCreatedAtDesc(user, NoticeStatus.DRAFT)
+                .stream()
+                .map(notice -> new NoticeDetailResponseDto(
+                        notice.getId(),
+                        notice.getTitle(),
+                        notice.getContent(),
+                        notice.getViewCount(),
+                        notice.getBadge(),
+                        notice.getIsPinned(),
+                        notice.getCreatedAt(),
+                        resolveUpdatedAt(notice)
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<Notice> getUnreadRecentNotices() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+                return List.of();
+            }
+            LocalAccount account = localAccountRepository.findByLoginId(auth.getName()).orElse(null);
+            if (account == null) return List.of();
+
+            User user = account.getUser();
+            LocalDateTime since = LocalDateTime.now().minusDays(7);
+            return readLogRepository.findUnreadRecentNotices(user, since);
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    public List<NoticeListResponseDto> getRecentNotices(int limit) {
+        return noticeRepository.findTop5ByStatusOrderByCreatedAtDesc(NoticeStatus.PUBLISHED)
+                .stream()
+                .map(notice -> new NoticeListResponseDto(
+                        notice.getId(),
+                        notice.getTitle(),
+                        notice.getBadge(),
+                        notice.getIsPinned(),
+                        notice.getViewCount(),
+                        notice.getCreatedAt(),
+                        notice.getUpdatedAt()
+                ))
+                .collect(Collectors.toList());
+    }
+
 }

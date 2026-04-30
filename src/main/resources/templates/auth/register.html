@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>회원가입 - Home Talk One Pass</title>
     <style>
-        .auth-container { width: 400px; margin: 20px auto; text-align: center; border: 1px solid #bdbaba; padding: 20px; border-radius: 8px; }
+        .auth-container { width: 400px; margin: 20px auto; text-align: center; border: 1px solid #bdbaba; padding: 30px; border-radius: 8px; }
         .input-group { margin-bottom: 15px; text-align: left; }
         .input-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
         input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #bdbaba; border-radius: 4px; height: 50px; }
@@ -24,63 +24,71 @@
     <p>서비스 이용을 위해 정보를 입력해주세요.</p>
 
     <!-- *{} = 객체를 전달받은 경우 매핑    -->
-    <form th:action="@{/auth/register/signup}" th:object="${signUpDTO}" method="post">
-        <input type="hidden" name="currentStep" th:value="${step}" />
+    <form method="post" th:action="@{/auth/register/signup}" th:object="${signUpDTO}">
+        <input name="currentStep" th:value="${step}" type="hidden"/>
 
         <div th:if="${step == 1}">
             <div class="input-group">
                 <label for="email">이메일</label>
-                <input type="email" th:field="*{email}" placeholder="example@hometalk.com" required>
+                <input placeholder="example@hometalk.com" required th:field="*{email}" type="email">
             </div>
 
             <div class="input-group">
                 <label for="loginId">아이디</label>
-                <input type="text" th:field="*{loginId}" placeholder="아이디를 입력하세요" required>
+                <input placeholder="아이디를 입력하세요" required th:field="*{loginId}" type="text">
             </div>
 
             <div class="input-group">
                 <label for="phoneNumber">연락처</label>
-                <input type="text" th:field="*{phoneNumber}" placeholder="휴대폰 번호(-)제외" required>
+                <input placeholder="휴대폰 번호(-)제외" required th:field="*{phoneNumber}" type="text">
             </div>
 
             <div class="input-group">
                 <label for="password">비밀번호</label>
-                <input type="password" th:field="*{password}" placeholder="비밀번호를 입력하세요" required>
+                <input id="pw1" pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$" placeholder="비밀번호를 입력하세요" required th:field="*{password}"
+                       title="8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다."
+                       type="password">
+            </div>
+
+            <div class="input-group">
+                <label>비밀번호 확인</label>
+                <input type="password" id="pw2" placeholder="비밀번호 재입력">
+                <p id="match-msg" style="font-size: 12px; margin-top: 5px;"></p>
             </div>
 
             <div class="input-group">
                 <label for="name">이름</label>
-                <input type="text" th:field="*{name}" placeholder="이름을 입력하세요" required>
+                <input placeholder="이름을 입력하세요" required th:field="*{name}" type="text">
             </div>
 
             <div class="input-group">
                 <label for="nickname">별명</label>
-                <input type="text" th:field="*{nickname}" placeholder="별명을 입력해주세요" required>
+                <input placeholder="별명을 입력해주세요" required th:field="*{nickname}" type="text">
             </div>
 
-            <button type="submit" name="action" value="next">다음</button>
+            <button name="action" type="submit" value="next">다음</button>
         </div>
 
         <div th:if="${step == 2}">
-            <input type="hidden" th:field="*{email}">
-            <input type="hidden" th:field="*{loginId}">
-            <input type="hidden" th:field="*{phoneNumber}">
-            <input type="hidden" th:field="*{password}">
-            <input type="hidden" th:field="*{name}">
-            <input type="hidden" th:field="*{nickname}">
+            <input th:field="*{email}" type="hidden">
+            <input th:field="*{loginId}" type="hidden">
+            <input th:field="*{phoneNumber}" type="hidden">
+            <input th:field="*{password}" type="hidden">
+            <input th:field="*{name}" type="hidden">
+            <input th:field="*{nickname}" type="hidden">
 
             <div class="input-group">
                 <label for="postNum">주소</label>
                 <div class="address-group">
-                    <input type="text" th:field="*{postNum}" id="postNum" placeholder="우편 번호를 입력하세요">
-                    <button type="button" onclick="execDaumPostcode()"> 우편번호 찾기 </button>
+                    <input id="postNum" placeholder="우편 번호를 입력하세요" th:field="*{postNum}" type="text">
+                    <button onclick="execDaumPostcode()" type="button"> 우편번호 찾기</button>
                 </div>
             </div>
 
 
             <div class="input-group">
                 <label for="buildingName"></label>
-                <input type="text" th:field="*{buildingName}"  id="buildingName" placeholder="주소를 입력하세요">
+                <input id="buildingName" placeholder="주소를 입력하세요" th:field="*{buildingName}" type="text">
             </div>
 
             <span class="address-detail">
@@ -89,23 +97,21 @@
 
             <div class="input-group">
                 <label for="dong">동</label>
-                <input type="text" th:field="*{dong}" placeholder="동을 입력하세요 (ex 102동 -> 102 입력)">
+                <input placeholder="동을 입력하세요 (ex 102동 -> 102)" th:field="*{dong}" type="text">
             </div>
 
             <div class="input-group">
                 <label for="ho">호</label>
-                <input type="text" th:field="*{ho}" placeholder="호를 입력하세요 (ex 201호 -> 201 입력)">
+                <input placeholder="호를 입력하세요 (ex 201호 -> 201)" th:field="*{ho}" type="text">
             </div>
 
             <div style="display: flex; gap: 10px;">
-                <button type="submit" name="action" value="prev">이전</button>
-                <button type="submit" name="action" value="complete">가입 완료</button>
+                <button name="action" type="submit" value="prev">이전</button>
+                <button name="action" type="submit" value="complete">가입 완료</button>
             </div>
         </div>
     </form>
 </div>
-
-
 
 
 <script src="//t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
@@ -153,6 +159,37 @@
             }
         }).open();
     }
+
+
+
+
+    // 2. 페이지 로드 시 비밀번호 체크 이벤트 연결
+    window.onload = function() {
+        const pw1 = document.getElementById('pw1');
+        const pw2 = document.getElementById('pw2');
+        const msg = document.getElementById('match-msg');
+
+        // 요소가 존재할 때만(Step 1일 때만) 실행
+        if (pw1 && pw2 && msg) {
+            const checkMatch = function() {
+                const val1 = pw1.value;
+                const val2 = pw2.value;
+
+                if (val1 === "" || val2 === "") {
+                    msg.textContent = "";
+                } else if (val1 === val2) {
+                    msg.textContent = "✅ 비밀번호가 일치합니다.";
+                    msg.style.color = "green";
+                } else {
+                    msg.textContent = "❌ 비밀번호가 일치하지 않습니다.";
+                    msg.style.color = "red";
+                }
+            };
+
+            pw1.addEventListener('input', checkMatch);
+            pw2.addEventListener('input', checkMatch);
+        }
+    };
 </script>
 </body>
 </html>

@@ -19,6 +19,7 @@ public class PostActionController {
     // 1. 공지 고정 토글 (관리자용)
     @PostMapping("/{postId}/pin")
     public ResponseEntity<Void> togglePin(@PathVariable Long postId) {
+        System.out.println("요청 성공");
         // [임시] adminId는 서비스 내부나 세션에서 처리하도록 변경
         Long tempAdminId = 1L;
         postActionService.togglePin(postId, tempAdminId);

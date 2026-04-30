@@ -39,7 +39,7 @@ public class Schedule extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDateTime startAt;
 
-    @Column(nullable = false)
+    @Column
     private LocalDateTime endAt;
 
     // 공지 없는 독립 일정의 배지 (공지 연동 시 공지 배지 우선)
@@ -47,10 +47,19 @@ public class Schedule extends BaseTimeEntity {
     @Column(name = "badge", columnDefinition = "VARCHAR(20)")
     private Badge badge;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "repeat_type", columnDefinition = "VARCHAR(20)")
+    private RepeatType repeatType;
+
+    private LocalDateTime repeatEndAt;
+
+    private Long repeatGroupId;
+
     @Builder
     public Schedule(User user, Notice notice, String title, String info,
                     String location, String referenceUrl,
-                    LocalDateTime startAt, LocalDateTime endAt, Badge badge) {
+                    LocalDateTime startAt, LocalDateTime endAt, Badge badge,
+                    RepeatType repeatType, LocalDateTime repeatEndAt, Long repeatGroupId) {
         validateTitle(title);
         validateTime(startAt, endAt);
         this.user = user;
@@ -62,11 +71,15 @@ public class Schedule extends BaseTimeEntity {
         this.startAt = startAt;
         this.endAt = endAt;
         this.badge = badge;
+        this.repeatType = repeatType;
+        this.repeatEndAt = repeatEndAt;
+        this.repeatGroupId = repeatGroupId;
     }
 
-    // 수정 메서드
+    //수정메서드
     public void update(String title, String info, String location,
-                       String referenceUrl, LocalDateTime startAt, LocalDateTime endAt, Badge badge) {
+                       String referenceUrl, LocalDateTime startAt, LocalDateTime endAt,
+                       Badge badge, RepeatType repeatType, LocalDateTime repeatEndAt) {
         validateTitle(title);
         validateTime(startAt, endAt);
         this.title = title;
@@ -76,6 +89,8 @@ public class Schedule extends BaseTimeEntity {
         this.startAt = startAt;
         this.endAt = endAt;
         this.badge = badge;
+        this.repeatType = repeatType;
+        this.repeatEndAt = repeatEndAt;
     }
 
     // 실제 달력에 표시할 배지 반환 (공지 배지 우선)

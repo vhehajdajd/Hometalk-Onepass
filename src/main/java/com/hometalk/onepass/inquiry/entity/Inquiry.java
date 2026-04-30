@@ -41,4 +41,18 @@ public class Inquiry {
     @Builder.Default
     @OneToMany(mappedBy = "inquiry", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InquiryAttachment> attachments = new ArrayList<>();
+
+
+    public void updateAnswer(String answer) {
+        this.answer = answer;
+        this.status = "완료"; // 답변이 달리면 자동으로 상태 변경
+    }
+
+
+    public void addAttachment(InquiryAttachment attachment) {
+        this.attachments.add(attachment);
+        if (attachment.getInquiry() != this) {
+            attachment.setInquiry(this);
+        }
+    }
 }

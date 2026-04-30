@@ -142,7 +142,7 @@ button[type="submit"]:hover {
 /* 7. 임시저장 모달 스타일 */
 .temp-modal {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
+    background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;
 }
 .modal-content {
     background: white; padding: 25px; border-radius: 12px; width: 450px;
@@ -151,5 +151,123 @@ button[type="submit"]:hover {
 .modal-content h3 { margin-bottom: 20px; display: flex; justify-content: space-between; }
 .close-modal { cursor: pointer; color: #94a3b8; }
 #tempListArea { list-style: none; max-height: 300px; overflow-y: auto; }
-#tempListArea li { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
-#tempListArea li:hover { background: #f8fafc; }
+#tempListArea li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #f1f5f9;
+    background-color: #fff;
+    transition: background-color 0.2s ease;
+    padding: 18px 20px;
+    border-left: 3px solid transparent;
+    box-sizing: border-box;
+}
+#tempListArea li:hover { background-color: #F4F7F9; border-left-color: #D1E8E4; }
+.temp-category {
+    font-size: 0.8rem; color: #3b82f6; font-weight: 600;
+}
+
+.temp-title {
+    font-size: 1rem; color: #1e293b; font-weight: 500;
+}
+
+.temp-date {
+    font-size: 0.75rem; color: #94a3b8; align-self: flex-end;      /* 날짜는 오른쪽 아래로 */
+}
+
+.temp-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* 정보와 삭제 버튼을 양 끝으로 */
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s;
+}
+
+.temp-item:hover { background: #f8fafc; }
+
+.temp-info {
+    flex-grow: 1;
+    padding: 15px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* 삭제 버튼 기본 상태: 투명하게 숨김 */
+.btn-delete-temp {
+    opacity: 0;                /* 평소에는 안 보임 */
+    visibility: hidden;         /* 클릭도 안 되게 숨김 */
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;  /* 부드러운 전환 효과 */
+    color: #94a3b8;            /* 평소엔 무난한 회색 아이콘 */
+}
+
+/* 항목(li)에 마우스를 올렸을 때 삭제 버튼 표시 */
+#tempListArea li:hover .btn-delete-temp {
+    opacity: 1;                /* 마우스를 올리면 나타남 */
+    visibility: visible;
+}
+
+/* 삭제 버튼 자체에 마우스를 올렸을 때 (강조) */
+.btn-delete-temp:hover {
+    color: #ef4444 !important; /* 빨간색으로 변경 */
+    transform: scale(1.1);      /* 살짝 커지는 효과 */
+}
+
+/* 모달 목록 스크롤 */
+#tempListArea::-webkit-scrollbar {
+    width: 6px;
+}
+#tempListArea::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+#tempListArea::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+#tempListArea::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.form-group {
+    margin-top: 12px;
+}
+
+.tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    background-color: #fff;
+    max-width: 200px;
+    margin-top: 15px;
+}
+
+/* 태그 입력란 (input) */
+#tagInput {
+    outline: none;
+    font-size: 14px;
+    width: 100%;
+    height: 30px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.tag-help-text {
+    margin-top: 10px;
+    margin-left: 4px;
+    font-size: 12px;
+    color: #888;
+    letter-spacing: -0.5px;
+}
+.tag-container:focus-within + .tag-help-text {
+    opacity: 1;
+    color: #666;
+    font-weight: 500;
+}

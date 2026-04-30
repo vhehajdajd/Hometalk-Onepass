@@ -1,36 +1,91 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <th:block th:replace="~{fragments/head :: head(pageTitle='커뮤니티')}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/community/common.css}">
+    <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/community/adminpage.css}">
 </head>
 
 <body class="main-layout">
-<aside th:replace="~{fragments/sidebar :: sidebar('community')}"></aside>
+<div class="main-layout" style="display: flex; min-height: 100vh;">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
+    <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+        <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">
+            <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community', '관리'} })}"></div>
 
-<div class="right-section">
+            <div th:replace="~{community/fragments/adminNav :: adminNav('management')}"></div>
 
-    <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community', '관리'} })}"></div>
-    <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
-
-    <main class="main-content">
-        <section class="admin-content-area">
-            <div class="admin-header">
-                <h2>커뮤니티 관리 센터</h2>
-                <button type="button" class="btn-create-main" onclick="toggleCreateForm()">
-                    + 새 게시판 등록
-                </button>
+            <div class="alert-container">
+                <!-- 성공 메시지 (message) -->
+                <div th:if="${message}" class="alert-banner alert-success">
+                    <span th:text="${message}">성공 메시지 영역</span>
+                    <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                </div>
+                <!-- 에러 메시지 (errorMessage) -->
+                <div th:if="${errorMessage}" class="alert-banner alert-error">
+                    <span th:text="${errorMessage}">에러 메시지 영역</span>
+                    <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                </div>
             </div>
 
-            <div class="admin-list-box">
-                <div th:replace="~{community/fragments/boardList :: boardList}"></div>
-            </div>
-        </section>
-    </main>
+            <section class="admin-content-area">
+                <div class="admin-header">
+                    <h2>커뮤니티 설정</h2>
+                    <button type="button" class="btn-create-main" onclick="openCreateModal()">
+                        + 새 게시판
+                    </button>
+                </div>
 
-    <footer th:replace="~{fragments/footer :: footer}"></footer>
+                <div id="createModal" class="modal-overlay">
+                    <div class="modal-content admin-form-card">
+                        <div class="modal-header">
+                            <h3>새 게시판 등록</h3>
+                            <button type="button" class="btn-close-x" onclick="closeModal()">&times;</button>
+                        </div>
+
+                        <form th:action="@{/community/admin/board/create}" th:object="${adminBoardRqDTO}" method="post" id="createBoardForm">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>게시판 이름</label>
+                                    <input type="text" th:field="*{boardName}" placeholder="예: 갤러리" required>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label>게시판 코드 (URL용)</label>
+                                    <input type="text" name="boardCode" placeholder="예: gallery" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>카테고리 구성</label>
+                                <div id="category-container">
+                                    <div class="category-item">
+                                        <input type="text" name="categoryNames" placeholder="카테고리 이름 (예: 사진)" required>
+                                        <input type="text" name="categoryCodes" placeholder="카테고리 영문명 (예: photo)" required style="flex: 1;">
+                                        <div class="color-picker-wrapper">
+                                            <input type="color" name="categoryColors" value="#EB6E57" title="카테고리 색상 선택">
+                                        </div>
+                                        <button type="button" class="btn-remove" disabled>×</button>
+                                    </div>
+                                </div>
+                                <button type="button" id="btn-add-category" class="btn-add-sub">+ 카테고리 추가</button>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn-save" id="btn-submit">저장하기</button>
+                                <button type="button" class="btn-close" onclick="closeModal()">취소</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="admin-list-box">
+                    <div th:replace="~{community/fragments/boardList :: boardList}"></div>
+                </div>
+            </section>
+        </main>
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
 </div>
+
 <script th:src="@{/js/community/adminpage.js}"></script>
 </body>
 </html>

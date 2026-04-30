@@ -3,17 +3,6 @@
     margin-bottom: 25px;
 }
 
-.category-tag {
-    display: inline-block;
-    background-color: var(--soft-mint);
-    color: var(--main-navy);
-    padding: 5px 14px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 15px;
-}
-
 .post-title {
     font-size: 2.2rem;
     color: var(--main-navy);
@@ -45,6 +34,10 @@
     line-height: 1.8;
     color: #334155;
     font-size: 1.1rem;
+    /* \n을 브라우저가 줄바꿈으로 인식 */
+    white-space: pre-wrap;
+    /* 단어가 너무 길면 자동 줄바꿈 */
+    word-wrap: break-word;
 }
 
 .page-body p { margin-bottom: 1.5rem; }
@@ -97,10 +90,48 @@
     border-radius: 12px;
 }
 
-/* 6. 기타 도구 (관리자 핀 등) */
-.admin-tools { display: inline-block; margin-left: 10px; }
-.btn-pin {
-    padding: 4px 10px; border-radius: 4px; border: 1px solid #e2e8f0;
-    background: #fff; cursor: pointer;
+
+/* 6. 관리자 도구 (상단 고정 및 숨김) */
+.admin-tools {
+    display: inline-flex; /* 버튼들이 가로로 정렬되게 */
+    align-items: center;
+    gap: 8px;
+    margin-left: 15px;
+    padding-left: 15px;
+    border-left: 2px solid var(--border-color); /* 게시글 메타 정보와 구분선 */
 }
-.btn-pin.active { background: var(--soft-mint); border-color: var(--soft-mint); }
+
+/* 관리자 공통 버튼 스타일 */
+.admin-tools button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: white;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* 📌 핀 활성화 상태: 민트보다는 연수님의 포인트 코랄 추천! */
+.btn-pin.active {
+    background-color: var(--point-coral) !important;
+    color: white !important;
+    border-color: var(--point-coral) !important;
+}
+
+/* 👻 숨김 버튼 호버: 삭제와 비슷한 느낌으로 */
+.btn-hide:hover {
+    background-color: #fff1f2;
+    color: #e11d48;
+    border-color: #fda4af;
+}
+
+.admin-tools button:hover:not(.active) {
+    border-color: var(--main-navy);
+    color: var(--main-navy);
+}

@@ -27,6 +27,9 @@ public class Category {
 
     private String color;
 
+    @Column(name = "is_system")
+    private boolean system = false; // 기본값 false, 초기 데이터만 true로 설정
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", referencedColumnName = "id", nullable = false)
     private Board board;

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<div th:fragment="tagList(tags, boardCode)" class="tag-list-container">
+  <th:block th:if="${tags != null}">
+    <a th:each="tagName : ${tags}"
+       th:if="${tagName != null and #strings.length(tagName) > 0}"
+       th:href="@{/community/{code}/all(code=${boardCode}, searchType='tag', keyword=${tagName})}"
+       class="tag-badge"
+       th:text="${tagName}">#태그</a>
+  </th:block>
+</div>
+</html>

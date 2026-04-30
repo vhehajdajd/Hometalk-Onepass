@@ -1,13 +1,19 @@
 package com.hometalk.onepass.community.controller;
 
 import com.hometalk.onepass.community.dto.request.CommentRqDTO;
+import com.hometalk.onepass.community.dto.response.CommentRsDTO;
+import com.hometalk.onepass.community.dto.response.PostResponseDTO;
+import com.hometalk.onepass.community.dto.response.PostUserRsDTO;
 import com.hometalk.onepass.community.service.CommentService;
+import com.hometalk.onepass.community.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
 /*
     댓글 저장/수정/삭제
  */

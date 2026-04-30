@@ -1,47 +1,33 @@
 package com.hometalk.onepass.facility.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.*;
-
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)  // 무분별 객체 생성 방지용 !
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@ToString
 @Table(name = "kjh_facility")
 public class Facility {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;    // 기본키 (자동 증가)
+    private Long id;
 
-    private String name;        // 시설 명
-
-    private String description;     // 시설 설명
-
-    private String category;      // 시설 종류
-
-    @Column(nullable = false)
-    private String location; // 단지 내 상세 위치 (예: 103동 지하 1층, 커뮤니티 센터 201호)
-
-    private String address;  // (선택사항) 외부 주소가 필요한 경우
-
-    private int capacity;       // 수용 인원
-
-
+    private String name;
+    private String location;
+    private String iconType;    // 디자인 가이드 아이콘
+    private String imagePath;   // 시설 전경 사진
 
     @Embedded
-    private OperationTime operationTime;        // OperationTime 파일 참조 오픈/마감 시간
+    private OperationTime operationTime; // LocalTime 기반 운영 시간
 
 
-    /*
-           시설 저오 수정 (비즈니스 로직)
-     */
-    public void updateInfo(String name, String location){
+    public void updateInfo(String name, String location, String iconType, String imagePath, OperationTime operationTime) {
         this.name = name;
         this.location = location;
+        this.iconType = iconType;
+        this.imagePath = imagePath;
+        this.operationTime = operationTime;
     }
 }

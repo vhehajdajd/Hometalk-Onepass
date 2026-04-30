@@ -11,4 +11,5 @@ public class TicketCancelRequest {
 
     private Long parkingId;
     private String ticketType;
+    private int count; // 티켓 수량별로 취소하기 위해 추가
 }

@@ -11,4 +11,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     // 코드로 카테고리 Entity 조회
     Optional<Category> findByCode(String code);
+
+    boolean existsByCodeAndBoardId(String code, Long boardId);
 }
