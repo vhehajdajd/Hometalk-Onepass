@@ -274,7 +274,7 @@ public class NoticeController {
         return noticeService.getDraftList();
     }
 
-    @GetMapping("/api/dashboard")
+    @GetMapping("/api/detail")
     @ResponseBody
     public ResponseEntity<List<NoticeListResponseDto>> getDashboardNotices() {
         List<NoticeListResponseDto> notices = noticeService.getRecentNotices(5);

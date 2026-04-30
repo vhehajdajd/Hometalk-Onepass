@@ -271,7 +271,6 @@ public class ScheduleService {
             if (firstId == null) firstId = schedule.getId();
 
             switch (dto.getRepeatType()) {
-                case DAILY   -> current = current.plusDays(1);
                 case WEEKLY  -> current = current.plusWeeks(1);
                 case MONTHLY -> current = current.plusMonths(1);
                 default -> { return firstId; }
@@ -348,7 +347,6 @@ public class ScheduleService {
             scheduleRepository.save(schedule);
 
             switch (repeatType) {
-                case DAILY   -> current = current.plusDays(1);
                 case WEEKLY  -> current = current.plusWeeks(1);
                 case MONTHLY -> current = current.plusMonths(1);
                 default -> { return; }

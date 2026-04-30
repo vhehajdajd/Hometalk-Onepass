@@ -91,7 +91,7 @@ public class ScheduleController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/api/dashboard")
+    @GetMapping("/api/calendar")
     @ResponseBody
     public ResponseEntity<List<ScheduleCalResponseDto>> getDashboardSchedules() {
         List<ScheduleCalResponseDto> schedules = scheduleService.getTodaySchedules();
