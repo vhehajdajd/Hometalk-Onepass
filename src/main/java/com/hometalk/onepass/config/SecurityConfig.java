@@ -32,7 +32,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 1. "/" 경로와 정적 리소스(css, js 등)는 모두에게 허용
                         .requestMatchers(
-                                "/auth",
+                                "/**",
                                 "/auth/loginimage/**",
                                 "/auth/signup",
                                 "/auth/login",
