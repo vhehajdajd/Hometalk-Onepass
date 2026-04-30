@@ -9,8 +9,6 @@
             box-sizing: border-box;
         }
 
-
-
         .logo-image {
             max-width: 250px;
             max-height: 180px;
@@ -86,14 +84,18 @@
         }
 
         .kakao-btn-container,
-        .naver-btn-container {
+        .naver-btn-container,
+        .google-btn-container
+         {
             margin-top: 0;
         }
 
         .kakao-btn-container img,
-        .naver-btn-container img {
-            width: 48px;
-            height: 48px;
+        .naver-btn-container img,
+        .google-btn-container img
+        {
+            width: 36px;
+            height: 36px;
             display: block;
             margin: 0;
         }
@@ -110,7 +112,9 @@
             <input type="text" name="loginId" placeholder="👤 아이디를 입력하세요." required>
         </div>
         <div class="input-group">
-            <input type="password" name="password" placeholder="🔒️ 비밀번호를 입력하세요." required>
+            <input type="password" name="password" placeholder="🔒️ 비밀번호를 입력하세요."
+                   pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$"
+                   title="8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다.">
         </div>
         <button type="submit">로그인</button>
     </form>
@@ -131,6 +135,11 @@
             <div class="naver-btn-container">
                 <a th:href="@{/oauth2/authorization/naver}">
                     <img th:src="@{/auth/loginimage/naver_login.png}" alt="네이버 로그인">
+                </a>
+            </div>
+            <div class="google-btn-container">
+                <a th:href="@{/oauth2/authorization/google}">
+                    <img th:src="@{/auth/loginimage/google_login.png}" alt="구글 로그인">
                 </a>
             </div>
         </div>

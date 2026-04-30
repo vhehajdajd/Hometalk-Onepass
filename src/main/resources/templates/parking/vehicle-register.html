@@ -27,7 +27,6 @@
     <main class="content">
       <div class="container">
         <h2 class="page-title">입주자 차량 등록</h2>
-
         <form id="vehicleForm" th:action="@{/parking/vehicle/register}" method="post" enctype="multipart/form-data">
           <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
@@ -42,6 +41,11 @@
                     maxlength="10"
             >
             <span class="error-msg" id="vehicleNumberError"></span>
+          </div>
+          <!-- 에러 메시지 -->
+          <div th:if="${errorMessage}"
+               style="color: var(--color-btn-point); font-size: 13px; margin-bottom: 16px;"
+               th:text="${errorMessage}">
           </div>
 
           <!-- 차량 모델 -->
@@ -106,7 +110,7 @@
 
           <!-- 제출 버튼 -->
           <div class="form-actions">
-            <button type="submit" id="submitBtn">제출</button>
+            <button type="submit" id="submitBtn" class="btn-primary">제출</button>
           </div>
 
         </form>

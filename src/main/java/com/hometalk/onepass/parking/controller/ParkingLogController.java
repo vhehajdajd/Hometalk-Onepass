@@ -5,12 +5,13 @@ import com.hometalk.onepass.parking.dto.response.ParkingHistoryResponse;
 import com.hometalk.onepass.parking.repository.ParkingLogRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -29,19 +30,21 @@ public class ParkingLogController {
     // 월별 주차 기록 조회 API
     @GetMapping("/logs/data")
     @ResponseBody
-    public ResponseEntity<List<ParkingHistoryResponse>> getParkingLogs(
+    public ResponseEntity<Page<ParkingHistoryResponse>> getParkingLogs(
             @RequestParam int year,
-            @RequestParam int month) {
+            @RequestParam int month,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         Long householdId = 1L;
         householdRepository.findById(householdId)
                 .orElseThrow(() -> new EntityNotFoundException("세대를 찾을 수 없습니다."));
 
-        List<ParkingHistoryResponse> logs = parkingLogRepository
-                .findByHouseholdAndYearAndMonth(householdId, year, month)
-                .stream()
-                .map(ParkingHistoryResponse::new)
-                .collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("entryTime").descending());
+
+        Page<ParkingHistoryResponse> logs = parkingLogRepository
+                .findByHouseholdAndYearAndMonth(householdId, year, month, pageable)
+                .map(ParkingHistoryResponse::new);
 
         return ResponseEntity.ok(logs);
     }
