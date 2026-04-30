@@ -70,10 +70,10 @@ body {
 
 .sidebar-item {
     width: 100%;
-    padding: 10px 12px;
+    padding: 14px 12px;
     border-radius: 8px;
     color: rgba(255,255,255,0.8);
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     text-decoration: none;
     text-align: center;
@@ -115,7 +115,7 @@ body {
 .s-logout:hover { background: rgba(255,255,255,0.25); }
 
 /* ── 메인 래퍼 ── */
-.main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.main-wrapper { flex: 1; display: flex; flex-direction: column; }
 
 /* ── 헤더 ── */
 .header {
@@ -383,11 +383,28 @@ body {
 .s-received   { background: var(--badge-default);  color: var(--badge-default-font); }
 
 /* ── 관리비 ── */
-.billing-month  { font-size: 13px; color: var(--color-text-muted); margin-bottom: 4px; }
-.billing-amount { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-.billing-amount.UNPAID { color: var(--color-btn-point); }
-.billing-amount.PAID   { color: var(--color-btn); }
-.billing-due { font-size: 12px; color: var(--color-text-muted); margin-bottom: 14px; }
+
+.billing-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 14px;
+}
+.billing-card-left { display: flex; align-items: center; gap: 10px; }
+.billing-card-label { font-size: 15px; font-weight: 700; color: var(--color-main); }
+.billing-status-badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+}
+.billing-status-badge.UNPAID { background: #fde8e8; color: var(--color-btn-point); }
+.billing-status-badge.PAID   { background: #e6f4f5; color: var(--badge-normal-font); }
+.billing-card-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+.billing-card-row-label { color: var(--color-text-muted); }
+.billing-card-row-value { font-weight: 600; color: var(--color-text); }
 
 .btn-detail {
     display: inline-block;

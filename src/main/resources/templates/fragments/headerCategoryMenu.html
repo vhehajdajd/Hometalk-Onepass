@@ -1,18 +1,36 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
-<!-- ── 주차 ── -->
+<!-- ── 주차 - 입주민 ── -->
 <div th:fragment="parking" class="category-bar">
-    <a class="category-item" th:href="@{/parking/vehicle}">차량 조회</a>
+    <a class="category-item" th:href="@{/parking/vehicle}">차량 목록</a>
     <a class="category-item" th:href="@{/parking/vehicle/register}">차량 등록</a>
-    <a class="category-item" th:href="@{/parking/visit}">방문 예약</a>
-    <a class="category-item" th:href="@{/parking/logs}">주차 기록</a>
+    <a class="category-item" th:href="@{/parking/visit}">방문 차량 예약</a>
+    <a class="category-item" th:href="@{/parking/logs}">방문자 관리</a>
+    <a class="category-item" th:href="@{/parking/ticket}">티켓 등록</a>
+    <a class="category-item" th:href="@{/parking/logs}">월별 주차 조회</a>
+    <a class="category-item" th:href="@{/parking/guide}">주차이용안내</a>
 </div>
 
-<!-- ── 관리비 ── -->
+<!-- ── 주차 - 관리자 ── -->
+<div th:fragment="parkingAdmin" class="category-bar">
+    <a class="category-item" th:href="@{/admin/vehicle/approval}">차량 승인</a>
+    <a class="category-item" th:href="@{/admin/ticket}">세대 티켓 발급</a>
+    <a class="category-item" th:href="@{/admin/parking/logs}">전체 주차 조회</a>
+</div>
+
+<!-- ── 관리비 - 입주민 ── -->
 <div th:fragment="billing" class="category-bar">
     <a class="category-item" th:href="@{/billing}">관리비 조회</a>
+</div>
+
+<!-- ── 관리비 - 관리자 ── -->
+<div th:fragment="billingAdmin" class="category-bar">
+    <a class="category-item" th:href="@{/billing/admin/upload}">고지서 업로드</a>
+    <a class="category-item" th:href="@{/billing/admin/monthly}">월별 관리</a>
+    <a class="category-item" th:href="@{/billing/admin/unpaid}">미납 세대 관리</a>
 </div>
 
 <!-- ── 커뮤니티 ── -->
@@ -44,6 +62,10 @@
     <a class="category-item" th:href="@{/hometop/inquiries/write}">문의 작성</a>
     <a class="category-item" th:href="@{/complaints/list}">민원 목록</a>
     <a class="category-item" th:href="@{/complaints/write}">민원 작성</a>
+</div>
+
+<!-- ── 알림 ── -->
+<div th:fragment="notification" class="category-bar">
 </div>
 
 </body>

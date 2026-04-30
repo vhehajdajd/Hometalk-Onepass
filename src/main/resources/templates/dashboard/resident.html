@@ -1,20 +1,65 @@
+<!--Mock 데이터-->
+
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('대시보드')}"></head>
+<style>
+    /* ── 일정 모달 ── */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(15,23,42,0.45);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-box {
+        background: #fff;
+        border-radius: 4px;
+        width: 500px;
+        max-width: 94%;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        animation: modalIn 0.18s ease;
+    }
+    @keyframes modalIn {
+        from { opacity: 0; transform: translateY(-14px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 24px;
+        border-bottom: 2px solid var(--color-modal-line);
+        font-weight: 600;
+        font-size: 16px;
+        color: var(--color-main);
+        background: #f8fafc;
+        border-radius: 4px 4px 0 0;
+    }
+    .modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: #94a3b8; }
+    .modal-close:hover { color: var(--color-text); }
+    .modal-body { padding: 22px 24px; }
+    .modal-table { width: 100%; border-collapse: collapse; }
+    .modal-table tr { border-bottom: 1px solid #f0f3f8; }
+    .modal-table tr:last-child { border-bottom: none; }
+    .modal-table td { padding: 10px 8px; font-size: 14px; vertical-align: middle; }
+    .modal-label { color: #64748b; width: 90px; font-weight: 600; white-space: nowrap; }
+    .detail-link { color: var(--color-main); font-weight: 600; text-decoration: none; }
+    .detail-link:hover { text-decoration: underline; }
+</style>
 <body>
 
 <div class="main-layout">
-
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='home')}"></div>
-
     <div class="main-wrapper">
-
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='home')}"></div>
-
         <div class="dashboard-content">
             <div class="dashboard-grid">
 
-                <!-- 1행: 공지 + 커뮤니티 -->
+                <!-- 1행 -->
                 <div class="row-1">
                     <div class="card">
                         <div class="card-header">
@@ -32,7 +77,7 @@
                     </div>
                 </div>
 
-                <!-- 2행: 달력 + 오늘의 일정 + 주차 -->
+                <!-- 2행 -->
                 <div class="row-2">
                     <div class="card">
                         <div class="card-header">
@@ -79,10 +124,9 @@
                     </div>
                 </div>
 
-                <!-- 3행: 관리비 + 예약 + 문의 + 민원 -->
+                <!-- 3행 -->
                 <div class="row-3">
                     <div class="card">
-                        <div class="card-header"><span class="card-title">관리비</span></div>
                         <div id="billingContent"><div class="loading">불러오는 중...</div></div>
                     </div>
                     <div class="card">
@@ -110,11 +154,34 @@
 
             </div>
         </div>
-
         <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
 </div>
 
+<!-- 일정 상세 모달 -->
+<div class="modal-overlay" id="scheduleDetailModal" onclick="if(event.target===this) closeScheduleModal()">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span>일정 상세</span>
+            <button class="modal-close" onclick="closeScheduleModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <table class="modal-table">
+                <tr><td class="modal-label">일정명</td><td id="modalTitle"></td></tr>
+                <tr><td class="modal-label">분류</td><td id="modalBadge"></td></tr>
+                <tr><td class="modal-label">시작</td><td id="modalStart"></td></tr>
+                <tr id="modalEndRow"><td class="modal-label">종료</td><td id="modalEnd"></td></tr>
+                <tr id="modalInfoRow"><td class="modal-label">설명</td><td id="modalInfo"></td></tr>
+                <tr id="modalLocationRow"><td class="modal-label">장소</td><td id="modalLocation"></td></tr>
+                <tr id="modalNoticeRow"><td class="modal-label">공지</td><td><a id="modalNoticeLink" href="#" class="detail-link">안내 페이지 이동 →</a></td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '/';
+</script>
 <script>
     var MOCK_NOTICES = [
         {id:1, title:"화재 예방 및 안전수칙 준수 안내", badge:"SAFETY", createdAt:"2026-04-24T10:00:00"},
@@ -134,7 +201,7 @@
         {id:101, title:"플리마켓 개최", startAt:"2026-04-30T10:00:00", endAt:"2026-04-30T15:00:00", badge:"NORMAL"},
         {id:102, title:"관리비 납부 마감", startAt:"2026-04-30T00:00:00", endAt:null, badge:"FACILITY"}
     ];
-    var MOCK_BILLING = {billingMonth:"4월", status:"UNPAID", totalAmount:245600, dueDate:"2026-05-10"};
+    var MOCK_BILLING = {billingMonth:"2월", status:"UNPAID", totalAmount:245600, dueDate:"2026-02-28"};
     var MOCK_VEHICLES = [
         {carNumber:"12가 3456", status:"승인완료"},
         {carNumber:"34나 7890", status:"승인대기"}
@@ -166,9 +233,11 @@
     var calYear  = today.getFullYear();
     var calMonth = today.getMonth() + 1;
     var scheduleData = MOCK_SCHEDULES;
+    var BADGE_LABEL = { 'FACILITY': '시설', 'SAFETY': '안전', 'NORMAL': '일반' };
 
     function formatDate(str) { return str ? str.substring(0, 10) : ''; }
     function formatTime(str) { return str ? str.substring(11, 16) : ''; }
+    function formatDateTime(str) { if (!str) return '-'; return str.substring(0,10) + ' ' + str.substring(11,16); }
     function comma(n) { return n != null ? n.toLocaleString() : '-'; }
     function badgeLabel(b) { return b==='FACILITY'?'시설':b==='SAFETY'?'안전':b==='NORMAL'?'일반':(b||''); }
 
@@ -182,11 +251,29 @@
         return 's-received';
     }
 
+    /* ── 일정 모달 ── */
+    function openScheduleModal(id) {
+        var s = MOCK_TODAY_SCHEDULES.find(function(s){ return s.id === id; });
+        if (!s) return;
+        document.getElementById('modalTitle').textContent = s.title;
+        document.getElementById('modalBadge').textContent = s.badge ? (BADGE_LABEL[s.badge] || s.badge) : '-';
+        document.getElementById('modalStart').textContent = formatDateTime(s.startAt);
+        var endRow = document.getElementById('modalEndRow');
+        if (s.endAt) { document.getElementById('modalEnd').textContent = formatDateTime(s.endAt); endRow.style.display = ''; }
+        else { endRow.style.display = 'none'; }
+        document.getElementById('modalInfoRow').style.display = 'none';
+        document.getElementById('modalLocationRow').style.display = 'none';
+        document.getElementById('modalNoticeRow').style.display = 'none';
+        document.getElementById('scheduleDetailModal').style.display = 'flex';
+    }
+    function closeScheduleModal() { document.getElementById('scheduleDetailModal').style.display = 'none'; }
+
+    /* ── 렌더링 ── */
     function renderNotice(data) {
         var el = document.getElementById('noticeList');
         if (!data||!data.length){el.innerHTML='<div class="loading">공지가 없습니다.</div>';return;}
         el.innerHTML = data.map(function(n){
-            return '<a class="notice-item" th:href="@{/notice/'+n.id+'}" href="/hometop/notice/'+n.id+'">'+
+            return '<a class="notice-item" href="/hometop/notice/'+n.id+'">'+
                 '<span class="notice-badge '+n.badge+'">'+badgeLabel(n.badge)+'</span>'+
                 '<span class="notice-title">'+n.title+'</span>'+
                 '<span class="notice-date">'+formatDate(n.createdAt)+'</span></a>';
@@ -210,23 +297,35 @@
             var badge = s.badge || 'DEFAULT';
             var timeStr = formatTime(s.startAt);
             if (s.endAt) timeStr += ' ~ ' + formatTime(s.endAt);
-            return '<div class="today-schedule-item">'+
+            return '<div class="today-schedule-item" style="cursor:pointer;" onclick="openScheduleModal('+s.id+')">'+
                 '<span class="today-schedule-badge '+badge+'">'+badgeLabel(s.badge)+'</span>'+
                 '<span class="today-schedule-title">'+s.title+'</span>'+
                 '<span class="today-schedule-time">'+timeStr+'</span></div>';
         }).join('');
     }
 
+    /* ── 입주민 관리비 (새 디자인) ── */
     function renderBilling(data) {
         var el = document.getElementById('billingContent');
         if (!data){el.innerHTML='<div class="loading">정보 없음</div>';return;}
-        var st = data.status==='UNPAID'?'미납':'납부완료';
-        var stColor = data.status==='UNPAID'?'var(--color-btn-point)':'var(--color-btn)';
+        var st = data.status==='UNPAID' ? '미납' : '납부완료';
+        var dateStr = data.dueDate ? data.dueDate.replace(/-/g, '년 ').replace(/년 (\d+)년 (\d+)/, '년 $1월 $2일') : '-';
         el.innerHTML =
-            '<div class="billing-month">'+data.billingMonth+' 관리비</div>'+
-            '<div class="billing-amount '+data.status+'">'+comma(data.totalAmount)+'<span style="font-size:13px;font-weight:400;">원</span></div>'+
-            '<div class="billing-due">납부기한: '+data.dueDate+' &nbsp;·&nbsp; <span style="color:'+stColor+';font-weight:600;">'+st+'</span></div>'+
-            '<a class="btn-detail" href="/hometop/billing">자세히</a>';
+            '<div class="billing-card-header">'+
+                '<div class="billing-card-left">'+
+                    '<span class="billing-card-label">관리비</span>'+
+                    '<span class="billing-status-badge '+data.status+'">'+st+'</span>'+
+                '</div>'+
+                '<a class="card-more" href="/hometop/billing">더보기 &rsaquo;</a>'+
+            '</div>'+
+            '<div class="billing-card-row">'+
+                '<span class="billing-card-row-label">'+data.billingMonth+' 관리비</span>'+
+                '<span class="billing-card-row-value">'+comma(data.totalAmount)+'원</span>'+
+            '</div>'+
+            '<div class="billing-card-row">'+
+                '<span class="billing-card-row-label">납부기한</span>'+
+                '<span class="billing-card-row-value">'+dateStr+'</span>'+
+            '</div>';
     }
 
     function renderVehicle(data) {
@@ -332,6 +431,5 @@
     renderComplaint(MOCK_COMPLAINTS);
     renderCalendar();
 </script>
-
 </body>
 </html>
