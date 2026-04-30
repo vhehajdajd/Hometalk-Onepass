@@ -116,6 +116,12 @@
                                           th:classappend="${post.categoryCode != null} ? ${#strings.toLowerCase(post.categoryCode)} : ''">카테고리</span>
                                 </td>
                                 <td class="title-cell">
+                                    <th:block th:if="${post.marketStatus != null and post.marketStatus != ''}">
+                                        <span th:classappend="${'badge-' + post.marketStatus.toLowerCase()}"
+                                              class="status-badge-inline"
+                                              th:text="${post.marketStatusDescription}">
+                                        </span>
+                                    </th:block>
                                     <a th:href="@{/community/{bCode}/{cCode}/{id}(bCode=${board.code}, cCode=${categoryCode}, id=${post.id})}"
                                        th:text="${post.title}"></a> <span th:if="${post.commentCount > 0}"
                                           th:text="'[' + ${post.commentCount} + ']'"

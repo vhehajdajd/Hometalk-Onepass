@@ -21,7 +21,7 @@ public class InquiryController {
     /*
      * 민원 등록 (POST) - 파일 업로드 통합 버전
      * 주소: POST http://localhost:8090/api/inquiries
-     * consumes 설정을 통해 파일 전송(multipart/form-data)을 허용합니다.
+     * consumes 설정을 통해 파일 전송(multipart/form-data) 허용
      */
     @PostMapping(consumes = {"multipart/form-data"})
     public Long register(
@@ -46,7 +46,7 @@ public class InquiryController {
 
      */
     @GetMapping("/{id}")
-    public InquiryDto detail(@PathVariable("id") Long id) { // 괄호 오타 수정
+    public InquiryDto detail(@PathVariable("id") Long id) {
         Inquiry inquiry = inquiryService.findOne(id);
         return InquiryDto.fromEntity(inquiry);
     }

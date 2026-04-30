@@ -19,6 +19,7 @@ public class PostActionService {
 
     private final PostRepository postRepository;
 
+    @Transactional
     public void updateMarketStatus(Long postId, MarketStatus status) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));

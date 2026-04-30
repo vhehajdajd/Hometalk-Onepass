@@ -46,7 +46,7 @@ public class ComplaintController {
     }
 
     /**
-     * 내 민원 목록 조회 (지현님이 말씀하신 기능)
+     * 내 민원 목록 조회
      */
     @GetMapping("/my/{userId}")
     public List<ComplaintDto> myLimitList(@PathVariable("userId") Long userId) {
@@ -98,4 +98,11 @@ public class ComplaintController {
                 .contentType(MediaType.IMAGE_JPEG) // 이미지 형식에 따라 조정 가능
                 .body(resource);
     }
+
+    @PostMapping("/{id}/respond")
+    public ResponseEntity<String> respond(@PathVariable("id") Long id, @RequestBody String respond) {
+        complaintService.respond(id, respond);
+        return ResponseEntity.ok("답변 등록 완료");
+    }
+
 }

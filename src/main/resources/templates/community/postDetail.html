@@ -101,7 +101,7 @@
                     <div class="page-footer">
                         <a th:href="@{/community/{code}(code=${board.code})}" class="btn">목록</a>
 
-                        <div class="edit-delete-group" th:if="${#authentication.name == post.authorId}">
+                        <div class="edit-delete-group" th:if="${post.editable}">
                             <a th:href="@{/community/{code}/edit/{id}(code=${board.code}, id=${post.id})}" class="btn-edit">수정</a>
                             <form th:action="@{/community/{code}/delete/{id}(code=${boardCode}, id=${post.id})}"
                                   method="post" style="display:inline;" id="deleteForm">

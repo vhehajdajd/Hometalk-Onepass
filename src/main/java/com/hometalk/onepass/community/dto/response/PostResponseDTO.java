@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 @Builder
 public class PostResponseDTO {
     private Long id;
+    private Long authorId;      // 본인 확인 ID
     private String title;
     private String content;
     private String boardName;
@@ -26,7 +27,7 @@ public class PostResponseDTO {
     private int viewCount;
     private int commentCount;
 
-    private String writer;
+    private String writer;      // 닉네임
     private boolean editable;
     private boolean admin;
     private boolean pinned;
@@ -64,7 +65,12 @@ public class PostResponseDTO {
             }
         }
 
-        this.writer = post.getWriter().getNickname();
+        // 작성자 정보 처리
+        if (post.getWriter() != null) {
+            this.authorId = post.getWriter().getId();       // ID 담기
+            this.writer = post.getWriter().getNickname();  // 닉네임 담기
+        }
+
         if (post.getPostTags() != null && !post.getPostTags().isEmpty()) {
             this.tags = post.getPostTags().stream()
                     .map(pt -> pt.getTag().getName())
@@ -72,6 +78,7 @@ public class PostResponseDTO {
         } else {
             this.tags = new ArrayList<>(); // null 대신 빈 리스트
         }
+
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();
         this.isDeleted = (post.getDeletedAt() != null);

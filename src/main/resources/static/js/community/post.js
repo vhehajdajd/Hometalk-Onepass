@@ -1,28 +1,38 @@
 /* ================================================
     [1] 페이지 초기화 & 이벤트 바인딩
 =================================================== */
+let quill;
 /* 안전장치로 DOMContentLoaded로 묶음 */
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. 제목 글자 수 카운트
+
+    const editorElement = document.getElementById('editor');
+    if (editorElement && !quill) { // quill이 아직 없을 때만 초기화
+        initQuill();
+    }
+
+    const postForm = document.getElementById('postForm');
+    const contentInput = document.getElementById('content');
+
+    if (postForm) {
+        postForm.addEventListener('submit', (e) => {
+            if (quill) {
+                const htmlContent = quill.root.innerHTML;
+                if (htmlContent === '<p><br></p>' || htmlContent.trim() === '') {
+                    alert("내용을 입력해주세요.");
+                    e.preventDefault();
+                    return false;
+                }
+                document.getElementById('content').value = htmlContent;
+            }
+        });
+    }
+
+    // 제목 글자 수 카운트 (기존 로직)
     const titleInput = document.getElementById('title');
     if (titleInput) {
         titleInput.addEventListener('input', updateCharCount);
         document.getElementById('charCount').innerText = titleInput.value.length;
     }
-
-/*    // 2. Quill 에디터 초기화
-    if (document.getElementById('editor')) {
-        initQuill();
-    }
-
-    // 2-1. 폼 제출 시 Quill 내용 처리
-    document.getElementById('postForm')?.addEventListener('submit', () => {
-        const contentInput = document.getElementById('content');
-        if (quill) {
-            contentInput.value = quill.root.innerHTML;
-        }
-    });
-*/
 
     // 3. 임시저장 목록 모달 열기
     const btnLoadTemp = document.getElementById('btnLoadTemp');
@@ -58,15 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
     [2] Quill 에디터 설정 & 이미지 업로드
 =================================================== */
 
-let quill;
-
-document.addEventListener('DOMContentLoaded', () => {
-    initQuill();
-});
-
 function initQuill() {
     const editor = document.getElementById('editor');
     if (!editor) return;
+
     quill = new Quill('#editor', {
         theme: 'snow',
         modules: {
@@ -78,10 +83,9 @@ function initQuill() {
                     [{ 'color': [] }],
                     ['link', 'image']
                 ],
-                handlers: {
-                    image: imageHandler
-                }
-            }
+                handlers: { image: imageHandler }
+            },
+            imageResize: { displaySize: true }
         }
     });
     const content = document.getElementById('content')?.value;
@@ -362,7 +366,7 @@ function changePage(pageNumber) {
     location.href = window.location.pathname + "?" + urlParams.toString();
 }
 
-// 상태 변경 함수 (post.js)
+// 상태 변경 함수
 function updateStatus(postId, status) {
     const token = document.querySelector('meta[name="_csrf"]')?.content;
     const header = document.querySelector('meta[name="_csrf_header"]')?.content;
@@ -373,10 +377,15 @@ function updateStatus(postId, status) {
             "Content-Type": "application/json",
             [header]: token
         },
-        body: JSON.stringify({ status: status })
+        body: JSON.stringify({ marketStatus: status })
     }).then(res => {
-        if (res.ok) alert("상태가 변경되었습니다.");
-        else alert("오류가 발생했습니다.");
+        if (res.ok) {
+            alert("상태가 변경되었습니다.");
+            location.reload();
+        } else {
+            console.error("Error Status:", res.status);
+            alert("변경 실패. 컨트롤러 주소를 확인하세요.");
+        }
     });
 }
 

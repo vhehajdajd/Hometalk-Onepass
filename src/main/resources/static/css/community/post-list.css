@@ -269,3 +269,34 @@
     display: inline-flex;
     align-items: center;
 }
+
+.status-badge-inline {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 12px;
+    margin-right: 6px;
+    vertical-align: middle;
+    background-color: #f0f0f0; /* 기본 배경 */
+}
+
+/* 예약중 - 코랄 포인트 */
+.badge-reserved {
+    background-color: #FFF5F5;
+    color: #F687B3;
+    border: 1px solid #FED7E2;
+}
+
+/* 나눔중 - 민트 포인트 */
+.badge-shared {
+    background-color: #E6FFFA;
+    color: #38B2AC;
+    border: 1px solid #B2F5EA;
+}
+
+.badge-completed {
+    background-color: #EDF2F7;
+    color: #718096;
+    border: 1px solid #E2E8F0;
+}

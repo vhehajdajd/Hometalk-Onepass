@@ -27,9 +27,13 @@ public class PostActionController {
     }
 
     // 2. 나눔 상태 변경 (작성자용)
-    @PostMapping("/{postId}/market-status")
-    public String updateMarketStatus(@PathVariable Long postId, @RequestParam MarketStatus status) {
-        postActionService.updateMarketStatus(postId, status);
+    @PostMapping("/{postId}/status")
+    public String updateMarketStatus(@PathVariable Long postId,
+                                     @RequestBody java.util.Map<String, String> request) {
+        String statusStr = request.get("marketStatus");
+        MarketStatus marketStatus = MarketStatus.valueOf(statusStr);
+
+        postActionService.updateMarketStatus(postId, marketStatus);
         return "redirect:/community/post/" + postId;
     }
 
