@@ -1,11 +1,30 @@
+package com.hometalk.onepass.notification.entity;
+
+import com.hometalk.onepass.common.entity.BaseTimeEntity;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notification", indexes = {
-    @Index(name = "idx_noti_user_role", columnList = "user_id, target_role"),
-    @Index(name = "idx_noti_expired",   columnList = "expired_at"),
-    @Index(name = "idx_noti_updated",   columnList = "updated_at"),
-    @Index(name = "idx_noti_reference", columnList = "reference_id")
+        @Index(name = "idx_noti_user_role", columnList = "user_id, target_role"),
+        @Index(name = "idx_noti_expired",   columnList = "expired_at"),
+        @Index(name = "idx_noti_updated",   columnList = "updated_at"),
+        @Index(name = "idx_noti_reference", columnList = "reference_id")
 })
 @Getter
 @Builder
@@ -13,11 +32,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Notification extends BaseTimeEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;            // null = 전체 발송
-    private Long reference_id;      // 식별용 (null 허용)
+    private Long userId;        // null = 전체 발송
+    private Long referenceId;   // ← snake_case 아님! camelCase로 작성 (DB 컬럼은 자동으로 reference_id)
 
     @Enumerated(EnumType.STRING)
     private NotificationTargetRole targetRole;
@@ -27,7 +47,7 @@ public class Notification extends BaseTimeEntity {
 
     private String title;
     private String message;
-    private String link;       // null 허용
+    private String link;        // null 허용
 
     private LocalDateTime expiredAt;
 }

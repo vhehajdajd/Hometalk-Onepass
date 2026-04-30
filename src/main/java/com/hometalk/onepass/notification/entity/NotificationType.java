@@ -1,118 +1,45 @@
+package com.hometalk.onepass.notification.entity;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum NotificationType {
-    // 공지
-    NOTICE_NEW("공지", "📢", 7, 1),  // 새 공지 등록 → 전체 입주민, 7일, 1시간 윈도우
 
-    // 일정
-    SCHEDULE_REMINDER("일정", "📆", 1),  // 일정 시작 1시간 전 → 해당 입주민, 1일
+    // ─── 관리비 — 입주민 ───
+    BILLING_UPLOAD ("관리비", "🏠", 7, 24),  // 전체 입주민, 7일, 24h dedupe
+    BILLING_PAID   ("관리비", "🏠", 1,  0),  // 해당 입주민, 24시간 후 자동삭제
+    BILLING_UNPAID ("관리비", "⚠️", 0,  0), // 영구 (조건부 삭제)
+    BILLING_OVERDUE("관리비", "🚨", 0,  0), // 영구 (조건부 삭제)
 
-    // 민원
-    COMPLAINT_RECEIVED("민원", "📋", 7),  // 민원 접수 → 전체 관리자, 7일
-    COMPLAINT_STATUS  ("민원", "📋", 7),  // 민원 상태 변경 → 해당 입주민, 7일
+    // ─── 관리비 — 관리자 ───
+    BILLING_UPLOAD_DONE     ("관리비", "✅", 7,  1),
+    BILLING_UPLOAD_ERROR    ("관리비", "❌", 7,  1),
+    BILLING_OVERDUE_ALERT   ("관리비", "🚨", 7, 24),
+    BILLING_MONTHLY_SUMMARY ("관리비", "📊", 7, 24),
 
-    // 시설예약
-    RESERVATION_CONFIRMED("예약", "📅", 3), // 시설 예약 확정 → 해당 입주민
+    // ─── 공지 ───
+    NOTICE_NEW ("공지", "📢", 7, 1),
 
-    // 관리비
-    BILLING_UPLOAD("관리비", "🏠", 30, 168),   // 관리비 고지서 등록 → 전체 입주민, 30일, 7일간 윈도우
-    BILLING_PAID  ("관리비", "🏠", -1),   // 납부완료 처리 → 해당 입주민, 납부완료 시 즉시삭제
+    // ─── 커뮤니티 ───
+    COMMUNITY_COMMENT ("커뮤니티", "💬", 7, 0),
 
-    // 주차
-    VEHICLE_APPROVED("주차", "🚗", 3),  // 차량 등록 승인 → 해당 입주민
-    VEHICLE_REJECTED("주차", "🚗", 3),  // 차량 등록 반려 → 해당 입주민
-    VEHICLE_ENTRY   ("주차", "🚗", 1),  // 차량 입차 → 해당 입주민
-    VEHICLE_EXIT    ("주차", "🚗", 1),  // 차량 출차 → 해당 입주민
+    // ─── 민원 ───
+    COMPLAINT_RECEIVED ("민원", "📋", 7, 0),
+    COMPLAINT_STATUS   ("민원", "📋", 7, 0),
 
+    // ─── 주차 ───
+    VEHICLE_APPROVED ("주차", "🚗", 3, 0),
+    VEHICLE_REJECTED ("주차", "🚗", 3, 0),
+    VEHICLE_ENTRY    ("주차", "🚗", 1, 0),
+    VEHICLE_EXIT     ("주차", "🚗", 1, 0),
 
-    // 커뮤니티
-    COMMUNITY_COMMENT("커뮤니티", "💬", 7),  // 내 글에 댓글, 7일
-    COMMUNITY_LIKE   ("커뮤니티", "💬", 3);  // 내 글에 좋아요, 3일
+    // ─── 시설예약 ───
+    RESERVATION_CONFIRMED ("예약", "📅", 3, 0);
 
     private final String category;
     private final String icon;
-    private final int expireDays; // -1: 즉시삭제, 0: 영구, N: N일 후 삭제
-    private final int dedupeWindowHours; // 중복방지 윈도우 (시간 단위, 0: 미적용)
+    private final int    expireDays;        // 0 = 영구(조건부 삭제) / N = N일 후 자동삭제
+    private final int    dedupeWindowHours; // 중복 방지 시간 윈도우 (0 = 미적용)
 }
-
-
-/*
-주차 모듈 알림
-① 차량 등록 승인
-
-알림 내용: [Home Talk] 차량등록이 완료되었습니다.
-대상: 해당 입주민
-만료일: 7일
-
-② 차량 등록 반려
-
-알림 내용: [Home Talk] 차량 등록이 반려되었습니다. 사유를 확인 후 다시 등록해 주세요.
-대상: 해당 입주민
-만료일: 7일
-
-③ 입주자 입차
-
-알림 내용: [Home Talk] 입주자 차량(OOO가 OOOO)이 입차했습니다.
-대상: 해당 입주민
-만료일: 24시간
-
-④ 예약 방문객 입차
-
-알림 내용: [Home Talk] 예약하신 방문 차량(OOO가 OOOO)이 도착하여 입차했습니다.
-대상: 해당 입주민
-만료일: 24시간
-
-⑤ 입주자 출차
-
-알림 내용: [Home Talk] 차량(OOO가 OOOO)이 정산 완료되어 출차하였습니다.
-대상: 해당 입주민
-만료일: 24시간
-
-⑥ 예약 방문객 출차
-
-알림 내용: [Home Talk] 방문 차량(OOO가 OOOO)이 출차하였습니다.
-대상: 해당 입주민
-만료일: 24시간
-
-⑦ 티켓 부족 출차 불가
-
-알림 내용: [Home Talk] 티켓이 부족하여 출차할 수 없습니다. 티켓을 적용해 주세요.
-대상: 해당 입주민
-만료일: 24시간
-*/
-
-
-
-/*
-내일 17시까지 각 모듈별로 1~2개 알림 내용을 정리해서 개인톡으로 주시면 감사하겠습니다.
-① 알림 내용
-② 대상 - 특정사용자 / 전체(입주민/관리자)
-③ 만료일 - 자동삭제 시간 또는 기간 (24시간, 7일 등)
-
-[전달내용 예시]
-공지 : 새 공지 등록 → 전체 입주민
-일정 : 일정 시작 1시간 전 → 해당 입주민
-
-민원 : 민원 접수 → 전체 관리자,
-      민원 상태 변경(접수/처리완료) → 해당 입주민
-시설예약 : 시설 예약 확정 → 해당 입주민
-
-관리비 : 관리비 고지서 등록 → 전체 입주민(30일 후 자동삭제),
-        납부완료 처리 → 해당 입주민 (즉시삭제)
-
-주차 : 차량 등록 승인/반려 → 해당 입주민,
-      차량 입/출차 → 해당 입주민
-
-커뮤니티 : 내 글에 댓글 → 해당 입주민
-
-[알림 예시]
-📢 새 공지가 등록되었습니다.
-📋 민원이 접수되었습니다.
-📅 시설 예약이 확정되었습니다.
-🏠 관리비 고지서가 등록되었습니다.
-🚗 차량이 입차되었습니다.
-🚗 차량이 출차되었습니다.
-💬 내 글에 새 댓글이 달렸습니다.
-
-* 알림 인프라 구축 후에 모듈별 service에 넣을 함수 코드를 각자 드릴 예정입니다.
-* 최대한 복사붙여넣기만 할 수 있게 전달해드리나, 알림 클릭시 이동하는 URL은 더블체크해주시고 필요하면 수정하시면 됩니다.
-
-*/

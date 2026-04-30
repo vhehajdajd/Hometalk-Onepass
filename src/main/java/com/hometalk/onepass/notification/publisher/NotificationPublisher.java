@@ -1,6 +1,13 @@
-import entity.NotificationTargetRole;
-import entity.NotificationType;
-import event.NotificationEvent;
+package com.hometalk.onepass.notification.publisher;
+
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+import com.hometalk.onepass.notification.entity.NotificationType;
+import com.hometalk.onepass.notification.event.NotificationEvent;
+
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -18,23 +25,23 @@ public class NotificationPublisher {
                         String title,
                         String message,
                         String link,
-                        Long billingId) {
+                        Long referenceId) {
         eventPublisher.publishEvent(
-            new NotificationEvent(userId, role, type, title, message, link, billingId)
+                new NotificationEvent(userId, role, type, title, message, link, referenceId)
         );
     }
 
     /**
      * 전체 발송 (userId = null)
-     * billingId = null로 고정
+     * referenceId = null로 고정
      */
     public void publishToAll(NotificationTargetRole role,
-                              NotificationType type,
-                              String title,
-                              String message,
-                              String link) {
+                             NotificationType type,
+                             String title,
+                             String message,
+                             String link) {
         eventPublisher.publishEvent(
-            new NotificationEvent(null, role, type, title, message, link, null)
+                new NotificationEvent(null, role, type, title, message, link, null)
         );
     }
 }
