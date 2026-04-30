@@ -136,9 +136,9 @@ public class StaffEntryService {
             String dong = request.getDong().endsWith("동") ? request.getDong() : request.getDong() + "동";
             String ho = request.getHo().endsWith("호") ? request.getHo() : request.getHo() + "호";
 
-            household = householdRepository
-                    .findByDongAndHo(dong, ho)
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 세대입니다."));
+            /*household = householdRepository
+                    .findByPostNumAndDongAndHo(dong, ho)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 세대입니다."));*/
         }
 
         // 차량번호 정규화
