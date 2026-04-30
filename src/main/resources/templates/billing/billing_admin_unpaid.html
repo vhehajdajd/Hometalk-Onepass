@@ -27,7 +27,13 @@
 
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'billing'} })}"></div>
 
-        <header class="category-menu-bar">&nbsp;</header>
+        <header class="category-menu-bar">
+            <nav class="admin-tab-nav">
+                <a th:href="@{/billing/admin/upload}"  class="admin-tab-btn" th:classappend="${currentUri != null and currentUri.contains('upload')}  ? ' active'">고지서 업로드</a>
+                <a th:href="@{/billing/admin/monthly}" class="admin-tab-btn" th:classappend="${currentUri != null and currentUri.contains('monthly')} ? ' active'">월별 관리</a>
+                <a th:href="@{/billing/admin/unpaid}"  class="admin-tab-btn" th:classappend="${currentUri != null and currentUri.contains('unpaid')}  ? ' active'">미납 세대 관리</a>
+            </nav>
+        </header>
 
         <div class="container">
 
@@ -133,7 +139,6 @@
                             </th>
                             <th>NUM</th>
                             <th class="sortable" onclick="sortBy('unit')">동/호 <span class="sort-icon">▼</span></th>
-                            <th>입주민</th>
                             <th class="sortable" onclick="sortBy('billingMonth')">부과월 <span class="sort-icon">▼</span></th>
                             <th class="sortable" onclick="sortBy('totalAmount')">청구금액 <span class="sort-icon">▼</span></th>
                             <th class="sortable" onclick="sortBy('dueDate')">납기일 <span class="sort-icon">▼</span></th>

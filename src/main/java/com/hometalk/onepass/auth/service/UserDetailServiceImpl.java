@@ -1,5 +1,6 @@
 package com.hometalk.onepass.auth.service;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.auth.entity.LocalAccount;
 import com.hometalk.onepass.auth.repository.HouseholdRepository;
@@ -31,12 +32,27 @@ public class UserDetailServiceImpl implements UserDetailsService {
         }
 
 
-
-        // username = loginId로 설정
+/*        // username = loginId로 설정
         return User.builder()
                 .username(account.getLoginId())
                 .password(account.getPasswordHash())
                 .roles(account.getUser().getRole().name())
-                .build();
+                .build();*/
+        // ── 위 코드 삭제 후 아래로 교체 ──
+        com.hometalk.onepass.auth.entity.User user = account.getUser();
+        Long householdId = user.getHousehold() != null
+                ? user.getHousehold().getId() : null;
+        String postNum = user.getHousehold() != null
+                ? user.getHousehold().getPostNum() : null;
+
+        return new CustomUserDetails(
+                user.getId(),
+                householdId,
+                postNum,
+                user.getName(),
+                user.getRole(),
+                account.getLoginId(),
+                account.getPasswordHash()
+        );
     }
 }
