@@ -984,6 +984,7 @@ body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background-color: #fafafa;
+
 }
 
 .ticket-item label {
@@ -1164,6 +1165,7 @@ body {
 .pk-btn-secondary {
   background-color: var(--color-btn-secondary);
   color: #ffffff;
+  margin-bottom: 6px;
 }
 
 /* 관리 열 버튼 가로 배치 */
@@ -1171,7 +1173,7 @@ body {
   justify-content: center;
   align-items: center;
   text-align: center;
-  gap: 6px;
+  gap: 10px;
   flex-wrap: nowrap;
 }
 
@@ -1196,7 +1198,17 @@ body {
 .pk-filter-group { display: flex; gap: 12px; margin-bottom: 20px; }
 .pk-dropdown-wrapper { position: relative; }
 .pk-dropdown-btn { padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 6px; background: #fff; cursor: pointer; font-size: 14px; }
-.pk-dropdown-menu { position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid var(--color-border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; min-width: 120px; }
+.pk-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 100;
+    min-width: 100%;  /* 120px → 100% */
+}
 .pk-dropdown-menu ul { list-style: none; margin: 0; padding: 4px 0; }
 .pk-dropdown-menu li { padding: 8px 16px; cursor: pointer; font-size: 14px; }
 .pk-dropdown-menu li:hover { background: var(--color-surface-2); }
@@ -1260,4 +1272,101 @@ input[type="number"]::-webkit-inner-spin-button {
 
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+// 페이지네이션
+.pk-pagination {
+  display: flex !important;
+  flex-direction: row !important;  /* 가로 배치 */
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  margin-top: 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.pk-pagination li {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pk-pagination a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-radius: 0;
+}
+
+.pk-pagination li.active a {
+  color: #E67E73;
+  font-weight: 800;
+  border-radius: 0;
+}
+
+.pk-pagination a:hover:not(.active) {
+  color: #E67E73;
+}
+
+// 주차 가이드
+/* =============================================
+   주차 이용 안내 페이지
+   ============================================= */
+.guide-section {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.guide-section h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-main);
+  margin: 40px 0 10px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.guide-content h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-sub);
+  margin: 35px 0 10px 0;
+}
+
+.guide-content h4:first-child { margin-top: 0; }
+
+.guide-content ol,
+.guide-content ul {
+  margin: 0 0 12px 0;
+  padding-left: 20px;
+}
+
+.guide-content li {
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.8;
+}
+
+.guide-content strong {
+  color: var(--color-main);
+  font-weight: 700;
+}
+
+/* 입차 페이지 버튼 */
+.pk-btn-blue {
+  background-color: #4073C9;
+  color: #ffffff;
 }

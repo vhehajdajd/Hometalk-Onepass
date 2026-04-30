@@ -9,7 +9,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -27,6 +26,14 @@ public class VehicleController {
         List<VehicleResponse> vehicles = vehicleService.getHouseholdVehicles(householdId);
         model.addAttribute("vehicles", vehicles);
         return "parking/vehicle-status";
+    }
+
+    // 세대 차량 목록 조회 (JSON - 대시보드용)
+    @GetMapping("/vehicle/list")
+    @ResponseBody
+    public ResponseEntity<List<VehicleResponse>> getVehicleList() {
+        Long householdId = 1L; // TODO: JWT 연동 후 추출
+        return ResponseEntity.ok(vehicleService.getHouseholdVehicles(householdId));
     }
 
     // 차량 등록 페이지

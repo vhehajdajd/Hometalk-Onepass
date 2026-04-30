@@ -12,301 +12,312 @@
 <body>
 
 <div class="main-layout" style="display: flex;">
+  <main class="content" style="flex: 1;">
+    <div class="container">
 
-    <!-- 메인 콘텐츠 -->
-    <main class="content" style="flex: 1;">
-      <div class="container">
+      <!-- 입차 처리 퀵서치 -->
+      <div class="section">
+        <h2 class="page-title">입차</h2>
 
-        <!-- 입차 처리 퀵서치 -->
-        <div class="section">
-          <h2 class="page-title">입차</h2>
-
-          <div class="form-group">
-            <label for="vehicleNumber">차량 번호</label>
-            <div class="search-group">
-              <input
-                      type="text"
-                      id="vehicleNumber"
-                      placeholder="차량 번호 4자리 입력"
-                      maxlength="4"
-              >
-              <button type="button" onclick="searchVehicle()">조회</button>
-            </div>
-            <span class="error-msg" id="searchError"></span>
+        <div class="form-group">
+          <label for="vehicleNumber">차량 번호</label>
+          <div class="search-group">
+            <input
+                    type="text"
+                    id="vehicleNumber"
+                    placeholder="차량 번호 4자리 입력"
+                    maxlength="4"
+            >
+            <button type="button" onclick="searchVehicle()">조회</button>
           </div>
-
-          <div id="searchResult"></div>
+          <span class="error-msg" id="searchError"></span>
         </div>
 
-        <!-- 오늘 입차 예정 차량 목록 -->
-        <div class="section" style="margin-top: 40px;">
-          <h2 class="page-title">오늘 입차 예정 차량</h2>
-
-          <!-- 탭 -->
-          <div class="tab-group">
-            <button type="button" class="tab-btn active" onclick="switchTab('visit', event)">방문 차량</button>
-            <button type="button" class="tab-btn" onclick="switchTab('resident', event)">입주자 차량</button>
-          </div>
-
-          <!-- 방문 차량 탭 -->
-          <div id="visitTab">
-            <table class="park-table">
-              <thead>
-              <tr>
-                <th>차량 번호</th>
-                <th>방문세대</th>
-                <th>방문목적</th>
-                <th>방문 예정 시각</th>
-                <th>관리</th>
-              </tr>
-              </thead>
-              <tbody id="visitList">
-              <tr>
-                <td colspan="5" class="pk-empty">오늘 방문 예정 차량이 없습니다.</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- 입주자 차량 탭 -->
-          <div id="residentTab" style="display:none;">
-            <table class="park-table">
-              <thead>
-              <tr>
-                <th>차량 번호</th>
-                <th>세대</th>
-                <th>등록자</th>
-                <th>차량 모델</th>
-                <th>관리</th>
-              </tr>
-              </thead>
-              <tbody id="residentList">
-              <tr>
-                <td colspan="5" class="pk-empty">등록된 입주자 차량이 없습니다.</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
+        <div id="searchResult"></div>
       </div>
-    </main>
+
+      <!-- 오늘 입차 예정 차량 목록 -->
+      <div class="section" style="margin-top: 40px;">
+        <h2 class="page-title">오늘 입차 예정 차량</h2>
+
+        <div class="tab-group">
+          <button type="button" class="tab-btn active" onclick="switchTab('visit', event)">방문 차량</button>
+          <button type="button" class="tab-btn" onclick="switchTab('resident', event)">입주자 차량</button>
+        </div>
+
+        <!-- 방문 차량 탭 -->
+        <div id="visitTab">
+          <table class="park-table">
+            <thead>
+            <tr>
+              <th>차량 번호</th>
+              <th>방문세대</th>
+              <th>방문목적</th>
+              <th>방문 예정 시각</th>
+              <th>관리</th>
+            </tr>
+            </thead>
+            <tbody id="visitList">
+            <tr>
+              <td colspan="5" class="pk-empty">오늘 방문 예정 차량이 없습니다.</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 입주자 차량 탭 -->
+        <div id="residentTab" style="display:none;">
+          <table class="park-table">
+            <thead>
+            <tr>
+              <th>차량 번호</th>
+              <th>세대</th>
+              <th>등록자</th>
+              <th>차량 모델</th>
+              <th>관리</th>
+            </tr>
+            </thead>
+            <tbody id="residentList">
+            <tr>
+              <td colspan="5" class="pk-empty">등록된 입주자 차량이 없습니다.</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
 </div>
 
+<!-- Thymeleaf 변수만 분리 -->
 <script th:inline="javascript">
   const contextPath = /*[[@{/}]]*/ '/';
   const csrfToken = document.querySelector('meta[name="_csrf"]').content;
   const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+</script>
+
+<script>
   let isProcessing = false;
 
   function postFetch(url, body) {
-      return fetch(url, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              [csrfHeader]: csrfToken
-          },
-          body: JSON.stringify(body)
-      });
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        [csrfHeader]: csrfToken
+      },
+      body: JSON.stringify(body)
+    });
   }
 
   // 탭 전환
   function switchTab(type, e) {
-      const tabBtns = document.querySelectorAll('.tab-btn');
-      tabBtns.forEach(btn => btn.classList.remove('active'));
-      e.currentTarget.classList.add('active');
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => btn.classList.remove('active'));
+    e.currentTarget.classList.add('active');
 
-      if (type === 'visit') {
-          document.getElementById('visitTab').style.display = 'block';
-          document.getElementById('residentTab').style.display = 'none';
-      } else {
-          document.getElementById('visitTab').style.display = 'none';
-          document.getElementById('residentTab').style.display = 'block';
-      }
+    if (type === 'visit') {
+      document.getElementById('visitTab').style.display = 'block';
+      document.getElementById('residentTab').style.display = 'none';
+    } else {
+      document.getElementById('visitTab').style.display = 'none';
+      document.getElementById('residentTab').style.display = 'block';
+    }
   }
 
   // 숫자만 입력, 4자리 되면 자동 조회
   document.getElementById('vehicleNumber').addEventListener('input', (e) => {
-      e.target.value = e.target.value.replace(/\D/g, '');
-      if (e.target.value.length === 4) searchVehicle();
+    e.target.value = e.target.value.replace(/\D/g, '');
+    if (e.target.value.length === 4) searchVehicle();
   });
 
   // 엔터키로 조회
   document.getElementById('vehicleNumber').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') searchVehicle();
+    if (e.key === 'Enter') searchVehicle();
   });
 
   // 차량 조회
   function searchVehicle() {
-      const keyword = document.getElementById('vehicleNumber').value.trim();
-      const searchError = document.getElementById('searchError');
+    const keyword = document.getElementById('vehicleNumber').value.trim();
+    const searchError = document.getElementById('searchError');
 
-      if (keyword.length !== 4) {
-          searchError.textContent = '차량 번호 4자리를 입력해주세요.';
+    if (keyword.length !== 4) {
+      searchError.textContent = '차량 번호 4자리를 입력해주세요.';
+      return;
+    }
+    searchError.textContent = '';
+
+    fetch(`${contextPath}staff/vehicle/search?keyword=${keyword}`)
+      .then(async res => {
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(msg || '서버 오류');
+        }
+        return res.json();
+      })
+      .then(data => {
+        const searchResult = document.getElementById('searchResult');
+        searchResult.innerHTML = '';
+
+        if (data.length === 0) {
+          searchResult.innerHTML = `
+            <div class="result-item">
+              <p>*결과 : 미등록 차량입니다.</p>
+              <button type="button" class="pk-btn pk-btn-blue"
+                      onclick="location.href='${contextPath}staff/manual-entry'">수동 입차</button>
+            </div>
+          `;
           return;
-      }
-      searchError.textContent = '';
+        }
 
-      fetch(`${contextPath}staff/vehicle/search?keyword=${keyword}`)
-          .then(async res => {
-              if (!res.ok) {
-                  const msg = await res.text();
-                  throw new Error(msg || '서버 오류');
-              }
-              return res.json();
-          })
-          .then(data => {
-              const searchResult = document.getElementById('searchResult');
-              searchResult.innerHTML = '';
+        data.forEach(vehicle => {
+          const div = document.createElement('div');
+          div.classList.add('result-item');
 
-              if (data.length === 0) {
-                  searchResult.innerHTML = `
-                      <div class="result-item">
-                          <p>*결과 : 미등록 차량입니다.</p>
-                          <button type="button" class="pk-btn pk-btn-secondary"
-                                  onclick="location.href='${contextPath}staff/manual-entry'">수동 입차</button>
-                      </div>
-                  `;
-                  return;
-              }
+          if (vehicle.type === 'RESERVATION') {
+            div.innerHTML = `
+              <p>*결과 : [${vehicle.vehicleNumber}] ${vehicle.household} ${vehicle.purpose} 차량입니다.</p>
+              <button type="button" class="pk-btn pk-btn-primary"
+                      onclick="processEntry(${vehicle.reservationId}, 'RESERVATION', this)">입차 처리</button>
+            `;
+          } else if (vehicle.type === 'RESIDENT') {
+            div.innerHTML = `
+              <p>*결과 : [${vehicle.vehicleNumber}] ${vehicle.household} 입주자 차량입니다.</p>
+              <button type="button" class="pk-btn pk-btn-primary"
+                      onclick="processEntry(${vehicle.vehicleId}, 'RESIDENT', this)">입차 처리</button>
+            `;
+          }
 
-              data.forEach(vehicle => {
-                  const div = document.createElement('div');
-                  div.classList.add('result-item');
+          searchResult.appendChild(div);
+        });
 
-                  if (vehicle.type === 'RESERVATION') {
-                      div.innerHTML = `
-                          <p>*결과 : ${vehicle.household} ${vehicle.purpose} 차량입니다.</p>
-                          <button type="button" class="pk-btn pk-btn-primary"
-                                  onclick="processEntry(${vehicle.reservationId}, 'RESERVATION', this)">입차 처리</button>
-                      `;
-                  } else if (vehicle.type === 'RESIDENT') {
-                      div.innerHTML = `
-                          <p>*결과 : ${vehicle.household} 입주자 차량입니다.</p>
-                          <button type="button" class="pk-btn pk-btn-primary"
-                                  onclick="processEntry(${vehicle.vehicleId}, 'RESIDENT', this)">입차 처리</button>
-                      `;
-                  }
-
-                  searchResult.appendChild(div);
-              });
-          })
-          .catch(err => {
-              console.error(err);
-              document.getElementById('searchError').textContent = '조회 중 오류가 발생했습니다.';
-          });
+        // 결과가 있어도 수동입차 버튼 항상 표시
+        const manualDiv = document.createElement('div');
+        manualDiv.classList.add('result-item');
+        manualDiv.innerHTML = `
+          <p>*위 목록에 없는 차량이라면 수동 입차로 처리해주세요.</p>
+          <button type="button" class="pk-btn pk-btn-blue"
+                  onclick="location.href='${contextPath}staff/manual-entry'">수동 입차</button>
+        `;
+        searchResult.appendChild(manualDiv);
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('searchError').textContent = '조회 중 오류가 발생했습니다.';
+      });
   }
 
   // 입차 처리
   function processEntry(id, type, btn) {
-      if (isProcessing) return;
-      isProcessing = true;
-      btn.disabled = true;
+    if (isProcessing) return;
+    isProcessing = true;
+    btn.disabled = true;
 
-      postFetch(`${contextPath}staff/vehicle/entry`, { id: id, type: type })
-          .then(async res => {
-              if (!res.ok) {
-                  const msg = await res.text();
-                  throw new Error(msg || '서버 오류');
-              }
-              alert('입차 처리가 완료되었습니다.');
-              document.getElementById('vehicleNumber').value = '';
-              document.getElementById('searchResult').innerHTML = '';
-              loadTodayList();
-          })
-          .catch(err => {
-              console.error(err);
-              alert('입차 처리 중 오류가 발생했습니다.');
-          })
-          .finally(() => {
-              isProcessing = false;
-              btn.disabled = false;
-          });
+    postFetch(`${contextPath}staff/vehicle/entry`, { id: id, type: type })
+      .then(async res => {
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(msg || '서버 오류');
+        }
+        alert('입차 처리가 완료되었습니다.');
+        document.getElementById('vehicleNumber').value = '';
+        document.getElementById('searchResult').innerHTML = '';
+        loadTodayList();
+      })
+      .catch(err => {
+        console.error(err);
+        alert('입차 처리 중 오류가 발생했습니다.');
+      })
+      .finally(() => {
+        isProcessing = false;
+        btn.disabled = false;
+      });
   }
 
   // 오늘 입차 예정 목록 조회
   function loadTodayList() {
-      const visitList = document.getElementById('visitList');
-      const residentList = document.getElementById('residentList');
+    const visitList = document.getElementById('visitList');
+    const residentList = document.getElementById('residentList');
 
-      visitList.innerHTML = '<tr><td colspan="5">로딩 중...</td></tr>';
-      residentList.innerHTML = '<tr><td colspan="5">로딩 중...</td></tr>';
+    visitList.innerHTML = '<tr><td colspan="5">로딩 중...</td></tr>';
+    residentList.innerHTML = '<tr><td colspan="5">로딩 중...</td></tr>';
 
-      fetch(`${contextPath}staff/entry/list/visit`)
-          .then(async res => {
-              if (!res.ok) {
-                  const msg = await res.text();
-                  throw new Error(msg || '서버 오류');
-              }
-              return res.json();
-          })
-          .then(data => {
-              visitList.innerHTML = '';
+    fetch(`${contextPath}staff/entry/list/visit`)
+      .then(async res => {
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(msg || '서버 오류');
+        }
+        return res.json();
+      })
+      .then(data => {
+        visitList.innerHTML = '';
 
-              if (data.length === 0) {
-                  visitList.innerHTML = '<tr><td colspan="5" class="pk-empty">오늘 방문 예정 차량이 없습니다.</td></tr>';
-                  return;
-              }
+        if (data.length === 0) {
+          visitList.innerHTML = '<tr><td colspan="5" class="pk-empty">오늘 방문 예정 차량이 없습니다.</td></tr>';
+          return;
+        }
 
-              data.forEach(vehicle => {
-                  const row = document.createElement('tr');
-                  row.innerHTML = `
-                      <td>${vehicle.vehicleNumber}</td>
-                      <td>${vehicle.household}</td>
-                      <td>${vehicle.purpose}</td>
-                      <td>${vehicle.reservedAt}</td>
-                      <td>
-                          <button type="button" class="pk-btn pk-btn-primary"
-                                  onclick="processEntry(${vehicle.reservationId}, 'RESERVATION', this)">
-                              입차 처리
-                          </button>
-                      </td>
-                  `;
-                  visitList.appendChild(row);
-              });
-          })
-          .catch(err => {
-              console.error(err);
-              visitList.innerHTML = '<tr><td colspan="5">데이터 조회 중 오류가 발생했습니다.</td></tr>';
-          });
+        data.forEach(vehicle => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${vehicle.vehicleNumber}</td>
+            <td>${vehicle.household}</td>
+            <td>${vehicle.purpose}</td>
+            <td>${vehicle.reservedAt}</td>
+            <td>
+              <button type="button" class="pk-btn pk-btn-primary"
+                      onclick="processEntry(${vehicle.reservationId}, 'RESERVATION', this)">
+                입차 처리
+              </button>
+            </td>
+          `;
+          visitList.appendChild(row);
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        visitList.innerHTML = '<tr><td colspan="5">데이터 조회 중 오류가 발생했습니다.</td></tr>';
+      });
 
-      fetch(`${contextPath}staff/entry/list/resident`)
-          .then(async res => {
-              if (!res.ok) {
-                  const msg = await res.text();
-                  throw new Error(msg || '서버 오류');
-              }
-              return res.json();
-          })
-          .then(data => {
-              residentList.innerHTML = '';
+    fetch(`${contextPath}staff/entry/list/resident`)
+      .then(async res => {
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(msg || '서버 오류');
+        }
+        return res.json();
+      })
+      .then(data => {
+        residentList.innerHTML = '';
 
-              if (data.length === 0) {
-                  residentList.innerHTML = '<tr><td colspan="5" class="pk-empty">등록된 입주자 차량이 없습니다.</td></tr>';
-                  return;
-              }
+        if (data.length === 0) {
+          residentList.innerHTML = '<tr><td colspan="5" class="pk-empty">등록된 입주자 차량이 없습니다.</td></tr>';
+          return;
+        }
 
-              data.forEach(vehicle => {
-                  const row = document.createElement('tr');
-                  row.innerHTML = `
-                      <td>${vehicle.vehicleNumber}</td>
-                      <td>${vehicle.household}</td>
-                      <td>${vehicle.userName}</td>
-                      <td>${vehicle.model ?? '-'}</td>
-                      <td>
-                          <button type="button" class="pk-btn pk-btn-primary"
-                                  onclick="processEntry(${vehicle.vehicleId}, 'RESIDENT', this)">
-                              입차 처리
-                          </button>
-                      </td>
-                  `;
-                  residentList.appendChild(row);
-              });
-          })
-          .catch(err => {
-              console.error(err);
-              residentList.innerHTML = '<tr><td colspan="5">데이터 조회 중 오류가 발생했습니다.</td></tr>';
-          });
+        data.forEach(vehicle => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${vehicle.vehicleNumber}</td>
+            <td>${vehicle.household}</td>
+            <td>${vehicle.userName}</td>
+            <td>${vehicle.model ?? '-'}</td>
+            <td>
+              <button type="button" class="pk-btn pk-btn-primary"
+                      onclick="processEntry(${vehicle.vehicleId}, 'RESIDENT', this)">
+                입차 처리
+              </button>
+            </td>
+          `;
+          residentList.appendChild(row);
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        residentList.innerHTML = '<tr><td colspan="5">데이터 조회 중 오류가 발생했습니다.</td></tr>';
+      });
   }
 
   loadTodayList();

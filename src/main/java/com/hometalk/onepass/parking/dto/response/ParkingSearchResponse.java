@@ -26,6 +26,8 @@ public class ParkingSearchResponse {
     private final boolean unregistered;
     private final boolean dayApplied;
     private final boolean hourApplied;
+    private final int dayAppliedCount;   // 추가
+    private final int hourAppliedCount;  // 추가
 
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
@@ -62,11 +64,20 @@ public class ParkingSearchResponse {
 
         this.unregistered = log.getHousehold() == null;
 
-        // 적용된 티켓 타입 확인
         this.dayApplied = usages.stream()
                 .anyMatch(u -> u.getTicket().getType() == ParkingTicket.TicketType.DAY);
         this.hourApplied = usages.stream()
                 .anyMatch(u -> u.getTicket().getType() == ParkingTicket.TicketType.HOUR);
+
+        // 적용된 수량 합산
+        this.dayAppliedCount = usages.stream()
+                .filter(u -> u.getTicket().getType() == ParkingTicket.TicketType.DAY)
+                .mapToInt(TicketUsage::getUsedCount)
+                .sum();
+        this.hourAppliedCount = usages.stream()
+                .filter(u -> u.getTicket().getType() == ParkingTicket.TicketType.HOUR)
+                .mapToInt(TicketUsage::getUsedCount)
+                .sum();
     }
 
     private String formatMinutes(long minutes) {

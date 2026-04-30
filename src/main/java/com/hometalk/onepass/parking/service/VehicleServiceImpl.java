@@ -14,6 +14,10 @@ import com.hometalk.onepass.parking.repository.VehicleApprovalRepository;
 import com.hometalk.onepass.parking.repository.VehicleRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,19 +40,16 @@ public class VehicleServiceImpl implements VehicleService {
     // 차량 등록
     @Override
     public VehicleResponse register(Long userId, VehicleRegisterRequest request, List<MultipartFile> documents) {
-        User user = userRepository.findById(1L) // TODO: JWT 연동 후 제거
+        User user = userRepository.findById(1L) // TODO: JWT 연동 후 userId로 변경
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
         Household household = user.getHousehold();
 
-        // 차량번호 정규화
         String vehicleNumber = request.getVehicleNumber().replace(" ", "");
 
-        // 차량 번호 중복 확인
         if (vehicleRepository.existsByVehicleNumber(vehicleNumber)) {
             throw new IllegalArgumentException("이미 등록된 차량 번호입니다.");
         }
 
-        // 차량 등록
         Vehicle vehicle = new Vehicle(
                 household,
                 user,
@@ -58,7 +59,6 @@ public class VehicleServiceImpl implements VehicleService {
         );
         vehicleRepository.save(vehicle);
 
-        // 서류 저장
         List<String> documentPaths = fileStorageService.saveDocuments(documents);
         if (documentPaths.isEmpty()) {
             throw new IllegalArgumentException("첨부 서류는 필수입니다.");
@@ -66,7 +66,6 @@ public class VehicleServiceImpl implements VehicleService {
 
         String documentPath = String.join(",", documentPaths);
 
-        // 승인 이력 생성
         VehicleApproval approval = new VehicleApproval(vehicle, documentPath);
         vehicleApprovalRepository.save(approval);
 
@@ -77,17 +76,23 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     @Transactional(readOnly = true)
     public List<VehicleResponse> getHouseholdVehicles(Long householdId) {
-        User user = userRepository.findById(1L) // TODO: JWT 연동 후 제거
+        User user = userRepository.findById(1L) // TODO: JWT 연동 후 householdId로 변경
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
         Household household = user.getHousehold();
 
         return vehicleRepository.findByHousehold(household)
                 .stream()
-                .map(VehicleResponse::new)
+                .map(vehicle -> {
+                    Optional<ParkingLog> parkingLog = parkingLogRepository
+                            .findByVehicleNumberAndStatus(
+                                    vehicle.getVehicleNumber(),
+                                    ParkingLog.ParkingStatus.PARKED);
+                    return new VehicleResponse(vehicle, parkingLog.orElse(null));
+                })
                 .collect(Collectors.toList());
     }
 
-    // 반려 사유 조회 (vehicleId 기반)
+    // 반려 사유 조회
     @Override
     @Transactional(readOnly = true)
     public String getRejectReason(Long vehicleId) {
@@ -133,6 +138,16 @@ public class VehicleServiceImpl implements VehicleService {
                 .collect(Collectors.toList());
     }
 
+    // 관리자 - 차량 목록 조회 (상태별, 페이지네이션)
+    @Override
+    @Transactional(readOnly = true)
+    public Page<VehicleApprovalResponse> getApprovalList(Vehicle.VehicleStatus status, int page, int size) {
+        VehicleApproval.ApprovalStatus approvalStatus = VehicleApproval.ApprovalStatus.valueOf(status.name());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("approvalId").descending());
+        return vehicleApprovalRepository.findByStatus(approvalStatus, pageable)
+                .map(VehicleApprovalResponse::new);
+    }
+
     // 관리자 - 차량 승인
     @Override
     public void approve(Long userId, Long approvalId) {
@@ -172,7 +187,6 @@ public class VehicleServiceImpl implements VehicleService {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new EntityNotFoundException("차량을 찾을 수 없습니다."));
 
-        // 주차 중인 차량은 삭제 불가
         parkingLogRepository.findByVehicleNumberAndStatus(
                         vehicle.getVehicleNumber(), ParkingLog.ParkingStatus.PARKED)
                 .ifPresent(l -> {

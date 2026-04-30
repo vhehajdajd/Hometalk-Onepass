@@ -88,18 +88,19 @@ public class StaffEntryService {
                         vehicleNumber,
                         reservation.getHousehold(),
                         reservation,
-                        null, // TODO: JWT 연동 후 staff 추출
+                        null,
                         ParkingLog.EntryType.RESERVATION
                 );
                 parkingLogRepository.save(log);
-                // TODO: 알림 - "방문 차량 입차 완료"
             }
+
             case RESIDENT -> {
                 Vehicle vehicle = vehicleRepository
                         .findById(request.getId())
                         .orElseThrow(() -> new IllegalArgumentException("차량 정보를 찾을 수 없습니다."));
 
-                if (vehicle.getStatus() != Vehicle.VehicleStatus.APPROVED) {
+                // ✅ 승인 차량만 허용 (보강)
+                if (!Vehicle.VehicleStatus.APPROVED.equals(vehicle.getStatus())) {
                     throw new IllegalStateException("승인된 차량만 입차 처리할 수 있습니다.");
                 }
 
@@ -118,11 +119,10 @@ public class StaffEntryService {
                         vehicleNumber,
                         vehicle.getHousehold(),
                         null,
-                        null, // TODO: JWT 연동 후 staff 추출
+                        null,
                         ParkingLog.EntryType.NORMAL
                 );
                 parkingLogRepository.save(log);
-                // TODO: 알림 - "입주자 차량 입차 완료"
             }
         }
     }
@@ -144,6 +144,14 @@ public class StaffEntryService {
         // 차량번호 정규화
         String vehicleNumber = request.getVehicleNumber().replace(" ", "");
 
+        // ✅ 핵심 추가: 등록 차량이면 승인 여부 체크
+        vehicleRepository.findByVehicleNumber(vehicleNumber)
+                .ifPresent(v -> {
+                    if (!Vehicle.VehicleStatus.APPROVED.equals(v.getStatus())) {
+                        throw new IllegalStateException("승인되지 않은 등록 차량은 입차할 수 없습니다.");
+                    }
+                });
+
         // 입차 중복 방지
         parkingLogRepository
                 .findByVehicleNumberAndStatus(vehicleNumber, ParkingLog.ParkingStatus.PARKED)
@@ -163,11 +171,10 @@ public class StaffEntryService {
                 vehicleNumber,
                 household,
                 reservation,
-                null, // TODO: JWT 연동 후 staff 추출
+                null,
                 ParkingLog.EntryType.MANUAL
         );
         parkingLogRepository.save(log);
-        // TODO: 알림 - "미등록 차량 입차됨, 방문자로 등록하시겠어요?"
     }
 
     // ─── 오늘 방문 예정 목록 ─────────────────────────────────────
@@ -181,14 +188,12 @@ public class StaffEntryService {
     public List<Vehicle> getResidentVehicleList() {
         List<Vehicle> approvedVehicles = vehicleRepository.findAllByStatusWithHousehold(Vehicle.VehicleStatus.APPROVED);
 
-        // 현재 주차 중인 차량 번호 목록
         List<String> parkedVehicleNumbers = parkingLogRepository
                 .findByStatus(ParkingLog.ParkingStatus.PARKED)
                 .stream()
                 .map(ParkingLog::getVehicleNumber)
                 .toList();
 
-        // 주차 중인 차량 제외
         return approvedVehicles.stream()
                 .filter(v -> !parkedVehicleNumbers.contains(
                         v.getVehicleNumber().replace(" ", "")))
