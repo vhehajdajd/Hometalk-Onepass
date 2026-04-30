@@ -9,6 +9,7 @@ import com.hometalk.onepass.community.repository.PostRepository;
 import com.hometalk.onepass.community.service.BoardService;
 import com.hometalk.onepass.community.service.CommunityAdminService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/community/admin")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class CommunityAdminController {
     private final CommunityAdminService communityAdminService;
 
@@ -54,7 +56,7 @@ public class CommunityAdminController {
             communityAdminService.deleteBoard(id);
             rttr.addFlashAttribute("message", "게시판이 성공적으로 삭제되었습니다.");
         } catch (IllegalStateException e) {
-            rttr.addFlashAttribute("error", e.getMessage());
+            rttr.addFlashAttribute("errorMessage", e.getMessage());
             System.out.println("삭제 에러 발생: " + e.getMessage());
         }
         return "redirect:/community/admin";

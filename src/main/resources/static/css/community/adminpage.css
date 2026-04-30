@@ -185,3 +185,50 @@ input[type="color"]::-webkit-color-swatch {
     border-radius: 50%;
     border: 1px solid #ddd;
 }
+
+/* 알림 메시지 공통 컨테이너 */
+.alert-container {
+    max-width: 800px;
+    margin: 0 auto 15px;
+}
+
+.alert-banner {
+    padding: 10px 15px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    box-shadow: none;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background-color: #f0fff9;
+    color: #003366;
+    border: 1px solid #98FFD2;
+    border-left: 4px solid #98FFD2;
+}
+
+.alert-error {
+    background-color: #fff5f2;
+    color: #d45d31;
+    border: 1px solid #FF7F50;
+    border-left: 4px solid #FF7F50;
+}
+
+.close-btn {
+    font-size: 16px;
+    line-height: 1;
+    padding-left: 10px;
+    color: inherit;
+    opacity: 0.5;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

@@ -30,6 +30,19 @@
             <div th:replace="~{community/fragments/adminNav :: adminNav('management')}"></div>
 
             <div class="detail-container">
+                <div class="alert-container">
+                    <!-- 성공 메시지 (message) -->
+                    <div th:if="${message}" class="alert-banner alert-success">
+                        <span th:text="${message}">성공 메시지 영역</span>
+                        <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                    <!-- 에러 메시지 (errorMessage) -->
+                    <div th:if="${errorMessage}" class="alert-banner alert-error">
+                        <span th:text="${errorMessage}">에러 메시지 영역</span>
+                        <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                </div>
+
                 <div class="board-header">
                     <h2 th:text="'게시판 관리: ' + ${board.name}">게시판 이름</h2>
                     <p th:if="${board.isSystem}" class="text-system">* 이 게시판은 시스템 필수 게시판으로 삭제가 제한됩니다.</p>
@@ -95,18 +108,6 @@
 
 <script th:src="@{/js/community/adminpage.js}"></script>
 <script th:inline="javascript">
-    /*<![CDATA[*/
-    const errorMessage = /*[[${errorMessage}]]*/ null;
-    const message = /*[[${message}]]*/ null;
-
-    if (errorMessage) {
-        alert(errorMessage);
-    }
-    if (message) {
-        alert(message);
-    }
-    /*]]>*/
-
     // 수정 모드 전환 함수
     function toggleEdit(id, isEdit) {
         const viewElements = document.querySelectorAll(`#name-text-${id}, #btn-group-${id}`);
