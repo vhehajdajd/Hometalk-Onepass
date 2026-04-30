@@ -16,9 +16,18 @@
             <div th:replace="~{community/fragments/adminNav :: adminNav('posts')}"></div>
 
             <div class="admin-content-card">
+                <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <p style="font-size: 14px; color: #666;">* 숨김 또는 삭제 처리된 게시글만 표시됩니다.</p>
+                    <button type="button" class="btn-hard-delete" onclick="deleteSelectedPosts()"
+                            style="padding: 8px 15px; background-color: #ff4d4f; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        선택한 게시글 일괄 영구 삭제
+                    </button>
+                </div>
+
                 <table class="admin-table">
                     <thead>
                     <tr>
+                        <th><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
                         <th>ID</th>
                         <th>게시판</th>
                         <th>제목</th>
@@ -29,6 +38,7 @@
                     </thead>
                     <tbody>
                     <tr th:each="post : ${posts}">
+                        <td><input type="checkbox" name="postCheck" th:value="${post.id}"></td>
                         <td th:text="${post.id}">1</td>
                         <td th:text="${post.boardName}">자유게시판</td>
                         <td class="text-left">
@@ -60,5 +70,59 @@
 </div>
 
 <script th:src="@{/js/community/adminpage.js}"></script>
+<script th:inline="javascript">
+    // 1. 전체 선택/해제 기능
+    function toggleAll(selectAll) {
+        const checkboxes = document.getElementsByName('postCheck');
+        checkboxes.forEach((checkbox) => {
+            checkbox.checked = selectAll.checked;
+        });
+    }
+
+    // 2. 선택 삭제 로직
+    function deleteSelectedPosts() {
+        const selectedIds = [];
+        const checkboxes = document.getElementsByName('postCheck');
+
+        checkboxes.forEach((cb) => {
+            if (cb.checked) {
+                selectedIds.push(cb.value);
+            }
+        });
+
+        if (selectedIds.length === 0) {
+            alert("삭제할 게시글을 선택해주세요.");
+            return;
+        }
+
+        if (confirm(`선택한 ${selectedIds.length}개의 게시글을 DB에서 완전히 영구 삭제하시겠습니까?`)) {
+            // JSON 형태로 전송하거나 폼을 동적으로 생성해 전송
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/hometop/community/admin/posts/hard-delete/batch'; // 일괄 삭제용 매핑 주소
+
+            // CSRF 토큰
+            const csrfToken = /*[[${_csrf.token}]]*/ '';
+            const csrfHeader = /*[[${_csrf.parameterName}]]*/ '_csrf';
+
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = csrfHeader;
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+            }
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'postIds';
+            input.value = selectedIds.join(','); // 1,2,3 형태로 전송
+
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
 </body>
 </html>

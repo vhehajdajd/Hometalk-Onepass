@@ -85,7 +85,7 @@
            th:classappend="${boardId == board.id ? 'active' : ''}"
            th:text="${board.name}">게시판 이름</a>
       </div>
-      <!-- 관리자 버튼: flex 구조상 오른쪽 끝 배치 -->
+      <!-- 관리자 버튼 -->
       <a sec:authorize="hasRole('ADMIN')" th:href="@{/community/admin}" class="admin-setup-link">
         <i class="fas fa-cog"></i>
       </a>

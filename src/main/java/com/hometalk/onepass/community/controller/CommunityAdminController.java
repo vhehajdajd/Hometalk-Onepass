@@ -72,8 +72,19 @@ public class CommunityAdminController {
     @PostMapping("/category/create")
     public String createCategory(@RequestParam Long boardId,
                                  @RequestParam String name,
-                                 @RequestParam String code) {
-        communityAdminService.addCategory(boardId, name, code);
+                                 @RequestParam String code,
+                                 @RequestParam String color,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            // 서비스 호출 (수정된 파라미터 포함)
+            communityAdminService.addCategory(boardId, name, code, color);
+            redirectAttributes.addFlashAttribute("message", "카테고리가 성공적으로 추가되었습니다.");
+        } catch (IllegalStateException e) {
+            // "카테고리는 최대 5개까지만..." 등의 메시지를 화면으로 전달
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "알 수 없는 오류가 발생했습니다.");
+        }
         return "redirect:/community/admin/board/detail/" + boardId;
     }
 
@@ -109,6 +120,17 @@ public class CommunityAdminController {
             rttr.addFlashAttribute("message", "게시글이 DB에서 영구 삭제되었습니다.");
         } catch (Exception e) {
             rttr.addFlashAttribute("errorMessage", "삭제 중 오류 발생: " + e.getMessage());
+        }
+        return "redirect:/community/admin/posts";
+    }
+
+    @PostMapping("/posts/hard-delete/batch")
+    public String hardDeleteBatch(@RequestParam List<Long> postIds, RedirectAttributes redirectAttributes) {
+        try {
+            communityAdminService.hardDeletePosts(postIds);
+            redirectAttributes.addFlashAttribute("message", postIds.size() + "건이 영구 삭제되었습니다.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "삭제 중 오류 발생: " + e.getMessage());
         }
         return "redirect:/community/admin/posts";
     }

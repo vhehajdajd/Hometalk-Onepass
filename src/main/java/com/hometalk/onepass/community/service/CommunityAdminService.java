@@ -165,6 +165,14 @@ public class CommunityAdminService {
         postRepository.hardDeletePostById(postId);
         log.info("관리자 권한으로 게시글 영구 삭제 완료: ID {}", postId);
     }
+    // 일괄 처리
+    @Transactional
+    public void hardDeletePosts(List<Long> postIds) {
+        if (postIds != null && !postIds.isEmpty()) {
+            postIds.forEach(this::hardDeletePost);
+            log.info("관리자 권한으로 게시글 {}건 일괄 영구 삭제 완료", postIds.size());
+        }
+    }
 
     // --- [내부 헬퍼 메서드] ---
     private void createDefaultCategory(Board board) {
@@ -217,10 +225,16 @@ public class CommunityAdminService {
     }
 
     @Transactional
-    public void addCategory(Long boardId, String name, String code) {
+    public void addCategory(Long boardId, String name, String code, String color) {
         // 1. 게시판 존재 여부 확인
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판입니다. id=" + boardId));
+        long customCategoryCount = board.getCategories().stream()
+                .filter(c -> !c.getCode().equals("all"))
+                .count();
+        if (customCategoryCount >= 5) {
+            throw new IllegalStateException("추가 카테고리는 게시판당 최대 5개까지만 생성 가능합니다.");
+        }
         // 2. 카테고리 이름 중복 체크
         boolean isDuplicate = board.getCategories().stream()
                 .anyMatch(c -> c.getName().equals(name));
@@ -230,7 +244,7 @@ public class CommunityAdminService {
 
         // 3. 카테고리 엔티티 생성 및 연관관계 설정
         Category category = Category.builder()
-                .name(name).code(code)
+                .name(name).code(code).color(color)
                 .board(board)  // 부모 게시판 설정
                 .system(false) // 사용자가 추가하는 건 시스템 카테고리가 아님
                 .build();

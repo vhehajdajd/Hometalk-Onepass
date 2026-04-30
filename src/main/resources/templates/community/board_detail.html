@@ -74,6 +74,11 @@
                         <input type="hidden" name="boardId" th:value="${board.id}">
                         <input type="text" name="name" placeholder="카테고리 이름 (예: 갤러리)" required>
                         <input type="text" name="code" placeholder="영문 코드 (예: gallery)" required style="flex: 1;">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <label style="font-size: 10px; color: #666;">색상</label>
+                            <input type="color" name="color" value="#888888" title="카테고리 색상 선택"
+                                   style="width: 40px; height: 30px; cursor: pointer; border: none; background: none;">
+                        </div>
                         <button type="submit" class="btn-sm" style="background: #e6f7ff; border-color: #91d5ff;">+ 카테고리 추가</button>
                     </form>
                 </div>
@@ -89,7 +94,7 @@
 </div>
 
 <script th:src="@{/js/community/adminpage.js}"></script>
-<script>
+<script th:inline="javascript">
     /*<![CDATA[*/
     const errorMessage = /*[[${errorMessage}]]*/ null;
     const message = /*[[${message}]]*/ null;
