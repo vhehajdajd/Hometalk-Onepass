@@ -7,16 +7,8 @@
 </head>
 <body>
 <div class="main-layout" style="display: flex; min-height: 100vh;">
-    <!-- 1. 왼쪽 사이드바 -->
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
-    <!-- 2. 오른쪽 영역 (헤더 + 본문) -->
     <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
-        <!--            <a th:text="${boardId}">광장 = 1, 마켓 = 2</a>-->
-        <!--            <a th:each="board : ${boards}" th:text="${board.name}">String = 광장, 마켓 </a>-->
-        <!--            <a th:each="category : ${categories}" th:text="${category.name}">전체, 자유, 토론 </a>-->
-        <!--            <a th:text="${categoryId}">전체, 자유, 토론 </a>-->
-        <!--            <p>현재 경로는 <span th:text="${boards[0].name}">현재 경로</span>입니다.</p>-->
-        <!-- 상단 헤더 -->
         <th:block th:each="board : ${boards}">
             <div th:if="${boardId == board.id}">
                 <div th:switch="${categoryId}">

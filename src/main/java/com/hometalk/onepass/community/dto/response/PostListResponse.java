@@ -53,7 +53,9 @@ public class PostListResponse {
         }
 
         // 나눔 게시글 상태
-        if ("share".equalsIgnoreCase(post.getCategory().getCode()) && post.getMarketStatus() != null) {
+        if ("share".equalsIgnoreCase(post.getCategory().getCode())
+                && post.getMarketStatus() != null
+                && !post.isPinned()) {
             this.marketStatus = post.getMarketStatus().name();
             this.marketStatusDescription = post.getMarketStatus().getDescription();
         } else {

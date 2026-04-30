@@ -4,7 +4,6 @@
     <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/community/post-list.css}">
 </head>
-
 <body>
 <div class="main-layout" style="display: flex; min-height: 100vh;">
     <!-- 1. 왼쪽 사이드바 -->
@@ -16,7 +15,6 @@
         <!--            <a th:each="category : ${categories}" th:text="${category.name}">전체, 자유, 토론 </a>-->
         <!--            <a th:text="${categoryId}">전체, 자유, 토론 </a>-->
         <!--            <p>현재 경로는 <span th:text="${boards[0].name}">현재 경로</span>입니다.</p>-->
-
         <!-- 상단 헤더 -->
         <th:block th:each="board : ${boards}">
             <div th:if="${boardId == board.id}">
@@ -39,10 +37,8 @@
                 </div>
             </div>
         </th:block>
-
         <!-- 상단 메뉴 -->
         <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
-
         <!-- 메인 콘텐츠 -->
         <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">
             <div th:replace="~{community/fragments/boardListHeader :: boardListHeader(boards=${boards}, boardId=${boardId}, loginUser=${loginUser})}"></div>
