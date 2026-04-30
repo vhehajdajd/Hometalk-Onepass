@@ -27,15 +27,27 @@
         <div class="container">
             <h2>공지 수정</h2>
 
+            <!-- ── 임시저장 알림 ──────────────────────────────────────────── -->
+            <div th:if="${param.saved}" style="background:#D1E8E4; color:#155724; padding:10px 16px; border-radius:8px; margin-bottom:16px; font-size:13px;">
+                임시저장 되었습니다!
+            </div>
+
+            <!-- ── 임시저장 버튼 ──────────────────────────────────────────── -->
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:16px;">
+                <button type="button" class="btn-draft-list" onclick="openDraftModal()">임시저장 목록</button>
+                <button type="button" class="btn-draft" onclick="saveDraft()">임시저장</button>
+            </div>
+
+            <!-- ── 공지 수정 폼 ───────────────────────────────────────────── -->
             <form th:action="@{/notice/{id}/edit(id=${notice.id})}" method="post" enctype="multipart/form-data" id="editForm">
 
                 <div class="form-group">
                     <label for="badge">분류</label>
-                    <select id="badge" name="badge" required>
+                    <select id="badge" name="badge">
                         <option value="">분류 선택</option>
-                        <option value="FACILITY"  th:selected="${notice.badge.name() == 'FACILITY'}">시설</option>
-                        <option value="SAFETY"    th:selected="${notice.badge.name() == 'SAFETY'}">안전</option>
-                        <option value="NORMAL"    th:selected="${notice.badge.name() == 'NORMAL'}">일반</option>
+                        <option value="FACILITY" th:selected="${notice.badge != null && notice.badge.name() == 'FACILITY'}">시설</option>
+                        <option value="SAFETY"   th:selected="${notice.badge != null && notice.badge.name() == 'SAFETY'}">안전</option>
+                        <option value="NORMAL"   th:selected="${notice.badge != null && notice.badge.name() == 'NORMAL'}">일반</option>
                     </select>
                 </div>
 
@@ -43,10 +55,11 @@
                     <label for="title">제목</label>
                     <input type="text" id="title" name="title"
                            th:value="${notice.title}"
-                           placeholder="제목을 입력하세요 (최대 100자)" maxlength="100" required>
-                    <small><span id="charCount" th:text="${notice.title.length()}">0</span>/100</small>
+                           placeholder="제목을 입력하세요" maxlength="100">
+                    <small><span id="charCount" th:text="${notice.title != null ? notice.title.length() : 0}">0</span>/100</small>
                 </div>
 
+                <!-- ── Quill 에디터 + 일정 등록 모달 ────────────────────── -->
                 <div class="form-group notice-content-wrap">
                     <label>내용</label>
                     <input type="hidden" name="content" id="content">
@@ -62,6 +75,20 @@
                                 <tr>
                                     <td>일정명</td>
                                     <td><input type="text" id="scheduleName" placeholder="일정명을 입력하세요."></td>
+                                </tr>
+                                <tr>
+                                    <td>반복</td>
+                                    <td>
+                                        <select id="scheduleRepeatType" name="scheduleRepeatType" onchange="toggleRepeatEndDate()">
+                                            <option value="NONE">반복 없음</option>
+                                            <option value="WEEKLY">매주</option>
+                                            <option value="MONTHLY">매월</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr id="repeatEndDateRow" style="display:none;">
+                                    <td>반복 종료일</td>
+                                    <td><input type="date" id="scheduleRepeatEndDate"></td>
                                 </tr>
                                 <tr>
                                     <td>시작</td>
@@ -117,18 +144,31 @@
                     </div>
                 </div>
 
-                <!-- 일정 hidden inputs -->
+                <!-- ── hidden 필드 ────────────────────────────────────────── -->
                 <input type="hidden" id="scheduleStartAt" name="scheduleStartAt">
                 <input type="hidden" id="scheduleEndAt" name="scheduleEndAt">
+                <input type="hidden" id="scheduleRepeatEndAt" name="scheduleRepeatEndAt">
                 <input type="hidden" id="scheduleNameHidden" name="scheduleName">
                 <input type="hidden" id="scheduleInfoHidden" name="scheduleInfo">
                 <input type="hidden" id="scheduleLocationHidden" name="scheduleLocation">
+                <input type="hidden" id="statusInput" name="status" value="PUBLISHED">
 
+                <!-- ── 첨부파일 ───────────────────────────────────────────── -->
+                <div class="file-section">
+                    <div class="file-section-title">📎 첨부파일</div>
+                    <div class="file-list" th:if="${attachments != null && !attachments.isEmpty()}">
+                        <div class="file-item" th:each="att : ${attachments}">
+                            <span th:text="${att.fileName}"></span>
+                        </div>
+                    </div>
+                    <div id="fileNames" class="file-list"></div>
+                </div>
+
+                <!-- ── 하단 버튼 그룹 ─────────────────────────────────────── -->
                 <div class="button-group">
                     <div class="button-group-left">
-                        <input type="file" id="file" name="file">
+                        <input type="file" id="file" name="files" multiple>
                         <label for="file" class="btn btn-file">파일 올리기</label>
-                        <span id="fileName" class="file-name"></span>
                     </div>
                     <div class="button-group-right">
                         <div class="checkbox-group">
@@ -147,8 +187,25 @@
                 </div>
 
             </form>
+
+            <!-- ── 임시저장 목록 모달 ─────────────────────────────────────── -->
+            <div class="draft-modal-overlay" id="draftModalOverlay">
+                <div class="draft-modal-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h3 style="font-size:16px; font-weight:600; color:var(--color-main);">임시저장 목록</h3>
+                        <button type="button" onclick="closeDraftModal()"
+                                style="background:none; border:none; font-size:18px; cursor:pointer; color:#aaa;">✕</button>
+                    </div>
+                    <div id="draftList">
+                        <div style="text-align:center; color:#aaa; padding:20px;">불러오는 중...</div>
+                    </div>
+                </div>
+            </div>
+
         </div>
+
         <footer th:replace="~{fragments/footer :: footer}"></footer>
+
     </div>
 </div>
 
@@ -156,19 +213,17 @@
     var savedContent = /*[[${notice.content}]]*/ '';
     var imageUploadUrl = /*[[@{/notice/image-upload}]]*/ '/notice/image-upload';
     var linkedSchedule = /*[[${linkedSchedule}]]*/ null;
+    var contextPath = /*[[@{/}]]*/ '/';
 </script>
 
 <script>
-    function formatDate(year, month, day) {
-        return year + '-' + pad(month) + '-' + pad(day);
-    }
-
     function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
+    // ── 날짜/시간 파싱 유틸 ──────────────────────────────────────────────────
     function extractDate(dt) {
         if (!dt) return '';
         if (typeof dt === 'object' && dt.year) {
-            return formatDate(dt.year, dt.monthValue, dt.dayOfMonth);
+            return dt.year + '-' + pad(dt.monthValue) + '-' + pad(dt.dayOfMonth);
         }
         return dt.substring(0, 10);
     }
@@ -185,6 +240,7 @@
         return dt.substring(14, 16);
     }
 
+    // ── Quill 에디터 초기화 ───────────────────────────────────────────────────
     var quill = new Quill('#editor', {
         theme: 'snow',
         modules: {
@@ -206,21 +262,26 @@
                             var file = input.files[0];
                             var formData = new FormData();
                             formData.append('file', file);
-
                             var csrfToken = document.querySelector('meta[name="_csrf"]').content;
                             var csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
                             var headers = {};
                             headers[csrfHeader] = csrfToken;
-
                             fetch(imageUploadUrl, {
                                 method: 'POST',
                                 headers: headers,
                                 body: formData
                             })
-                            .then(res => res.json())
+                            .then(res => {
+                                if (!res.ok) throw new Error('업로드 실패');
+                                return res.json();
+                            })
                             .then(data => {
                                 var range = quill.getSelection();
-                                quill.insertEmbed(range.index, 'image', data.url);
+                                var index = range ? range.index : quill.getLength();
+                                quill.insertEmbed(index, 'image', data.url);
+                            })
+                            .catch(err => {
+                                alert('이미지 업로드에 실패했습니다.');
                             });
                         };
                     }
@@ -229,15 +290,23 @@
         }
     });
 
+    // ── 반복 종료일 표시/숨김 ────────────────────────────────────────────────
+    function toggleRepeatEndDate() {
+        var repeatType = document.getElementById('scheduleRepeatType').value;
+        var row = document.getElementById('repeatEndDateRow');
+        row.style.display = repeatType === 'NONE' ? 'none' : '';
+    }
+
+    // ── 기존 공지 내용 로드 ──────────────────────────────────────────────────
     setTimeout(function() {
         if (savedContent) quill.root.innerHTML = savedContent;
     }, 100);
 
+    // ── 기존 연동 일정 로드 ──────────────────────────────────────────────────
     if (linkedSchedule) {
         document.getElementById('scheduleName').value = linkedSchedule.title || '';
         document.getElementById('scheduleInfo').value = linkedSchedule.info || '';
         document.getElementById('scheduleLocation').value = linkedSchedule.location || '';
-
         if (linkedSchedule.startAt) {
             document.getElementById('scheduleStartDate').value = extractDate(linkedSchedule.startAt);
             document.getElementById('scheduleStartHour').value = extractHour(linkedSchedule.startAt);
@@ -248,59 +317,49 @@
             document.getElementById('scheduleEndHour').value = extractHour(linkedSchedule.endAt);
             document.getElementById('scheduleEndMinute').value = extractMinute(linkedSchedule.endAt);
         }
+        if (linkedSchedule.repeatType && linkedSchedule.repeatType !== 'NONE') {
+            document.getElementById('scheduleRepeatType').value = linkedSchedule.repeatType;
+            document.getElementById('repeatEndDateRow').style.display = '';
+            if (linkedSchedule.repeatEndAt) {
+                document.getElementById('scheduleRepeatEndDate').value = extractDate(linkedSchedule.repeatEndAt);
+            }
+        }
     } else {
         document.getElementById('scheduleStartMinute').value = '00';
         document.getElementById('scheduleEndMinute').value = '00';
     }
 
+    // ── 제목 글자수 카운트 ───────────────────────────────────────────────────
     document.getElementById('title').addEventListener('input', function() {
         document.getElementById('charCount').innerText = this.value.length;
     });
 
+    // ── 첨부파일 목록 표시 ───────────────────────────────────────────────────
     document.getElementById('file').addEventListener('change', function() {
-        document.getElementById('fileName').innerText = this.files[0]?.name || '';
+        var container = document.getElementById('fileNames');
+        container.innerHTML = '';
+        Array.from(this.files).forEach(function(f) {
+            var div = document.createElement('div');
+            div.className = 'file-item';
+            div.textContent = '📎 ' + f.name;
+            container.appendChild(div);
+        });
     });
 
-    function registerSchedule() {
-        var startDate    = document.getElementById('scheduleStartDate').value;
-        var endDate      = document.getElementById('scheduleEndDate').value;
-        var startHour    = document.getElementById('scheduleStartHour').value;
-        var startMinute  = document.getElementById('scheduleStartMinute').value || '00';
-        var endHour      = document.getElementById('scheduleEndHour').value;
-        var endMinute    = document.getElementById('scheduleEndMinute').value || '00';
-        var scheduleName = document.getElementById('scheduleName').value.trim();
+    // ── hidden 입력값 수집 ───────────────────────────────────────────────────
+    function collectScheduleData() {
+        document.getElementById('scheduleStartAt').value = '';
+        document.getElementById('scheduleEndAt').value = '';
+        document.getElementById('scheduleRepeatEndAt').value = '';
 
-        if (!scheduleName) {
-            alert('일정명을 입력해주세요.');
-            return;
-        }
-        if (!startDate) {
-            alert('시작 날짜를 입력해주세요.');
-            return;
-        }
-
-        if (endDate) {
-            var startAt = new Date(startDate + 'T' + startHour + ':' + startMinute + ':00');
-            var endAt   = new Date(endDate   + 'T' + endHour   + ':' + endMinute   + ':00');
-            if (endAt <= startAt) {
-                alert('종료 시간이 시작 시간보다 이후여야 합니다.');
-                return;
-            }
-        }
-
-        document.getElementById('scheduleModal').classList.remove('open');
-    }
-
-    document.getElementById('editForm').addEventListener('submit', function() {
-        document.getElementById('content').value = quill.root.innerHTML;
-
-        var scheduleName = document.getElementById('scheduleName').value.trim();
-        var startDate    = document.getElementById('scheduleStartDate').value;
-        var startHour    = document.getElementById('scheduleStartHour').value;
-        var startMinute  = document.getElementById('scheduleStartMinute').value || '00';
-        var endDate      = document.getElementById('scheduleEndDate').value;
-        var endHour      = document.getElementById('scheduleEndHour').value;
-        var endMinute    = document.getElementById('scheduleEndMinute').value || '00';
+        var scheduleName  = document.getElementById('scheduleName').value.trim();
+        var startDate     = document.getElementById('scheduleStartDate').value;
+        var startHour     = document.getElementById('scheduleStartHour').value;
+        var startMinute   = document.getElementById('scheduleStartMinute').value || '00';
+        var endDate       = document.getElementById('scheduleEndDate').value;
+        var endHour       = document.getElementById('scheduleEndHour').value;
+        var endMinute     = document.getElementById('scheduleEndMinute').value || '00';
+        var repeatEndDate = document.getElementById('scheduleRepeatEndDate').value;
 
         document.getElementById('scheduleNameHidden').value = scheduleName;
         document.getElementById('scheduleInfoHidden').value = document.getElementById('scheduleInfo').value;
@@ -312,11 +371,146 @@
         if (endDate) {
             document.getElementById('scheduleEndAt').value = endDate + 'T' + endHour + ':' + endMinute + ':00';
         }
+        if (repeatEndDate) {
+            document.getElementById('scheduleRepeatEndAt').value = repeatEndDate + 'T23:59:59';
+        }
+    }
+
+    // ── 임시저장 ─────────────────────────────────────────────────────────────
+    function saveDraft() {
+        document.getElementById('content').value = quill.root.innerHTML;
+        document.getElementById('statusInput').value = 'DRAFT';
+        collectScheduleData();
+        document.getElementById('editForm').submit();
+    }
+
+    // ── 임시저장 모달 열기/닫기 ──────────────────────────────────────────────
+    function openDraftModal() {
+        document.getElementById('draftModalOverlay').classList.add('open');
+        loadDrafts();
+    }
+
+    function closeDraftModal() {
+        document.getElementById('draftModalOverlay').classList.remove('open');
+    }
+
+    // ── 임시저장 목록 불러오기 ───────────────────────────────────────────────
+    function loadDrafts() {
+        fetch(contextPath + 'notice/api/drafts')
+            .then(res => res.json())
+            .then(function(data) {
+                var container = document.getElementById('draftList');
+                if (data.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; color:#aaa; padding:20px;">임시저장된 공지가 없습니다.</div>';
+                    return;
+                }
+                container.innerHTML = '';
+                data.forEach(function(draft) {
+                    var div = document.createElement('div');
+                    div.className = 'draft-item';
+                    var title = draft.title && draft.title.trim() !== '' ? draft.title : '(제목 없음)';
+                    var date = typeof draft.createdAt === 'string' ? draft.createdAt.substring(0, 10) : '';
+                    div.innerHTML =
+                        '<div class="draft-item-title" style="cursor:pointer;">' + title + '</div>' +
+                        '<div style="display:flex; align-items:center; gap:8px;">' +
+                        '<div class="draft-item-date">' + date + '</div>' +
+                        '<button class="draft-delete-btn" data-id="' + draft.id + '" style="background:none; border:none; color:#888; padding:2px 8px; font-size:11px; cursor:pointer;">삭제</button>' +
+                        '</div>';
+
+                    div.querySelector('.draft-item-title').addEventListener('click', function() {
+                        window.location.href = contextPath + 'notice/' + draft.id + '/edit';
+                    });
+
+                    div.querySelector('.draft-delete-btn').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (!confirm('임시저장을 삭제하시겠습니까?')) return;
+                        var csrfToken = document.querySelector('meta[name="_csrf"]').content;
+                        var csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+                        var headers = {};
+                        headers[csrfHeader] = csrfToken;
+                        fetch(contextPath + 'notice/' + draft.id + '/delete', {
+                            method: 'POST',
+                            headers: headers
+                        }).then(function(res) {
+                            if (res.ok) loadDrafts();
+                            else alert('삭제에 실패했습니다.');
+                        }).catch(() => alert('삭제 중 오류가 발생했습니다.'));
+                    });
+
+                    container.appendChild(div);
+                });
+                updateDraftCount();
+            });
+    }
+
+    document.getElementById('draftModalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeDraftModal();
+    });
+
+    // ── 일정 등록 유효성 검사 ────────────────────────────────────────────────
+    function registerSchedule() {
+        var startDate    = document.getElementById('scheduleStartDate').value;
+        var endDate      = document.getElementById('scheduleEndDate').value;
+        var startHour    = document.getElementById('scheduleStartHour').value;
+        var startMinute  = document.getElementById('scheduleStartMinute').value || '00';
+        var endHour      = document.getElementById('scheduleEndHour').value;
+        var endMinute    = document.getElementById('scheduleEndMinute').value || '00';
+        var scheduleName = document.getElementById('scheduleName').value.trim();
+
+        if (!scheduleName) { alert('일정명을 입력해주세요.'); return; }
+        if (!startDate) { alert('시작 날짜를 입력해주세요.'); return; }
+
+        if (endDate) {
+            var startAt = new Date(startDate + 'T' + startHour + ':' + startMinute + ':00');
+            var endAt   = new Date(endDate   + 'T' + endHour   + ':' + endMinute   + ':00');
+            if (endAt <= startAt) {
+                alert('종료 시간이 시작 시간보다 이후여야 합니다.');
+                return;
+            }
+        }
+        document.getElementById('scheduleModal').classList.remove('open');
+    }
+
+    // ── 폼 제출 유효성 검사 ──────────────────────────────────────────────────
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        var statusVal = document.getElementById('statusInput').value;
+        document.getElementById('content').value = quill.root.innerHTML;
+
+        if (statusVal === 'PUBLISHED') {
+            if (!document.getElementById('badge').value) {
+                alert('분류를 선택해주세요.');
+                e.preventDefault();
+                return;
+            }
+            if (!document.getElementById('title').value.trim()) {
+                alert('제목을 입력해주세요.');
+                e.preventDefault();
+                return;
+            }
+        }
+
+        collectScheduleData();
     });
 
     function confirmCancel() {
         return confirm("수정 중인 내용을 취소하고 돌아가시겠습니까?");
     }
+
+    // ── 임시저장 개수 표시 ───────────────────────────────────────────────────
+    function updateDraftCount() {
+        fetch(contextPath + 'notice/api/drafts')
+            .then(res => res.json())
+            .then(function(data) {
+                var btn = document.querySelector('.btn-draft-list');
+                if (data.length > 0) {
+                    btn.textContent = '임시저장 목록 (' + data.length + ')';
+                } else {
+                    btn.textContent = '임시저장 목록';
+                }
+            });
+    }
+
+    updateDraftCount();
 </script>
 
 </body>

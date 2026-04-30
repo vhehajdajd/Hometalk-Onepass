@@ -4,22 +4,27 @@
    공통: billing_admin_upload.css 함께 로드
 ═══════════════════════════════════════ */
 
-/* badge-unpaid / badge-paid (billing_common에 없을 경우 대비) */
+/* ── 페이지 타이틀 ── */
+.page-title {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--color-main);
+    margin-bottom: 20px;
+}
+
 .badge-unpaid {
     display: inline-block;
     padding: 3px 10px;
     font-size: 11px;
-    border-radius: 10px;
-    background: #fff3e0;
-    color: #e65100;
-    font-weight: 600;
+    border-radius: 4px;
+    background: var(--color-unpaid-bg);
+    color: var(--color-unpaid-text);
 }
 .badge-paid {
     display: inline-block;
     padding: 3px 10px;
     font-size: 11px;
-    border-radius: 10px;
-    background: #e8f5e9;
-    color: #2e7d32;
-    font-weight: 600;
+    border-radius: 4px;
+    background: var(--color-paid-bg);
+    color: var(--color-paid-text);
 }

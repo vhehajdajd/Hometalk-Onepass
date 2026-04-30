@@ -60,14 +60,23 @@
               </span>
             </td>
             <td th:text="${vehicle.userName}"></td>
-            <td style="display: table-cell; text-align: center;">
-              <button type="button"
-                      th:if="${vehicle.status == 'REJECTED'}"
-                      class="btn-reapply"
-                      th:attr="data-vehicle=${vehicle.vehicleId}"
-                      onclick="goReapply(this.getAttribute('data-vehicle'))">
-                재신청
-              </button>
+            <td style="display: table-cell; text-align: center; vertical-align: middle;">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <button type="button"
+                        th:if="${vehicle.status == 'REJECTED'}"
+                        class="btn-reapply"
+                        th:attr="data-vehicle=${vehicle.vehicleId}"
+                        onclick="goReapply(this.getAttribute('data-vehicle'))">
+                  재신청
+                </button>
+                <button type="button"
+                        th:unless="${vehicle.status == 'APPROVED'}"
+                        class="btn-delete"
+                        th:attr="data-vehicle=${vehicle.vehicleId}"
+                        onclick="deleteVehicle(this.getAttribute('data-vehicle'))">
+                  삭제
+                </button>
+              </div>
             </td>
           </tr>
           </tbody>
@@ -76,7 +85,7 @@
         <!-- 차량 추가 버튼 -->
         <div class="form-actions">
           <button type="button"
-                  class="btn-add"
+                  class="d"
                   th:onclick="'location.href=\'' + @{/parking/vehicle/register} + '\''">+ 차량 추가</button>
         </div>
       </div>
@@ -137,6 +146,29 @@
 
   function goReapplyFromModal() {
       location.href = `${contextPath}parking/vehicle/reapply/${selectedVehicleId}`;
+  }
+
+  function deleteVehicle(vehicleId) {
+      if (!confirm('차량을 삭제하시겠습니까?')) return;
+
+      fetch(`${contextPath}parking/vehicle/delete/${vehicleId}`, {
+          method: 'POST',
+          headers: {
+              [csrfHeader]: csrfToken
+          }
+      })
+          .then(async res => {
+              if (!res.ok) {
+                  const msg = await res.text();
+                  throw new Error(msg || '서버 오류');
+              }
+              alert('삭제되었습니다.');
+              location.reload();
+          })
+          .catch(err => {
+              console.error(err);
+              alert('삭제 중 오류가 발생했습니다: ' + err.message);
+          });
   }
 </script>
 

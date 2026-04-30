@@ -1,6 +1,5 @@
 package com.hometalk.onepass.billing.entity;
 
-import com.hometalk.onepass.billing.entity.BillingStatus;
 import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;

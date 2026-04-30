@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class ReservationResponseDto {
     private Long id;
     private String facilityName;
-    private String userName;        // [변경] ID 대신 사용자 이름을 보여주면 더 친절하겠죠?
+    private String userName;      // 💡 관리자 페이지의 핵심 데이터
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private ReservationStatus status;
@@ -21,12 +21,19 @@ public class ReservationResponseDto {
         dto.setId(reservation.getId());
         dto.setFacilityName(reservation.getFacility().getName());
 
-        // [수정 예정] reservation.getMemberId() -> reservation.getUser().getName()
-        // 지금은 User가 없으니 일단 주석이나 기존 필드로 유지하세요!
-        // dto.setUserName(reservation.getUser().getName());
+        // 1. 예약자 이름 세팅 (User 엔티티와의 연관관계 활용)
+        if (reservation.getUser() != null) {
+            dto.setUserName(reservation.getUser().getName());
+        } else {
+            dto.setUserName("알 수 없는 사용자");
+        }
 
-        dto.setStartTime(reservation.getReservationTime().getStartTime());
-        dto.setEndTime(reservation.getReservationTime().getEndTime());
+        // 2. 예약 시간 세팅
+        if (reservation.getReservationTime() != null) {
+            dto.setStartTime(reservation.getReservationTime().getStartTime());
+            dto.setEndTime(reservation.getReservationTime().getEndTime());
+        }
+
         dto.setStatus(reservation.getStatus());
         return dto;
     }

@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -32,7 +32,7 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
     private final TicketUsageRepository ticketUsageRepository;
     private final HouseholdRepository householdRepository;
 
-    // ─── 차량 조회 ───────────────────────────────────────────────
+    // ─── 차량 조회 (단건) ────────────────────────────────────────
     @Override
     @Transactional(readOnly = true)
     public ParkingSearchResponse searchParkedVehicle(String keyword, Long householdId) {
@@ -42,7 +42,6 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
             throw new IllegalArgumentException("차량 번호 4자리를 입력해주세요.");
         }
 
-        // PARKED 상태 차량 조회
         List<ParkingLog> logs = parkingLogRepository.findParkedByLast4(last4);
 
         if (logs.isEmpty()) {
@@ -51,7 +50,6 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
 
         ParkingLog parkingLog = logs.get(0);
 
-        // 세대 티켓 조회
         Household household = householdRepository.findById(householdId)
                 .orElseThrow(() -> new EntityNotFoundException("세대를 찾을 수 없습니다."));
 
@@ -60,13 +58,56 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
                 .findByHouseholdAndIssueYearAndIssueMonth(
                         household, today.getYear(), today.getMonthValue());
 
-        return new ParkingSearchResponse(parkingLog, tickets);
+        List<TicketUsage> usages = ticketUsageRepository.findByParkingLog(parkingLog);
+
+        return new ParkingSearchResponse(parkingLog, tickets, usages);
+    }
+
+    // ─── 차량 조회 (다건 - 차량 선택용) ─────────────────────────
+    @Override
+    @Transactional(readOnly = true)
+    public List<ParkingSearchResponse> searchParkedVehicleList(String keyword, Long householdId) {
+        String last4 = keyword.replace(" ", "");
+
+        if (last4.length() != 4) {
+            throw new IllegalArgumentException("차량 번호 4자리를 입력해주세요.");
+        }
+
+        List<ParkingLog> logs = parkingLogRepository.findParkedByLast4(last4);
+
+        if (logs.isEmpty()) {
+            throw new EntityNotFoundException("주차 중인 차량이 없습니다.");
+        }
+
+        Household household = householdRepository.findById(householdId)
+                .orElseThrow(() -> new EntityNotFoundException("세대를 찾을 수 없습니다."));
+
+        LocalDate today = LocalDate.now();
+        List<ParkingTicket> tickets = parkingTicketRepository
+                .findByHouseholdAndIssueYearAndIssueMonth(
+                        household, today.getYear(), today.getMonthValue());
+
+        return logs.stream()
+                .filter(log -> {
+                    if (log.getEntryType() == ParkingLog.EntryType.NORMAL) {
+                        return false;
+                    }
+                    if (log.getEntryType() == ParkingLog.EntryType.MANUAL) {
+                        return true;
+                    }
+                    return log.getHousehold() != null &&
+                            log.getHousehold().getId().equals(householdId);
+                })
+                .map(log -> {
+                    List<TicketUsage> usages = ticketUsageRepository.findByParkingLog(log);
+                    return new ParkingSearchResponse(log, tickets, usages);
+                })
+                .collect(Collectors.toList());
     }
 
     // ─── 티켓 적용 ───────────────────────────────────────────────
     @Override
     public void applyTicket(TicketApplyRequest request, Long householdId) {
-        // 비관적 락으로 동시 요청 방지
         ParkingLog parkingLog = parkingLogRepository.findByIdWithLock(request.getParkingId())
                 .orElseThrow(() -> new EntityNotFoundException("주차 기록을 찾을 수 없습니다."));
 
@@ -82,22 +123,18 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
 
         LocalDate today = LocalDate.now();
 
-        // 비관적 락으로 티켓 조회
         ParkingTicket ticket = parkingTicketRepository
                 .findByHouseholdAndTypeAndIssueYearAndIssueMonth(
                         household, ticketType, today.getYear(), today.getMonthValue())
                 .orElseThrow(() -> new EntityNotFoundException("보유한 티켓이 없습니다."));
 
-        // 잔여 수량 확인
         if (!ticket.isEnough(request.getCount())) {
             throw new IllegalStateException("티켓 잔여 수량이 부족합니다.");
         }
 
-        // 티켓 사용 (TicketUsage 생성자 내부에서 ticket.use() 호출)
         TicketUsage usage = new TicketUsage(parkingLog, ticket, request.getCount());
         ticketUsageRepository.save(usage);
 
-        // appliedMinutes 업데이트
         int addedMinutes = ticketType.toMinutes(request.getCount());
         int currentApplied = parkingLog.getAppliedMinutes() != null
                 ? parkingLog.getAppliedMinutes() : 0;
@@ -120,36 +157,41 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
         ParkingTicket.TicketType ticketType =
                 ParkingTicket.TicketType.valueOf(request.getTicketType());
 
-        // 해당 주차 기록의 티켓 사용 내역 조회
         List<TicketUsage> usages = ticketUsageRepository.findByParkingLog(parkingLog);
 
-        Optional<TicketUsage> targetUsage = usages.stream()
+        List<TicketUsage> targetUsages = usages.stream()
                 .filter(u -> u.getTicket().getType() == ticketType)
-                .findFirst();
+                .collect(Collectors.toList());
 
-        if (targetUsage.isEmpty()) {
+        if (targetUsages.isEmpty()) {
             throw new EntityNotFoundException("취소할 티켓 사용 내역이 없습니다.");
         }
 
-        TicketUsage usage = targetUsage.get();
-        ParkingTicket ticket = usage.getTicket();
+        int remainCount = request.getCount();
+        int totalCancelMinutes = 0;
 
-        // usedCount 복구
-        int cancelMinutes = ticketType.toMinutes(usage.getUsedCount());
+        for (TicketUsage usage : targetUsages) {
+            if (remainCount <= 0) break;
 
-        // 티켓 사용 수량 복구
-        ticket.restoreCount(usage.getUsedCount());
+            if (usage.getUsedCount() <= remainCount) {
+                remainCount -= usage.getUsedCount();
+                totalCancelMinutes += ticketType.toMinutes(usage.getUsedCount());
+                usage.getTicket().restoreCount(usage.getUsedCount());
+                ticketUsageRepository.delete(usage);
+            } else {
+                totalCancelMinutes += ticketType.toMinutes(remainCount);
+                usage.getTicket().restoreCount(remainCount);
+                usage.updateCount(usage.getUsedCount() - remainCount);
+                remainCount = 0;
+            }
+        }
 
-        // TicketUsage 삭제
-        ticketUsageRepository.delete(usage);
-
-        // appliedMinutes 업데이트
         int currentApplied = parkingLog.getAppliedMinutes() != null
                 ? parkingLog.getAppliedMinutes() : 0;
-        int newApplied = Math.max(0, currentApplied - cancelMinutes);
+        int newApplied = Math.max(0, currentApplied - totalCancelMinutes);
         parkingLog.updateAppliedMinutes(newApplied);
 
         log.info("티켓 취소 - parkingId: {}, 타입: {}, 복구분: {}",
-                request.getParkingId(), ticketType, cancelMinutes);
+                request.getParkingId(), ticketType, totalCancelMinutes);
     }
 }

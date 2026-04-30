@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeTOP - 글쓰기</title>
+    <link rel="stylesheet" href="/css/style.css" th:href="@{/css/style.css}">
+    <style>
+        .write-container { max-width: 800px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; }
+        .form-group input[type="text"], .form-group textarea, .form-group select {
+            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;
+        }
+        .form-group textarea { height: 300px; resize: none; }
+        .btn-area { text-align: center; margin-top: 30px; }
+        .btn-submit { background-color: #333; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-cancel { background-color: #eee; color: #333; padding: 12px 30px; border: none; border-radius: 5px; text-decoration: none; margin-right: 10px; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/header_menu :: header_menu('inquiry', 'write')}"></div>
+
+<div class="write-container">
+    <h2>민원/문의 등록</h2>
+    <hr>
+    <form id="writeForm" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="category">분류</label>
+            <select name="category" id="category">
+                <option value="시설/기술">시설/기술</option>
+                <option value="환경/위생">환경/위생</option>
+                <option value="보안/안전">보안/안전</option>
+                <option value="기타문의">기타문의</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="title">제목</label>
+            <input type="text" id="title" name="title" placeholder="제목을 입력하세요" required>
+        </div>
+
+        <div class="form-group">
+            <label for="content">내용</label>
+            <textarea id="content" name="content" placeholder="내용을 상세히 입력해주세요" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="files">첨부파일</label>
+            <input type="file" id="files" name="files" multiple>
+            <p style="font-size: 12px; color: #888;">* 이미지는 최대 3개까지 업로드 가능합니다.</p>
+        </div>
+
+        <div class="btn-area">
+            <a href="/hometop/complaints/list" class="btn-cancel">취소</a>
+            <button type="button" class="btn-submit" onclick="submitForm()">등록하기</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    async function submitForm() {
+        const form = document.getElementById('writeForm');
+        const formData = new FormData();
+
+
+        const complaintDto = {
+            userId: 1, // 테스트용 ID (나중에 세션에서 가져오도록 수정)
+            title: document.getElementById('title').value,
+            content: document.getElementById('content').value,
+            category: document.getElementById('category').value
+        };
+
+        // JSON 데이터를 Blob 형태로 추가 (ComplaintController의 @RequestPart 대응)
+        formData.append("dto", new Blob([JSON.stringify(complaintDto)], { type: "application/json" }));
+
+        // 파일 추가
+        const fileInput = document.getElementById('files');
+        for (let i = 0; i < fileInput.files.length; i++) {
+            formData.append("files", fileInput.files[i]);
+        }
+
+        try {
+            const response = await fetch('/hometop/api/complaints', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                alert("성공적으로 등록되었습니다!");
+                location.href = "/hometop/complaints/list";
+            } else {
+                alert("등록에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("에러가 발생했습니다.");
+        }
+    }
+</script>
+</body>
+</html>

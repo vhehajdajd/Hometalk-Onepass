@@ -1,8 +1,6 @@
 package com.hometalk.onepass.billing.service;
 
-import com.hometalk.onepass.billing.dto.BillingDetailResponse;
-import com.hometalk.onepass.billing.dto.BillingSummaryResponse;
-import com.hometalk.onepass.billing.dto.ResidentBillingResponse;
+import com.hometalk.onepass.billing.dto.*;
 import com.hometalk.onepass.billing.entity.Billing;
 import com.hometalk.onepass.billing.entity.BillingActionType;
 import com.hometalk.onepass.billing.entity.BillingDetail;
@@ -23,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +33,64 @@ public class BillingService {
     private final BillingDetailRepository billingDetailRepository;
     private final BillingLogRepository    billingLogRepository;
     private final HouseholdRepository     householdRepository;
+
+    // ─────────────────────────────────────────────
+    // 대시보드 - 관리자 특정 월의 '미납 총액' 합계
+    // ─────────────────────────────────────────────
+    public AdminDashboardResponse getAdminDashboardSummary() {
+        // 1. 현재 날짜 기준 부과월 계산 (예: 2026-02)
+        String currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+
+        // 2. 미납 세대 수 조회 (기존 메서드 활용)
+        long unpaidCount = billingRepository.countByBillingMonthAndStatus(currentMonth, BillingStatus.UNPAID);
+
+        // 3. 미납 총액 조회 (신규 메서드 활용)
+        Long unpaidSum = billingRepository.sumTotalAmountByBillingMonthAndStatus(currentMonth, BillingStatus.UNPAID);
+        long totalAmount = (unpaidSum != null) ? unpaidSum : 0L; // null 체크 후 변수 선언
+
+        // 4. DTO 빌더로 반환
+        return AdminDashboardResponse.builder()
+                .billingMonth(Integer.parseInt(currentMonth.substring(5, 7)) + "월")
+                .unpaidHouseholds(unpaidCount)
+                .totalUnpaidAmount(totalAmount)
+                .build();
+    }
+
+
+    // ─────────────────────────────────────────────
+    // 대시보드 - 입주민용 관리비 요약 (미납 우선 노출 로직)
+    // ─────────────────────────────────────────────
+    public ResidentDashboardResponse getResidentDashboardSummary(Long householdId) {
+        // 1. 미납(UNPAID) 데이터가 있으면 가장 오래된 것부터, 없으면 완납(PAID) 데이터 조회
+        List<Billing> billings = billingRepository.findAllByHouseholdIdOrderByStatusDescBillingMonthAsc(householdId);
+
+        if (billings == null || billings.isEmpty()) {
+            return null;
+        }
+
+        // 2. 정렬 결과의 첫 번째 데이터를 타겟으로 잡음
+        Billing target = billings.get(0);
+
+        // 3. 만약 모든 항목이 PAID(납부완료)라면, 그중 가장 최근 월의 데이터를 보여줌
+        if (target.getStatus() == BillingStatus.PAID) {
+            target = billings.get(billings.size() - 1);
+        }
+
+        // 4. 화면 설계서 규격에 맞춘 가공 (2026-02 -> 2월)
+        String displayMonth = Integer.parseInt(target.getBillingMonth().substring(5, 7)) + "월";
+        String formattedDueDate = target.getDueDate().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일"));
+
+        return ResidentDashboardResponse.builder()
+                .billingMonth(displayMonth)
+                .status(target.getStatus().name())
+                .totalAmount(target.getTotalAmount())
+                .dueDate(formattedDueDate)
+                .build();
+    }
+
+
+
+
 
     // ─────────────────────────────────────────────
     // AdminBillingStats

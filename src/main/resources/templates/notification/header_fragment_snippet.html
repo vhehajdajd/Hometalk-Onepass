@@ -1,0 +1,50 @@
+<!--
+  헤더 fragment에 추가할 마크업
+  path: /templates/fragments/header.html (팀원1이 만들 헤더 안에 삽입)
+
+  ⚠️ 이 마크업은 헤더 fragment 내부에 위치해야 합니다.
+  ⚠️ 부모 컨테이너는 position: relative 여야 드롭다운이 벨 아래에 정렬됩니다.
+-->
+<div class="noti-bell-wrap" style="position: relative; display: inline-block;">
+
+    <!-- 벨 아이콘 + 뱃지 -->
+    <a href="javascript:void(0)" class="noti-bell" id="noti-bell-trigger">
+        <span class="noti-bell__icon">🔔</span>
+        <span class="noti-bell__badge" id="noti-bell-badge"></span>
+    </a>
+
+    <!-- 드롭다운 패널 -->
+    <div class="noti-dropdown" id="noti-dropdown">
+
+        <!-- 헤더 -->
+        <div class="noti-dropdown__header">
+            <span class="noti-dropdown__title">알림</span>
+            <button class="noti-dropdown__action" id="noti-mark-all">전체 읽음</button>
+        </div>
+
+        <!-- 바디 (스크롤 영역, JS가 렌더링) -->
+        <div class="noti-dropdown__body" id="noti-dropdown-body">
+            <div class="noti-loading">불러오는 중...</div>
+        </div>
+
+        <!-- 푸터 -->
+        <div class="noti-dropdown__footer">
+            <button class="noti-dropdown__more" id="noti-load-more">더보기</button>
+        </div>
+    </div>
+</div>
+
+
+<!--
+  ─────────────────────────────────────────────────────────
+  layout fragment (또는 전역 레이아웃 head/footer)에 추가
+  ─────────────────────────────────────────────────────────
+-->
+
+<!-- <head> 안에 -->
+<meta name="ctx" th:content="@{/}">
+<link rel="stylesheet" th:href="@{/notification/css/notification.css}">
+
+<!-- </body> 직전에 (순서 중요: SSE → bell) -->
+<script th:src="@{/notification/js/notification-sse.js}"></script>
+<script th:src="@{/notification/js/notification-bell.js}"></script>

@@ -32,11 +32,12 @@
             </nav>
         </header>
 
-        <div class="main-content">
+        <div class="container">
+            <div class="page-title">고지서 업로드</div>
 
             <!-- 업로드 존 -->
             <div class="upload-zone" id="uploadZone">
-                <div class="upload-icon">↑</div>
+                <div class="upload-icon">⬆</div>
                 <div class="upload-title">엑셀 파일을 드래그하거나 클릭하여 업로드</div>
                 <div class="upload-hint">.xlsx · 파일명 형식: 2026_01.xlsx</div>
                 <input type="file" id="fileInput" accept=".xlsx,.csv" style="display:none" />
@@ -54,18 +55,14 @@
 
             <!-- 동 필터 (파일 드롭 후 표시) -->
             <div class="filter-row" id="filterBar" style="display:none">
-                <div class="panel-wrap">
-                    <button class="filter-btn" id="btnDong" onclick="toggleDongPanel()">
-                        <span id="lblDong">전체 동</span><span class="caret">▼</span>
-                    </button>
-                    <div class="filter-panel" id="panelDong" style="display:none">
-                        <div class="chip-grid dong-g" id="dongGrid"></div>
-                    </div>
-                </div>
+                <select id="selDong" onchange="onDongChange()">
+                    <option value="">전체 동</option>
+                </select>
             </div>
 
             <!-- 미리보기 / 결과 테이블 -->
-            <div class="table-section" id="tableSection" style="display:none">
+            <div class="table-section" id="tableSection" style="display:block">
+
                 <div class="table-header-row">
                     <div class="table-header-title" id="tableTitle">유효성 검사 + 고지서 미리보기 + 업로드 확정</div>
                     <div class="table-header-meta" id="tableMeta"></div>
@@ -83,13 +80,19 @@
                             <th id="thUpsert" style="display:none" class="sortable" onclick="sortBy('upsertType')">비고 (UPSERT) <span class="sort-icon">▼</span></th>
                         </tr>
                         </thead>
-                        <tbody id="tableBody"></tbody>
+                        <tbody id="tableBody">
+                        <tr>
+                            <td colspan="7" style="text-align:center;padding:36px;color:#aaa;">
+                                파일을 업로드하면 여기에 표시됩니다.
+                            </td>
+                        </tr>
+                        </tbody>
                     </table>
                 </div>
                 <div class="table-footer">
                     <div class="table-summary" id="tableSummary"></div>
                     <div class="table-actions" id="tableActions">
-                        <button class="btn-confirm-upload disabled" id="btnConfirm" onclick="confirmUpload()">업로드 확정 ↑</button>
+                        <button class="btn-confirm-upload disabled" id="btnConfirm" onclick="confirmUpload()">업로드 확정</button>
                     </div>
                 </div>
             </div>

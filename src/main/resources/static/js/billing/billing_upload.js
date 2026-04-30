@@ -29,9 +29,6 @@ let openDongPanel = false;
 ================================================================ */
 document.addEventListener('DOMContentLoaded', () => {
     initUploadZone();
-    document.addEventListener('click', e => {
-        if (!e.target.closest('.panel-wrap')) closeDongPanel();
-    });
 });
 
 /* ================================================================
@@ -134,7 +131,9 @@ async function runValidation(rows) {
 
     validRows = trimmedRows.map((row, idx) => {
         const dongHo = String(row['동/호'] ?? '').trim();
-        const total  = parseFloat(String(row['당월부과액']).replace(/,/g, '')) || 0;
+        const totalRaw   = parseFloat(String(row['당월부과액']).replace(/,/g, ''));
+        const total      = isNaN(totalRaw) ? 0 : totalRaw;
+        const totalInvalid = isNaN(totalRaw) || totalRaw < 0;
         const dong   = row._dong || '';
         const hoPart = dongHo.split('-')[1] || '';
         const unit   = dongHo ? `${dong} ${hoPart}호` : dongHo;
@@ -171,6 +170,7 @@ async function runValidation(rows) {
         let valid = '정상';
         if (!dongHo || !month)         valid = '오류';
         else if (hasInvalidItem)       valid = '항목 오류';
+        else if (totalInvalid)         valid = '금액 오류';
         else if (total === 0)          valid = '금액 누락';
         else if (hasMissingItem)       valid = '금액 누락';
         else if (details.length === 0) valid = '항목 누락';
@@ -386,36 +386,19 @@ function renderTable() {
 }
 
 /* ================================================================
-   동 필터
+    동 필터
 ================================================================ */
+
 function buildDongGrid() {
     const dongs = [...new Set(validRows.map(r => r.dong))].sort();
-    document.getElementById('dongGrid').innerHTML =
-        `<button class="chip full${!selDong ? ' selected' : ''}" onclick="pickDong(null)">전체 동</button>`
-        + dongs.map(d =>
-            `<button class="chip${selDong === d ? ' selected' : ''}" onclick="pickDong('${d}')">${d}</button>`
-        ).join('');
+    const sel = document.getElementById('selDong');
+    sel.innerHTML = '<option value="">전체 동</option>'
+        + dongs.map(d => `<option value="${d}">${d}</option>`).join('');
+    sel.value = selDong || '';
 }
 
-function toggleDongPanel() {
-    const panel = document.getElementById('panelDong');
-    const btn   = document.getElementById('btnDong');
-    openDongPanel = !openDongPanel;
-    panel.style.display = openDongPanel ? 'block' : 'none';
-    btn.classList.toggle('active', openDongPanel);
-}
-
-function closeDongPanel() {
-    document.getElementById('panelDong').style.display = 'none';
-    document.getElementById('btnDong').classList.remove('active');
-    openDongPanel = false;
-}
-
-function pickDong(d) {
-    selDong = d;
-    document.getElementById('lblDong').textContent = d || '전체 동';
-    closeDongPanel();
-    buildDongGrid();
+function onDongChange() {
+    selDong = document.getElementById('selDong').value || null;
     renderTable();
 }
 
@@ -560,11 +543,13 @@ function resetUpload() {
     sortKey      = null;
     sortDir      = 1;
 
-    document.getElementById('uploadZone').style.display      = '';
+    document.getElementById('uploadZone').style.display       = '';
     document.getElementById('uploadDoneBanner').style.display = 'none';
-    document.getElementById('filterBar').style.display       = 'none';
-    document.getElementById('tableSection').style.display    = 'none';
-    document.getElementById('fileInput').value               = '';
+    document.getElementById('filterBar').style.display        = 'none';
+    document.getElementById('tableSection').style.display     = 'block';  // ← none → block
+    document.getElementById('tableBody').innerHTML            =
+        `<tr><td colspan="7" style="text-align:center;padding:36px;color:#aaa;">파일을 업로드하면 여기에 표시됩니다.</td></tr>`;
+    document.getElementById('fileInput').value                = '';
 }
 
 /* ================================================================
@@ -572,5 +557,8 @@ function resetUpload() {
 ================================================================ */
 function lastDay(bm) {
     const [y, m] = bm.split('-').map(Number);
-    return `${bm}-${String(new Date(y, m, 0).getDate()).padStart(2,'0')}`;
+    // 다음 달 10일 (2026-03 관리비 → 2026-04-10 납부기한)
+    const nextMonth = m === 12 ? 1 : m + 1;
+    const nextYear  = m === 12 ? y + 1 : y;
+    return `${nextYear}-${String(nextMonth).padStart(2,'0')}-10`;
 }
