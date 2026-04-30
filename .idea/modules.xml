@@ -2,12 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-<<<<<<< HEAD
-=======
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Home-Talk-One-Pass.onepass.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Home-Talk-One-Pass.onepass.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.hometalk.onepass.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.hometalk.onepass.main.iml" />
->>>>>>> develop
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/onepass.main.iml" filepath="$PROJECT_DIR$/.idea/modules/onepass.main.iml" />
     </modules>
   </component>
 </project>

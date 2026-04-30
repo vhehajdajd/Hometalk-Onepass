@@ -252,9 +252,9 @@ body {
 .community-title { flex: 1; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── 달력 ── */
-.cal-nav { display: flex; align-items: center; gap: 8px; }
+.dashboard-content .cal-nav { display: flex; align-items: center; gap: 8px; }
 
-.cal-nav button {
+.dashboard-content .cal-nav button {
     background: none;
     border: 1px solid var(--border-color);
     border-radius: 4px;
@@ -265,16 +265,16 @@ body {
     transition: background 0.2s;
 }
 
-.cal-nav button:hover { background: var(--color-bg-white-btn); }
-.cal-nav-title { font-size: 14px; font-weight: 700; color: var(--color-main); }
+.dashboard-content .cal-nav button:hover { background: var(--color-bg-white-btn); }
+.dashboard-content .cal-nav-title { font-size: 14px; font-weight: 700; color: var(--color-main); }
 
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-top: 4px; }
+.dashboard-content .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-top: 4px; }
 
-.cal-day-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--color-text-muted); padding: 4px 0; }
-.cal-day-header.sun { color: #e74c3c; }
-.cal-day-header.sat { color: var(--color-sub); }
+.dashboard-content .cal-day-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--color-text-muted); padding: 4px 0; }
+.dashboard-content .cal-day-header.sun { color: #e74c3c; }
+.dashboard-content .cal-day-header.sat { color: var(--color-sub); }
 
-.cal-cell {
+.dashboard-content .cal-cell {
     text-align: center;
     padding: 3px 1px;
     font-size: 11px;
@@ -287,17 +287,17 @@ body {
     gap: 2px;
 }
 
-.cal-cell.other-month { color: #c8d0da; }
-.cal-cell.today .cal-date { background: var(--color-btn); color: white; border-radius: 50%; }
+.dashboard-content .cal-cell.other-month { color: #c8d0da; }
+.dashboard-content .cal-cell.today .cal-date { background: var(--color-btn); color: white; border-radius: 50%; }
 
-.cal-date { font-size: 11px; font-weight: 600; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+.dashboard-content .cal-date { font-size: 11px; font-weight: 600; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
 
-.cal-dots { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
-.cal-dot { width: 4px; height: 4px; border-radius: 50%; }
-.cal-dot.FACILITY { background: var(--badge-facility-font); }
-.cal-dot.SAFETY   { background: var(--badge-safety-font); }
-.cal-dot.NORMAL   { background: var(--badge-normal-font); }
-.cal-dot.DEFAULT  { background: var(--badge-default-font); }
+.dashboard-content .cal-dots { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
+.dashboard-content .cal-dot { width: 4px; height: 4px; border-radius: 50%; }
+.dashboard-content .cal-dot.FACILITY { background: var(--badge-facility-font); }
+.dashboard-content .cal-dot.SAFETY   { background: var(--badge-safety-font); }
+.dashboard-content .cal-dot.NORMAL   { background: var(--badge-normal-font); }
+.dashboard-content .cal-dot.DEFAULT  { background: var(--badge-default-font); }
 
 /* ── 오늘의 일정 ── */
 .today-schedule-item {
