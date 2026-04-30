@@ -33,6 +33,7 @@ public class BillingUploadService {
     // 유효성 검사 + 미리보기
     // ─────────────────────────────────────────────
 
+/*
     @Transactional(readOnly = true)
     public UploadPreviewResult validateAndPreview(List<UploadRow> rows) {
 
@@ -90,12 +91,13 @@ public class BillingUploadService {
 
         return new UploadPreviewResult(rows.size(), errorCount, previewRows);
     }
+*/
 
     // ─────────────────────────────────────────────
     // 업로드 확정 (UPSERT)
     // ─────────────────────────────────────────────
 
-    @Transactional
+   /* @Transactional
     public UploadConfirmResult confirmUpload(List<UploadRow> rows, Long adminId) {
 
         int insertCount = 0;
@@ -154,7 +156,7 @@ public class BillingUploadService {
         }
 
         return new UploadConfirmResult(insertCount, updateCount);
-    }
+    }*/
 
     // ─────────────────────────────────────────────
     // 유효성 검사

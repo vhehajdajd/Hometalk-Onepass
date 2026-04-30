@@ -33,13 +33,13 @@ public class BillingPageController {
     // ─────────────────────────────────────────────────────────
     // 대시보드 - 관리자 특정 월의 '미납 총액' 합계
     // ─────────────────────────────────────────────────────────
-    @GetMapping("/api/billing/admin/dashboard-summary")
+  /*  @GetMapping("/api/billing/admin/dashboard-summary")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getDashboardSummary() {
         // 여기서 SecurityContext에서 관리자 권한인지 체크 로직이 들어감
         Map<String, Object> summary = billingService.getAdminDashboardSummary();
         return ResponseEntity.ok(summary);
-    }
+    }*/
 
     // ─────────────────────────────────────────────
     // 관리자 고지서 업로드 페이지 (ADMIN 전용)
