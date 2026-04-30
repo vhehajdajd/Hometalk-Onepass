@@ -30,25 +30,36 @@ public class Notice extends BaseTimeEntity {
     @Column(name = "badge", columnDefinition = "VARCHAR(20)")
     private Badge badge;
 
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", columnDefinition = "VARCHAR(20)")
+    private NoticeStatus status;
+
     // 공지 생성용
-    public void create(String title, String content, Boolean isPinned, Badge badge, User user) {
+    public void create(String title, String content, Boolean isPinned, Badge badge, User user, NoticeStatus status) {
         this.title = title;
         this.content = content;
         this.isPinned = isPinned;
         this.badge = badge;
         this.user = user;
+        this.status = status;
     }
 
     // 공지 수정용
-    public void update(String title, String content, Boolean isPinned, Badge badge) {
+    public void update(String title, String content, Boolean isPinned, Badge badge, NoticeStatus status) {
         this.title = title;
         this.content = content;
         this.isPinned = isPinned;
         this.badge = badge;
+        this.status = status;
     }
-
     // 조회수 증가
     public void increaseViewCount() {
         this.viewCount++;
+    }
+
+
+    public void publish() {
+        this.status = NoticeStatus.PUBLISHED;
     }
 }
