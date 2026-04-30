@@ -82,7 +82,7 @@ public class CustomOAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSucc
             log.info("기존 유저 -> 메인 페이지로 이동");
             String redirectUrl = UriComponentsBuilder.fromUriString(getBaseUrl(request))
                     .path(request.getContextPath())
-                    .path("/index")
+                    .path("/dashboard")
                     .build()
                     .toUriString();
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
