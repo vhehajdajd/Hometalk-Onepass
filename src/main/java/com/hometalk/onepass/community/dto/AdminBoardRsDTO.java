@@ -33,7 +33,8 @@ public class AdminBoardRsDTO {
         private Long id;
         private String name;
         private String code;
-        private String color;
+        private String bgColor;
+        private String textColor;
         private long postCount; // 삭제 가능 여부 판단용
         private boolean system;
 
@@ -42,7 +43,8 @@ public class AdminBoardRsDTO {
                     .id(category.getId())
                     .name(category.getName())
                     .code(category.getCode())
-                    .color(category.getColor())
+                    .bgColor(category.getBgColor())
+                    .textColor(category.getTextColor())
                     .postCount(postCount)
                     .system(category.isSystem())
                     .build();

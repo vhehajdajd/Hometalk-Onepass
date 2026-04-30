@@ -11,11 +11,10 @@
     <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
         <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">
             <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community', '관리'} })}"></div>
-            <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
 
             <div th:replace="~{community/fragments/adminNav :: adminNav('posts')}"></div>
 
-            <div class="admin-content-card">
+            <div class="admin-content-area">
                 <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                     <p style="font-size: 14px; color: #666;">* 숨김 또는 삭제 처리된 게시글만 표시됩니다.</p>
                     <button type="button" class="btn-hard-delete" onclick="deleteSelectedPosts()"
@@ -37,7 +36,7 @@
                     </div>
                 </div>
 
-                <table class="admin-table">
+                <table class="admin-table admin-management-table">
                     <thead>
                     <tr>
                         <th><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>

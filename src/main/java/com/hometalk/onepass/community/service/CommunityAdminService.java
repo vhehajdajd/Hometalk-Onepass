@@ -76,9 +76,12 @@ public class CommunityAdminService {
             for (int i = 0; i < dto.getCategoryNames().size(); i++) {
                 String catName = dto.getCategoryNames().get(i);
                 String catCode = dto.getCategoryCodes().get(i);
-                String color = (dto.getCategoryColors() != null && dto.getCategoryColors().size() > i)
-                        ? dto.getCategoryColors().get(i) : "#888888";
-                createCustomCategory(board, catName, catCode, color);
+                String bgColor = (dto.getCategoryBgColors() != null && dto.getCategoryBgColors().size() > i)
+                        ? dto.getCategoryBgColors().get(i) : "#003366"; // 기본값 딥블루
+
+                String textColor = (dto.getCategoryTextColors() != null && dto.getCategoryTextColors().size() > i)
+                        ? dto.getCategoryTextColors().get(i) : "#FFFFFF"; // 기본값 화이트
+                createCustomCategory(board, catName, catCode, bgColor, textColor);
             }
         }
     }
@@ -98,15 +101,15 @@ public class CommunityAdminService {
 
     // --- [2. 카테고리 관리] ---
     @Transactional
-    public void updateCategory(Long categoryId, String newName) {
+    public void updateCategory(Long categoryId, String newName,
+                               String bgColor, String textColor) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(categoryId, "ADMIN"));
-
         if (category.isSystem()) {
             throw new IllegalStateException("시스템 기본 카테고리는 이름을 수정할 수 없습니다.");
         }
 
-        category.rename(newName);
+        category.rename(newName, bgColor, textColor);
     }
 
     @Transactional
@@ -180,14 +183,16 @@ public class CommunityAdminService {
                 .name("전체").code("all").system(true).board(board).build());
     }
 
-    private void createCustomCategory(Board board, String name, String code, String color) {
+    private void createCustomCategory(Board board, String name, String code,
+                                      String bgColor, String textColor) {
         if (categoryRepository.existsByCodeAndBoardId(code, board.getId())) {
             throw new IllegalStateException("해당 게시판 내에 중복된 카테고리 코드가 있습니다: " + code);
         }
         categoryRepository.save(Category.builder()
                 .name(name)
                 .code(code)
-                .color(color)
+                .bgColor(bgColor)
+                .textColor(textColor)
                 .system(false)
                 .board(board)
                 .build());
@@ -225,7 +230,8 @@ public class CommunityAdminService {
     }
 
     @Transactional
-    public void addCategory(Long boardId, String name, String code, String color) {
+    public void addCategory(Long boardId, String name, String code,
+                            String bgColor, String textColor) {
         // 1. 게시판 존재 여부 확인
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판입니다. id=" + boardId));
@@ -244,7 +250,8 @@ public class CommunityAdminService {
 
         // 3. 카테고리 엔티티 생성 및 연관관계 설정
         Category category = Category.builder()
-                .name(name).code(code).color(color)
+                .name(name).code(code)
+                .bgColor(bgColor).textColor(textColor)
                 .board(board)  // 부모 게시판 설정
                 .system(false) // 사용자가 추가하는 건 시스템 카테고리가 아님
                 .build();
