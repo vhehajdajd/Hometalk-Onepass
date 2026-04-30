@@ -25,7 +25,7 @@ public class Board {
     @Column(name = "is_system")
     private boolean system = false; // 기본값 false, 초기 데이터만 true로 설정
 
-    @OneToMany(mappedBy = "board", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Category> categories;
 
     // 변경 method

@@ -3,12 +3,16 @@ package com.hometalk.onepass.community.controller;
 import com.hometalk.onepass.community.dto.AdminBoardRqDTO;
 import com.hometalk.onepass.community.dto.AdminBoardRsDTO;
 import com.hometalk.onepass.community.dto.response.PostResponseDTO;
+import com.hometalk.onepass.community.entity.Post;
+import com.hometalk.onepass.community.enums.PostStatus;
+import com.hometalk.onepass.community.repository.PostRepository;
 import com.hometalk.onepass.community.service.BoardService;
 import com.hometalk.onepass.community.service.CommunityAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,28 +49,36 @@ public class CommunityAdminController {
 
     // 게시판 삭제
     @PostMapping("/board/delete/{id}")
-    public String deleteBoard(@PathVariable Long id) {
-        communityAdminService.deleteBoard(id);
+    public String deleteBoard(@PathVariable Long id, RedirectAttributes rttr) {
+        try {
+            communityAdminService.deleteBoard(id);
+            rttr.addFlashAttribute("message", "게시판이 성공적으로 삭제되었습니다.");
+        } catch (IllegalStateException e) {
+            rttr.addFlashAttribute("error", e.getMessage());
+            System.out.println("삭제 에러 발생: " + e.getMessage());
+        }
         return "redirect:/community/admin";
     }
 
     // 숨김/삭제 게시글 관리 페이지
     @GetMapping("/posts")
     public String managedPostsPage(Model model) {
-        List<PostResponseDTO> managedPosts = communityAdminService.getAdminManagedPosts();
-        model.addAttribute("posts", managedPosts);
+        List<PostResponseDTO> posts = communityAdminService.getAdminManagedPosts();
+        model.addAttribute("posts", posts);
         return "community/admin-posts"; // 별도의 관리 페이지 뷰
     }
 
     // 카테고리 생성
     @PostMapping("/category/create")
-    public String createCategory(@RequestParam Long boardId, @RequestParam String name) {
-        communityAdminService.addCategory(boardId, name);
+    public String createCategory(@RequestParam Long boardId,
+                                 @RequestParam String name,
+                                 @RequestParam String code) {
+        communityAdminService.addCategory(boardId, name, code);
         return "redirect:/community/admin/board/detail/" + boardId;
     }
 
     // 카테고리 이름 수정 (AJAX로 처리할 경우 @ResponseBody 사용 가능)
-    @PostMapping("/category/update/{id}")
+    @GetMapping("/category/update/{id}")
     public String updateCategory(@PathVariable Long id,
                                  @RequestParam("name") String newName,
                                  @RequestParam Long boardId) {
@@ -75,9 +87,29 @@ public class CommunityAdminController {
     }
 
     // 6. 카테고리 삭제
-    @PostMapping("/category/delete/{id}")
-    public String deleteCategory(@PathVariable Long id, @RequestParam Long boardId) {
-        communityAdminService.deleteCategory(id);
+    @GetMapping("/category/delete/{id}")
+    public String deleteCategory(@PathVariable Long id, @RequestParam Long boardId,
+                                 RedirectAttributes rttr) {
+        try {
+            communityAdminService.deleteCategory(id);
+            rttr.addFlashAttribute("message", "카테고리가 삭제되었습니다.");
+        } catch (IllegalStateException e) {
+            rttr.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (Exception e) {
+            rttr.addFlashAttribute("errorMessage", "삭제 중 알 수 없는 오류가 발생했습니다.");
+        }
         return "redirect:/community/admin/board/detail/" + boardId;
+    }
+
+    // 영구 삭제 처리
+    @PostMapping("/posts/hard-delete/{id}")
+    public String hardDeletePost(@PathVariable Long id, RedirectAttributes rttr) {
+        try {
+            communityAdminService.hardDeletePost(id);
+            rttr.addFlashAttribute("message", "게시글이 DB에서 영구 삭제되었습니다.");
+        } catch (Exception e) {
+            rttr.addFlashAttribute("errorMessage", "삭제 중 오류 발생: " + e.getMessage());
+        }
+        return "redirect:/community/admin/posts";
     }
 }

@@ -36,6 +36,7 @@ public class CommunityAdminService {
                 .map(board -> {
                     // 각 게시판에 속한 카테고리들을 DTO로 변환
                     List<AdminBoardRsDTO.CategoryDto> categories = board.getCategories().stream()
+                            .filter(cat -> !cat.getCode().equals("all"))
                             .map(cat -> {
                                 // 각 카테고리별 게시글 개수 카운트
                                 long postCount = postRepository.countByCategoryId(cat.getId());
@@ -55,7 +56,7 @@ public class CommunityAdminService {
         if (boardRepository.count() >= 5) {
             throw new IllegalStateException("게시판은 최대 5개까지만 생성 가능합니다.");
         }
-        String code = generateBoardCode(dto.getBoardName());
+        String code = dto.getBoardCode();
 
         if (boardRepository.existsByCode(code)) {
             throw new IllegalStateException("이미 존재하는 게시판 코드입니다: " + code);
@@ -71,9 +72,11 @@ public class CommunityAdminService {
         createDefaultCategory(board);
 
         // 추가 카테고리들이 있다면 생성
-        if (dto.getCategoryNames() != null) {
+        if (dto.getCategoryNames() != null && dto.getCategoryCodes() != null) {
             for (int i = 0; i < dto.getCategoryNames().size(); i++) {
-                createCustomCategory(board, dto.getCategoryNames().get(i));
+                String catName = dto.getCategoryNames().get(i);
+                String catCode = dto.getCategoryCodes().get(i);
+                createCustomCategory(board, catName, catCode);
             }
         }
     }
@@ -82,22 +85,16 @@ public class CommunityAdminService {
     public void deleteBoard(Long boardId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판입니다."));
-
-        if (board.isSystem()) {
-            throw new IllegalStateException("광장, 마켓, 소통 등 시스템 게시판은 삭제할 수 없습니다.");
+        long totalPostCount = postRepository.countAllByBoardIdNative(boardId);
+        if (totalPostCount > 0) {
+            throw new IllegalStateException("이 게시판에 아직 삭제되지 않은 데이터(유령 게시글 등)가 "
+                    + totalPostCount + "개 남아있습니다. 게시글 관리 탭에서 모두 영구 삭제해주세요.");
         }
-        long postCount = postRepository.countByBoardId(boardId);
-        if (postCount > 0) {
-            // 여기서 던지는 메시지가 화면에 뜨게 됩니다!
-            throw new IllegalStateException("게시글이 존재하는 게시판은 삭제할 수 없습니다. (현재 " + postCount + "개)");
-        }
-
         // 게시판 삭제 시 하위 카테고리에 글이 있으면 삭제 불가 (제약 조건 활용 혹은 직접 체크)
         boardRepository.delete(board);
     }
 
     // --- [2. 카테고리 관리] ---
-
     @Transactional
     public void updateCategory(Long categoryId, String newName) {
         Category category = categoryRepository.findById(categoryId)
@@ -114,40 +111,57 @@ public class CommunityAdminService {
     public void deleteCategory(Long categoryId) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(categoryId, "ADMIN"));
-
         if (category.isSystem()) {
             throw new IllegalStateException("시스템 기본 카테고리는 삭제할 수 없습니다.");
         }
 
-        long postCount = postRepository.countByCategoryId(categoryId);
-        if (postCount > 0) {
-            throw new IllegalStateException("게시글이 존재하는 카테고리는 삭제할 수 없습니다. (현재 " + postCount + "개)");
+        long totalPostCount = postRepository.countAllByCategoryId(categoryId);
+        if (totalPostCount > 0) {
+            throw new IllegalStateException("해당 카테고리에 게시글(숨김/삭제 포함)이 " + totalPostCount + "개 존재합니다. " +
+                    "관리자 페이지의 '숨김/삭제 게시글 관리' 메뉴에서 해당 글들을 먼저 영구 삭제해주세요.");
         }
-
         categoryRepository.delete(category);
     }
 
     // --- [3. 게시글 및 알림 관리] ---
-
     @Transactional(readOnly = true)
     public List<PostResponseDTO> getAdminManagedPosts() {
         // 숨김(HIDDEN) 또는 삭제(DELETED) 상태의 글만 조회
-        List<PostStatus> targets = List.of(PostStatus.HIDDEN, PostStatus.DELETED);
-        return postRepository.findAllByPostStatusInOrderByCreatedAtDesc(targets)
+        List<String> targets = List.of(PostStatus.HIDDEN.name(), PostStatus.DELETED.name());
+        return postRepository.findAllManagedPostsNative(targets)
                 .stream()
                 .map(PostResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
-    @Scheduled(cron = "0 0 3 * * *") // 매일 새벽 3시 영구 삭제
-    public void deleteExpiredPosts() {
-        LocalDateTime threshold = LocalDateTime.now().minusDays(30);
-        List<Post> expiredPosts = postRepository.findAllByPostStatusAndUpdatedAtBefore(PostStatus.DELETED, threshold);
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void hardDeleteOldPosts() {
+        // 현재 시간으로부터 30일 전 시점 계산
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        // 1. 30일이 지난 DELETED 상태의 게시글 조회
+        List<Post> targets = postRepository.findOldDeletedPosts(PostStatus.DELETED.name(), thirtyDaysAgo);
 
-        if (!expiredPosts.isEmpty()) {
-            postRepository.deleteAll(expiredPosts);
-            log.info("관리자 정책: 30일 경과된 삭제글 {}건 영구 삭제 완료", expiredPosts.size());
+        if (!targets.isEmpty()) {
+            for (Post post : targets) {
+                // 자식 댓글부터 영구 삭제 후 게시글 삭제
+                postRepository.hardDeleteCommentsByPostId(post.getId());
+                postRepository.hardDeletePostById(post.getId());
+            }
+            log.info("관리자 정책: 30일 경과된 게시글 {}건 및 관련 댓글 영구 삭제 완료", targets.size());
         }
+    }
+
+    /*
+       관리자 권한: 게시글 DB 영구 삭제 (Hard Delete)
+       카테고리 삭제 전, 해당 카테고리의 글들을 완전히 지울 때 사용
+     */
+    @Transactional
+    public void hardDeletePost(Long postId) {
+        // DB에서 실제 레코드를 삭제 (FK 제약 조건을 풀기 위한 작업)
+        postRepository.hardDeleteCommentsByPostId(postId);
+        postRepository.hardDeletePostById(postId);
+        log.info("관리자 권한으로 게시글 영구 삭제 완료: ID {}", postId);
     }
 
     // --- [내부 헬퍼 메서드] ---
@@ -156,45 +170,33 @@ public class CommunityAdminService {
                 .name("전체").code("all").system(true).board(board).build());
     }
 
-    private void createCustomCategory(Board board, String name) {
-        String code = generateCategoryCode(name);
+    private void createCustomCategory(Board board, String name, String code) {
         if (categoryRepository.existsByCodeAndBoardId(code, board.getId())) {
-            throw new IllegalStateException("이미 존재하는 카테고리 코드입니다: " + code);
+            throw new IllegalStateException("해당 게시판 내에 중복된 카테고리 코드가 있습니다: " + code);
         }
         categoryRepository.save(Category.builder()
-                .name(name).code(code).system(false).board(board).build());
+                .name(name)
+                .code(code)
+                .system(false)
+                .board(board)
+                .build());
     }
 
-    private String generateBoardCode(String name) {
-//        return name
-//                .toLowerCase()
-//                .trim()
-//                .replaceAll("\\s+", "_")
-//                .replaceAll("[^a-z0-9_]", "");
-
-        String cleanedName = name.trim().replaceAll("[^a-zA-Z0-9ㄱ-ㅎ가-힣]", "");
-
-        if (cleanedName.isEmpty()) {
-            cleanedName = "cat";
-        }
-        return cleanedName + "_" + System.nanoTime() % 100000;
-    }
-
-    private String generateCategoryCode(String name) {
-//        return name
-//                .toLowerCase()
-//                .trim()
-//                .replaceAll("\\s+", "_")
-//                .replaceAll("[^a-z0-9_]", "");
-
-        String cleanedName = name.trim().replaceAll("[^a-zA-Z0-9ㄱ-ㅎ가-힣]", "");
-
-        if (cleanedName.isEmpty()) {
-            cleanedName = "cat";
-        }
-
-        return cleanedName + "_" + System.nanoTime() % 100000;
-    }
+//    private String generateBoardCode(String name) {
+//        String englishOnly = name.replaceAll("[^a-zA-Z0-9]", "");
+//        if (englishOnly.isEmpty()) {
+//            englishOnly = "board";
+//        }
+//        return englishOnly.toLowerCase() + "_" + (System.nanoTime() % 100000);
+//    }
+//
+//    private String generateCategoryCode(String name) {
+//        String englishOnly = name.replaceAll("[^a-zA-Z0-9]", "");
+//        if (englishOnly.isEmpty()) {
+//            englishOnly = "cat";
+//        }
+//        return englishOnly.toLowerCase() + "_" + (System.nanoTime() % 100000);
+//    }
 
     @Transactional(readOnly = true)
     public AdminBoardRsDTO getAdminBoardDetail(Long id) {
@@ -212,22 +214,20 @@ public class CommunityAdminService {
     }
 
     @Transactional
-    public void addCategory(Long boardId, String name) {
+    public void addCategory(Long boardId, String name, String code) {
         // 1. 게시판 존재 여부 확인
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판입니다. id=" + boardId));
-
-        // 2. 카테고리 이름 중복 체크 (선택 사항이지만 권장)
+        // 2. 카테고리 이름 중복 체크
         boolean isDuplicate = board.getCategories().stream()
                 .anyMatch(c -> c.getName().equals(name));
-
         if (isDuplicate) {
             throw new IllegalStateException("해당 게시판에 이미 동일한 이름의 카테고리가 존재합니다.");
         }
 
         // 3. 카테고리 엔티티 생성 및 연관관계 설정
         Category category = Category.builder()
-                .name(name)
+                .name(name).code(code)
                 .board(board)  // 부모 게시판 설정
                 .system(false) // 사용자가 추가하는 건 시스템 카테고리가 아님
                 .build();

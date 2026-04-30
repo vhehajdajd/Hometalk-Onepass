@@ -22,6 +22,7 @@ public class PostResponseDTO {
     private String categoryCode;
     private List<String> tags;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private int viewCount;
     private int commentCount;
 
@@ -72,6 +73,7 @@ public class PostResponseDTO {
             this.tags = new ArrayList<>(); // null 대신 빈 리스트
         }
         this.createdAt = post.getCreatedAt();
+        this.updatedAt = post.getUpdatedAt();
         this.isDeleted = (post.getDeletedAt() != null);
         this.viewCount = post.getViewCount();
         this.commentCount = post.getCommentCount();

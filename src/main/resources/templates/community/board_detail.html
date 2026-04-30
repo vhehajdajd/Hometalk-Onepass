@@ -15,7 +15,6 @@
         .category-info { display: flex; align-items: center; gap: 10px; }
         .btn-group { display: flex; gap: 5px; }
         .btn-sm { padding: 4px 8px; font-size: 12px; cursor: pointer; border-radius: 3px; border: 1px solid #ccc; }
-        .btn-edit { background-color: #f8f9fa; }
         .btn-delete { background-color: #fff1f0; color: #ff4d4f; border-color: #ffccc7; }
         .text-system { color: #999; font-size: 12px; font-style: italic; }
         .add-category-area { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px; }
@@ -29,32 +28,43 @@
             <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community', '관리'} })}"></div>
             <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
 
-            <div class="admin-tab-nav">
-                <a th:href="@{/community/admin}" class="tab-item active">게시판/카테고리 설정</a>
-                <a th:href="@{/community/admin/posts}" class="tab-item">숨김/삭제 게시글 관리</a>
-            </div>
+            <div th:replace="~{community/fragments/adminNav :: adminNav('management')}"></div>
 
             <div class="detail-container">
                 <div class="board-header">
                     <h2 th:text="'게시판 관리: ' + ${board.name}">게시판 이름</h2>
                     <p th:if="${board.isSystem}" class="text-system">* 이 게시판은 시스템 필수 게시판으로 삭제가 제한됩니다.</p>
+
+                    <div th:if="${!board.isSystem}">
+                        <form th:action="@{/community/admin/board/delete/{id}(id=${board.id})}" method="post">
+                            <button type="submit" class="btn-delete"
+                                    onclick="return confirm('정말로 이 게시판을 삭제하시겠습니까?\n삭제된 게시판의 데이터는 복구할 수 없습니다.')">
+                                게시판 삭제
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <h3>카테고리 설정</h3>
                 <ul class="category-list">
-                    <li th:each="cat : ${board.categories}" class="category-item">
+                    <li th:each="cat : ${board.categories}" class="category-item" th:id="'item-' + ${cat.id}">
                         <div class="category-info">
-                            <span th:text="'- ' + ${cat.name}">- 카테고리 이름</span>
-                            <small class="badge-count" th:text="'(' + ${cat.postCount} + ')'">(5)</small>
-                            <span th:if="${cat.isSystem}" class="text-system">[기본]</span>
+                            <span class="view-mode" th:id="'name-text-' + ${cat.id}" th:text="'- ' + ${cat.name}">- 이름</span>
+
+                            <div class="edit-mode" th:id="'edit-form-' + ${cat.id}" style="display: none;">
+                                <input type="text" th:id="'input-' + ${cat.id}" th:value="${cat.name}" style="padding: 2px 5px;">
+                                <button class="btn-sm" th:onclick="|saveEdit(${cat.id}, ${board.id})|">저장</button>
+                                <button class="btn-sm" th:onclick="|toggleEdit(${cat.id}, false)|">취소</button>
+                            </div>
+
+                            <small class="badge-count" th:text="'(' + ${cat.postCount} + ')'">(0)</small>
                         </div>
 
-                        <div class="btn-group">
+                        <div class="btn-group view-mode" th:id="'btn-group-' + ${cat.id}">
                             <th:block th:if="${!cat.isSystem}">
-                                <button class="btn-sm btn-edit" th:onclick="|openEditCategoryModal(${cat.id}, '${cat.name}, ${board.id}')|">수정</button>
+                                <button class="btn-sm btn-edit" th:onclick="|toggleEdit(${cat.id}, true)|">수정</button>
                                 <button class="btn-sm btn-delete" th:onclick="|deleteCategory(${cat.id}, ${cat.postCount}, ${board.id})|">삭제</button>
                             </th:block>
-                            <span th:if="${cat.isSystem}" class="text-system">수정불가</span>
                         </div>
                     </li>
                 </ul>
@@ -63,7 +73,8 @@
                     <form th:action="@{/community/admin/category/create}" method="post">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         <input type="hidden" name="boardId" th:value="${board.id}">
-                        <input type="text" name="name" placeholder="새 카테고리 이름 입력" required>
+                        <input type="text" name="name" placeholder="카테고리 이름 (예: 갤러리)" required>
+                        <input type="text" name="code" placeholder="영문 코드 (예: gallery)" required style="flex: 1;">
                         <button type="submit" class="btn-sm" style="background: #e6f7ff; border-color: #91d5ff;">+ 카테고리 추가</button>
                     </form>
                 </div>
@@ -80,23 +91,76 @@
 
 <script th:src="@{/js/community/adminpage.js}"></script>
 <script>
-    function deleteCategory(id, count, boardId) {
-        if (count > 0) {
-            alert("해당 카테고리에 게시글이 " + count + "개 남아있습니다.\n글을 모두 삭제하거나 이동한 후 다시 시도해주세요.");
-            return;
-        }
-        if (confirm("정말로 이 카테고리를 삭제하시겠습니까?")) {
-            // 삭제 요청 로직 (fetch 또는 form submit)
-            location.href = `/hometop/community/admin/category/delete/${id}?boardId=${boardId}`;
+    /*<![CDATA[*/
+    const errorMessage = /*[[${errorMessage}]]*/ null;
+    const message = /*[[${message}]]*/ null;
+
+    if (errorMessage) {
+        alert(errorMessage);
+    }
+    if (message) {
+        alert(message);
+    }
+    /*]]>*/
+
+    // 수정 모드 전환 함수
+    function toggleEdit(id, isEdit) {
+        const viewElements = document.querySelectorAll(`#name-text-${id}, #btn-group-${id}`);
+        const editForm = document.getElementById(`edit-form-${id}`);
+
+        if (isEdit) {
+            viewElements.forEach(el => el.style.display = 'none');
+            editForm.style.display = 'inline-flex';
+        } else {
+            viewElements.forEach(el => el.style.display = 'inline-block');
+            editForm.style.display = 'none';
         }
     }
 
-    function openEditCategoryModal(id, name, boardId) {
-        const newName = prompt("수정할 카테고리 이름을 입력하세요:", name);
-        if (newName && newName !== name) {
-            location.href = `/hometop/community/admin/category/update/${id}?name=${newName}&boardId=${boardId}`;
+    // 저장 로직
+    function saveEdit(id, boardId) {
+        const newName = document.getElementById(`input-${id}`).value;
+        if (!newName || newName.trim() === "") {
+            alert("카테고리 이름을 입력해주세요.");
+            return;
+        }
+        // 컨트롤러의 GetMapping 경로와 일치해야 함
+        location.href = `../category/update/${id}?name=${encodeURIComponent(newName)}&boardId=${boardId}`;
+    }
+
+    function saveCategory(boardId) {
+        const name = document.getElementById('new-category-name').value;
+
+        // 코드가 비어있으면 타임스탬프를 이용해서 임시 코드를 생성
+        const code = 'cat_' + Date.now();
+
+        const data = {
+            name: name,
+            code: code, // 이제 null이 아님!
+            boardId: boardId
+        };
+
+        fetch('/admin/category/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(/* ... */);
+    }
+
+    /*<![CDATA[*/
+    function deleteCategory(id, count, boardId) {
+        console.log("삭제 시도 - 카테고리ID:", id, "글개수:", count, "게시판ID:", boardId);
+        if (count > 0) {
+            alert("게시글이 있는 카테고리는 삭제할 수 없습니다.");
+            return;
+        }
+        if (confirm("정말로 삭제하시겠습니까?")) {
+            const url = `/hometop/community/admin/category/delete/${id}?boardId=${boardId}`;
+            console.log("이동할 최종 주소:", url);
+            location.href = url;
         }
     }
+    /*]]>*/
 </script>
 </body>
 </html>

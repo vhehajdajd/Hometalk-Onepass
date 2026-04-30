@@ -141,3 +141,24 @@ input.error {
     gap: 5px;
     margin-bottom: 10px;
 }
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.status-deleted { background-color: #fff1f0; color: #f5222d; border: 1px solid #ffa39e; } /* 코랄 톤 */
+.status-hidden { background-color: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; }
+.status-temp { background-color: #f0f5ff; color: #1d39c4; border: 1px solid #adc6ff; } /* 딥블루 톤 */
+
+.btn-hard-delete {
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.btn-hard-delete:hover { background-color: #cf1322; }
