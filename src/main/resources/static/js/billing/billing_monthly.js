@@ -21,9 +21,6 @@ let sortDir            = 1;
 ================================================================ */
 document.addEventListener('DOMContentLoaded', () => {
     fetchList();
-    document.addEventListener('click', e => {
-        if (!e.target.closest('.panel-wrap')) closeAllPanels();
-    });
 });
 
 /* ================================================================
@@ -122,84 +119,32 @@ function renderTable() {
    필터
 ================================================================ */
 function buildDongGrid() {
-    const dongs = [...new Set(billingRows.map(r => r.dong).filter(d => d && d !== '—'))].sort();
-    document.getElementById('dongGrid').innerHTML =
-        `<button class="chip full${!selDong ? ' selected' : ''}" onclick="pickDong(null)">전체 동</button>`
-        + dongs.map(d =>
-            `<button class="chip${selDong === d ? ' selected' : ''}" onclick="pickDong('${d}')">${d}</button>`
-        ).join('');
+    const dongs = [...new Set(billingRows.map(r => r.dong).filter(Boolean))].sort();
+    const sel = document.getElementById('selDong');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">전체 동</option>'
+        + dongs.map(d => `<option value="${d}">${d}</option>`).join('');
+    sel.value = cur;
 }
 
-function buildYearGrid() {
-    document.getElementById('yearGrid').innerHTML =
-        `<button class="chip full${selYear === null ? ' selected' : ''}" onclick="pickYear(null)">전체</button>`
-        + YEARS.map(y =>
-            `<button class="chip${y === selYear ? ' selected' : ''}" onclick="pickYear(${y})">${y}년</button>`
-        ).join('');
-}
+function onFilterChange() {
+    const year  = document.getElementById('selYear').value;
+    const month = document.getElementById('selMonth').value;
+    const dong  = document.getElementById('selDong').value;
 
-function buildMonthGrid() {
-    document.getElementById('monthGrid').innerHTML =
-        `<button class="chip full${selMonth === null ? ' selected' : ''}" onclick="pickMonth(null)">전체</button>`
-        + MONTHS_KR.map((m, i) =>
-            `<button class="chip${selMonth === i + 1 ? ' selected' : ''}" onclick="pickMonth(${i + 1})">${m}</button>`
-        ).join('');
-}
+    selYear  = year  ? parseInt(year)  : null;
+    selMonth = month ? parseInt(month) : null;
+    selDong  = dong  || null;
 
-function togglePanel(name) {
-    if (openPanel === name) { closeAllPanels(); return; }
-    closeAllPanels();
-    openPanel = name;
-    if (name === 'year')  buildYearGrid();
-    if (name === 'month') buildMonthGrid();
-    const panelMap = { year:'panelYear', month:'panelMonth', dong:'panelDong' };
-    const btnMap   = { year:'btnYear',   month:'btnMonth',   dong:'btnDong'  };
-    document.getElementById(panelMap[name]).style.display = 'block';
-    document.getElementById(btnMap[name]).classList.add('active');
-}
-
-function closeAllPanels() {
-    ['panelYear','panelMonth','panelDong'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-    });
-    ['btnYear','btnMonth','btnDong'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-    });
-    openPanel = null;
-}
-
-function pickYear(y) {
-    selYear = y; selDong = null;
-    document.getElementById('lblYear').textContent = y ? y + '년' : '전체';
-    document.getElementById('lblDong').textContent = '전체 동';
-    closeAllPanels();
+    // 삭제 링크 갱신
+    updateDeleteLink();
     fetchList();
-}
-
-function pickMonth(m) {
-    selMonth = m; selDong = null;
-    document.getElementById('lblMonth').textContent = m ? MONTHS_KR[m - 1] : '전체 월';
-    document.getElementById('lblDong').textContent  = '전체 동';
-    closeAllPanels();
-    fetchList();
-}
-
-function pickDong(d) {
-    selDong = d;
-    document.getElementById('lblDong').textContent = d || '전체 동';
-    closeAllPanels();
-    buildDongGrid();
-    renderTable();
-    updateDeleteLink(); // 동 선택 시 삭제 링크 텍스트 갱신
 }
 
 /* 삭제 링크: 연도 + 월 선택 시만 표시 */
 function updateDeleteLink() {
     const wrap = document.getElementById('deleteWrap');
     const link = document.querySelector('.delete-month-link');
-
     if (selYear && selMonth) {
         wrap.style.display = '';
         const month = `${selYear}-${String(selMonth).padStart(2,'0')}`;
