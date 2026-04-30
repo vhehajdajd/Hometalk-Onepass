@@ -6,6 +6,7 @@
   <title>수동 입차</title>
   <meta name="_csrf" th:content="${_csrf.token}">
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
+  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
   <style>
     /* CSS는 나중에 추가 */
   </style>
@@ -51,8 +52,8 @@
 
   <!-- 버튼 -->
   <div class="form-actions">
-    <button type="button" onclick="goBack()">취소</button>
-    <button type="button" id="submitBtn" disabled onclick="processManualEntry()">입차 처리</button>
+    <button type="button" class="btn-cancel" onclick="goBack()">취소</button>
+    <button type="button" id="submitBtn" class="pk-btn pk-btn-primary" disabled onclick="processManualEntry()">입차 처리</button>
   </div>
 
 </div>
