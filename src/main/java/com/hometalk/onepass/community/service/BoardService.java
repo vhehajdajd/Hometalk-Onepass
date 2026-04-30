@@ -1,7 +1,7 @@
 package com.hometalk.onepass.community.service;
 
-import com.hometalk.onepass.community.dto.BoardRequestDTO;
-import com.hometalk.onepass.community.dto.BoardResponseDTO;
+import com.hometalk.onepass.community.dto.request.BoardRequestDTO;
+import com.hometalk.onepass.community.dto.response.BoardResponseDTO;
 import com.hometalk.onepass.community.entity.Board;
 import com.hometalk.onepass.community.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;

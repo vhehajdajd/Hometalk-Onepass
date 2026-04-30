@@ -1,0 +1,25 @@
+/* ═══════════════════════════════════════
+   월별 관리 페이지 전용 스타일 (고지서업로드 탭2 DB저장 후 확인화면)
+   파일 위치: static/billing/css/billing_admin_monthly.css
+   공통: billing_admin_upload.css 함께 로드
+═══════════════════════════════════════ */
+
+/* badge-unpaid / badge-paid (billing_common에 없을 경우 대비) */
+.badge-unpaid {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 11px;
+    border-radius: 10px;
+    background: #fff3e0;
+    color: #e65100;
+    font-weight: 600;
+}
+.badge-paid {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 11px;
+    border-radius: 10px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 600;
+}

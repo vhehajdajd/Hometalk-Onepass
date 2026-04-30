@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!--
+    * Fragment 스타일2 : 동적 컴포넌트 (파라미터 있음)
+      - 이 파일은 Book 데이터를 받아서 카드 UI를 만드는 동적 fragment임.
+      - 같은 카드 구조에 다른 데이터를 넣어 재사용함
+      -  th:fragment= "bookCard(book)"
+                      --------- ----
+                      fragment 이름       파라미터
+                      (자유롭게 지정)     (Book 객체를 받음)
+
+      - ${book.subject}  -> book.getSubject()
+        ${book.price} -> book.getPrice()
+-->
+<div th:fragment="dashboardCard" class="card">
+    <h2 >Book Subject</h2>
+    <p class="author">Author Name</p>
+    <div class="info">
+        Price: $<span>10</span><br>
+        Pages: <span>200</span><br>
+<!--        Created At: <span th:text="${#temporals.format(book.createdAt, 'yyyy-MM-dd')}">2026-03-25</span>-->
+    </div>
+    <!--
+      th:href="@{/detail/{id}(id=${book.id})}"
+        예: /detail/1,    /detail/2
+    -->
+    <a class="btn" href="#" th:href="@{/}">View Details</a>
+</div>
+</body>
+</html>

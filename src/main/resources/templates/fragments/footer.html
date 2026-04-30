@@ -6,8 +6,8 @@
 </head>
 <body>
 <footer th:fragment="footer" class="site-footer">
-    <p>&copy; 2026 My Website. All Rights Reserved.</p>
-    <p class="small">Designed by My Name</p>
+    <p>&copy; <span th:text="${#temporals.format(#temporals.createNow(), 'yyyy')}">2026</span> 포레스트리움. All Rights Reserved.</p>
+    <p class="small">Designed by Choongang</p>
 </footer>
 </body>
 </html>

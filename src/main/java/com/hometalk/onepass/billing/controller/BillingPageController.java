@@ -46,7 +46,7 @@ public class BillingPageController {
                 .getContent();
 
         model.addAttribute("currentUri", request.getRequestURI());
-        model.addAttribute("contextPath", "/hometalk");
+        model.addAttribute("contextPath", "/hometop");
         model.addAttribute("unpaidList",    unpaidList);
         model.addAttribute("unpaidMonths",  unpaidList.stream()
                 .map(BillingSummaryResponse::getBillingMonth)
@@ -80,10 +80,18 @@ public class BillingPageController {
     public String uploadPage(Model model, HttpServletRequest request) {
         model.addAttribute("currentUri", request.getRequestURI());
         model.addAttribute("menu",        "billing");
-        model.addAttribute("contextPath", "/hometalk");
+        model.addAttribute("contextPath", "/hometop");
         return "billing/billing_admin_upload";
     }
 
+    // 관리자 고지서 업로드 후 관리 페이지
+    @GetMapping("/admin/monthly")
+    public String monthlyPage(Model model, HttpServletRequest request) {
+        model.addAttribute("currentUri",  request.getRequestURI());
+        model.addAttribute("menu",        "billing");
+        model.addAttribute("contextPath", "/hometop");
+        return "billing/billing_admin_monthly";
+    }
 
     // ─────────────────────────────────────────────
     // 관리자 미납 세대 관리 페이지
@@ -118,7 +126,7 @@ public class BillingPageController {
         model.addAttribute("pageSize",    20);
         model.addAttribute("menu",        "billing");
         model.addAttribute("currentUri", request.getRequestURI());
-        model.addAttribute("contextPath", "/hometalk");
+        model.addAttribute("contextPath", "/hometop");
 
         return "billing/billing_admin_unpaid";
     }

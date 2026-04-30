@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 티켓 발급</title>
+  <meta name="_csrf" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
+  <style>
+    /* CSS는 나중에 추가 */
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2 class="page-title">관리자 티켓 발급</h2>
+
+  <!-- 전체 세대 월별 자동 발급 -->
+  <div class="section">
+    <h3>전체 세대 월별 티켓 발급</h3>
+    <p class="hint">*매달 1일 자동 발급되며, 수동으로 즉시 발급할 수 있습니다.</p>
+    <button type="button" id="monthlyIssueBtn" onclick="issueMonthly(this)">
+      전체 세대 티켓 발급
+    </button>
+    <span class="result-msg" id="monthlyResult"></span>
+  </div>
+
+  <hr>
+
+  <!-- 특정 세대 수동 발급 -->
+  <div class="section">
+    <h3>특정 세대 수동 발급</h3>
+
+    <div class="form-group">
+      <label for="householdSelect">세대 선택</label>
+      <select id="householdSelect">
+        <option value="">세대를 선택해주세요</option>
+        <option th:each="household : ${households}"
+                th:value="${household.id}"
+                th:text="${household.dong} + ' ' + ${household.ho}">
+        </option>
+      </select>
+      <span class="error-msg" id="householdError"></span>
+    </div>
+
+    <div class="form-group">
+      <label>티켓 종류</label>
+      <div class="ticket-type-group">
+        <label>
+          <input type="radio" name="ticketType" value="HOUR"> 1시간권
+        </label>
+        <label>
+          <input type="radio" name="ticketType" value="DAY"> 1일권
+        </label>
+      </div>
+      <span class="error-msg" id="typeError"></span>
+    </div>
+
+    <div class="form-group">
+      <label for="totalCount">수량</label>
+      <div class="count-group">
+        <button type="button" onclick="decreaseCount()">-</button>
+        <span id="countDisplay">1</span>
+        <button type="button" onclick="increaseCount()">+</button>
+      </div>
+      <input type="hidden" id="totalCount" value="1">
+    </div>
+
+    <div class="form-actions">
+      <button type="button" id="issueBtn" onclick="issueTicket(this)">발급</button>
+    </div>
+    <span class="result-msg" id="issueResult"></span>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  const contextPath = /*[[@{/}]]*/ '/';
+  const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+  const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+  let count = 1;
+  const MAX_COUNT = 1000;
+
+  // 수량 증가
+  function increaseCount() {
+      if (count < MAX_COUNT) {
+          count++;
+          document.getElementById('countDisplay').textContent = count;
+          document.getElementById('totalCount').value = count;
+      }
+  }
+
+  // 수량 감소
+  function decreaseCount() {
+      if (count > 1) {
+          count--;
+          document.getElementById('countDisplay').textContent = count;
+          document.getElementById('totalCount').value = count;
+      }
+  }
+
+  // 전체 세대 월별 티켓 발급
+  function issueMonthly(btn) {
+      if (!confirm('전체 세대에 이번 달 티켓을 발급하시겠습니까?')) return;
+
+      btn.disabled = true;
+      const resultMsg = document.getElementById('monthlyResult');
+      resultMsg.textContent = '';
+
+      fetch(`${contextPath}admin/ticket/issue/monthly`, {
+          method: 'POST',
+          headers: {
+              [csrfHeader]: csrfToken
+          }
+      })
+          .then(async res => {
+              if (!res.ok) {
+                  const msg = await res.text();
+                  throw new Error(msg || '서버 오류');
+              }
+              resultMsg.textContent = '✅ 전체 세대 티켓 발급이 완료되었습니다.';
+              resultMsg.style.color = 'green';
+          })
+          .catch(err => {
+              console.error(err);
+              resultMsg.textContent = '❌ 발급 중 오류가 발생했습니다.';
+              resultMsg.style.color = 'red';
+          })
+          .finally(() => {
+              btn.disabled = false;
+          });
+  }
+
+  // 특정 세대 수동 발급
+  function issueTicket(btn) {
+      const householdId = document.getElementById('householdSelect').value;
+      const ticketType = document.querySelector('input[name="ticketType"]:checked')?.value;
+      const totalCount = document.getElementById('totalCount').value;
+
+      const householdError = document.getElementById('householdError');
+      const typeError = document.getElementById('typeError');
+      const issueResult = document.getElementById('issueResult');
+
+      householdError.textContent = '';
+      typeError.textContent = '';
+      issueResult.textContent = '';
+
+      if (!householdId) {
+          householdError.textContent = '세대를 선택해주세요.';
+          return;
+      }
+      if (!ticketType) {
+          typeError.textContent = '티켓 종류를 선택해주세요.';
+          return;
+      }
+
+      btn.disabled = true;
+
+      fetch(`${contextPath}admin/ticket/issue?householdId=${householdId}&type=${ticketType}&totalCount=${totalCount}`, {
+          method: 'POST',
+          headers: {
+              [csrfHeader]: csrfToken
+          }
+      })
+          .then(async res => {
+              if (!res.ok) {
+                  const msg = await res.text();
+                  throw new Error(msg || '서버 오류');
+              }
+              issueResult.textContent = '✅ 티켓 발급이 완료되었습니다.';
+              issueResult.style.color = 'green';
+
+              // 초기화
+              document.getElementById('householdSelect').value = '';
+              document.querySelectorAll('input[name="ticketType"]').forEach(r => r.checked = false);
+              count = 1;
+              document.getElementById('countDisplay').textContent = 1;
+              document.getElementById('totalCount').value = 1;
+          })
+          .catch(err => {
+              console.error(err);
+              issueResult.textContent = '❌ 발급 중 오류가 발생했습니다: ' + err.message;
+              issueResult.style.color = 'red';
+          })
+          .finally(() => {
+              btn.disabled = false;
+          });
+  }
+</script>
+
+</body>
+</html>

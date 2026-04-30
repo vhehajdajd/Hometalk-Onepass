@@ -1,49 +1,82 @@
 <!DOCTYPE html>
+<!--
+    미납 세대 관리 페이지 (billing/admin/unpaid)
+    - 납부 status (paid/unpaid) 확인, 미납세대 납부완료 처리
+    - 연/월/동/미납/3개월이상 체납 조회
+    - 전체세대/납부완료/미납세대/납부율 통계
+-->
+
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>미납 세대 관리 - HomeTalkOnePass</title>
+    <title>미납 세대 관리</title>
+    <meta name="_csrf"        th:content="${_csrf?.token}" />
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}" />
     <link rel="stylesheet" th:href="@{/css/dashboard/style.css}" />
-    <link rel="stylesheet" th:href="@{/billing/css/billing_common.css}" />
-    <link rel="stylesheet" th:href="@{/billing/css/billing_admin_unpaid.css}" />
+    <link rel="stylesheet" th:href="@{/css/billing/billing_common.css}" />
+    <link rel="stylesheet" th:href="@{/css/billing/billing_admin_unpaid.css}" />
 </head>
 <body>
 
 <div class="main-layout" style="display:flex; min-height:100vh;">
-    <div th:replace="~{fragments/sidebar :: sidebar}" th:with="menu='billing'"></div>
+
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='billing')}"></div>
 
     <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
-        <div th:replace="~{fragments/header :: header}"></div>
 
-        <!-- 카테고리 바 위치 (빈 바 고정) -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'billing'} })}"></div>
+
         <header class="category-menu-bar">&nbsp;</header>
 
-        <!-- 메인 콘텐츠 -->
         <div class="main-content">
 
             <div class="page-title">미납 세대 관리</div>
 
-            <!-- 통계 카드 -->
+            <!-- 통계 카드 윗줄: 필터 기준 -->
+            <div class="stat-section-label" id="statFilterLabel">현재 필터 기준</div>
             <div class="stat-grid">
                 <div class="stat-card">
                     <div class="stat-label">전체 세대</div>
-                    <div class="stat-value" th:text="${totalCount} ?: '—'">120</div>
+                    <div class="stat-value" id="statTotal">—</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">납부 완료</div>
-                    <div class="stat-value accent" th:text="${paidCount} ?: '—'">98</div>
+                    <div class="stat-value accent" id="statPaid">—</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">미납 세대</div>
-                    <div class="stat-value warn" th:text="${unpaidCount} ?: '—'">22</div>
+                    <div class="stat-value warn" id="statUnpaid">—</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">납부율</div>
-                    <div class="stat-value"
-                         th:text="${paidRate != null} ? ${#numbers.formatDecimal(paidRate, 1, 1) + '%'} : '—'">81.7%</div>
+                    <div class="stat-value" id="statRate">—</div>
                 </div>
             </div>
+
+            <!-- 통계 카드 아랫줄: 전체 기간 고정, 토글 -->
+            <!-- 전체 누적 기준 (토글) -->
+            <div class="stat-section-label stat-toggle-label" onclick="toggleGlobalStats()">
+                <strong>전체 누적 기준</strong>
+                <span class="stat-toggle-icon" id="globalStatsIcon">▼</span>
+            </div>
+            <div class="stat-grid-global-wrap" id="globalStatsWrap" style="display:none">
+                <div class="stat-grid stat-grid-global">
+                    <div class="stat-card stat-card-sm">
+                        <div class="stat-label-sm">전체기간 총 미납건수</div>
+                        <div class="stat-value-sm warn" id="statGlobalBillings">—</div>
+                    </div>
+                    <div class="stat-card stat-card-sm">
+                        <div class="stat-label-sm">미납 세대</div>
+                        <div class="stat-value-sm warn" id="statGlobalHouseholds">—</div>
+                    </div>
+                    <div class="stat-card stat-card-sm">
+                        <div class="stat-label-sm">3개월 이상 체납<br></div>
+                        <div class="stat-value-sm" id="statGlobalOverdue" style="color:#d83c2d;">—</div>
+                    </div>
+                </div>
+            </div>
+
 
             <!-- 필터 -->
             <div class="filter-row">
@@ -76,100 +109,59 @@
                         <span id="lblUnpaid">미납만 보기</span><span class="caret">▼</span>
                     </button>
                     <div class="filter-panel" id="panelUnpaid" style="display:none">
-                        <div class="chip-grid status-g">
-                            <button class="chip status-chip" id="chipAll"
-                                    onclick="pickUnpaidFilter('all','전체')">전체</button>
-                            <button class="chip status-chip selected" id="chipUnpaid"
-                                    onclick="pickUnpaidFilter('unpaid','미납만 보기')">미납만 보기</button>
-                            <button class="chip status-chip" id="chipLong"
-                                    onclick="pickUnpaidFilter('long','3개월 이상 체납')">3개월 이상 체납</button>
-                            <button class="chip status-chip" id="chipPaid"
-                                    onclick="pickUnpaidFilter('paid','납부완료')">납부완료</button>
-                        </div>
+                        <div class="chip-grid status-g"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- 미납 세대 목록 테이블 -->
+            <!-- ★ 일괄처리 액션 바 (체크 시 표시) -->
+            <div class="bulk-action-bar" id="bulkActionBar" style="display:none">
+                <span id="bulkCount">0건 선택됨</span>
+                <div class="bulk-actions">
+                    <button class="btn btn-ghost" onclick="clearAllChecks()">선택 해제</button>
+                    <button class="btn btn-point" onclick="openBulkConfirm()">납부완료 처리</button>
+                </div>
+            </div>
+
+            <!-- 테이블 -->
             <div class="table-section">
                 <div class="table-wrap">
                     <table class="data-table">
                         <thead>
                         <tr>
-                            <th>num</th>
-                            <th>동/호</th>
+                            <th style="width:40px;">
+                                <input type="checkbox" id="checkAll" onclick="toggleAllChecks(this)">
+                            </th>
+                            <th>NUM</th>
+                            <th class="sortable" onclick="sortBy('unit')">동/호 <span class="sort-icon">▼</span></th>
                             <th>입주민</th>
-                            <th>부과월</th>
-                            <th>청구금액</th>
-                            <th>납기일</th>
-                            <th>status</th>
+                            <th class="sortable" onclick="sortBy('billingMonth')">부과월 <span class="sort-icon">▼</span></th>
+                            <th class="sortable" onclick="sortBy('totalAmount')">청구금액 <span class="sort-icon">▼</span></th>
+                            <th class="sortable" onclick="sortBy('dueDate')">납기일 <span class="sort-icon">▼</span></th>
+                            <th class="sortable" onclick="sortBy('status')">status <span class="sort-icon">▼</span></th>
                             <th>처리</th>
                         </tr>
                         </thead>
                         <tbody id="billingTableBody">
-                        <th:block th:if="${billingList != null and !billingList.isEmpty()}">
-                            <tr th:each="item, stat : ${billingList}"
-                                th:with="isUnpaid=${item.status.name() == 'UNPAID'},
-                                         isDone=${item.status.name() == 'PAID'}"
-                                th:classappend="${isDone} ? 'done' : ''">
-                                <td th:text="${stat.index + 1 + (currentPage * pageSize)}">1</td>
-                                <td th:text="${item.unit}">101-1204</td>
-                                <td th:text="${item.residentName}">홍길동</td>
-                                <td th:text="${item.billingMonth}">2026.02</td>
-                                <td th:text="${#numbers.formatInteger(item.totalAmount, 0, 'COMMA') + '원'}">119,300원</td>
-                                <td th:text="${#temporals.format(item.dueDate, 'yyyy.MM.dd')}">2026.02.28</td>
-                                <td>
-                                    <span th:classappend="${isUnpaid} ? 'badge-unpaid' : 'badge-paid'"
-                                          class="badge"
-                                          th:text="${item.status}">UNPAID</span>
-                                </td>
-                                <td>
-                                    <button th:if="${isUnpaid}"
-                                            class="btn-process"
-                                            th:data-billing-id="${item.billingId}"
-                                            th:data-unit="${item.unit}"
-                                            th:data-month="${item.billingMonth}"
-                                            onclick="openConfirm(this)">납부완료 처리</button>
-                                    <span th:unless="${isUnpaid}" class="btn-process done-txt">처리완료</span>
-                                </td>
-                            </tr>
-                        </th:block>
-                        <tr th:if="${billingList == null or billingList.isEmpty()}">
-                            <td colspan="8" class="empty-state">조회된 미납 세대가 없습니다.</td>
+                        <tr>
+                            <td colspan="9" class="empty-state">불러오는 중...</td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
 
                 <!-- 페이지네이션 -->
-                <div class="pagination" th:if="${totalPages > 1}">
-                    <button class="page-btn"
-                            th:classappend="${currentPage == 0} ? 'disabled'"
-                            th:onclick="${currentPage > 0} ? 'goPage(' + ${currentPage - 1} + ')' : ''">
-                        &lt;
-                    </button>
-                    <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
-                        <button class="page-btn"
-                                th:classappend="${i == currentPage} ? 'active'"
-                                th:text="${i + 1}"
-                                th:onclick="'goPage(' + ${i} + ')'">1</button>
-                    </th:block>
-                    <button class="page-btn"
-                            th:classappend="${currentPage == totalPages - 1} ? 'disabled'"
-                            th:onclick="${currentPage < totalPages - 1} ? 'goPage(' + ${currentPage + 1} + ')' : ''">
-                        &gt;
-                    </button>
-                </div>
+                <div class="pagination" id="paginationWrap"></div>
             </div>
 
-        </div><!-- /main-content -->
+        </div>
 
         <footer th:replace="~{fragments/footer :: footer}"></footer>
 
-    </div><!-- /main-wrapper -->
-</div><!-- /main-layout -->
+    </div>
+</div>
 
-<!-- 납부완료 처리 confirm 팝업 -->
+<!-- 단건 납부완료 팝업 -->
 <div class="confirm-overlay" id="confirmOverlay" style="display:none">
     <div class="confirm-box">
         <div class="confirm-title">납부완료 처리</div>
@@ -183,17 +175,27 @@
     </div>
 </div>
 
-<meta name="_csrf"        th:content="${_csrf.token}" />
-<meta name="_csrf_header" th:content="${_csrf.headerName}" />
+<!-- 일괄 납부완료 팝업 -->
+<div class="confirm-overlay" id="bulkConfirmOverlay" style="display:none">
+    <div class="confirm-box">
+        <div class="confirm-title">일괄 납부완료 처리</div>
+        <div class="confirm-msg" id="bulkConfirmMsg"></div>
+        <div class="confirm-msg-warn">선택한 세대를 납부완료 처리합니다. (변경불가)</div>
+        <div class="confirm-btns">
+            <button class="btn btn-ghost" onclick="closeBulkConfirm()">취소</button>
+            <button class="btn btn-point" onclick="processBulkPayment()">확인</button>
+        </div>
+    </div>
+</div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    const CONTEXT_PATH = /*[[${contextPath}]]*/ '/hometalk';
+    const CONTEXT_PATH = /*[[${contextPath}]]*/ '/hometop';
     const CSRF_TOKEN   = document.querySelector('meta[name="_csrf"]')?.content;
     const CSRF_HEADER  = document.querySelector('meta[name="_csrf_header"]')?.content;
     /*]]>*/
 </script>
-<script th:src="@{/billing/js/billing_unpaid.js}"></script>
+<script th:src="@{/js/billing/billing_unpaid.js}"></script>
 
 </body>
 </html>

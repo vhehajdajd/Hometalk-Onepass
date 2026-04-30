@@ -87,7 +87,8 @@
 
 </div>
 
-<script>
+<script th:inline="javascript">
+  const contextPath = /*[[@{/}]]*/ '/';
   const csrfToken = document.querySelector('meta[name="_csrf"]').content;
   const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
   let isProcessing = false;
@@ -140,7 +141,7 @@
       }
       searchError.textContent = '';
 
-      fetch(`/staff/vehicle/search?keyword=${keyword}`)
+      fetch(`${contextPath}staff/vehicle/search?keyword=${keyword}`)
           .then(async res => {
               if (!res.ok) {
                   const msg = await res.text();
@@ -157,7 +158,7 @@
                       <div class="result-item">
                           <span>*결과 : 미등록 차량입니다.</span>
                           <button type="button" class="manual-btn"
-                                  onclick="location.href='/staff/manual-entry'">수동 입차</button>
+                                  onclick="location.href='${contextPath}staff/manual-entry'">수동 입차</button>
                       </div>
                   `;
                   return;
@@ -196,7 +197,7 @@
       isProcessing = true;
       btn.disabled = true;
 
-      postFetch('/staff/vehicle/entry', { id: id, type: type })
+      postFetch(`${contextPath}staff/vehicle/entry`, { id: id, type: type })
           .then(async res => {
               if (!res.ok) {
                   const msg = await res.text();
@@ -225,7 +226,7 @@
       visitList.innerHTML = '<tr><td colspan="5">로딩 중...</td></tr>';
       residentList.innerHTML = '<tr><td colspan="5">로딩 중...</td></tr>';
 
-      fetch('/staff/entry/list/visit')
+      fetch(`${contextPath}staff/entry/list/visit`)
           .then(async res => {
               if (!res.ok) {
                   const msg = await res.text();
@@ -263,7 +264,7 @@
               visitList.innerHTML = '<tr><td colspan="5">데이터 조회 중 오류가 발생했습니다.</td></tr>';
           });
 
-      fetch('/staff/entry/list/resident')
+      fetch(`${contextPath}staff/entry/list/resident`)
           .then(async res => {
               if (!res.ok) {
                   const msg = await res.text();

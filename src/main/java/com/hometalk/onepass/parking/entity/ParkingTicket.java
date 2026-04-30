@@ -114,4 +114,27 @@ public class ParkingTicket extends BaseTimeEntity {
         };
         public abstract int toMinutes(int count);
     }
+
+    /**
+     * 티켓 수량 복구 (취소 시)
+     */
+    public void restoreCount(int count) {
+        if (count <= 0) {
+            throw new IllegalArgumentException("복구 수량은 1 이상이어야 합니다.");
+        }
+        if (this.usedCount - count < 0) {
+            throw new IllegalStateException("복구 수량이 사용 수량을 초과합니다.");
+        }
+        this.usedCount -= count;
+    }
+
+    /**
+     * 수량 추가 (관리자 티켓 발급 시)
+     */
+    public void addCount(int count) {
+        if (count <= 0) {
+            throw new IllegalArgumentException("추가 수량은 1 이상이어야 합니다.");
+        }
+        this.totalCount += count;
+    }
 }

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="` http://www.thymeleaf.org">
+<!--
+  * Fragment 스타일1 : 고정 레이아웃 (파라미터 없음)
+    - 이 파일은 모든 페이지에서 동일하게 사용되는 "고정된" 헤더임.
+    - 데이터가 필요 없으므로 파라미터 없이 정의함
+    - th:fragment="header"
+                   ------
+                   fragment 이름 (파라미터 없음)
+    - 언제 이 스타일1을 사용하는가?
+      - 네비게이션 바 (모든 페이지에 동일)
+      - 푸터 (모든 페이지에 동일)
+      - 사이드바 (모든 페이지에 동일)
+      -> 데이터가 필요 없고, 어디서든 같은 내용을 보여줄 때
+-->
+<header th:fragment="path(paths)" th:with="len=${paths != null ? #lists.size(paths) : 0}"
+        class="site-header" style="display: flex; flex-direction: column; padding: 0;">
+
+    <div class="header-top-row" style="width: 100%; display: flex; justify-content: flex-end; padding: 10px 40px; background-color: #ffffff;">
+        <nav class="menu" style="margin-top: 20px;">    <!-- 20px만큼 위를 띄움 -->
+            <a href="#" th:href="@{/notification}" style="position: relative; display: inline-block; text-decoration: none;">
+                알림⏰
+                <!-- 새 메시지가 있을 때만 빨간 점 표시 (서버에서 newAlert 변수를 보내준다고 가정) -->
+                <span
+                        style="position: absolute; top: -5px; right: 50px; width: 12px; height: 12px; background-color: red; border-radius: 50%; border: 1px solid white;">
+                </span>
+            </a>
+            <a href="#"
+               th:href="@{/myPage}"
+               th:attr="onclick=|window.open('@{/myPage}', 'myPageWindow', 'width=520,height=760,left=200,top=120,resizable=yes,scrollbars=yes'); return false;|">
+                마이페이지
+            </a>
+
+        </nav>
+    </div>
+
+    <!-- 하단 여백 (레이아웃 조절용) -->
+    <div style="height: 13px;"></div>
+
+    <!-- [두 번째 줄] 새 상단바: 사이드 메뉴 + 상세 메뉴 표시 -->
+    <div class="header-second-row" style="width: 100%; background-color: #a8bacb; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 12px 40px; min-height: 48px">
+        <div class="breadcrumb" style="font-size: 14px; color: #0526ad; display: flex; align-items: center;">
+
+            <!-- 1. 고정 홈 아이콘/텍스트 -->
+            <!--            <span style="color: #999;">홈</span>-->
+
+            <th:block th:each="p, iter : ${paths}">
+
+                <!-- 2. 사이드 메뉴(대분류) 표시 -->
+                <!-- index가 0일 때만 실행되는 블록 -->
+                <th:block th:if="${iter.index == 0}">
+                    <span style="color: #0526ad; font-weight: 500" th:switch="${p}">
+                        <span th:case="'home'">대시보드</span>
+                        <span th:case="'notification'">알림</span>
+                        <span th:case="'parking'">주차</span>
+                        <span th:case="'billing'">관리비</span>
+                        <span th:case="'notice'">공지 사항</span>
+                        <span th:case="'schedule'">일정</span>
+                        <span th:case="'community'">커뮤니티</span>
+                    </span>
+                </th:block>
+
+                <!-- 3. 상세 메뉴(소분류) 표시 -->
+                <th:block th:if="${iter.index >= 1}">    <!-- 메뉴경로 > 표시  -->
+                    <span style="margin: 0 10px; color: #2ea5ef;">&gt;</span>
+
+                    <th:block th:with="fontWeight=${iter.index == len - 1? 700 : 500}">     <!-- 최종 경로라면 700 적용으로 찐하게 아니라면 500 적용 -->
+                        <span th:style="'color: #0526ad; font-weight: ' + ${fontWeight}" th:switch="${p}">
+
+                             <!-- 주차 목록 -->
+                            <span th:case="'status'">조회</span>
+                            <span th:case="'register'">등록</span>
+                            <span th:case="'reservationRegister'">예약 조회</span>
+                            <span th:case="'reservationRegisterForm'">예약 등록</span>
+
+                            <!-- 커뮤니티 -->
+                            <span th:case="'광장'">광장</span>
+                            <span th:case="'마켓'">마켓</span>
+                            <span th:case="'전체'">전체</span>
+                            <span th:case="'자유'">자유</span>
+                            <span th:case="'토론'">토론</span>
+                            <span th:case="'나눔'">나눔</span>
+                            <span th:case="'분실문'">분실문</span>
+
+                        </span>
+                    </th:block>
+
+                </th:block>
+            </th:block>
+
+        </div>
+    </div>
+</header>
+</html>

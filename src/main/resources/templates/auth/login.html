@@ -8,44 +8,141 @@
         * {
             box-sizing: border-box;
         }
-        .auth-container { width: 400px; margin: 20px auto; padding: 30px; text-align: center; border: solid 1px #bdbaba;  }
-        .input-group { margin-bottom: 10px; width: 100% }
-        input { width: 250px; padding: 10px; }
-        button { width: 250px; padding: 10px; background-color: #007bff; color: white; border: none; cursor: pointer; }
-    </style>
 
+
+
+        .logo-image {
+            max-width: 250px;
+            max-height: 180px;
+            margin-bottom: 10px;
+        }
+
+        body {
+            margin: 0;
+            background: #9EBFDB;
+        }
+
+        .auth-container {
+            background: #fefefe;
+            width: 400px;
+            margin: 75px auto 20px;
+            min-height: 600px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid #bdbaba;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        p {margin: 8px auto; font-size: 14px;}
+
+        .input-group {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        input {
+            width: 250px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        button {
+            width: 250px;
+            padding: 10px;
+            background-color: #3C6ABC;
+            color: white;
+            border: none;
+            cursor: pointer;
+            height: 40px;
+            border-radius: 8px;
+            margin-top: 5px;
+        }
+
+        button:hover {
+            background-color: #4073c9;
+        }
+
+        hr {
+            width: 100%;
+            margin: 14px auto;
+            border: 0;
+            border-top: 1px solid #a7b3c5;
+        }
+
+        .other-contain {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .social-login-list {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .kakao-btn-container,
+        .naver-btn-container {
+            margin-top: 0;
+        }
+
+        .kakao-btn-container img,
+        .naver-btn-container img {
+            width: 48px;
+            height: 48px;
+            display: block;
+            margin: 0;
+        }
+    </style>
 </head>
 <body>
 
 <div class="auth-container">
-    <h2>Home Talk One Pass</h2>
-    <h2>로그인</h2>
+    <!-- 일반 로그인과 소셜 로그인을 한 화면에 배치해 인증 진입점을 단순화한다. -->
+    <img th:src="@{/auth/loginimage/logo.png}" alt="로그인 로고 이미지" class="logo-image">
+
     <form th:action="@{/auth/login}" method="post">
         <div class="input-group">
-            <input type="text" name="loginId" placeholder="아이디를 입력하세요." required>
+            <input type="text" name="loginId" placeholder="👤 아이디를 입력하세요." required>
         </div>
         <div class="input-group">
-            <input type="password" name="password" placeholder="비밀번호를 입력하세요." required>
+            <input type="password" name="password" placeholder="🔒️ 비밀번호를 입력하세요." required>
         </div>
         <button type="submit">로그인</button>
     </form>
 
     <div class="other-contain">
         <p>계정이 없으신가요? <a th:href="@{/auth/register}">회원가입</a></p>
+
+        <hr>
+
+        <!-- 버튼은 Spring Security OAuth2 인가 엔드포인트로 직접 이동한다. -->
+        <p>소셜 로그인</p>
+        <div class="social-login-list">
+            <div class="kakao-btn-container">
+                <a th:href="@{/oauth2/authorization/kakao}">
+                    <img th:src="@{/auth/loginimage/kakao_login.png}" alt="카카오 로그인">
+                </a>
+            </div>
+            <div class="naver-btn-container">
+                <a th:href="@{/oauth2/authorization/naver}">
+                    <img th:src="@{/auth/loginimage/naver_login.png}" alt="네이버 로그인">
+                </a>
+            </div>
+        </div>
     </div>
+
+    <script th:if="${param.error}" th:inline="javascript">
+        // error 쿼리스트링이 남아 있으면 새로고침 때 경고가 반복될 수 있어
+        // 안내 후 현재 path 로 다시 이동해 URL 을 정리한다.
+        alert("아이디 또는 비밀번호가 일치하지 않습니다.");
+        window.location.href = window.location.pathname;
+    </script>
 </div>
-
-
-<script th:if="${param.error}" th:inline="javascript">
-
-    // 1. 알림창 띄우기
-    alert("아이디 또는 비밀번호가 일치하지 않습니다.");
-
-    // 2. 확인(OK)을 누르면 다시 깨끗한 로그인 페이지로 리다이렉트
-    window.location.href = window.location.pathname;
-    /*]]>*/
-</script>
-
 
 </body>
 </html>

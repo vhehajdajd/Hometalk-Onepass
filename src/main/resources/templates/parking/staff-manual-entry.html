@@ -27,12 +27,12 @@
     <span class="error-msg" id="purposeTypeError"></span>
   </div>
 
-  <!-- 방문 세대 -->
+  <!-- 방문 세대 (선택사항) -->
   <div class="form-group">
-    <label>방문 세대</label>
+    <label>방문 세대 <span style="font-size:12px;color:#999">(모를 경우 생략 가능)</span></label>
     <div class="household-group">
-      <input type="text" id="dong" placeholder="예) 동">
-      <input type="text" id="ho" placeholder="예) 호수">
+      <input type="text" id="dong" placeholder="예) 101">
+      <input type="text" id="ho" placeholder="예) 101">
     </div>
     <span class="error-msg" id="householdError"></span>
   </div>
@@ -51,13 +51,14 @@
 
   <!-- 버튼 -->
   <div class="form-actions">
-    <button type="button" onclick="location.href='/staff/entry'">취소</button>
+    <button type="button" onclick="goBack()">취소</button>
     <button type="button" id="submitBtn" disabled onclick="processManualEntry()">입차 처리</button>
   </div>
 
 </div>
 
-<script>
+<script th:inline="javascript">
+  const contextPath = /*[[@{/}]]*/ '/';
   const csrfToken = document.querySelector('meta[name="_csrf"]').content;
   const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
   const vehicleNumberRegex = /^\d{2,3}[가-힣]\d{4}$/;
@@ -76,11 +77,9 @@
       });
   });
 
-  // 방문 세대 입력 검증
   document.getElementById('dong').addEventListener('input', checkSubmitBtn);
   document.getElementById('ho').addEventListener('input', checkSubmitBtn);
 
-  // 차량 번호 실시간 검증
   document.getElementById('vehicleNumber').addEventListener('input', () => {
       const value = document.getElementById('vehicleNumber').value
           .replace(/\s/g, '')
@@ -96,19 +95,20 @@
       checkSubmitBtn();
   });
 
-  // 제출 버튼 활성화 체크
+  // dong, ho는 선택사항 → 제외
   function checkSubmitBtn() {
       const purposeType = purposeTypeInput.value;
-      const dong = document.getElementById('dong').value.trim();
-      const ho = document.getElementById('ho').value.trim();
       const vehicleNumber = document.getElementById('vehicleNumber').value.replace(/\s/g, '');
       const isValidNumber = vehicleNumberRegex.test(vehicleNumber);
 
       document.getElementById('submitBtn').disabled =
-          !(purposeType && dong && ho && isValidNumber);
+          !(purposeType && isValidNumber);
   }
 
-  // 수동 입차 처리
+  function goBack() {
+      location.href = `${contextPath}staff/entry`;
+  }
+
   function processManualEntry() {
       const btn = document.getElementById('submitBtn');
       const purposeType = purposeTypeInput.value;
@@ -120,14 +120,17 @@
           document.getElementById('purposeTypeError').textContent = '방문 종류를 선택해주세요.';
           return;
       }
-      if (!dong || !ho) {
-          document.getElementById('householdError').textContent = '방문 세대를 입력해주세요.';
+
+      // 동호수는 둘 다 입력하거나 둘 다 비워야 함
+      if ((dong && !ho) || (!dong && ho)) {
+          document.getElementById('householdError').textContent = '동과 호수를 모두 입력해주세요.';
           return;
       }
+      document.getElementById('householdError').textContent = '';
 
       btn.disabled = true;
 
-      fetch('/staff/vehicle/manual-entry', {
+      fetch(`${contextPath}staff/vehicle/manual-entry`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -135,8 +138,8 @@
           },
           body: JSON.stringify({
               purposeType: purposeType,
-              dong: dong,
-              ho: ho,
+              dong: dong || null,
+              ho: ho || null,
               vehicleNumber: vehicleNumber
           })
       })
@@ -146,7 +149,7 @@
                   throw new Error(msg || '서버 오류');
               }
               alert('수동 입차 처리가 완료되었습니다.');
-              location.href = '/staff/entry';
+              location.href = `${contextPath}staff/entry`;
           })
           .catch(err => {
               console.error(err);

@@ -1,6 +1,6 @@
 package com.hometalk.onepass.parking.entity;
 
-import com.hometalk.onepass.common.entity.BaseTimeEntity;
+import com.hometalk.onepass.common.entity.BaseSoftDeleteEntity;
 import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.auth.entity.User;
 import jakarta.persistence.*;
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "parking_logs")
 @Getter
 @NoArgsConstructor
-public class ParkingLog extends BaseTimeEntity {
+public class ParkingLog extends BaseSoftDeleteEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +24,7 @@ public class ParkingLog extends BaseTimeEntity {
     @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
 
-    @Column(name= "vehicle_number", nullable = false, length = 20)
+    @Column(name = "vehicle_number", nullable = false, length = 20)
     private String vehicleNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -59,9 +59,7 @@ public class ParkingLog extends BaseTimeEntity {
     @Column(nullable = false)
     private ParkingStatus status;
 
-    /**
-     * 생성자 (입차 처리)
-     */
+    // ─── 입차 처리 ───────────────────────────────────────────────
     public ParkingLog(Vehicle vehicle, String vehicleNumber, Household household,
                       VisitReservation reservation, User staff, EntryType entryType) {
 
@@ -81,29 +79,24 @@ public class ParkingLog extends BaseTimeEntity {
         this.entryTime = LocalDateTime.now();
         this.status = ParkingStatus.PARKED;
 
-        // 예약 차량이면 상태 변경
-        if (this.reservation != null) {
+        // MANUAL 타입은 세대 확인 대기 상태 유지를 위해 enter() 호출 안 함
+        if (this.reservation != null && entryType != EntryType.MANUAL) {
             this.reservation.enter();
         }
     }
 
-    /**
-     * 출차 처리
-     */
+    // ─── 출차 처리 ───────────────────────────────────────────────
     public void exit(int totalMinutes, int appliedMinutes) {
 
-        if (this.status != ParkingStatus.PARKED && this.status != ParkingStatus.OVERSTAY) {
-            throw new IllegalStateException("주차 중인 차량만 출차 처리할 수 있습니다.");
+        if (this.status != ParkingStatus.PARKED) {
+            throw new IllegalStateException("이미 출차된 차량입니다.");
         }
-
         if (totalMinutes < 0) {
             throw new IllegalArgumentException("총 주차 시간은 0 이상이어야 합니다.");
         }
-
         if (appliedMinutes < 0) {
             throw new IllegalArgumentException("티켓 적용 시간은 0 이상이어야 합니다.");
         }
-
         if (appliedMinutes > totalMinutes) {
             throw new IllegalArgumentException("티켓 적용 시간은 총 주차 시간을 초과할 수 없습니다.");
         }
@@ -112,7 +105,6 @@ public class ParkingLog extends BaseTimeEntity {
         this.totalMinutes = totalMinutes;
         this.appliedMinutes = appliedMinutes;
 
-        // 초과 여부 판단
         if (totalMinutes > appliedMinutes) {
             this.status = ParkingStatus.OVERSTAY;
         } else {
@@ -120,9 +112,7 @@ public class ParkingLog extends BaseTimeEntity {
         }
     }
 
-    /**
-     * 세대 매칭 (수동 입차 대응)
-     */
+    // ─── 세대 매칭 ───────────────────────────────────────────────
     public void matchHousehold(Household household) {
         if (household == null) {
             throw new IllegalArgumentException("세대 정보는 필수입니다.");
@@ -136,5 +126,13 @@ public class ParkingLog extends BaseTimeEntity {
 
     public enum ParkingStatus {
         PARKED, EXITED, OVERSTAY
+    }
+
+    // ─── 티켓 적용 시간 업데이트
+    public void updateAppliedMinutes(int appliedMinutes) {
+        if (appliedMinutes < 0) {
+            throw new IllegalArgumentException("티켓 적용 시간은 0 이상이어야 합니다.");
+        }
+        this.appliedMinutes = appliedMinutes;
     }
 }

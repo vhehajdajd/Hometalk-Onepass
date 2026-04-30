@@ -3,70 +3,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>주차 기록 조회</title>
-  <style>
-    /* CSS는 나중에 추가 */
-  </style>
+  <title>월별 주차 기록</title>
+  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
 </head>
 <body>
 
 <div class="container">
-  <h2 class="page-title">주차 기록 조회</h2>
+  <h2 class="page-title">월별 주차 기록</h2>
 
-  <!-- 년/월 선택 -->
-  <div class="date-filter">
-
-    <!-- 년 선택 -->
-    <div class="dropdown-wrapper">
-      <button type="button" id="yearBtn" onclick="toggleYearDropdown()">
+  <!-- 년/월 필터 -->
+  <div class="pk-filter-group">
+    <div class="pk-dropdown-wrapper">
+      <button type="button" class="pk-dropdown-btn" onclick="toggleYearDropdown()">
         <span id="selectedYear"></span> ▼
       </button>
-      <div id="yearDropdown" class="dropdown" style="display:none;">
+      <div id="yearDropdown" class="pk-dropdown-menu" style="display:none;">
         <ul id="yearList"></ul>
       </div>
     </div>
 
-    <!-- 월 선택 -->
-    <div class="dropdown-wrapper">
-      <button type="button" id="monthBtn" onclick="toggleMonthDropdown()">
+    <div class="pk-dropdown-wrapper">
+      <button type="button" class="pk-dropdown-btn" onclick="toggleMonthDropdown()">
         <span id="selectedMonth"></span> ▼
       </button>
-      <div id="monthDropdown" class="dropdown" style="display:none;">
+      <div id="monthDropdown" class="pk-dropdown-menu" style="display:none;">
         <ul id="monthList"></ul>
       </div>
     </div>
-
   </div>
 
   <!-- 주차 기록 테이블 -->
-  <table id="parkingTable">
+  <table class="park-table">
     <thead>
     <tr>
       <th>차량 번호</th>
-      <th>입차시간</th>
-      <th>출차시간</th>
-      <th>등록구분</th>
-      <th>정산내역</th>
+      <th>구분</th>
+      <th>입차 시간</th>
+      <th>출차 시간</th>
+      <th>정산 내역</th>
     </tr>
     </thead>
     <tbody id="parkingList">
     <tr>
-      <td colspan="5">주차 기록이 없습니다.</td>
+      <td colspan="5" class="pk-empty">주차 기록이 없습니다.</td>
     </tr>
     </tbody>
   </table>
 </div>
 
-<script>
-  const YEARS  = [2026,2025,2024,2023,2022,2021,2020,2019,2018];
+<script th:inline="javascript">
+  const contextPath = /*[[@{/}]]*/ '/';
+  const YEARS  = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
   const MONTHS = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
   const TODAY  = new Date();
 
-  let selectedYear = TODAY.getFullYear();
+  let selectedYear  = TODAY.getFullYear();
   let selectedMonth = TODAY.getMonth() + 1;
 
-  // 페이지 로드 시 현재 년/월로 버튼 텍스트 초기화
-  document.getElementById('selectedYear').textContent = `${selectedYear}년`;
+  document.getElementById('selectedYear').textContent  = `${selectedYear}년`;
   document.getElementById('selectedMonth').textContent = `${selectedMonth}월`;
 
   // 년 목록 생성
@@ -97,82 +92,62 @@
       monthList.appendChild(li);
   });
 
-  // 모든 드롭다운 닫기
   function closeAllDropdowns() {
-      document.getElementById('yearDropdown').style.display = 'none';
+      document.getElementById('yearDropdown').style.display  = 'none';
       document.getElementById('monthDropdown').style.display = 'none';
   }
 
-  // 년 드롭다운 토글
   function toggleYearDropdown() {
-      const dropdown = document.getElementById('yearDropdown');
-      const isOpen = dropdown.style.display !== 'none';
+      const dd = document.getElementById('yearDropdown');
+      const isOpen = dd.style.display !== 'none';
       closeAllDropdowns();
-      if (!isOpen) dropdown.style.display = 'block';
+      if (!isOpen) dd.style.display = 'block';
   }
 
-  // 월 드롭다운 토글
   function toggleMonthDropdown() {
-      const dropdown = document.getElementById('monthDropdown');
-      const isOpen = dropdown.style.display !== 'none';
+      const dd = document.getElementById('monthDropdown');
+      const isOpen = dd.style.display !== 'none';
       closeAllDropdowns();
-      if (!isOpen) dropdown.style.display = 'block';
+      if (!isOpen) dd.style.display = 'block';
   }
 
-  // 외부 클릭 시 드롭다운 닫기
   document.addEventListener('click', (e) => {
-      if (!e.target.closest('.dropdown-wrapper')) {
-          closeAllDropdowns();
-      }
+      if (!e.target.closest('.pk-dropdown-wrapper')) closeAllDropdowns();
   });
 
-  // ESC 키로 드롭다운 닫기
-  document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeAllDropdowns();
-  });
-
-  // 주차 기록 조회
   function loadParkingLogs() {
-      const parkingList = document.getElementById('parkingList');
-
-      // 로딩 상태 표시
-      parkingList.innerHTML = '<tr><td colspan="5">로딩 중...</td></tr>';
-
-      fetch(`/parking/logs?year=${selectedYear}&month=${selectedMonth}`)
-          .then(async res => {
-              if (!res.ok) {
-                  const msg = await res.text();
-                  throw new Error(msg || '서버 오류');
-              }
+      fetch(`${contextPath}parking/logs/data?year=${selectedYear}&month=${selectedMonth}`)
+          .then(res => {
+              if (!res.ok) throw new Error('서버 오류');
               return res.json();
           })
           .then(data => {
-              parkingList.innerHTML = '';
+              const tbody = document.getElementById('parkingList');
+              tbody.innerHTML = '';
 
               if (data.length === 0) {
-                  parkingList.innerHTML = '<tr><td colspan="5">주차 기록이 없습니다.</td></tr>';
+                  tbody.innerHTML = '<tr><td colspan="5" class="pk-empty">주차 기록이 없습니다.</td></tr>';
                   return;
               }
 
               data.forEach(log => {
-                  const row = document.createElement('tr');
-                  row.innerHTML = `
+                  const tr = document.createElement('tr');
+                  tr.innerHTML = `
                       <td>${log.vehicleNumber}</td>
+                      <td>${log.entryType}</td>
                       <td>${log.entryTime}</td>
-                      <td>${log.exitTime ?? '주차 중'}</td>
-                      <td>${log.vehicleType}</td>
+                      <td>${log.exitTime}</td>
                       <td>${log.settlement}</td>
                   `;
-                  parkingList.appendChild(row);
+                  tbody.appendChild(tr);
               });
           })
           .catch(err => {
               console.error(err);
-              parkingList.innerHTML = '<tr><td colspan="5">데이터 조회 중 오류가 발생했습니다.</td></tr>';
+              alert('데이터 조회 중 오류가 발생했습니다.');
           });
   }
 
-  // 페이지 로드 시 현재 년/월 기록 조회
   loadParkingLogs();
 </script>
 

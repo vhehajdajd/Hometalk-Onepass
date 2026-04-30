@@ -8,10 +8,13 @@ import com.hometalk.onepass.auth.repository.HouseholdRepository;
 import com.hometalk.onepass.auth.repository.LocalAccountRepository;
 import com.hometalk.onepass.auth.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
+@Validated
 @Service
 @RequiredArgsConstructor
 public class SignUpService {

@@ -3,23 +3,30 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>관리비 - HomeTalkOnePass</title>
-    <link rel="stylesheet" th:href="@{/css/dashboard/style.css}" />
-    <link rel="stylesheet" th:href="@{/billing/css/billing_common.css}" />
-    <link rel="stylesheet" th:href="@{/billing/css/billing_resident.css}" />
+    <title>관리비</title>
     <meta name="_csrf"        th:content="${_csrf?.token}" />
     <meta name="_csrf_header" th:content="${_csrf?.headerName}" />
+    <link rel="stylesheet" th:href="@{/css/dashboard/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/billing/billing_common.css}" />
+    <link rel="stylesheet" th:href="@{/css/billing/billing_admin_upload.css}" />
+    <link rel="stylesheet" th:href="@{/css/billing/billing_resident.css}" />
 </head>
 <body>
 
 <div class="main-layout" style="display:flex; min-height:100vh;">
-    <div th:replace="~{fragments/sidebar :: sidebar}" th:with="menu='billing'"></div>
 
+    <!-- 사이드바 -->
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='billing')}"></div>
+
+    <!-- 오른쪽 영역 -->
     <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
-        <div th:replace="~{fragments/header :: header}"></div>
 
-        <!-- 카테고리 바 위치 — 미납 배너 (빈 바 고정) -->
-        <header class="category-menu-bar">&nbsp;</header>
+        <!-- 헤더 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'billing'} })}"></div>
+<!--        <div th:replace="~{fragments/header_menu :: header_menu(currentPath01='billing', currentPath02='')}"></div>-->
+
+        <!-- 카테고리 바 — 미납 배너 -->
+        <header class="category-menu-bar">
             <div class="bp-alert-inner" th:if="${unpaidList != null and !unpaidList.isEmpty()}">
                 <div class="bp-alert-icon">!</div>
                 <div>
@@ -30,7 +37,6 @@
                         </span>
                         관리비가 미납 상태입니다. 관리사무소로 연락 바랍니다. ☎️02-888-9999
                     </div>
-                    <div class="bp-alert-sub">status = UNPAID 기준 · 안내 전용</div>
                 </div>
             </div>
         </header>
@@ -100,7 +106,7 @@
             <div class="bp-list" id="billingList">
                 <th:block th:each="b : ${billings}">
                     <div th:with="isUnpaid=${b.status.name() == 'UNPAID'},
-                                  isOverdue=${b.status.name() == 'UNPAID' and #temporals.createNow().isAfter(b.dueDate)}"
+                             isOverdue=${b.status.name() == 'UNPAID' and #temporals.createToday().isAfter(b.dueDate)}"
                          th:classappend="${isOverdue} ? 'overdue'"
                          class="bp-item">
                         <div class="bp-item-left">
@@ -143,41 +149,41 @@
 </div><!-- /main-layout -->
 
 <!-- 고지서 모달 -->
-<div class="bm-overlay" id="modalOverlay" style="display:none" onclick="closeModal(event)"></div>
-<div class="bm-modal" id="billingModal" style="display:none">
-    <div class="bm-header">
-        <div>
-            <div class="bm-title">디지털 고지서</div>
-            <div class="bm-subtitle" id="modalSubtitle"></div>
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModal(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-header-title" id="modalHeaderTitle">디지털 고지서</span>
+            <button class="modal-close-btn" onclick="closeModalBtn()">✕</button>
         </div>
-        <button class="bm-close" onclick="closeModalBtn()">✕</button>
-    </div>
-    <div class="bm-bill-head">
-        <div class="bm-bill-title">관리비 고지서</div>
-        <div class="bm-bill-period" id="modalPeriod"></div>
-    </div>
-    <div class="bm-col-hint">항목명</div>
-    <div class="bm-rows" id="modalRows"></div>
-    <div class="bm-total-row" style="grid-column: 1 / -1;">
-        <span class="bm-total-label">합계</span>
-        <span class="bm-total-amount" id="modalTotal"></span>
-    </div>
-    <div class="bm-status-box" id="modalStatusBox"></div>
-    <div class="bm-footer">
-        <button class="bm-btn-close" onclick="closeModalBtn()">닫기</button>
+        <div class="modal-body">
+            <div class="bill-head">
+                <div class="bill-head-title">관리비 고지서</div>
+                <div class="bill-head-sub" id="modalPeriod"></div>
+            </div>
+            <div class="bill-col-hint">항목명</div>
+            <div class="bill-rows" id="modalRows"></div>
+            <div class="bill-total-row">
+                <span class="bill-total-label">합계</span>
+                <span class="bill-total-amount" id="modalTotal"></span>
+            </div>
+            <div class="bm-status-box" id="modalStatusBox"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModalBtn()">닫기</button>
+        </div>
     </div>
 </div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    const CONTEXT_PATH = /*[[${contextPath}]]*/ '/hometalk';
+    const CONTEXT_PATH = /*[[${contextPath}]]*/ '/hometop';
     const UNIT_INFO    = /*[[${unitInfo}]]*/ '';
     const HOUSEHOLD_ID = /*[[${householdId}]]*/ '';
     const CSRF_TOKEN   = document.querySelector('meta[name="_csrf"]')?.content;
     const CSRF_HEADER  = document.querySelector('meta[name="_csrf_header"]')?.content;
     /*]]>*/
 </script>
-<script th:src="@{/billing/js/billing_resident.js}"></script>
+<script th:src="@{/js/billing/billing_resident.js}"></script>
 
 </body>
 </html>

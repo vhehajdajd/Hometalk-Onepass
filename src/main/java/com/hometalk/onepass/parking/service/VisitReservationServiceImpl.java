@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,20 +30,21 @@ public class VisitReservationServiceImpl implements VisitReservationService {
         Household household = householdRepository.findById(householdId)
                 .orElseThrow(() -> new EntityNotFoundException("세대를 찾을 수 없습니다."));
 
-        // 예약 시간 검증
         if (request.getReservedAt() == null || request.getReservedAt().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("예약 시간은 현재 이후여야 합니다.");
         }
 
-        // 중복 예약 방지
+        // 차량번호 공백 제거 정규화
+        String vehicleNumber = request.getVehicleNumber().replace(" ", "");
+
         if (visitReservationRepository.existsByVehicleNumberAndReservedAt(
-                request.getVehicleNumber(), request.getReservedAt())) {
+                vehicleNumber, request.getReservedAt())) {
             throw new IllegalArgumentException("이미 같은 시간에 예약된 차량입니다.");
         }
 
         VisitReservation reservation = new VisitReservation(
                 household,
-                request.getVehicleNumber(),
+                vehicleNumber,
                 request.getPurpose(),
                 request.getReservedAt()
         );
@@ -66,7 +68,12 @@ public class VisitReservationServiceImpl implements VisitReservationService {
         VisitReservation reservation = visitReservationRepository.findById(reservationId)
                 .orElseThrow(() -> new EntityNotFoundException("예약을 찾을 수 없습니다."));
 
-        reservation.update(request.getVehicleNumber(), request.getPurpose(), request.getReservedAt());
+        // 차량번호 공백 제거 정규화
+        String vehicleNumber = request.getVehicleNumber() != null
+                ? request.getVehicleNumber().replace(" ", "")
+                : null;
+
+        reservation.update(vehicleNumber, request.getPurpose(), request.getReservedAt());
 
         return new VisitReservationResponse(reservation);
     }
@@ -90,10 +97,17 @@ public class VisitReservationServiceImpl implements VisitReservationService {
     }
 
     // 세대별 예약 목록 조회
+    // RESERVED: 항상 노출 + 정렬 최상단
+    // ENTERED: 당일만 노출
+    // CANCELLED: 7일간 노출
     @Override
     @Transactional(readOnly = true)
     public List<VisitReservationResponse> getHouseholdReservations(Long householdId) {
-        return visitReservationRepository.findByHousehold_Id(householdId)
+        LocalDate today = LocalDate.now();
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+
+        return visitReservationRepository
+                .findHouseholdReservationsFiltered(householdId, today, sevenDaysAgo)
                 .stream()
                 .map(VisitReservationResponse::new)
                 .collect(Collectors.toList());
@@ -106,6 +120,17 @@ public class VisitReservationServiceImpl implements VisitReservationService {
             Long householdId,
             VisitReservation.ReservationStatus status) {
         return visitReservationRepository.findByHousehold_IdAndStatus(householdId, status)
+                .stream()
+                .map(VisitReservationResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    // 수동 입차 목록 조회 (PENDING_CONFIRM)
+    @Override
+    @Transactional(readOnly = true)
+    public List<VisitReservationResponse> getPendingConfirmReservations(Long householdId) {
+        return visitReservationRepository
+                .findByHousehold_IdAndStatus(householdId, VisitReservation.ReservationStatus.PENDING_CONFIRM)
                 .stream()
                 .map(VisitReservationResponse::new)
                 .collect(Collectors.toList());

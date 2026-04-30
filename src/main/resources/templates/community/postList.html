@@ -1,43 +1,149 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HomeTOP Community</title>
-    <link rel="stylesheet" href="/css/community/poststyle.css" th:href="@{/css/community/poststyle.css}">
-</head>
-<body>
-    <div th:replace="~{community/fragments/boardListHeader :: boardListHeader(boards=${boards}, boardId=${boardId})}"></div>
-    <div th:replace="~{community/fragments/categoryBanner :: categoryBanner(board=${board}, categories=${categories}, categoryId=${categoryId})}"></div>
-    <p>태그(tags)</p>
+    <th:block th:replace="~{fragments/head :: head(pageTitle='커뮤니티')}"></th:block>
 
-    <div class="postList-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>카테고리</th>
-                    <th>제목</th>
-                    <th>댓글수</th>
-                    <th>작성자</th>
-                    <th>조회수</th>
-                    <th>작성일</th>
-                </tr>
-            </thead>
-            <tbody th:if="${not #lists.isEmpty(posts)}">
-                <tr th:each="post : ${posts}">
-                    <td th:text="${post.categoryName}"></td>
-                    <td><a th:href="@{/community/{code}/{id}(code=${board.code}, id=${post.id})}" th:text="${post.title}"></a></td>
-                    <td th:text="${post.commentCount}"></td>
-                    <td th:text="${post.writer}">작성자</td>
-                    <td th:text="${post.viewCount}"></td>
-                    <td th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}"></td>
-                </tr>
-            </tbody>
-        </table>
+    <link rel="stylesheet" th:href="@{/css/community/common.css}">
+    <link rel="stylesheet" th:href="@{/css/community/post-list.css}">
+</head>
+
+<body>
+<div class="main-layout" style="display: flex; min-height: 100vh;">
+    <!-- 1. 왼쪽 사이드바 -->
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
+    <!-- 2. 오른쪽 영역 (헤더 + 본문) -->
+    <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+        <!--            <a th:text="${boardId}">광장 = 1, 마켓 = 2</a>-->
+        <!--            <a th:each="board : ${boards}" th:text="${board.name}">String = 광장, 마켓 </a>-->
+        <!--            <a th:each="category : ${categories}" th:text="${category.name}">전체, 자유, 토론 </a>-->
+        <!--            <a th:text="${categoryId}">전체, 자유, 토론 </a>-->
+        <!--            <p>현재 경로는 <span th:text="${boards[0].name}">현재 경로</span>입니다.</p>-->
+
+        <!-- 상단 헤더 -->
+        <th:block th:each="board : ${boards}">
+            <div th:if="${boardId == board.id}">
+
+                <div th:switch="${categoryId}">
+
+                    <div th:case="2">
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '자유' } })}"></div>
+                    </div>
+                    <div th:case="3">
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '토론' } })}"></div>
+                    </div>
+                    <div th:case="4">
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '나눔' } })}"></div>
+                    </div>
+                    <div th:case="5">
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '분실문' } })}"></div>
+                    </div>
+                    <div th:case="*" >
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '전체' } })}"></div>
+                    </div>
+
+                </div>
+
+            </div>
+        </th:block>
+
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
+
+        <!-- 메인 콘텐츠 -->
+        <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">
+            <div th:replace="~{community/fragments/boardListHeader :: boardListHeader(boards=${boards}, boardId=${boardId}, loginUser=${loginUser})}"></div>
+            <div th:replace="~{community/fragments/categoryBanner :: categoryBanner(board=${board}, categories=${categories}, categoryId=${categoryId})}"></div>
+            <p>태그(tags)</p> <!-- fragment 구현 예정 -->
+            <div class="content-container">
+
+                <div class="list-top-area">
+                    <div class="search-info-box">
+                        <div th:if="${not #strings.isEmpty(keyword)}" class="search-status">
+                            '<span th:text="${keyword}" class="highlight"></span>' 검색 결과
+                            <span th:text="${page.totalElements}" class="count">0</span>건
+                        </div>
+                    </div>
+
+                    <div class="search-area">
+                        <form th:action="@{|/community/${boardCode}/${categoryCode}|}" method="get" class="search-form">
+                            <div class="select-wrapper">
+                                <select name="searchType" class="search-select">
+                                    <option value="title" th:selected="${searchType == 'title'}">제목</option>
+                                    <option value="tc" th:selected="${searchType == 'tc'}">제목+내용</option>
+                                    <option value="nickname" th:selected="${searchType == 'nickname'}">작성자</option>
+                                </select>
+                            </div>
+
+                            <div class="search-input-container">
+                                <input type="text" name="keyword" th:value="${keyword}"
+                                       placeholder="2자 이상 입력하세요." class="search-input">
+                                <button type="submit" class="btn-search-submit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                         stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                </button>
+                                <a th:href="@{|/community/${boardCode}/${categoryCode}|}" class="btn-reset-icon" title="검색 초기화">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                         stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M23 4v6h-6"></path>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="page-body">
+                    <table class="post-table">
+                        <thead>
+                            <tr>
+                                <th>카테고리</th>
+                                <th>제목</th>
+                                <th>조회수</th>
+                                <th>작성자</th>
+                                <th>작성일</th>
+                            </tr>
+                        </thead>
+                        <tbody th:if="${not #lists.isEmpty(posts)}">
+                            <tr th:each="post : ${posts}" th:classappend="${post.pinned} ? 'pinned-row' : ''">
+                                <td>
+                                    <span th:if="${post.pinned}" class="pin-badge">📌</span>
+                                    <span th:text="${post.categoryName}" class="list-category"
+                                          th:classappend="${post.categoryCode != null} ? ${#strings.toLowerCase(post.categoryCode)} : ''">카테고리</span>
+                                </td>
+                                <td class="title-cell">
+                                    <a th:href="@{/community/{bCode}/{cCode}/{id}(bCode=${board.code}, cCode=${categoryCode}, id=${post.id})}"
+                                       th:text="${post.title}"></a> <span th:if="${post.commentCount > 0}"
+                                          th:text="'[' + ${post.commentCount} + ']'"
+                                          class="comment-count-inline"></span>
+                                </td>
+                                <td th:text="${post.viewCount}" class="view-count"></td>
+                                <td th:text="${post.writer}">작성자</td>
+                                <td th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}" class="date-cell"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div th:if="${#lists.isEmpty(posts)}" class="no-data">
+                        <p>게시글이 없습니다.<br>새 게시글을 작성해보세요!</p>
+                        <p th:if="${not #strings.isEmpty(keyword)}">검색 결과와 일치하는 게시글이 없습니다.</p>
+                    </div>
+                </div>
+
+                <div class="page-footer">
+                    <div class="pagination-wrapper" th:if="${not #lists.isEmpty(posts)}">
+                        <div th:replace="~{community/fragments/postpaging :: pagination(page=${page}, boardCode=${boardCode}, categoryCode=${categoryCode})}"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
-    <p th:if="${#lists.isEmpty(posts)}" class="no-data">게시글이 없습니다.<br>새 게시글을 작성해보세요!</p>
-    <div >
-        <a th:href="@{/community/{code}/write(code=${board.code})}" class="btn add-post-btn">글 작성</a>
-    </div>
+</div>
+
 </body>
 </html>

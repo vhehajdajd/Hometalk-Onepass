@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<!--
+    고지서업로드 페이지 (billing/admin/upload)
+    nav 탭2 - DB저장된 데이터를 연/월/동 조회, 데이터삭제/재업로드시 UPSERT 확인
+-->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>고지서 업로드 월별 관리</title>
+  <meta name="_csrf"        th:content="${_csrf?.token}" />
+  <meta name="_csrf_header" th:content="${_csrf?.headerName}" />
+  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/billing/billing_common.css}" />
+  <link rel="stylesheet" th:href="@{/css/billing/billing_admin_upload.css}" />
+  <link rel="stylesheet" th:href="@{/css/billing/billing_admin_monthly.css}" />
+</head>
+<body>
+
+<div class="main-layout" style="display:flex; min-height:100vh;">
+
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='billing')}"></div>
+
+  <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
+
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'billing'} })}"></div>
+
+    <header class="category-menu-bar">
+      <nav class="admin-tab-nav">
+        <a th:href="@{/billing/admin/upload}"  class="admin-tab-btn">고지서 업로드</a>
+        <a th:href="@{/billing/admin/monthly}" class="admin-tab-btn active">월별 관리</a>
+      </nav>
+    </header>
+
+    <div class="main-content">
+
+      <!-- 필터 -->
+      <div class="filter-row" id="filterBar">
+        <div class="panel-wrap">
+          <button class="filter-btn" id="btnYear" onclick="togglePanel('year')">
+            <span id="lblYear">2026년</span><span class="caret">▼</span>
+          </button>
+          <div class="filter-panel" id="panelYear" style="display:none">
+            <div class="chip-grid year-g" id="yearGrid"></div>
+          </div>
+        </div>
+        <div class="panel-wrap">
+          <button class="filter-btn" id="btnMonth" onclick="togglePanel('month')">
+            <span id="lblMonth">전체 월</span><span class="caret">▼</span>
+          </button>
+          <div class="filter-panel" id="panelMonth" style="display:none">
+            <div class="chip-grid month-g" id="monthGrid"></div>
+          </div>
+        </div>
+        <div class="panel-wrap">
+          <button class="filter-btn" id="btnDong" onclick="togglePanel('dong')">
+            <span id="lblDong">전체 동</span><span class="caret">▼</span>
+          </button>
+          <div class="filter-panel" id="panelDong" style="display:none">
+            <div class="chip-grid dong-g" id="dongGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 테이블 -->
+      <div class="table-section">
+        <div class="table-header-row">
+          <div class="table-header-title">월별 고지서 목록</div>
+          <div class="table-header-meta" id="tableMeta"></div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+            <tr>
+              <th>NUM</th>
+              <th class="sortable" onclick="sortBy('unit')">동/호 <span class="sort-icon">▼</span></th>
+              <th class="sortable" onclick="sortBy('billingMonth')">부과월 <span class="sort-icon">▼</span></th>
+              <th class="sortable" onclick="sortBy('totalAmount')">청구금액 <span class="sort-icon">▼</span></th>
+              <th class="sortable" onclick="sortBy('status')">status <span class="sort-icon">▼</span></th>
+              <th>고지서 미리보기</th>
+              <th class="sortable" onclick="sortBy('lastUploadType')">UPSERT <span class="sort-icon">▼</span></th>
+            </tr>
+            </thead>
+            <tbody id="tableBody">
+            <tr>
+              <td colspan="7" style="text-align:center;padding:36px;color:#aaa;">불러오는 중...</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          <div class="table-summary" id="tableSummary"></div>
+        </div>
+      </div>
+
+      <!-- 하단 삭제 링크 (연도+월 선택 시만 노출) -->
+      <div class="delete-month-link-wrap" id="deleteWrap" style="display:none">
+        <a href="javascript:void(0)" class="delete-month-link" onclick="deleteCurrentMonth()">
+          ⚠ 이 월 전체 데이터 삭제
+        </a>
+      </div>
+
+    </div>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+  </div>
+</div>
+
+<!-- 삭제 1단계 팝업 -->
+<div class="confirm-overlay" id="deleteStep1Overlay" style="display:none">
+  <div class="confirm-box">
+    <div class="confirm-title">관리비 데이터 삭제</div>
+    <div class="confirm-msg" id="deleteStep1Msg"></div>
+    <div class="confirm-msg-warn">해당 월의 모든 고지서 데이터가 삭제됩니다.</div>
+    <div class="confirm-btns">
+      <button class="btn btn-ghost" onclick="cancelDelete()">취소</button>
+      <button class="btn btn-point" onclick="goToDeleteStep2()">다음</button>
+    </div>
+  </div>
+</div>
+
+<!-- 삭제 2단계 팝업 -->
+<div class="confirm-overlay" id="deleteStep2Overlay" style="display:none">
+  <div class="confirm-box">
+    <div class="confirm-title confirm-title-danger">⚠ 최종 확인</div>
+    <div class="confirm-msg" id="deleteStep2Msg"></div>
+    <div class="confirm-msg-warn">이 작업은 되돌릴 수 없습니다. 정말 삭제하시겠습니까?</div>
+    <div class="confirm-btns">
+      <button class="btn btn-ghost" onclick="cancelDelete()">취소</button>
+      <button class="btn btn-danger" onclick="doDelete()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 고지서 미리보기 모달 -->
+<div class="modal-overlay" id="previewOverlay" style="display:none" onclick="closePreview(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-header-title" id="modalHeaderTitle">고지서 미리보기</span>
+      <button class="modal-close-btn" onclick="closePreviewBtn()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="bill-head">
+        <div class="bill-head-title">관리비 고지서</div>
+        <div class="bill-head-sub" id="modalPeriod"></div>
+      </div>
+      <div class="bill-col-hint">항목명</div>
+      <div class="bill-rows" id="modalRows"></div>
+      <div class="bill-total-row">
+        <span class="bill-total-label">합계</span>
+        <span class="bill-total-amount" id="modalTotal"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closePreviewBtn()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  /*<![CDATA[*/
+  const CONTEXT_PATH = /*[[${contextPath}]]*/ '/hometop';
+  const CSRF_TOKEN   = document.querySelector('meta[name="_csrf"]')?.content;
+  const CSRF_HEADER  = document.querySelector('meta[name="_csrf_header"]')?.content;
+  /*]]>*/
+</script>
+<script th:src="@{/js/billing/billing_monthly.js}"></script>
+
+</body>
+</html>

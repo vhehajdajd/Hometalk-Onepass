@@ -6,80 +6,102 @@
   <title>방문 차량 예약</title>
   <meta name="_csrf" th:content="${_csrf.token}">
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
-  <style>
-    /* CSS는 나중에 추가 */
-  </style>
+  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
 </head>
 <body>
 
-<div class="container">
+<div class="main-layout" style="display: flex; min-height: 100vh;">
 
-  <h2 class="page-title" th:text="${reservation != null} ? '방문 차량 예약 수정' : '방문 차량 예약'"></h2>
+  <!-- 1. 왼쪽 사이드바 -->
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
-  <!-- 차량 번호 -->
-  <div class="form-group">
-    <label for="vehicleNumber">차량 번호</label>
-    <input type="text" id="vehicleNumber" name="vehicleNumber"
-           placeholder="예) 123가4567" maxlength="10"
-           th:value="${reservation?.vehicleNumber}">
-    <span class="error-msg" id="vehicleNumberError"></span>
-  </div>
+  <!-- 2. 오른쪽 영역 (헤더 + 본문) -->
+  <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
 
-  <!-- 방문 목적 -->
-  <div class="form-group">
-    <label for="purpose">방문 목적</label>
-    <input type="text" id="purpose" name="purpose"
-           placeholder="방문 목적을 입력하세요."
-           th:value="${reservation?.purpose}">
-    <span class="error-msg" id="purposeError"></span>
-  </div>
+    <!-- 상단 헤더 -->
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'parking', 'reservationRegister', 'reservationRegisterForm'} })}"></div>
 
-  <!-- 방문 예정 시각 -->
-  <div class="form-group">
-    <label>방문 예정 시각</label>
-    <div class="datetime-group">
-      <select id="year">
-        <option value="">년</option>
-        <option th:each="y : ${years}" th:value="${y}" th:text="${y}"
-                th:selected="${reservation != null and reservation.reservedAt.year == y}">
-        </option>
-      </select>
-      <select id="month">
-        <option value="">월</option>
-        <option th:each="m : ${months}" th:value="${m}" th:text="${m}"
-                th:selected="${reservation != null and reservation.reservedAt.monthValue == m}">
-        </option>
-      </select>
-      <select id="day">
-        <option value="">일</option>
-        <option th:each="d : ${days}" th:value="${d}" th:text="${d}"
-                th:selected="${reservation != null and reservation.reservedAt.dayOfMonth == d}">
-        </option>
-      </select>
-      <select id="hour">
-        <option value="">시</option>
-        <option th:each="h : ${hours}" th:value="${h}" th:text="${h}"
-                th:selected="${reservation != null and reservation.reservedAt.hour == h}">
-        </option>
-      </select>
-      <select id="minute">
-        <option value="">분</option>
-        <option th:each="min : ${minutes}" th:value="${min}" th:text="${min}"
-                th:selected="${reservation != null and reservation.reservedAt.minute == min}">
-        </option>
-      </select>
-    </div>
-    <span class="error-msg" id="datetimeError"></span>
-  </div>
+    <!-- 상단 메뉴 -->
+    <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
 
-  <!-- 버튼 -->
-  <div class="form-actions">
-    <button type="button"
-            th:onclick="'location.href=\'' + @{/parking/visit} + '\''">취소</button>
-    <button type="button" id="submitBtn" disabled
-            th:text="${reservation != null} ? '수정' : '등록'"
-            onclick="submitForm()">
-    </button>
+    <!-- 메인 콘텐츠 -->
+    <main class="content" style="flex: 1;">
+      <div class="container">
+
+        <h2 class="page-title" th:text="${reservation != null} ? '방문 차량 예약 수정' : '방문 차량 예약'"></h2>
+
+        <!-- 차량 번호 -->
+        <div class="form-group">
+          <label for="vehicleNumber">차량 번호</label>
+          <input type="text" id="vehicleNumber" name="vehicleNumber"
+                 placeholder="예) 123가4567" maxlength="10"
+                 th:value="${reservation?.vehicleNumber}">
+          <span class="error-msg" id="vehicleNumberError"></span>
+        </div>
+
+        <!-- 방문 목적 -->
+        <div class="form-group">
+          <label for="purpose">방문 목적</label>
+          <input type="text" id="purpose" name="purpose"
+                 placeholder="방문 목적을 입력하세요."
+                 th:value="${reservation?.purpose}">
+          <span class="error-msg" id="purposeError"></span>
+        </div>
+
+        <!-- 방문 예정 시각 -->
+        <div class="form-group">
+          <label>방문 시각</label>
+          <div class="datetime-group">
+            <select id="year">
+              <option value="">년</option>
+              <option th:each="y : ${years}" th:value="${y}" th:text="${y}"
+                      th:selected="${reservation != null and reservation.reservedAt.year == y}">
+              </option>
+            </select>
+            <select id="month">
+              <option value="">월</option>
+              <option th:each="m : ${months}" th:value="${m}" th:text="${m}"
+                      th:selected="${reservation != null and reservation.reservedAt.monthValue == m}">
+              </option>
+            </select>
+            <select id="day">
+              <option value="">일</option>
+              <option th:each="d : ${days}" th:value="${d}" th:text="${d}"
+                      th:selected="${reservation != null and reservation.reservedAt.dayOfMonth == d}">
+              </option>
+            </select>
+            <select id="hour">
+              <option value="">시</option>
+              <option th:each="h : ${hours}" th:value="${h}" th:text="${h}"
+                      th:selected="${reservation != null and reservation.reservedAt.hour == h}">
+              </option>
+            </select>
+            <select id="minute">
+              <option value="">분</option>
+              <option th:each="min : ${minutes}" th:value="${min}" th:text="${min}"
+                      th:selected="${reservation != null and reservation.reservedAt.minute == min}">
+              </option>
+            </select>
+          </div>
+          <span class="error-msg" id="datetimeError"></span>
+        </div>
+
+        <!-- 버튼 -->
+        <div class="form-actions">
+          <button type="button"
+                  th:onclick="'location.href=\'' + @{/parking/visit} + '\''">취소</button>
+          <button type="button" id="submitBtn" disabled
+                  th:text="${reservation != null} ? '수정' : '등록'"
+                  onclick="submitForm()">
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- 하단 푸터 삽입 -->
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
   </div>
 </div>
 

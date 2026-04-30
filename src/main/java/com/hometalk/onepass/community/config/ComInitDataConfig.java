@@ -27,6 +27,7 @@ public class ComInitDataConfig implements CommandLineRunner {
         if (boards.isEmpty()) {
             Board square = boardRepository.save(Board.builder().name("광장").code("square").build());
             Board market = boardRepository.save(Board.builder().name("마켓").code("market").build());
+            Board talk = boardRepository.save(Board.builder().name("소통").code("talk").build());
 
             // 2. 생성된 게시판 객체(square, market)를 사용하여 Category 연결
             // 광장 카테고리
@@ -36,6 +37,8 @@ public class ComInitDataConfig implements CommandLineRunner {
 
             categoryRepository.save(Category.builder().name("나눔").code("share").board(market).build());
             categoryRepository.save(Category.builder().name("분실물").code("lost").board(market).build());
+
+            categoryRepository.save(Category.builder().name("설문").code("survey").board(talk).build());
 
             log.info("초기 데이터 생성 완료");
         } else {

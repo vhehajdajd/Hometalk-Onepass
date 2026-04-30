@@ -1,95 +1,121 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HomeTOP Community</title>        <!-- 제목도 게시판에 따라 변경되도록 -->
-    <link rel="stylesheet" href="/css/community/poststyle.css" th:href="@{/css/community/poststyle.css}">
+    <th:block th:replace="~{fragments/head :: head(pageTitle='커뮤니티')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/community/common.css}">
+    <link rel="stylesheet" href="/css/community/poststyle.css" th:href="@{/css/community/post-form.css}">
 </head>
 <body>
-<div th:replace="~{community/fragments/boardListHeader :: boardListHeader(boards=${boards}, boardId=${boardId})}"></div>
-<div th:replace="~{community/fragments/categoryBanner :: categoryBanner(board=${board}, categories=${categories}, categoryId=${categoryId})}"></div>
-
-<div class="container">
-    <h2 th:text="${board.name} + ' 글쓰기'">커뮤니티 글쓰기</h2>
-
-    <form th:action="@{/community/{code}/save(code=${board.code})}" method="post" id="postForm" th:object="${post}">
-        <div class="form-group">
-            <label>태그 선택: </label>
-            <input type="checkbox" name="tags" value="공지"> 공지
-            <input type="checkbox" name="tags" value="질문"> 질문
-            <input type="checkbox" name="tags" value="정보"> 정보
-        </div>
-
-        <div class="form-group">
-            <select th:field="*{categoryId}" required>
-                <option value="">카테고리 선택</option>
-                <option th:each="category : ${categories}" th:value="${category.id}"
-                        th:text="${category.name}">카테고리 명</option>
-            </select>
-        </div>
-
-        <input type="hidden" th:field="*{id}">
-
-        <div class="form-group">
-            <input type="text" id="title" th:field="*{title}" placeholder="제목을 입력하세요 (최대 50자)"
-                   maxlength="50" required style="width: 100%;">
-            <small><span id="charCount">0</span>/50</small>
-        </div>
-
-        <div style="background: #f4f4f4; padding: 5px; border: 1px solid #ccc;">
-            <small>에디터 툴바 영역 (폰트, 정렬 등 구현 예정)</small>
-        </div>
-
-        <div class="form-group">
-            <textarea th:field="*{content}" rows="15" placeholder="내용을 입력하세요"
-                      style="width: 100%;" required></textarea>
-        </div>
-
-        <div class="button-group" style="margin-top: 20px;">
-            <a th:href="@{/community/{code}(code=${board.code})}" onclick="return confirmCancel()">취소</a>
-
-            <button type="button"
-                    th:if="${post.id == null}"      <!-- 신규 작성 시에만 버튼 보이도록 -->
-                    onclick="saveTemp()">임시저장</button>
-            <button type="button" id="btnLoadTemp" class="btn-sub">임시저장 글 (<span th:text="${tempCount}">0</span>)</button>
-
-            <button type="submit">등록</button>
-        </div>
-
-        <div id="tempListModal" style="display:none;" class="temp-modal">
-            <div class="modal-content">
-                <h3>임시저장 글 <span class="close-modal">&times;</span></h3>
-                <ul id="tempListArea">
-                </ul>
+<div class="main-layout" style="display: flex; min-height: 100vh;">
+    <!-- 1. 왼쪽 사이드바 -->
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
+    <!-- 2. 오른쪽 영역 (헤더 + 본문) -->
+    <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+        <!--            <a th:text="${boardId}">광장 = 1, 마켓 = 2</a>-->
+        <!--            <a th:each="board : ${boards}" th:text="${board.name}">String = 광장, 마켓 </a>-->
+        <!--            <a th:each="category : ${categories}" th:text="${category.name}">전체, 자유, 토론 </a>-->
+        <!--            <a th:text="${categoryId}">전체, 자유, 토론 </a>-->
+        <!--            <p>현재 경로는 <span th:text="${boards[0].name}">현재 경로</span>입니다.</p>-->
+        <!-- 상단 헤더 -->
+        <th:block th:each="board : ${boards}">
+            <div th:if="${boardId == board.id}">
+                <div th:switch="${categoryId}">
+                    <div th:case="2">
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '자유' } })}"></div>
+                    </div>
+                    <div th:case="3">
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '토론' } })}"></div>
+                    </div>
+                    <div th:case="4">
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '나눔' } })}"></div>
+                    </div>
+                    <div th:case="5">
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '분실문' } })}"></div>
+                    </div>
+                    <div th:case="*" >
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '전체' } })}"></div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </th:block>
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
 
-        <input type="hidden" name="isTemp" id="isTemp" value="false">
-    </form>
+        <!-- 메인 -->
+        <main class="main-wrapper content-container" style="flex: 1; display: flex; flex-direction: column;">
+            <div th:replace="~{community/fragments/boardListHeader :: boardListHeader(boards=${boards}, boardId=${boardId}, loginUser=${loginUser})}"></div>
+            <div th:replace="~{community/fragments/categoryBanner :: categoryBanner(board=${board}, categories=${categories}, categoryId=${categoryId})}"></div>
+
+            <div class="content-container">
+                <div class="form-top-actions">
+                    <button type="button" id="btnLoadTemp" class="btn-sub" th:data-board-code="${boardCode}">
+                        임시저장 목록 (<span th:text="${tempCount}">0</span>)
+                    </button>
+                </div>
+
+                <form th:action="@{/community/{code}/save(code=${board.code})}" method="post" id="postForm" th:object="${post}">
+                    <input type="hidden" th:field="*{id}">
+                    <input type="hidden" name="isTemp" id="isTemp" value="false">
+                    <div class="page-body">
+                        <div class="form-group tag-group">
+                            <span class="form-label">태그: </span>
+                            <label><input type="checkbox" name="tags" value="공지"> 공지</label>
+                            <label><input type="checkbox" name="tags" value="질문"> 질문</label>
+                            <label><input type="checkbox" name="tags" value="정보"> 정보</label>
+                        </div>
+
+                        <div class="form-inline-group">
+                            <div class="category-field">
+                                <select th:field="*{categoryId}" required class="category-select">
+                                    <option value="">카테고리 선택</option>
+                                    <option th:each="category : ${categories}" th:value="${category.id}"
+                                            th:text="${category.name}">카테고리 명</option>
+                                </select>
+                            </div>
+
+                            <div class="title-field">
+                                <input type="text" id="title" th:field="*{title}" placeholder="제목을 입력하세요 (최대 50자)"
+                                       maxlength="50" required class="input-control">
+                                <span class="char-limit"><span id="charCount">0</span>/50</span>
+                            </div>
+                        </div>
+
+
+                        <div class="editor-wrapper">
+                            <div class="editor-header">
+                                <small>에디터 툴바 영역 (폰트, 정렬 등 구현 예정)</small>
+                            </div>
+                            <textarea th:field="*{content}" rows="18" placeholder="내용을 입력하세요" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="page-footer">
+                        <div class="left-box">
+                            <a th:href="@{/community/{code}(code=${board.code})}" onclick="return confirmCancel()"
+                                class="btn-cancel">취소</a>
+                        </div>
+
+                        <div class="right-box">
+                            <button type="button" th:if="${post.id == null}"
+                                    id="btnSaveTemp" th:data-board-code="${boardCode}">임시저장</button>
+                            <button type="submit" onclick="document.getElementById('isTemp').value='false'">등록</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+            <div id="tempListModal" style="display:none;" class="temp-modal">
+                <div class="modal-content">
+                    <h3>임시저장 글 <span class="close-modal">&times;</span></h3>
+                    <ul id="tempListArea">
+                    </ul>
+                </div>
+            </div>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
 </div>
-
-<script>
-    // 제목 글자 수 카운트
-    document.getElementById('title').addEventListener('input', function() {
-        document.getElementById('charCount').innerText = this.value.length;
-    });
-
-    // 취소 버튼 컨펌
-    function confirmCancel() {
-        if (confirm("작성 중인 내용을 중단하고 목록으로 돌아가시겠습니까?\n(임시저장된 내용은 보존됩니다.)")) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    // 임시저장 로직
-    function saveTemp() {
-        document.getElementById('isTemp').value = "true";
-        alert("임시저장 되었습니다. (목록에는 숨김 처리됩니다)");
-        document.getElementById('postForm').submit();
-    }
-</script>
+<script th:src="@{/js/community/post.js}" defer></script>
 </body>
 </html>

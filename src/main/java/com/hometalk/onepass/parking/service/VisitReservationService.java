@@ -31,4 +31,7 @@ public interface VisitReservationService {
             Long householdId,
             VisitReservation.ReservationStatus status
     );
+
+    // 수동 입차 목록 조회 (PENDING_CONFIRM)
+    List<VisitReservationResponse> getPendingConfirmReservations(Long householdId);
 }

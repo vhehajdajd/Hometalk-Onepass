@@ -1,14 +1,12 @@
 package com.hometalk.onepass.billing.dto;
+
 /*
  * 관리비 목록 행 1건 응답 DTO
  *
  * 사용처:
  *  - 입주민 관리비 내역 리스트
- *    · 부과월, 납부기한(UNPAID 배지), 청구금액, status 배지, 고지서 보기 버튼
  *  - 관리자 미납 세대 관리 목록
- *    · 동/호, 입주민명, 부과월, 청구금액, 납기일, status, 납부완료 처리 버튼
  *  - 관리자 고지서 업로드 유효성 검사 + 미리보기 테이블
- *    · NUM, 동/호, household_id, 부과월, 청구금액, 검증상태, 비고(UPSERT)
  */
 
 import com.hometalk.onepass.billing.entity.Billing;
@@ -23,20 +21,24 @@ import java.time.LocalDate;
 @Builder
 public class BillingSummaryResponse {
 
-    private final Long billingId;
-    private final String dong;
-    private final String ho;
-    private final String unit;          // 추가 - "101동 1204호"
-    private final String residentName;
-    private final String billingMonth;
-    private final LocalDate dueDate;
-    private final BigDecimal totalAmount;
+    private final Long          billingId;       // Billing PK
+    private final Long          householdId;     // Household FK (숫자)
+    private final String        dong;            // "103동"
+    private final String        ho;              // "1101호"
+    private final String        unit;            // "103동 1101호" (화면 표시용)
+    private final String        residentName;    // 입주민 이름
+    private final String        billingMonth;    // "2026-01"
+    private final LocalDate     dueDate;
+    private final BigDecimal    totalAmount;
     private final BillingStatus status;
+    private final String        upsertType;      // "INSERT" | "UPDATE" (미리보기 전용)
+    private final String        lastUploadType;  // "INSERT" / "UPDATE" / null
 
-    // 입주민 목록용
+    // 입주민/업로드 DB 조회용
     public static BillingSummaryResponse from(Billing billing) {
         return BillingSummaryResponse.builder()
                 .billingId(billing.getId())
+                .householdId(billing.getHousehold().getId())
                 .dong(billing.getHousehold().getDong())
                 .ho(billing.getHousehold().getHo())
                 .unit(billing.getHousehold().getDong() + " " + billing.getHousehold().getHo())
@@ -44,13 +46,16 @@ public class BillingSummaryResponse {
                 .dueDate(billing.getDueDate())
                 .totalAmount(billing.getTotalAmount())
                 .status(billing.getStatus())
+                .lastUploadType(billing.getLastUploadType())
                 .build();
+
     }
 
     // 관리자 미납 목록용 (입주민명 포함)
     public static BillingSummaryResponse of(Billing billing, String residentName) {
         return BillingSummaryResponse.builder()
                 .billingId(billing.getId())
+                .householdId(billing.getHousehold().getId())
                 .dong(billing.getHousehold().getDong())
                 .ho(billing.getHousehold().getHo())
                 .unit(billing.getHousehold().getDong() + " " + billing.getHousehold().getHo())
@@ -59,6 +64,8 @@ public class BillingSummaryResponse {
                 .dueDate(billing.getDueDate())
                 .totalAmount(billing.getTotalAmount())
                 .status(billing.getStatus())
+                .lastUploadType(billing.getLastUploadType())
                 .build();
     }
+
 }

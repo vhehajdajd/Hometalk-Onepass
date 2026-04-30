@@ -2,12 +2,14 @@ package com.hometalk.onepass.auth.entity;
 
 import com.hometalk.onepass.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
+@Valid
 @Entity
 @Table(name = "local_account")
 @Getter
@@ -24,12 +26,15 @@ public class LocalAccount extends BaseTimeEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @NotNull
     @Column(name = "login_id", nullable = false, unique = true, length = 100)
     private String loginId;
 
+    @NotNull
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
+    @NotNull
     @Column(name = "email_verified", nullable = false)
     private Boolean emailVerified = false;
 

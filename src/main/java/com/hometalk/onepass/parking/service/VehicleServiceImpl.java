@@ -2,6 +2,7 @@ package com.hometalk.onepass.parking.service;
 
 import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.auth.entity.User;
+import com.hometalk.onepass.auth.repository.UserRepository;
 import com.hometalk.onepass.parking.dto.request.VehicleRegisterRequest;
 import com.hometalk.onepass.parking.dto.response.VehicleApprovalResponse;
 import com.hometalk.onepass.parking.dto.response.VehicleResponse;
@@ -27,22 +28,25 @@ public class VehicleServiceImpl implements VehicleService {
     private final VehicleRepository vehicleRepository;
     private final VehicleApprovalRepository vehicleApprovalRepository;
     private final FileStorageService fileStorageService;
-
-    // TODO: JWT 연동 후 UserRepository 추가
-    // private final UserRepository userRepository;
+    private final UserRepository userRepository; // TODO: JWT 연동 후 제거
 
     // 차량 등록
     @Override
     public VehicleResponse register(Long userId, VehicleRegisterRequest request, List<MultipartFile> documents) {
-        // TODO: JWT 연동 후 아래 주석 해제
+        // TODO: JWT 연동 후 아래로 교체
         // User user = userRepository.findById(userId)
         //     .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
         // Household household = user.getHousehold();
-        User user = null;
-        Household household = null;
+
+        User user = userRepository.findById(1L) // TODO: JWT 연동 후 제거
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+        Household household = user.getHousehold();
+
+        // 차량번호 정규화
+        String vehicleNumber = request.getVehicleNumber().replace(" ", "");
 
         // 차량 번호 중복 확인
-        if (vehicleRepository.existsByVehicleNumber(request.getVehicleNumber())) {
+        if (vehicleRepository.existsByVehicleNumber(vehicleNumber)) {
             throw new IllegalArgumentException("이미 등록된 차량 번호입니다.");
         }
 
@@ -50,7 +54,7 @@ public class VehicleServiceImpl implements VehicleService {
         Vehicle vehicle = new Vehicle(
                 household,
                 user,
-                request.getVehicleNumber(),
+                vehicleNumber,
                 request.getModel(),
                 request.getVehicleType()
         );
@@ -79,7 +83,10 @@ public class VehicleServiceImpl implements VehicleService {
         // TODO: JWT 연동 후 아래 주석 해제
         // Household household = householdRepository.findById(householdId)
         //     .orElseThrow(() -> new EntityNotFoundException("세대를 찾을 수 없습니다."));
-        Household household = null;
+
+        User user = userRepository.findById(1L) // TODO: JWT 연동 후 제거
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+        Household household = user.getHousehold();
 
         return vehicleRepository.findByHousehold(household)
                 .stream()
@@ -111,14 +118,11 @@ public class VehicleServiceImpl implements VehicleService {
             throw new IllegalArgumentException("첨부 서류는 필수입니다.");
         }
 
-        // 여러 파일 경로 합쳐서 저장
         String documentPath = String.join(",", documentPaths);
 
-        // 승인 이력 생성
         VehicleApproval approval = new VehicleApproval(vehicle, documentPath);
         vehicleApprovalRepository.save(approval);
 
-        // 차량 상태 대기로 변경
         vehicle.pending();
 
         return new VehicleResponse(vehicle);
@@ -166,7 +170,6 @@ public class VehicleServiceImpl implements VehicleService {
         approval.reject(user, rejectReason);
         approval.getVehicle().reject();
     }
-
 
     @Override
     @Transactional(readOnly = true)

@@ -2,30 +2,30 @@
 
 <head th:replace="~{fragments/head :: head(pageTitle='알람')}"></head>
 <body>
-<div class="main-layout" style="display: flex;">
+    <div class="main-layout" style="display: flex;">
 
-    <!-- 1. 왼쪽 사이드바 -->
-    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='notification')}"></div>
+        <!-- 1. 왼쪽 사이드바 -->
+        <div th:replace="~{fragments/sidebar :: sidebar(currentPage='notification')}"></div>
 
-    <!-- 2. 오른쪽 영역 (헤더 + 본문) -->
-    <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+        <!-- 2. 오른쪽 영역 (헤더 + 본문) -->
+        <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
 
-        <!-- 상단 헤더 -->
-        <div th:replace="~{fragments/header_menu :: header_menu(currentPath01='notification', currentPath02='')}"></div>
+            <!-- 상단 헤더 현재 선택한 왼쪽 사이드 메뉴 + 오른쪽 선택한 메뉴 -->
+            <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'notification'} })}"></div>
 
-        <!-- 상단 메뉴 -->
-        <div th:replace="~{fragments/header-menu/notificationCategoryMenu :: categoryMenu}"></div>
+            <!-- 상단 메뉴 -->
+            <div th:replace="~{fragments/headerCategoryMenu :: notification}"></div>
 
-        <!-- 메인 콘텐츠 -->
-        <main class="content">
-            <h1>알람 홈 화면 입니다.ㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ</h1>
-        </main>
+            <!-- 메인 콘텐츠 -->
+            <main class="content">
+                <h1>알람 홈 화면 입니다.ㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ</h1>
+            </main>
 
-        <!-- 하단 푸터 삽입 -->
-        <footer th:replace="~{fragments/footer :: footer}"></footer>
+            <!-- 하단 푸터 삽입 -->
+            <footer th:replace="~{fragments/footer :: footer}"></footer>
 
+        </div>
     </div>
-</div>
 
 </body>
 </html>

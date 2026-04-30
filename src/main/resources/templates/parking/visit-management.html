@@ -6,9 +6,8 @@
     <title>방문 차량 관리</title>
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
-    <style>
-        /* CSS는 나중에 추가 */
-    </style>
+    <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+    <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
 </head>
 <body>
 
@@ -37,18 +36,20 @@
 
     <!-- 입차 등록 버튼 -->
     <div class="form-actions">
-        <button type="button" id="registerBtn" disabled onclick="registerVehicle()">입차 등록</button>
+        <button type="button" id="registerBtn" disabled onclick="registerVehicle()">내 방문자로 등록</button>
     </div>
 </div>
 
-<script>
+<script th:inline="javascript">
+    const contextPath = /*[[@{/}]]*/ '/';
     const csrfToken = document.querySelector('meta[name="_csrf"]').content;
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
-    let selectedParkingId = null;
+    let selectedReservationId = null;
 
     // 숫자만 입력
     document.getElementById('vehicleNumber').addEventListener('input', (e) => {
         e.target.value = e.target.value.replace(/\D/g, '');
+        if (e.target.value.length === 4) searchVehicle();
     });
 
     // 엔터키로 조회
@@ -56,7 +57,7 @@
         if (e.key === 'Enter') searchVehicle();
     });
 
-    // 차량 조회
+    // 차량 조회 - PENDING_CONFIRM 상태 차량 검색
     function searchVehicle() {
         const keyword = document.getElementById('vehicleNumber').value.trim();
         const searchError = document.getElementById('searchError');
@@ -67,7 +68,7 @@
         }
         searchError.textContent = '';
 
-        fetch(`/parking/unregistered/search?keyword=${encodeURIComponent(keyword)}`)
+        fetch(`${contextPath}parking/unregistered/search?keyword=${encodeURIComponent(keyword)}`)
             .then(async res => {
                 if (!res.ok) {
                     const msg = await res.text();
@@ -79,7 +80,7 @@
                 const vehicleList = document.getElementById('vehicleList');
                 const searchResult = document.getElementById('searchResult');
                 vehicleList.innerHTML = '';
-                selectedParkingId = null;
+                selectedReservationId = null;
                 document.getElementById('registerBtn').disabled = true;
 
                 if (data.length === 0) {
@@ -94,9 +95,9 @@
                     li.innerHTML = `
                         <label>
                             <input type="radio" name="vehicleSelect"
-                                   value="${vehicle.parkingId}"
-                                   onchange="selectVehicle(${vehicle.parkingId})">
-                            ${vehicle.vehicleNumber}
+                                   value="${vehicle.reservationId}"
+                                   onchange="selectVehicle(${vehicle.reservationId})">
+                            ${vehicle.vehicleNumber} (${vehicle.purpose} · ${vehicle.enteredAt})
                         </label>
                     `;
                     vehicleList.appendChild(li);
@@ -104,43 +105,43 @@
             })
             .catch(err => {
                 console.error(err);
-                searchError.textContent = '조회 중 오류가 발생했습니다.';
+                document.getElementById('searchError').textContent = '조회 중 오류가 발생했습니다.';
             });
     }
 
     // 차량 선택
-    function selectVehicle(parkingId) {
-        selectedParkingId = parkingId;
+    function selectVehicle(reservationId) {
+        selectedReservationId = reservationId;
         document.getElementById('registerBtn').disabled = false;
     }
 
-    // 입차 등록
+    // 내 방문자로 등록
     function registerVehicle() {
-        if (!selectedParkingId) return;
+        if (!selectedReservationId) return;
         if (!confirm('해당 차량을 우리 세대 방문 차량으로 등록하시겠습니까?')) return;
 
         const btn = document.getElementById('registerBtn');
         btn.disabled = true;
 
-        fetch('/parking/unregistered/match', {
+        fetch(`${contextPath}parking/unregistered/match`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 [csrfHeader]: csrfToken
             },
-            body: JSON.stringify({ parkingId: selectedParkingId })
+            body: JSON.stringify({ reservationId: selectedReservationId })
         })
             .then(async res => {
                 if (!res.ok) {
                     const msg = await res.text();
                     throw new Error(msg || '서버 오류');
                 }
-                alert('입차 등록이 완료되었습니다.');
+                alert('방문 차량 등록이 완료되었습니다.');
                 document.getElementById('vehicleNumber').value = '';
                 document.getElementById('vehicleList').innerHTML = '';
                 document.getElementById('searchResult').style.display = 'none';
                 document.getElementById('searchError').textContent = '';
-                selectedParkingId = null;
+                selectedReservationId = null;
             })
             .catch(err => {
                 console.error(err);

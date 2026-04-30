@@ -2,6 +2,7 @@ package com.hometalk.onepass.auth.entity;
 import com.hometalk.onepass.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,14 +26,17 @@ public class SocialAccount extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "platform", nullable = false, length = 20)
     private Platform platform;
 
+    @NotNull
     @Column(name = "platform_id", nullable = false, length = 100)
     private String platformId;
 

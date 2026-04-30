@@ -7,11 +7,11 @@
     Fragment Style 1 : main banner - BoardList
       - postList, postDetail, postForm에서 사용
 -->
-  <div th:fragment="boardListHeader(boards, boardId)" class="boardList-header">
+  <div th:fragment="boardListHeader(boards, boardId, loginUser)" class="boardList-header">
     <style>
       /* 게시판 전체 헤더 */
       .boardList-header {
-        max-width: 80%; padding: 2rem 1rem; border-bottom: 1px solid #032154; margin-bottom: 2rem;
+        max-width: 100%; padding: 2rem 1rem; border-bottom: 1px solid #032154; margin-bottom: 2rem;
       }
       .boardList-header h1 {
         font-size: 1.5rem; color: #170124; margin-bottom: 1.5rem;
@@ -38,6 +38,20 @@
       .boardList-header nav a:hover:not(.active) {
         color: #3C6ABC;
       }
+
+
+      /* 관리자 링크 전용 스타일 추가 */
+      .admin-setup-link {
+        margin-left: auto; /* 게시판 메뉴와 떨어뜨려 오른쪽 끝으로 배치 */
+        color: #d9534f !important; /* 관리자용 강조 색상 */
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .admin-setup-link:hover {
+        color: #c9302c !important;
+        border-bottom-color: #c9302c !important;
+      }
     </style>
 
 
@@ -45,7 +59,15 @@
     <nav>
       <a th:each="board : ${boards}" th:text="${board.name}"
          th:href="@{/community/{code}(code=${board.code})}"
-         th:classappend="${boardId == board.id ? 'active' : ''}">게시판 이름</a>
+         th:classappend="${boardId == board.id ? 'active' : ''}">
+        게시판 이름
+      </a>
+
+      <a th:if="${loginUser != null and loginUser.role == 'ADMIN'}"
+         href="/admin/main"
+         class="admin-setup-link">
+        <i class="fas fa-cog"></i> 관리자 설정
+      </a>
     </nav>
   </div>
 </body>

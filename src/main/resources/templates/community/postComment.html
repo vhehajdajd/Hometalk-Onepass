@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<div th:fragment="postComment(boardCode, categoryCode, postId, comments)">
+    <link rel="stylesheet" th:href="@{/css/community/post-comment.css}">
+
+    <div class="comment-form">
+        <form th:action="@{/community/{bCode}/{cCode}/{postId}/comments(bCode=${boardCode}, cCode=${categoryCode}, postId=${postId})}"
+              th:method="post">
+            <textarea name="content" placeholder="댓글을 입력해주세요."></textarea>
+            <button type="submit" class="comment-submit-btn">등록</button>
+            <div style="clear: both;"></div>
+        </form>
+    </div>
+
+    <div class="comment-count-header" style="margin-bottom: 10px; font-weight: bold; color: var(--main-navy);">
+        댓글 <span id="total-comment-count" th:text="${comments.size()}">0</span>개
+    </div>
+
+    <div class="comment-list">
+        <div th:each="comment, iterStat : ${comments}" class="comment-item"
+             th:classappend="${iterStat.index >= 10} ? 'review-hidden'">
+            <div class="comment-info" th:id="|meta-${comment.id}|">
+                <div class="info-left">
+                    <strong th:text="${comment.nickname}">작성자</strong>
+                    <small th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</small>
+                </div>
+                <div class="comment-actions">
+                    <button type="button" class="btn-edit" th:onclick="|toggleEditForm(${comment.id})|">수정</button>
+                    <form th:action="@{/community/{bCode}/{cCode}/{postId}/comments/{id}/delete
+                                     (bCode=${boardCode}, cCode=${categoryCode}, postId=${postId}, id=${comment.id})}"
+                          th:method="post" style="display: inline;" onsubmit="return confirm('댓글을 삭제하시겠습니까?');">
+                        <button type="submit" class="btn-delete">삭제</button>
+                    </form>
+                </div>
+            </div>
+            <div class="comment-content" th:id="|body-${comment.id}|"><p th:text="${comment.content}">댓글 내용</p></div>
+
+            <div th:id="|edit-form-${comment.id}|" style="display: none;">
+                <form th:action="@{/community/{bCode}/{cCode}/{postId}/comments/{id}/edit
+                                 (bCode=${boardCode}, cCode=${categoryCode}, postId=${postId}, id=${comment.id})}"
+                      th:method="post">
+                    <textarea name="content" class="edit-textarea" th:text="${comment.content}"></textarea>
+                    <div class="edit-button-group">
+                        <button type="button" class="btn-cancel-edit" th:onclick="|toggleEditForm(${comment.id})|">취소</button>
+                        <button type="submit" class="btn-save-edit">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div th:if="${comments.size() > 10}" style="text-align: center; margin-top: 20px;">
+            <button type="button" class="btn-more" id="btnMoreComments" onclick="showAllComments()">
+                + 더보기
+            </button>
+        </div>
+
+        <div th:if="${#lists.isEmpty(comments)}" class="no-comment">
+            <p>아직 작성된 댓글이 없습니다.</p>
+            <p>첫 번째 댓글을 남겨보세요!</p>
+        </div>
+    </div>
+</div>
+
+</html>
+
+<!--
+    <div th:replace="~{community/postComment :: postComment(${boardCode}, ${categoryCode}, ${post.id}, ${comments})}"></div> 로 호출
+-->

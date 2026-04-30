@@ -19,7 +19,12 @@ public class VisitReservationResponse {
         this.vehicleNumber = reservation.getVehicleNumber();
         this.purpose = reservation.getPurpose();
         this.reservedAt = reservation.getReservedAt();
-        this.status = reservation.getStatus().name();
+        this.status = switch (reservation.getStatus()) {
+            case RESERVED -> "예약중";
+            case ENTERED -> "입차완료";
+            case CANCELLED -> "취소됨";
+            case PENDING_CONFIRM -> "확인대기";
+        };
         this.household = reservation.getHousehold() != null
                 ? reservation.getHousehold().getDong() + " " + reservation.getHousehold().getHo()
                 : "";

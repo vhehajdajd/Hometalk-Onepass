@@ -6,67 +6,85 @@
     <title>방문 차량 예약</title>
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
-    <style>
-        /* CSS는 나중에 추가 */
-    </style>
+    <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+    <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
 </head>
 <body>
 
-<div class="container">
+<div class="main-layout" style="display: flex; min-height: 100vh;">
 
-    <!-- 상단 타이틀 + 예약하기 버튼 -->
-    <div class="page-header">
-        <h2 class="page-title">방문 차량 예약</h2>
-        <button type="button"
-                th:onclick="'location.href=\'' + @{/parking/visit/register} + '\''">+ 예약하기</button>
-    </div>
+    <!-- 1. 왼쪽 사이드바 -->
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
-    <!-- 예약 목록 테이블 -->
-    <table id="reservationTable">
-        <thead>
-        <tr>
-            <th>차량 번호</th>
-            <th>방문 목적</th>
-            <th>방문 예정 시각</th>
-            <th>상태</th>
-            <th>관리</th>
-        </tr>
-        </thead>
-        <tbody id="reservationtbody">
-        <!-- 예약 없을 때 -->
-        <tr th:if="${#lists.isEmpty(reservations)}">
-            <td colspan="5">예약된 방문 차량이 없습니다.</td>
-        </tr>
-        <!-- 예약 목록 -->
-        <tr th:each="reservation : ${reservations}"
-            th:id="'row-' + ${reservation.reservationId}">
-            <td th:text="${reservation.vehicleNumber}"></td>
-            <td th:text="${reservation.purpose}"></td>
-            <td th:text="${#temporals.format(reservation.reservedAt, 'yyyy.MM.dd HH:mm')}"></td>
-            <td>
-                <span th:text="${reservation.status == 'RESERVED'} ? '예약중' :
-                               (${reservation.status == 'ENTERED'} ? '입차완료' : '취소됨')"
-                      th:class="${reservation.status == 'RESERVED'} ? 'status reserved' :
-                                (${reservation.status == 'ENTERED'} ? 'status entered' : 'status cancelled')">
-                </span>
-            </td>
-            <td>
-                <th:block th:if="${reservation.status == 'RESERVED'}">
+    <!-- 2. 오른쪽 영역 (헤더 + 본문) -->
+    <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+
+        <!-- 상단 헤더 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'parking', 'reservationRegister'} })}"></div>
+
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
+
+        <!-- 메인 콘텐츠 -->
+        <main class="content" style="flex: 1;">
+            <div class="container">
+
+                <!-- 상단 타이틀 + 예약하기 버튼 -->
+                <div class="page-header">
+                    <h2 class="page-title">방문 차량 예약</h2>
                     <button type="button"
-                            th:onclick="'location.href=\'' + @{/parking/visit/update/} + ${reservation.reservationId} + '\''">
-                        수정
-                    </button>
-                    <button type="button" class="cancel-btn"
-                            th:attr="data-id=${reservation.reservationId}"
-                            onclick="cancelReservation(this)">취소</button>
-                    <button type="button" class="enter-btn"
-                            th:attr="data-id=${reservation.reservationId}"
-                            onclick="enterReservation(this)">입차</button>
-                </th:block>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+                            th:onclick="'location.href=\'' + @{/parking/visit/register} + '\''">+ 예약하기</button>
+                </div>
+
+                <!-- 예약 목록 테이블 -->
+                <table id="reservationTable">
+                    <thead>
+                    <tr>
+                        <th>차량 번호</th>
+                        <th>방문 목적</th>
+                        <th>방문 예정 시각</th>
+                        <th>상태</th>
+                        <th>관리</th>
+                    </tr>
+                    </thead>
+                    <tbody id="reservationtbody">
+                    <!-- 예약 없을 때 -->
+                    <tr th:if="${#lists.isEmpty(reservations)}">
+                        <td colspan="5">예약된 방문 차량이 없습니다.</td>
+                    </tr>
+                    <!-- 예약 목록 -->
+                    <tr th:each="reservation : ${reservations}"
+                        th:id="'row-' + ${reservation.reservationId}">
+                        <td th:text="${reservation.vehicleNumber}"></td>
+                        <td th:text="${reservation.purpose}"></td>
+                        <td th:text="${#temporals.format(reservation.reservedAt, 'yyyy.MM.dd HH:mm')}"></td>
+                        <td>
+                <span th:text="${reservation.status}"
+                      th:class="${reservation.status == '예약중'} ? 'status reserved' :
+                                (${reservation.status == '입차완료'} ? 'status entered' : 'status cancelled')">
+                </span>
+                        </td>
+                        <td>
+                            <th:block th:if="${reservation.status == '예약중'}">
+                                <button type="button"
+                                        th:onclick="'location.href=\'' + @{/parking/visit/update/} + ${reservation.reservationId} + '\''">
+                                    수정
+                                </button>
+                                <button type="button" class="cancel-btn"
+                                        th:attr="data-id=${reservation.reservationId}"
+                                        onclick="cancelReservation(this)">취소</button>
+                            </th:block>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <!-- 하단 푸터 삽입 -->
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    </div>
 </div>
 
 <script th:inline="javascript">
@@ -99,34 +117,6 @@
         }).catch(err => {
             console.error(err);
             alert('취소 처리 중 오류가 발생했습니다.');
-        });
-    }
-
-    function enterReservation(btn) {
-        const reservationId = btn.getAttribute('data-id');
-        if (!confirm('입차 처리하시겠습니까?')) return;
-
-        fetch(`${contextPath}parking/visit/enter/${reservationId}`, {
-            method: 'POST',
-            headers: {
-                [csrfHeader]: csrfToken
-            }
-        }).then(async res => {
-            if (res.ok) {
-                const row = document.getElementById(`row-${reservationId}`);
-                if (!row) return;
-                const statusCell = row.querySelector('td:nth-child(4) span');
-                const actionCell = row.querySelector('td:nth-child(5)');
-                statusCell.textContent = '입차완료';
-                statusCell.className = 'status entered';
-                actionCell.innerHTML = '';
-            } else {
-                const msg = await res.text();
-                alert(msg || '입차 처리 중 오류가 발생했습니다.');
-            }
-        }).catch(err => {
-            console.error(err);
-            alert('입차 처리 중 오류가 발생했습니다.');
         });
     }
 </script>

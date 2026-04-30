@@ -57,13 +57,13 @@
         <h2 th:text="${board.name}">광장</h2>
         <nav>
             <a href="#" th:href="@{/community/{boardCode}(boardCode=${board.code})}"
-                th:classappend="${categoryId == null ? 'active' : ''}">전체</a>
+                th:classappend="${categoryCode == 'all' or categoryCode == null} ? 'active' : ''">전체</a>
 
             <th:block th:each="category : ${categories}">
             <a th:if="${category.code != 'all'}"
                href="#" th:href="@{/community/{boardCode}/{categoryCode}(boardCode=${board.code}, categoryCode=${category.code})}"
                th:text="${category.name}"
-               th:classappend="${categoryId == category.id ? 'active' : ''}">카테고리명</a>
+               th:classappend="${categoryCode == category.code ? 'active' : ''}">카테고리명</a>
             </th:block>
         </nav>
     </div>

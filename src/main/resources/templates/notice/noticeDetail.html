@@ -1,151 +1,127 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>공지 상세</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --main-navy: #032154;
-            --point-coral: #EB6E57;
-            --bg-gray: #F4F7F9;
-            --border-color: #E2E8F0;
-        }
-
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: var(--bg-gray);
-            padding: 20px;
-            color: #333;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 80%;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-
-        .notice-table { width: 100%; border-collapse: collapse; }
-        .notice-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
-        .notice-table td:first-child { width: 80px; text-align: center; }
-        .notice-table td:nth-child(3), .notice-table td:nth-child(4) { width: 130px; text-align: center; color: #888; }
-        .notice-table td:last-child { width: 80px; text-align: center; color: #888; }
-
-        .badge-important span { background-color: rgb(174,34,41); border-radius: 15px; padding: 3px 12px; font-size: 11px; color: white; }
-        .badge-facility span { background-color: rgb(201,106,37); border-radius: 15px; padding: 3px 12px; font-size: 11px; color: white; }
-        .badge-safety span { background-color: rgb(39,139,88); border-radius: 15px; padding: 3px 12px; font-size: 11px; color: white; }
-        .badge-normal span { background-color: rgb(59,65,105); border-radius: 15px; padding: 3px 12px; font-size: 11px; color: white; }
-
-        .admin-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            margin: 12px 0;
-        }
-
-        .btn-edit {
-            background: var(--main-navy);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 18px;
-            font-size: 13px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .btn-delete {
-            background: var(--point-coral);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 18px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        .notice-box {
-            min-height: 300px;
-            padding: 20px;
-            margin: 16px 0;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 14px;
-            line-height: 1.8;
-        }
-
-        .notice-nav-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-        .notice-nav-table td { padding: 10px 12px; border: 1px solid var(--border-color); font-size: 13px; }
-        .notice-nav-table tr td:first-child { width: 60px; text-align: center; color: #888; background: #f9f9f9; }
-        .notice-nav-table td:nth-child(3), .notice-nav-table td:nth-child(4) { width: 120px; text-align: center; color: #888; }
-        .notice-nav-table td:last-child { width: 80px; text-align: center; color: #888; }
-        .notice-nav-table a { text-decoration: none; color: #333; }
-        .notice-nav-table a:hover { color: var(--point-coral); }
-    </style>
+    <title>공지 상세 | Home talk</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+    <link rel="stylesheet" th:href="@{/css/notice/notice-common.css}">
+    <link rel="stylesheet" th:href="@{/css/notice/noticeDetail.css}">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 </head>
+
 <body>
-<div th:replace="~{fragments/NoticePageHeader :: notice-page-header}"></div>
 
-<div class="container">
+<div class="main-layout" style="display:flex; min-height:100vh;">
 
-    <table class="notice-table">
-        <tr>
-            <td th:class="'badge-' + ${notice.badge != null ? notice.badge.name().toLowerCase() : 'normal'}">
-                <span th:text="${notice.badge != null ? notice.badge.label : '일반'}"></span>
-            </td>
-            <td th:text="${notice.title}">공지 제목</td>
-            <td th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd HH:mm')}">작성일시</td>
-            <td th:text="${notice.updatedAt != null && !notice.updatedAt.toLocalDate().isEqual(notice.createdAt.toLocalDate()) ? #temporals.format(notice.updatedAt, 'yyyy-MM-dd HH:mm') : '-'}">수정일시</td>
-            <td th:text="${notice.viewCount}">조회수</td>
-        </tr>
-    </table>
+    <!-- 사이드바 -->
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='notice')}"></div>
 
-    <div class="admin-buttons">
-        <a th:href="@{/notice/{id}/edit(id=${notice.id})}" class="btn-edit">수정</a>
-        <form th:action="@{/notice/{id}/delete(id=${notice.id})}" method="post" style="display:inline;">
-            <button type="button" class="btn-delete"
-                    onclick="if(confirm('삭제하시겠습니까?')) this.form.submit()">삭제</button>
-        </form>
+    <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
+
+        <!-- 헤더 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=#{'notice'})}"></div>
+
+        <div class="container">
+
+            <!-- 공지 정보 -->
+            <table class="notice-table">
+                <tr>
+                    <td th:class="'badge-' + ${notice.badge.name().toLowerCase()}">
+                        <span th:text="${notice.badge.label}"></span>
+                    </td>
+                    <td th:text="${notice.title}">공지 제목</td>
+                    <td th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd HH:mm')}">작성일시</td>
+                    <td th:text="${notice.updatedAt != null ? #temporals.format(notice.updatedAt, 'yyyy-MM-dd HH:mm') : '-'}">수정일시</td>
+                    <td th:text="${notice.viewCount}">조회수</td>
+                </tr>
+            </table>
+
+            <!-- 본문 -->
+            <div class="notice-box">
+                <div th:utext="${notice.content}"></div>
+            </div>
+
+            <!-- 첨부파일 다운로드 -->
+            <div class="attachment-box" th:if="${attachments != null && !attachments.isEmpty()}">
+                <div class="attachment-title">📎 첨부파일</div>
+                <div th:each="attachment : ${attachments}">
+                    <a th:href="@{/notice/download/{id}(id=${attachment.id})}"
+                       th:text="${attachment.fileName}"
+                       class="attachment-link"></a>
+                    <br>
+                </div>
+            </div>
+
+            <!-- 이전글 / 다음글 -->
+            <table class="notice-nav-table">
+                <tr th:if="${preNotice != null}"
+                    style="cursor:pointer;"
+                    th:onclick="|location.href='@{/notice/{id}(id=${preNotice.id})}'|">
+                    <td>이전글</td>
+                    <td th:text="${preNotice.title}"></td>
+                    <td th:text="${#temporals.format(preNotice.createdAt, 'yyyy-MM-dd')}"></td>
+                    <td th:text="${preNotice.updatedAt != null ? #temporals.format(preNotice.updatedAt, 'yyyy-MM-dd') : '-'}"></td>
+                    <td th:text="${preNotice.viewCount}"></td>
+                </tr>
+                <tr th:if="${preNotice == null}">
+                    <td>이전글</td>
+                    <td colspan="4"></td>
+                </tr>
+                <tr th:if="${nextNotice != null}"
+                    style="cursor:pointer;"
+                    th:onclick="|location.href='@{/notice/{id}(id=${nextNotice.id})}'|">
+                    <td>다음글</td>
+                    <td th:text="${nextNotice.title}"></td>
+                    <td th:text="${#temporals.format(nextNotice.createdAt, 'yyyy-MM-dd')}"></td>
+                    <td th:text="${nextNotice.updatedAt != null ? #temporals.format(nextNotice.updatedAt, 'yyyy-MM-dd') : '-'}"></td>
+                    <td th:text="${nextNotice.viewCount}"></td>
+                </tr>
+                <tr th:if="${nextNotice == null}">
+                    <td>다음글</td>
+                    <td colspan="4"></td>
+                </tr>
+            </table>
+
+            <!-- 하단 버튼 -->
+            <div class="admin-buttons">
+                <a th:href="@{/notice}" class="btn-back">← 뒤로가기</a>
+                <div sec:authorize="hasRole('ADMIN')" style="display:flex; gap:8px;">
+                    <a th:href="@{/notice/{id}/edit(id=${notice.id})}" class="btn-edit">수정</a>
+                    <form th:action="@{/notice/{id}/delete(id=${notice.id})}" method="post" style="display:inline;">
+                        <button type="button" class="btn-delete"
+                                onclick="if(confirm('삭제하시겠습니까?')) this.form.submit()">삭제</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="img-modal-overlay" id="imgModalOverlay">
+            <img id="imgModalTarget" src="" alt="">
+        </div>
+
+        <!-- 푸터 -->
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+
     </div>
-
-    <div class="notice-box">
-        <p th:text="${notice.content}" style="white-space: pre-line;"></p>
-    </div>
-
-    <table class="notice-nav-table">
-        <tr>
-            <td>이전글</td>
-            <th:block th:if="${preNotice != null}">
-                <td><a th:href="@{/notice/{id}(id=${preNotice.id})}" th:text="${preNotice.title}"></a></td>
-                <td th:text="${#temporals.format(preNotice.createdAt, 'yyyy-MM-dd')}"></td>
-                <td th:text="${preNotice.updatedAt != null && !preNotice.updatedAt.toLocalDate().isEqual(preNotice.createdAt.toLocalDate()) ? #temporals.format(preNotice.updatedAt, 'yyyy-MM-dd') : '-'}"></td>
-                <td th:text="${preNotice.viewCount}"></td>
-            </th:block>
-            <th:block th:if="${preNotice == null}">
-                <td colspan="4"></td>
-            </th:block>
-        </tr>
-        <tr>
-            <td>다음글</td>
-            <th:block th:if="${nextNotice != null}">
-                <td><a th:href="@{/notice/{id}(id=${nextNotice.id})}" th:text="${nextNotice.title}"></a></td>
-                <td th:text="${#temporals.format(nextNotice.createdAt, 'yyyy-MM-dd')}"></td>
-                <td th:text="${nextNotice.updatedAt != null && !nextNotice.updatedAt.toLocalDate().isEqual(nextNotice.createdAt.toLocalDate()) ? #temporals.format(nextNotice.updatedAt, 'yyyy-MM-dd') : '-'}"></td>
-                <td th:text="${nextNotice.viewCount}"></td>
-            </th:block>
-            <th:block th:if="${nextNotice == null}">
-                <td colspan="4"></td>
-            </th:block>
-        </tr>
-    </table>
-
 </div>
+
+<script>
+    document.querySelectorAll('.notice-box img').forEach(function(img) {
+    img.style.cursor = 'pointer';
+    img.addEventListener('click', function() {
+        document.getElementById('imgModalTarget').src = this.src;
+        document.getElementById('imgModalOverlay').classList.add('open');
+    });
+});
+
+document.getElementById('imgModalOverlay').addEventListener('click', function() {
+    this.classList.remove('open');
+});
+</script>
+
 </body>
 </html>

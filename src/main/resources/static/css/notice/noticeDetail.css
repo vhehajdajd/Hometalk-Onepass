@@ -1,0 +1,232 @@
+/* noticeDetail.css */
+
+.notice-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-top: 2px solid var(--color-main);
+}
+
+.notice-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+    color: var(--color-text);
+    vertical-align: middle;
+}
+
+.notice-table td:first-child {
+    width: 80px;
+    text-align: center;
+}
+
+.notice-table td:nth-child(2) {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.notice-table td:nth-child(3),
+.notice-table td:nth-child(4) {
+    width: 150px;
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+}
+
+.notice-table td:last-child {
+    width: 60px;
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+}
+
+/* ── 본문 ──────────────────────────────────────────────────────────────────── */
+.notice-box {
+    min-height: 450px;
+    padding: 24px 4px;
+    margin: 16px 0;
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* ── 첨부파일 ──────────────────────────────────────────────────────────────── */
+.attachment-box {
+    padding: 14px 16px;
+    margin: 0 0 20px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+}
+
+.attachment-title {
+    font-weight: 700;
+    color: var(--color-main);
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.attachment-link {
+    color: var(--color-sub);
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.attachment-link:hover {
+    text-decoration: underline;
+}
+
+/* ── 이전글/다음글 ─────────────────────────────────────────────────────────── */
+.notice-nav-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.notice-nav-table tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.15s;
+}
+
+.notice-nav-table tr:last-child {
+    border-bottom: none;
+}
+
+.notice-nav-table tr:hover {
+    background: #f5f8ff;
+}
+
+.notice-nav-table td {
+    padding: 13px 16px;
+    font-size: 13px;
+    color: var(--color-text);
+}
+
+.notice-nav-table tr td:first-child {
+    width: 70px;
+    text-align: center;
+    color: var(--color-sub);
+    font-weight: 600;
+    font-size: 13px;
+    background: #f5f7fa;
+}
+
+.notice-nav-table td:nth-child(3),
+.notice-nav-table td:nth-child(4) {
+    width: 120px;
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+}
+
+.notice-nav-table td:last-child {
+    width: 60px;
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+}
+
+.notice-nav-table a {
+    text-decoration: none;
+    color: var(--color-text);
+}
+
+.notice-nav-table a:hover {
+    color: var(--color-sub);
+}
+
+/* ── 하단 버튼 ─────────────────────────────────────────────────────────────── */
+.admin-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+}
+
+.btn-back {
+    background: white;
+    color: #666;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 7px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.btn-back:hover {
+    background: #f5f5f5;
+}
+
+.btn-edit {
+    background: var(--color-btn);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.btn-edit:hover {
+    background: var(--color-btn-secondary);
+}
+
+.btn-delete {
+    background: white;
+    color: var(--color-btn-point);
+    border: 1px solid var(--color-btn-point);
+    border-radius: 6px;
+    padding: 7px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-delete:hover {
+    background: var(--color-btn-point);
+    color: white;
+}
+
+/* ── Quill 에디터 정렬 ─────────────────────────────────────────────────────── */
+.ql-align-center  { text-align: center; }
+.ql-align-right   { text-align: right; }
+.ql-align-justify { text-align: justify; }
+.ql-size-small    { font-size: 0.75em; }
+.ql-size-large    { font-size: 1.5em; }
+.ql-size-huge     { font-size: 2.5em; }
+
+.notice-box img {
+    max-width: 60%;
+    max-height: 700px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.img-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.img-modal-overlay.open {
+    display: flex;
+}
+
+.img-modal-overlay img {
+    max-width: 90%;
+    max-height: 90vh;
+    border-radius: 8px;
+}

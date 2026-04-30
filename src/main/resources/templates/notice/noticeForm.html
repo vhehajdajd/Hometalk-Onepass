@@ -1,301 +1,261 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>공지 작성</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --main-navy: #032154;
-            --point-coral: #EB6E57;
-            --bg-gray: #F4F7F9;
-            --border-color: #E2E8F0;
-        }
-
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: var(--bg-gray);
-            padding: 20px;
-            color: #333;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 80%;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
-
-        h2 {
-            color: var(--main-navy);
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
-
-        .form-group { margin-bottom: 15px; }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: var(--main-navy);
-            font-size: 14px;
-        }
-
-        .form-group select,
-        .form-group input[type="text"] {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .form-group select:focus,
-        .form-group input[type="text"]:focus { border-color: var(--main-navy); }
-
-        .form-group small { color: #999; font-size: 12px; }
-
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 14px;
-            resize: none;
-            outline: none;
-            box-sizing: border-box;
-        }
-
-        .form-group textarea:focus { border-color: var(--main-navy); }
-
-        .notice-content-wrap { position: relative; }
-
-        .button-group {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-        }
-
-        .button-group-left { display: flex; align-items: center; gap: 10px; }
-        .button-group-right { display: flex; align-items: center; gap: 10px; }
-
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 13px;
-            cursor: pointer;
-            border: none;
-            transition: all 0.3s;
-            text-decoration: none;
-        }
-
-        .btn-cancel {
-            background: white;
-            color: #666;
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-cancel:hover { background: #f5f5f5; }
-
-        .btn-file {
-            background-color: var(--main-navy);
-            color: white;
-            cursor: pointer;
-        }
-
-        .btn-file:hover { background-color: #051a3a; }
-
-        input[type="file"] { display: none; }
-
-        .btn-schedule {
-            background-color: var(--main-navy);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .btn-schedule:hover { background-color: #051a3a; }
-
-        .btn-submit {
-            background-color: var(--point-coral);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(235, 110, 87, 0.3);
-        }
-
-        .btn-submit:hover { background-color: #d65a45; }
-
-        .checkbox-group { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-
-        .schedule-modal {
-            display: none;
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: white;
-            border-radius: 16px;
-            width: 300px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-            z-index: 100;
-        }
-
-        .schedule-modal.open { display: block; }
-
-        .modal-header {
-            background: var(--main-navy);
-            color: white;
-            padding: 14px 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .modal-header button {
-            background: none;
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            border-radius: 6px;
-            width: 24px; height: 24px;
-            cursor: pointer;
-            font-size: 11px;
-        }
-
-        .modal-body { padding: 16px; }
-        .modal-table { width: 100%; border-collapse: collapse; }
-        .modal-table td { padding: 6px 4px; font-size: 13px; vertical-align: middle; }
-        .modal-table td:first-child { white-space: nowrap; width: 50px; color: #444; }
-        .modal-table input[type="text"], .modal-table input[type="date"] { border: 1px solid #ddd; border-radius: 4px; padding: 3px 6px; font-size: 12px; }
-        .modal-table input[type="text"] { width: 100%; }
-        .modal-table select { border: 1px solid #ddd; border-radius: 4px; padding: 3px 4px; font-size: 12px; }
-        .modal-table textarea { width: 100%; height: 60px; border: 1px solid #ddd; border-radius: 4px; padding: 4px; font-size: 12px; resize: none; box-sizing: border-box; }
-        .modal-bottom { text-align: right; margin-top: 10px; }
-        .btn-register { background: var(--point-coral); color: white; border: none; border-radius: 6px; padding: 6px 16px; font-size: 13px; cursor: pointer; }
-    </style>
+    <title>공지 작성 | Home talk</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+    <link rel="stylesheet" th:href="@{/css/notice/notice-common.css}">
+    <link rel="stylesheet" th:href="@{/css/notice/noticeForm.css}">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 </head>
+
 <body>
 
-<div th:replace="~{fragments/NoticePageHeader :: notice-page-header}"></div>
+<div class="main-layout" style="display:flex; min-height:100vh;">
 
-<div class="container">
-    <h2>공지 작성</h2>
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='notice')}"></div>
 
-    <form th:action="@{/notice/write}" method="post" enctype="multipart/form-data" id="noticeForm">
+    <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
 
-        <div class="form-group">
-            <label for="badge">분류</label>
-            <select id="badge" name="badge" required>
-                <option value="">분류 선택</option>
-                <option value="IMPORTANT">중요</option>
-                <option value="FACILITY">시설</option>
-                <option value="SAFETY">안전</option>
-                <option value="NORMAL">일반</option>
-            </select>
-        </div>
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=#{'notice'})}"></div>
 
-        <div class="form-group">
-            <label for="title">제목</label>
-            <input type="text" id="title" name="title" placeholder="제목을 입력하세요 (최대 100자)" maxlength="100" required>
-            <small><span id="charCount">0</span>/100</small>
-        </div>
+        <div class="container">
+            <h2>공지 작성</h2>
 
-        <div class="form-group notice-content-wrap">
-            <label>내용</label>
-            <textarea name="content" rows="15" placeholder="내용을 입력하세요" required></textarea>
+            <form th:action="@{/notice/write}" method="post" enctype="multipart/form-data" id="noticeForm">
 
-            <div class="schedule-modal" id="scheduleModal">
-                <div class="modal-header">
-                    <span>일정 등록</span>
-                    <button type="button" onclick="document.getElementById('scheduleModal').classList.remove('open')">X</button>
+                <div class="form-group">
+                    <label for="badge">분류</label>
+                    <select id="badge" name="badge" required>
+                        <option value="">분류 선택</option>
+                        <option value="FACILITY">시설</option>
+                        <option value="SAFETY">안전</option>
+                        <option value="NORMAL">일반</option>
+                    </select>
                 </div>
-                <div class="modal-body">
-                    <table class="modal-table">
-                        <tr>
-                            <td>일정명</td>
-                            <td><input type="text" name="scheduleName" placeholder="일정명을 입력하세요."></td>
-                        </tr>
-                        <tr>
-                            <td>시작</td>
-                            <td>
-                                <input type="date" name="startDate">
-                                <select name="startHour"><option>00</option></select>
-                                <select name="startMinute"><option>00</option></select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>종료</td>
-                            <td>
-                                <input type="date" name="endDate">
-                                <select name="endHour"><option>23</option></select>
-                                <select name="endMinute"><option>59</option></select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>설명</td>
-                            <td><textarea name="scheduleDesc"></textarea></td>
-                        </tr>
-                    </table>
-                    <div class="modal-bottom">
-                        <button type="button" class="btn-register">등록</button>
+
+                <div class="form-group">
+                    <label for="title">제목</label>
+                    <input type="text" id="title" name="title" placeholder="제목을 입력하세요 (최대 100자)" maxlength="100" required>
+                    <small><span id="charCount">0</span>/100</small>
+                </div>
+
+                <div class="form-group notice-content-wrap">
+                    <label>내용</label>
+                    <input type="hidden" name="content" id="content">
+                    <div id="editor" style="height: 300px;"></div>
+
+                    <!-- 일정 등록 모달 -->
+                    <div class="schedule-modal" id="scheduleModal">
+                        <div class="modal-header">
+                            <span>일정 등록</span>
+                            <button type="button" onclick="document.getElementById('scheduleModal').classList.remove('open')">X</button>
+                        </div>
+                        <div class="modal-body">
+                            <table class="modal-table">
+                                <tr>
+                                    <td>일정명</td>
+                                    <td><input type="text" name="scheduleName" placeholder="일정명을 입력하세요."></td>
+                                </tr>
+                                <tr>
+                                    <td>시작</td>
+                                    <td>
+                                        <div class="modal-time-row">
+                                            <input type="date" name="startDate">
+                                            <select name="startHour">
+                                                <option th:each="h : ${#numbers.sequence(0, 23)}"
+                                                        th:value="${#strings.toString(h).length() == 1 ? '0' + h : h}"
+                                                        th:text="${#strings.toString(h).length() == 1 ? '0' + h : h}"></option>
+                                            </select>
+                                            <span class="modal-time-sep">:</span>
+                                            <select name="startMinute">
+                                                <option th:each="m : ${#numbers.sequence(0, 59)}"
+                                                        th:value="${#strings.toString(m).length() == 1 ? '0' + m : m}"
+                                                        th:text="${#strings.toString(m).length() == 1 ? '0' + m : m}"></option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>종료</td>
+                                    <td>
+                                        <div class="modal-time-row">
+                                            <input type="date" name="endDate">
+                                            <select name="endHour">
+                                                <option th:each="h : ${#numbers.sequence(0, 23)}"
+                                                        th:value="${#strings.toString(h).length() == 1 ? '0' + h : h}"
+                                                        th:text="${#strings.toString(h).length() == 1 ? '0' + h : h}"></option>
+                                            </select>
+                                            <span class="modal-time-sep">:</span>
+                                            <select name="endMinute">
+                                                <option th:each="m : ${#numbers.sequence(0, 59)}"
+                                                        th:value="${#strings.toString(m).length() == 1 ? '0' + m : m}"
+                                                        th:text="${#strings.toString(m).length() == 1 ? '0' + m : m}"></option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>설명</td>
+                                    <td><textarea name="scheduleInfo"></textarea></td>
+                                </tr>
+                                <tr>
+                                    <td>장소</td>
+                                    <td><input type="text" name="scheduleLocation" placeholder="장소를 입력하세요."></td>
+                                </tr>
+                            </table>
+                            <div class="modal-bottom">
+                                <button type="button" class="btn-register" onclick="registerSchedule()">등록</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="button-group">
-            <div class="button-group-left">
-                <input type="file" id="file" name="file">
-                <label for="file" class="btn btn-file">파일 올리기</label>
-            </div>
-            <div class="button-group-right">
-                <div class="checkbox-group">
-                    <input type="checkbox" id="isPinned" name="isPinned" value="true">
-                    <label for="isPinned">상단 고정</label>
+                <!-- 일정 hidden inputs -->
+                <input type="hidden" id="scheduleStartAt" name="scheduleStartAt">
+                <input type="hidden" id="scheduleEndAt" name="scheduleEndAt">
+
+                <div class="button-group">
+                    <div class="button-group-left">
+                        <input type="file" id="file" name="file">
+                        <label for="file" class="btn btn-file">파일 올리기</label>
+                    </div>
+                    <div class="button-group-right">
+                        <div class="checkbox-group">
+                            <input type="hidden" name="_isPinned" value="on">
+                            <input type="checkbox" id="isPinned" name="isPinned" value="true">
+                            <label for="isPinned">상단 고정</label>
+                        </div>
+                        <button type="button" class="btn-schedule"
+                                onclick="document.getElementById('scheduleModal').classList.add('open')">일정 등록</button>
+                        <a th:href="@{/notice}" class="btn btn-cancel" onclick="return confirmCancel()">목록</a>
+                        <button type="submit" class="btn-submit">게시</button>
+                    </div>
                 </div>
-                <button type="button" class="btn-schedule"
-                        onclick="document.getElementById('scheduleModal').classList.add('open')">일정 등록</button>
-                <a th:href="@{/notice}" class="btn btn-cancel" onclick="return confirmCancel()">취소</a>
-                <button type="submit" class="btn-submit">게시</button>
-            </div>
+
+            </form>
         </div>
 
-    </form>
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    </div>
 </div>
 
+<script th:inline="javascript">
+    var imageUploadUrl = /*[[@{/notice/image-upload}]]*/ '/notice/image-upload';
+</script>
+
 <script>
+    var quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: {
+                container: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'align': [] }],
+                    [{ 'size': ['small', false, 'large', 'huge'] }],
+                    [{ 'color': [] }],
+                    ['link', 'image']
+                ],
+                handlers: {
+                    image: function() {
+                        var input = document.createElement('input');
+                        input.setAttribute('type', 'file');
+                        input.setAttribute('accept', 'image/*');
+                        input.click();
+                        input.onchange = function() {
+                            var file = input.files[0];
+                            var formData = new FormData();
+                            formData.append('file', file);
+
+                            var csrfToken = document.querySelector('meta[name="_csrf"]').content;
+                            var csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+                            var headers = {};
+                            headers[csrfHeader] = csrfToken;
+
+                            fetch(imageUploadUrl, {
+                                method: 'POST',
+                                headers: headers,
+                                body: formData
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                var range = quill.getSelection();
+                                quill.insertEmbed(range.index, 'image', data.url);
+                            });
+                        };
+                    }
+                }
+            }
+        }
+    });
+
     document.getElementById('title').addEventListener('input', function() {
         document.getElementById('charCount').innerText = this.value.length;
     });
 
-    function confirmCancel() {
-        if (confirm("작성 중인 내용을 중단하고 목록으로 돌아가시겠습니까?")) {
-            return true;
-        } else {
-            return false;
+    function registerSchedule() {
+        var startDate   = document.querySelector('[name="startDate"]').value;
+        var endDate     = document.querySelector('[name="endDate"]').value;
+        var startHour   = document.querySelector('[name="startHour"]').value;
+        var startMinute = document.querySelector('[name="startMinute"]').value;
+        var endHour     = document.querySelector('[name="endHour"]').value;
+        var endMinute   = document.querySelector('[name="endMinute"]').value;
+        var scheduleName = document.querySelector('[name="scheduleName"]').value.trim();
+
+        if (!scheduleName) {
+            alert('일정명을 입력해주세요.');
+            return;
         }
+        if (!startDate) {
+            alert('시작 날짜를 입력해주세요.');
+            return;
+        }
+
+        if (endDate) {
+            var startAt = new Date(startDate + 'T' + startHour + ':' + startMinute + ':00');
+            var endAt   = new Date(endDate   + 'T' + endHour   + ':' + endMinute   + ':00');
+            if (endAt <= startAt) {
+                alert('종료 시간이 시작 시간보다 이후여야 합니다.');
+                return;
+            }
+        }
+
+        document.getElementById('scheduleModal').classList.remove('open');
+    }
+
+    document.getElementById('noticeForm').addEventListener('submit', function(e) {
+        var content = quill.root.innerHTML;
+        if (content === '<p><br></p>') {
+            alert('내용을 입력해주세요.');
+            e.preventDefault();
+            return;
+        }
+        document.getElementById('content').value = content;
+
+        var startDate   = document.querySelector('[name="startDate"]').value;
+        var startHour   = document.querySelector('[name="startHour"]').value;
+        var startMinute = document.querySelector('[name="startMinute"]').value;
+        var endDate     = document.querySelector('[name="endDate"]').value;
+        var endHour     = document.querySelector('[name="endHour"]').value;
+        var endMinute   = document.querySelector('[name="endMinute"]').value;
+
+        if (startDate) {
+            document.getElementById('scheduleStartAt').value = startDate + 'T' + startHour + ':' + startMinute + ':00';
+        }
+        if (endDate) {
+            document.getElementById('scheduleEndAt').value = endDate + 'T' + endHour + ':' + endMinute + ':00';
+        }
+    });
+
+    function confirmCancel() {
+        return confirm("작성 중인 내용을 중단하고 목록으로 돌아가시겠습니까?");
     }
 </script>
 

@@ -47,15 +47,29 @@ public class BillingUploadService {
             boolean hasError = validationError != null;
             if (hasError) errorCount++;
 
-            // householdId("101-101") → Household 조회 → 기존 billing 존재 여부로 UPSERT 판별
+            Long billingId = null;
+            String dong = null;
+            String ho = null;
             UpsertType upsertType = UpsertType.ERROR;
+
             if (!hasError) {
-                Optional<Household> household = findHousehold(row.getHouseholdId());
-                if (household.isPresent()) {
+                Optional<Household> householdOpt = findHousehold(row.getHouseholdId());
+
+                if (householdOpt.isPresent()) {
+                    Household household = householdOpt.get();
+                    dong = household.getDong();
+                    ho = household.getHo();
+
                     Optional<Billing> existing = billingRepository
                             .findByHousehold_IdAndBillingMonth(
-                                    household.get().getId(), row.getBillingMonth());
-                    upsertType = existing.isPresent() ? UpsertType.UPDATE : UpsertType.INSERT;
+                                    household.getId(), row.getBillingMonth());
+
+                    if (existing.isPresent()) {
+                        billingId = existing.get().getId();
+                        upsertType = UpsertType.UPDATE;
+                    } else {
+                        upsertType = UpsertType.INSERT;
+                    }
                 } else {
                     upsertType = UpsertType.INSERT;
                 }
@@ -64,6 +78,9 @@ public class BillingUploadService {
             previewRows.add(UploadPreviewRow.builder()
                     .num(num)
                     .householdId(row.getHouseholdId())
+                    .dong(dong)
+                    .ho(ho)
+                    .billingId(billingId)
                     .billingMonth(row.getBillingMonth())
                     .totalAmount(row.getTotalAmount())
                     .validationError(validationError)
@@ -85,12 +102,10 @@ public class BillingUploadService {
         int updateCount = 0;
 
         for (UploadRow row : rows) {
-
             if (validate(row) != null) continue;
 
-            // householdId("101-101") → Household 조회
             Optional<Household> householdOpt = findHousehold(row.getHouseholdId());
-            if (householdOpt.isEmpty()) continue; // 세대 없으면 스킵
+            if (householdOpt.isEmpty()) continue;
 
             Household household = householdOpt.get();
 
@@ -101,24 +116,22 @@ public class BillingUploadService {
             Billing billing;
 
             if (existing.isPresent()) {
-                // UPDATE
                 billing = existing.get();
                 billing.updateByUpload(row.getTotalAmount(), row.getDueDate());
                 billingDetailRepository.deleteByBilling_Id(billing.getId());
                 updateCount++;
             } else {
-                // INSERT
                 billing = billingRepository.save(Billing.builder()
                         .household(household)
                         .billingMonth(row.getBillingMonth())
                         .dueDate(row.getDueDate())
                         .totalAmount(row.getTotalAmount())
                         .status(BillingStatus.UNPAID)
+                        .lastUploadType("INSERT")
                         .build());
                 insertCount++;
             }
 
-            // billing_details 저장 (sortOrder 포함)
             List<BillingDetail> details = new ArrayList<>();
             List<ItemRow> items = row.getItems();
             for (int i = 0; i < items.size(); i++) {
@@ -130,10 +143,11 @@ public class BillingUploadService {
                         .build());
             }
             billingDetailRepository.saveAll(details);
+        }
 
-            // billing_logs UPLOAD 기록
+        if (insertCount + updateCount > 0) {
             billingLogRepository.save(BillingLog.builder()
-                    .billing(billing)
+                    .billing(null)
                     .userId(adminId)
                     .actionType(BillingActionType.UPLOAD)
                     .build());
@@ -150,6 +164,8 @@ public class BillingUploadService {
         if (row.getHouseholdId() == null || row.getHouseholdId().isBlank()) return "세대 정보 누락";
         if (row.getBillingMonth() == null || row.getBillingMonth().isBlank()) return "부과월 누락";
         if (row.getTotalAmount() == null || row.getTotalAmount().compareTo(BigDecimal.ZERO) < 0) return "금액 누락";
+        if (row.getTotalAmount() == null || row.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0)
+            return "금액 누락";   // 0원도 누락으로 처리
         if (row.getDueDate() == null) return "납기일 누락";
         if (row.getItems() == null || row.getItems().isEmpty()) return "상세 항목 누락";
         return null;
@@ -159,15 +175,11 @@ public class BillingUploadService {
     // 내부 유틸
     // ─────────────────────────────────────────────
 
-    /**
-     * householdId("101-101") → dong="101동", ho="101호" 변환 후 Household 조회
-     * 엑셀 동/호 형식: "동번호-호번호" (예: "101-101", "102-305")
-     */
     private Optional<Household> findHousehold(String householdId) {
         String[] parts = householdId.split("-");
         if (parts.length < 2) return Optional.empty();
-        String dong = parts[0] + "동";  // "101" → "101동"
-        String ho   = parts[1] + "호";  // "101" → "101호"
+        String dong = parts[0] + "동";
+        String ho   = parts[1] + "호";
         return householdRepository.findByDongAndHo(dong, ho);
     }
 
@@ -180,7 +192,7 @@ public class BillingUploadService {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UploadRow {
-        private String        householdId;  // 엑셀 동/호 값 (예: "101-101")
+        private String        householdId;
         private String        billingMonth;
         private LocalDate     dueDate;
         private BigDecimal    totalAmount;
@@ -205,6 +217,9 @@ public class BillingUploadService {
         private BigDecimal totalAmount;
         private String     validationError;
         private UpsertType upsertType;
+        private Long       billingId;
+        private String     dong;
+        private String     ho;
     }
 
     public record UploadPreviewResult(

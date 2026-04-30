@@ -84,6 +84,13 @@ public class VisitReservationController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/visit/pending/{householdId}")
+    @ResponseBody
+    public ResponseEntity<List<VisitReservationResponse>> getPendingConfirm(
+            @PathVariable Long householdId) {
+        return ResponseEntity.ok(visitReservationService.getPendingConfirmReservations(householdId));
+    }
+
     // 상태별 예약 목록 조회 (JSON)
     @GetMapping("/visit/list/{householdId}")
     @ResponseBody
@@ -104,5 +111,11 @@ public class VisitReservationController {
         model.addAttribute("days", IntStream.rangeClosed(1, 31).boxed().toList());
         model.addAttribute("hours", IntStream.rangeClosed(0, 23).boxed().toList());
         model.addAttribute("minutes", List.of(0, 10, 20, 30, 40, 50));
+    }
+
+    // 방문 차량 관리 페이지
+    @GetMapping("/visit/manage")
+    public String visitManagePage() {
+        return "parking/visit-management";
     }
 }

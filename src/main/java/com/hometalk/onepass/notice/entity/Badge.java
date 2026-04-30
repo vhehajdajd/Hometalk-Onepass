@@ -1,7 +1,6 @@
 package com.hometalk.onepass.notice.entity;
 
 public enum Badge {
-    IMPORTANT("중요"),
     FACILITY("시설"),
     SAFETY("안전"),
     NORMAL("일반");

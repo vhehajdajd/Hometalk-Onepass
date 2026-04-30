@@ -1,0 +1,52 @@
+<header>
+
+    <!-- 카테고리 메뉴 프래그먼트 정의 각 카테고리의 상단 오른쪽 상세 메뉴 표시에 표시될 메뉴들 -->
+
+    <!-- 주차 -->
+    <div th:fragment="parking" class="category-menu-bar">
+        <ul class="category-list">
+            <li><a th:href="@{/parking/vehicle}">조회</a></li>
+            <li><a th:href="@{/parking/vehicle/register}">등록</a></li>
+<!--            <li><a th:href="@{/parking/vehicle-reapply}">재신청</a></li>-->
+            <li><a th:href="@{/parking/visit}">예약 등록</a></li>
+        </ul>
+    </div>
+
+    <!-- 관리비 -->
+    <div th:fragment="billing" class="category-menu-bar_unless">
+        <ul class="category-list">
+<!--            <li><a th:href="@{/billing}">관리비</a></li>-->
+        </ul>
+    </div>
+
+    <!-- 커뮤니티 -->
+    <div th:fragment="community" class="category-menu-bar">
+        <ul class="category-list">
+            <li th:each="board : ${boards}">
+                <a th:href="@{/community/{code}(code=${board.code})}"
+                   th:text="${board.name}">게시판이름</a>
+            </li>
+            <li th:if="${isAdmin}">
+                <a th:href="@{/community/admin}">⚙️ 관리</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 공지 사항 -->
+    <div th:fragment="notice" class="category-menu-bar_unless">
+        <ul class="category-list">
+            <!--            <li><a th:href="@{/billing}">관리비</a></li>-->
+        </ul>
+    </div>
+
+    <!-- 알람 -->
+    <div th:fragment="notification" class="category-menu-bar_unless">
+        <ul class="category-list">
+<!--            <li><a th:href="@{/notification/news}">전체보기</a></li>-->
+<!--            <li><a th:href="@{/notification/news}">새소식</a></li>-->
+<!--            <li><a th:href="@{/notification/event}">이벤트</a></li>-->
+<!--            <li><a th:href="@{/notification/community}">커뮤니티</a></li>-->
+<!--            <li><a th:href="@{/notification/qna}">고객센터</a></li>-->
+        </ul>
+    </div>
+</header>

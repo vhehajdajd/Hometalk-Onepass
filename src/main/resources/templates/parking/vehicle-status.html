@@ -6,10 +6,8 @@
   <title>세대 차량 목록</title>
   <meta name="_csrf" th:content="${_csrf.token}">
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
-  <style>
-    /* CSS는 나중에 추가 */
-  </style>
   <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
 </head>
 <body>
 
@@ -22,10 +20,10 @@
   <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
 
     <!-- 상단 헤더 -->
-    <div th:replace="~{fragments/header_menu :: header_menu(currentPath01='parking', currentPath02='status')}"></div>
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'parking', 'status'} })}"></div>
 
     <!-- 상단 메뉴 -->
-    <div th:replace="~{fragments/header-menu/parkingCategoryMenu :: categoryMenu}"></div>
+    <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
 
     <!-- 메인 콘텐츠 -->
     <main class="content" style="flex: 1;">
@@ -33,7 +31,7 @@
         <h2 class="page-title">세대 차량 목록</h2>
 
         <!-- 차량 목록 테이블 -->
-        <table id="vehicleTable">
+        <table class="park-table" id="vehicleTable">
           <thead>
           <tr>
             <th>차량 번호</th>
@@ -41,7 +39,7 @@
             <th>종류</th>
             <th>상태</th>
             <th>등록자</th>
-            <th></th>
+            <th>비고</th>
           </tr>
           </thead>
           <tbody>
@@ -55,16 +53,17 @@
             <td th:text="${vehicle.model}"></td>
             <td th:text="${vehicle.vehicleType}"></td>
             <td>
-          <span th:with="status=${vehicle.status.name()}"
-                th:text="${status == 'APPROVED'} ? '승인완료' : (${status == 'PENDING'} ? '승인대기' : '반려')"
-                th:class="${status == 'APPROVED'} ? 'status approved' : (${status == 'PENDING'} ? 'status pending' : 'status rejected')">
-          </span>
+              <span th:text="${vehicle.status == 'APPROVED'} ? '승인완료' :
+                            (${vehicle.status == 'PENDING'} ? '승인대기' : '반려')"
+                    th:class="${vehicle.status == 'APPROVED'} ? 'badge badge-approved' :
+                              (${vehicle.status == 'PENDING'} ? 'badge badge-pending' : 'badge badge-rejected')">
+              </span>
             </td>
-            <td th:text="${vehicle.user.name}"></td>
-            <td>
+            <td th:text="${vehicle.userName}"></td>
+            <td style="display: table-cell; text-align: center;">
               <button type="button"
-                      th:if="${vehicle.status.name() == 'REJECTED'}"
-                      class="reapply-btn"
+                      th:if="${vehicle.status == 'REJECTED'}"
+                      class="btn-reapply"
                       th:attr="data-vehicle=${vehicle.vehicleId}"
                       onclick="goReapply(this.getAttribute('data-vehicle'))">
                 재신청
@@ -74,21 +73,11 @@
           </tbody>
         </table>
 
-        <!-- 반려 사유 모달 -->
-        <div id="rejectModal" style="display:none;">
-          <div class="modal-content">
-            <h3>반려 사유</h3>
-            <p id="rejectReason"></p>
-            <div class="modal-actions">
-              <button type="button" onclick="closeModal()">닫기</button>
-              <button type="button" class="reapply-btn" onclick="goReapplyFromModal()">재신청</button>
-            </div>
-          </div>
-        </div>
-
         <!-- 차량 추가 버튼 -->
         <div class="form-actions">
-          <button type="button" onclick="location.href='/parking/vehicle/register'">+ 차량 추가</button>
+          <button type="button"
+                  class="btn-add"
+                  th:onclick="'location.href=\'' + @{/parking/vehicle/register} + '\''">+ 차량 추가</button>
         </div>
       </div>
     </main>
@@ -99,15 +88,28 @@
   </div>
 </div>
 
-<script>
+<!-- 반려 사유 모달 -->
+<div id="rejectModal" style="display:none;">
+  <div class="modal-content">
+    <h3>반려 사유</h3>
+    <p id="rejectReason"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" onclick="closeModal()">닫기</button>
+      <button type="button" class="btn-reapply" onclick="goReapplyFromModal()">재신청</button>
+    </div>
+  </div>
+</div>
+
+<script th:inline="javascript">
   const csrfToken = document.querySelector('meta[name="_csrf"]').content;
   const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+  const contextPath = /*[[@{/}]]*/ '/';
   let selectedVehicleId = null;
 
   function goReapply(vehicleId) {
       selectedVehicleId = vehicleId;
 
-      fetch(`/parking/vehicle/reject-reason/${vehicleId}`, {
+      fetch(`${contextPath}parking/vehicle/reject-reason/${vehicleId}`, {
           headers: {
               [csrfHeader]: csrfToken
           }
@@ -121,7 +123,7 @@
           })
           .then(data => {
               document.getElementById('rejectReason').textContent = data || '사유 없음';
-              document.getElementById('rejectModal').style.display = 'block';
+              document.getElementById('rejectModal').style.display = 'flex';
           })
           .catch(err => {
               console.error(err);
@@ -134,7 +136,7 @@
   }
 
   function goReapplyFromModal() {
-      location.href = `/parking/vehicle/reapply/${selectedVehicleId}`;
+      location.href = `${contextPath}parking/vehicle/reapply/${selectedVehicleId}`;
   }
 </script>
 

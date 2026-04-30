@@ -60,6 +60,10 @@ public class Billing extends BaseTimeEntity {
     public void updateByUpload(BigDecimal totalAmount, LocalDate dueDate) {
         this.totalAmount = totalAmount;
         this.dueDate = dueDate;
+        this.lastUploadType = "UPDATE";
     }
+    // UPSERT
+    @Column(name = "last_upload_type", length = 10)
+    private String lastUploadType;  // "INSERT" | "UPDATE"
 
 }

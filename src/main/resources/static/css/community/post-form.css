@@ -1,0 +1,155 @@
+/* 1. 상단 액션 (임시저장 목록 버튼) */
+.form-top-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.btn-sub {
+    background-color: var(--soft-mint);
+    color: var(--main-navy);
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.btn-sub:hover { opacity: 0.8; }
+
+/* 2. 태그 그룹 스타일 */
+.tag-group {
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.form-label { font-weight: 700; color: var(--main-navy); font-size: 0.95rem; }
+.tag-group label { cursor: pointer; font-size: 0.95rem; color: #475569; }
+.tag-group input[type="checkbox"] { margin-right: 5px; accent-color: var(--main-navy); }
+
+/* 3. 입력 필드 레이아웃 (카테고리 & 제목) */
+.form-inline-group {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+    align-items: flex-start;
+}
+.category-field { flex: 0 0 160px; }
+.title-field { flex: 1; position: relative; }
+
+/* 4. 공통 입력 컨트롤 */
+.input-control, .category-select, .editor-wrapper textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: 0.2s;
+    background-color: #fff;
+}
+
+.input-control:focus, .category-select:focus, .editor-wrapper textarea:focus {
+    border-color: var(--main-navy);
+    box-shadow: 0 0 0 3px rgba(3, 33, 84, 0.05);
+}
+
+/* 글자수 제한 표시 */
+.char-limit {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+/* 5. 에디터 영역 */
+.editor-wrapper {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+.editor-header {
+    background: #f8fafc;
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color);
+    color: #64748b;
+    font-size: 0.85rem;
+}
+.editor-wrapper textarea {
+    border: none;
+    border-radius: 0;
+    resize: vertical;
+    min-height: 450px;
+    line-height: 1.6;
+}
+
+/* 6. 푸터 버튼 스타일 (common.css의 .page-footer 내부 요소) */
+.left-box .btn-cancel {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.2s;
+}
+.left-box .btn-cancel:hover {
+    background-color: #f1f5f9;
+    color: #334155;
+}
+
+.right-box { display: flex; gap: 12px; }
+
+/* 임시저장 버튼 */
+#btnSaveTemp {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+#btnSaveTemp:hover { background: #e2e8f0; }
+
+/* 등록 버튼 (Submit) */
+button[type="submit"] {
+    background: var(--main-navy);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+button[type="submit"]:hover {
+    background: #053385; /* 네이비보다 살짝 밝은색 */
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(3, 33, 84, 0.15);
+}
+
+/* 7. 임시저장 모달 스타일 */
+.temp-modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
+.modal-content {
+    background: white; padding: 25px; border-radius: 12px; width: 450px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+.modal-content h3 { margin-bottom: 20px; display: flex; justify-content: space-between; }
+.close-modal { cursor: pointer; color: #94a3b8; }
+#tempListArea { list-style: none; max-height: 300px; overflow-y: auto; }
+#tempListArea li { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+#tempListArea li:hover { background: #f8fafc; }

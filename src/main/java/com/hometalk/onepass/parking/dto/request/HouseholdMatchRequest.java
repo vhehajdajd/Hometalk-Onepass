@@ -7,5 +7,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class HouseholdMatchRequest {
 
+    private Long reservationId;
+
     private Long parkingId;
+
+    // reservationId 우선, 없으면 parkingId 사용
+    public Long getEffectiveId() {
+        return reservationId != null ? reservationId : parkingId;
+    }
 }

@@ -4,6 +4,7 @@ import com.hometalk.onepass.common.entity.BaseSoftDeleteEntity;
 import com.hometalk.onepass.community.entity.Comment;
 import com.hometalk.onepass.community.entity.Post;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -62,8 +63,8 @@ public class User extends BaseSoftDeleteEntity {
 
     @Builder
     public User(String name, String nickname, String email,
-                String phoneNumber, UserStatus status, UserRole role
-                ,Household household) {
+                String phoneNumber, UserStatus status, UserRole role,
+                Household household) {
         this.name = name;
         this.nickname = nickname;
         this.email = email;
@@ -73,7 +74,14 @@ public class User extends BaseSoftDeleteEntity {
         this.household = household;
     }
 
+    // 세대 배정 (관리자 승인 시 호출)
+    public void assignHousehold(Household household) {
+        this.household = household;
+    }
 
+    public void removeHousehold() {
+        this.household = null;
+    }
 
     public void approve() {
         this.status = UserStatus.APPROVED;
@@ -81,6 +89,11 @@ public class User extends BaseSoftDeleteEntity {
 
     public void reject() {
         this.status = UserStatus.REJECTED;
+    }
+
+    public void withdraw() {
+        this.status = UserStatus.REJECTED;
+        softDelete();
     }
 
     // Enum

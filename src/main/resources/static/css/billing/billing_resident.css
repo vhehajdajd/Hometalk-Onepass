@@ -1,0 +1,79 @@
+/* ═══════════════════════════════════════
+   입주민 관리비 페이지
+   파일 위치: static//billing/css/billing_resident.css
+   공통 변수: common.css 반드시 함께 로드
+═══════════════════════════════════════ */
+
+/* ── 페이지 ── */
+.bp-page { width: 100%; display: flex; flex-direction: column;
+       padding: 24px; min-height: 100vh; background: var(--color-bg); }
+
+/* ── 미납 배너 내용 (미납일 때만 표시) ── */
+.bp-alert-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+.bp-alert-icon {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--color-btn-point);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px; color: #fff; font-weight: 600;
+}
+.bp-alert-title { font-size: 13px; font-weight: 500; color: var(--color-unpaid-text); }
+.bp-alert-sub   { font-size: 11px; color: var(--color-unpaid-text); opacity: .75; margin-top: 3px; }
+/* ── 요약 카드 ── */
+.bp-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+.bp-card { background: var(--color-surface-2); border-radius: var(--radius-md); padding: 14px 16px; }
+.bp-card-label { font-size: 12px; color: #888; margin-bottom: 6px; }
+.bp-card-value { font-size: 22px; font-weight: 500; color: var(--color-text); line-height: 1.2; }
+.bp-card-value.warn { color: var(--color-btn-point); }
+.bp-card-value.md { font-size: 17px; }
+.bp-card-sub { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+/* ── 섹션 타이틀 ── */
+.bp-section-title { font-size: 15px; font-weight: 500; color: var(--color-text); margin-bottom: 10px; }
+
+/* ── 필터 ── */
+/* panel-wrap, filter-btn, filter-panel, chip-grid, chip → common.css 사용 */
+.bp-filter-row { display: flex; gap: 8px; margin-bottom: 14px; }
+
+/* ── 목록 ── */
+.bp-list { display: flex; flex-direction: column; gap: 8px; }
+.bp-empty { text-align: center; padding: 36px; font-size: 13px; color: #aaa; }
+.bp-item { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; }
+.bp-item.overdue { border-color: var(--color-unpaid-border); }
+.bp-item-left { flex: 1; }
+.bp-item-month { font-size: 14px; font-weight: 500; color: var(--color-text); }
+.bp-item-due { font-size: 12px; color: #888; margin-top: 3px; }
+.bp-item-due.paid-text { color: var(--color-paid-text); }
+.bp-item-mid { display: flex; align-items: center; gap: 12px; margin-right: 16px; }
+
+/* 뱃지 → common.css의 .badge 활용, 여기선 bp-badge 별칭 유지 */
+.bp-badge { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; }
+.bp-badge.unpaid { background: var(--color-unpaid-bg); color: var(--color-unpaid-text); }
+.bp-badge.paid   { background: var(--color-paid-bg);   color: var(--color-paid-text); }
+
+.bp-amount { font-size: 16px; font-weight: 500; color: var(--color-text); }
+.bp-amount.unpaid { color: var(--color-btn-point); font-weight: 600; }
+
+/* 고지서 보기 버튼 */
+.bp-btn-view { padding: 7px 16px; font-size: 13px; font-family: inherit; border-radius: var(--radius-md); cursor: pointer; border: none; white-space: nowrap; transition: opacity .15s; }
+.bp-btn-view:hover { opacity: .88; }
+.bp-btn-view.primary   { background: var(--color-btn);  color: #fff; }
+.bp-btn-view.secondary { background: transparent; border: 1px solid var(--color-border); color: #888; }
+
+/* ── 더보기 ── */
+.bp-load-more { display: flex; justify-content: center; margin-top: 16px; }
+.bp-btn-load { padding: 9px 40px; font-size: 13px; font-family: inherit; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: #666; cursor: pointer; transition: background .12s; }
+.bp-btn-load:hover { background: var(--color-surface-2); }
+
+/* ── 고지서 모달 상태 박스만 유지 ── */
+.bm-status-box { margin-top: 14px; padding: 12px 14px; border-radius: var(--radius-md); font-size: 13px; }
+.bm-status-box.past     { background: var(--color-unpaid-bg); border: 1px solid var(--color-unpaid-border); color: var(--color-unpaid-text); }
+.bm-status-box.upcoming { background: var(--color-update-bg); border: 1px solid #fac775; color: var(--color-update-text); }
+.bm-status-box.done     { background: var(--color-paid-bg); border: 1px solid var(--color-paid-border); color: var(--color-paid-text); }
+.bm-status-title { font-weight: 500; margin-bottom: 4px; }
+.bm-status-sub   { font-size: 12px; margin-top: 4px; }

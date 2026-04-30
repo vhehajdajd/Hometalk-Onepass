@@ -1,10 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <th:block th:replace="~{fragments/head :: head(pageTitle='커뮤니티')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/community/common.css}">
+    <link rel="stylesheet" th:href="@{/css/community/adminpage.css}">
 </head>
-<body>
 
+<body class="main-layout">
+<aside th:replace="~{fragments/sidebar :: sidebar('community')}"></aside>
+
+<div class="right-section">
+
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community', '관리'} })}"></div>
+    <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
+
+    <main class="main-content">
+        <section class="admin-content-area">
+            <div class="admin-header">
+                <h2>커뮤니티 관리 센터</h2>
+                <button type="button" class="btn-create-main" onclick="toggleCreateForm()">
+                    + 새 게시판 등록
+                </button>
+            </div>
+
+            <div class="admin-list-box">
+                <div th:replace="~{community/fragments/boardList :: boardList}"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+</div>
+<script th:src="@{/js/community/adminpage.js}"></script>
 </body>
 </html>
