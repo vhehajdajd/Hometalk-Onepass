@@ -1,3 +1,11 @@
+package com.hometalk.onepass.notification.dto;
+
+import com.hometalk.onepass.notification.entity.NotificationType;
+
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
 @Getter
 public class NotificationResponse {
 
@@ -7,20 +15,19 @@ public class NotificationResponse {
     private final String  icon;
     private final String  title;
     private final String  message;
-    private final String  link;
+    private final String  link;       // null 허용
     private final Boolean isRead;
     private final String  createdAt;
 
-    // ✅ JPQL new 생성자 — Entity가 아닌 개별 필드 전달 (표준 JPA)
-    // category, icon은 type Enum으로부터 내부 파생
+    // ✅ JPQL new 생성자 — Repository 쿼리에서 직접 사용
     public NotificationResponse(
-        Long id,
-        NotificationType type,
-        String title,
-        String message,
-        String link,
-        Boolean isRead,
-        LocalDateTime createdAt
+            Long id,
+            NotificationType type,
+            String title,
+            String message,
+            String link,
+            Boolean isRead,
+            LocalDateTime createdAt
     ) {
         this.id        = id;
         this.type      = type.name();

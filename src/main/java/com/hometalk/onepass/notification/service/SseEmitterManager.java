@@ -1,10 +1,19 @@
+package com.hometalk.onepass.notification.service;
+
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import entity.NotificationTargetRole;
 
 @Component
 @RequiredArgsConstructor
@@ -55,17 +64,17 @@ public class SseEmitterManager {
         // 현재 접속 중인 모든 emitter에 전체 발송
         // Security 연동 후 role 필터링 추가 예정
         emitterMap.values().forEach(list ->
-            list.forEach(emitter -> sendEvent(emitter, "notification", data))
+                list.forEach(emitter -> sendEvent(emitter, "notification", data))
         );
     }
 
     private void sendEvent(SseEmitter emitter, String eventName, Object data) {
         try {
             emitter.send(
-                SseEmitter.event()
-                    .name(eventName)
-                    .data(data, MediaType.APPLICATION_JSON)
-                    .id(String.valueOf(System.currentTimeMillis()))
+                    SseEmitter.event()
+                            .name(eventName)
+                            .data(data, MediaType.APPLICATION_JSON)
+                            .id(String.valueOf(System.currentTimeMillis()))
             );
         } catch (IOException e) {
             emitter.completeWithError(e);
@@ -76,7 +85,7 @@ public class SseEmitterManager {
     private void sendReconnectSignal(SseEmitter emitter) {
         try {
             emitter.send(
-                SseEmitter.event().name("reconnect").data("timeout")
+                    SseEmitter.event().name("reconnect").data("timeout")
             );
         } catch (IOException ignored) { }
     }
@@ -86,13 +95,13 @@ public class SseEmitterManager {
     @Scheduled(fixedRate = 30000)
     public void sendHeartbeat() {
         emitterMap.values().forEach(list ->
-            list.forEach(emitter -> {
-                try {
-                    emitter.send(SseEmitter.event().comment("heartbeat"));
-                } catch (IOException e) {
-                    emitter.completeWithError(e);
-                }
-            })
+                list.forEach(emitter -> {
+                    try {
+                        emitter.send(SseEmitter.event().comment("heartbeat"));
+                    } catch (IOException e) {
+                        emitter.completeWithError(e);
+                    }
+                })
         );
     }
 

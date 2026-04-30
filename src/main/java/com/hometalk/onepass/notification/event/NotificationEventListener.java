@@ -1,6 +1,16 @@
-import dto.NotificationResponse;
-import service.NotificationService;
-import service.SseEmitterManager;
+package com.hometalk.onepass.notification.event;
+
+import com.hometalk.onepass.notification.dto.NotificationResponse;
+import com.hometalk.onepass.notification.entity.Notification;
+import com.hometalk.onepass.notification.service.NotificationService;
+import com.hometalk.onepass.notification.service.SseEmitterManager;
+
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
@@ -20,8 +30,8 @@ public class NotificationEventListener {
         if (saved == null) return;
 
         NotificationResponse response = new NotificationResponse(
-            saved.getId(), saved.getType(), saved.getTitle(),
-            saved.getMessage(), saved.getLink(), false, saved.getCreatedAt()
+                saved.getId(), saved.getType(), saved.getTitle(),
+                saved.getMessage(), saved.getLink(), false, saved.getCreatedAt()
         );
 
         if (event.getUserId() == null) {

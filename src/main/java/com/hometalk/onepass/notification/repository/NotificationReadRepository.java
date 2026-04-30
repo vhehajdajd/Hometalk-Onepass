@@ -1,8 +1,27 @@
+package com.hometalk.onepass.notification.repository;
+
+import com.hometalk.onepass.notification.entity.NotificationRead;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
+
 public interface NotificationReadRepository extends JpaRepository<NotificationRead, Long> {
 
-    // 전체 읽음 처리 (Native Bulk INSERT)
-    // ⚠️ 호출 시 반드시 role.name() 전달 (String 파라미터이므로 Enum 직접 전달 금지)
-    // 예: bulkReadAll(userId, role.name())
+    /**
+     * 단건 읽음 처리 시 중복 INSERT 방지용 조회
+     */
+    Optional<NotificationRead> findByNotificationIdAndUserId(Long notificationId, Long userId);
+
+
+    /**
+     * 전체 읽음 처리 (Native Bulk INSERT)
+     * ⚠️ 호출 시 반드시 role.name() 전달 (String 파라미터)
+     * 예: bulkReadAll(userId, role.name())
+     */
     @Modifying(clearAutomatically = true)
     @Query(value = """
         INSERT INTO notification_read (notification_id, user_id, read_at)
@@ -15,5 +34,10 @@ public interface NotificationReadRepository extends JpaRepository<NotificationRe
         AND (n.expired_at IS NULL OR n.expired_at > CURRENT_TIMESTAMP)
     """, nativeQuery = true)
     int bulkReadAll(@Param("userId") Long userId, @Param("role") String role);
-    // ↑ nativeQuery이므로 role은 String. 반드시 role.name()으로 호출할 것
+
+    /**
+     * 특정 알림이 특정 사용자에게 이미 읽음 처리되었는지 확인
+     * 사용 케이스: markBroadcastAsRead 호출 시 중복 INSERT 방지
+     */
+    boolean existsByNotificationIdAndUserId(Long notificationId, Long userId);
 }
