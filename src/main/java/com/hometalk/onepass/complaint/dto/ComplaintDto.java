@@ -1,6 +1,6 @@
-package com.hometalk.onepass.inquiry.dto;
+package com.hometalk.onepass.complaint.dto;
 
-import com.hometalk.onepass.inquiry.entity.Complaint;
+import com.hometalk.onepass.complaint.entity.Complaint;
 import lombok.*;
 
 import java.time.LocalDateTime;

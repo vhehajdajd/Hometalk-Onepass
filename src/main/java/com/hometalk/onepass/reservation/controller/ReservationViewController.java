@@ -42,7 +42,7 @@ public class ReservationViewController {
     @GetMapping("/admin/facilities")
     public String manageFacilities(Model model) {
         model.addAttribute("facilities", facilityService.findAll());
-        return "reservation/admin/facility-admin"; // 👈 경로에 reservation/admin/ 추가
+        return "reservation/facility-admin"; // 👈 경로에 reservation/admin/ 추가
     }
 
     /** * [스태프] 전체 예약 현황 관리 화면

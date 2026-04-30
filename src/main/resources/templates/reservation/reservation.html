@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>One Pass - 시설 예약</title>
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
 </head>
 <body>
@@ -16,9 +18,9 @@
     <div id="step1" class="step-section active">
       <label class="label-text">1. 시설을 선택해주세요</label>
       <div class="facility-list">
-        <div class="facility-item" onclick="selectFacility('테니스장 A코트', 1)">테니스장 A코트 (1시간)</div>
-        <div class="facility-item" onclick="selectFacility('독서실 15번석', 2)">독서실 15번석 (2시간)</div>
-        <div class="facility-item" onclick="selectFacility('게스트하우스 101호', 20)">게스트하우스 101호 (20시간)</div>
+        <div class="facility-item" onclick="selectFacility('테니스장', 2)">테니스장 (2시간)</div>
+        <div class="facility-item" onclick="selectFacility('독서실', 1)">독서실 (1시간)</div>
+        <div class="facility-item" onclick="selectFacility('게스트하우스', 24)">게스트하우스 (24시간)</div>
       </div>
     </div>
 

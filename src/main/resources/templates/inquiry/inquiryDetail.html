@@ -35,7 +35,7 @@
         <span class="category" th:text="${complaint.category}">카테고리</span>
         <span class="status-badge"
               th:text="${complaint.status}"
-              th:style="${complaint.status == '처리완료'} ? 'color: #1976d2;' : 'color: #e53935;'">상태</span>
+              th:classappend="${complaint.status == '처리완료'} ? 'done' : 'pending'"></span>
 
         <h1 th:text="${complaint.title}">민원 제목</h1>
 
@@ -73,7 +73,12 @@
 
         <div class="auth-buttons">
             <a th:href="@{/hometop/inquiries/edit/{id}(id=${complaint.id})}" class="btn btn-edit">수정</a>
-            <button type="button" class="btn btn-delete" th:onclick="|confirmDelete(${complaint.id})|">삭제</button>
+
+            <button type="button"
+                    class="btn btn-delete"
+                    th:onclick="'confirmDelete(' + ${complaint.id} + ')'">
+                삭제
+            </button>
         </div>
     </div>
 </div>

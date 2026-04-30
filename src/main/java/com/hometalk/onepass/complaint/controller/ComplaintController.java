@@ -1,8 +1,8 @@
-package com.hometalk.onepass.inquiry.controller;
+package com.hometalk.onepass.complaint.controller;
 
-import com.hometalk.onepass.inquiry.dto.ComplaintDto;
-import com.hometalk.onepass.inquiry.entity.Complaint;
-import com.hometalk.onepass.inquiry.service.ComplaintService;
+import com.hometalk.onepass.complaint.dto.ComplaintDto;
+import com.hometalk.onepass.complaint.entity.Complaint;
+import com.hometalk.onepass.complaint.service.ComplaintService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;

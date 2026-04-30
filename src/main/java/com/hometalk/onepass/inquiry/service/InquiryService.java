@@ -64,8 +64,8 @@ public class InquiryService {
                     // 첨부파일 엔티티 생성 및 저장
                     InquiryAttachment attach = InquiryAttachment.builder()
                             .originFileName(file.getOriginalFilename())
-                            .storedFileName(savedName) // [수정] storedFilePath 대신 storedFileName 사용
-                            .filePath(uploadPath + savedName) // [추가] 경로도 따로 저장하도록 필드 맞춰줌
+                            .storedFileName(savedName)
+                            .filePath(uploadPath + savedName)
                             .inquiry(inquiry)
                             .build();
 

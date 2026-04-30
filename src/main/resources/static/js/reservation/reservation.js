@@ -9,9 +9,22 @@ function selectFacility(name, usageTime) {
 // 2. 날짜 선택
 function selectDate(val) {
     if (!val) return;
-    const date = new Date(val);
+
+    const selectedDate = new Date(val);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+       if (selectedDate < today) {
+        alert("과거 날짜는 선택하실 수 없습니다. 오늘 또는 이후 날짜를 선택해주세요.");
+        document.getElementById('resDate').value = ""; // input 초기화
+        return;
+    }
+
     const week = ['일', '월', '화', '수', '목', '금', '토'];
-    const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')}월 ${String(date.getDate()).padStart(2, '0')}일 (${week[date.getDay()]})`;
+    const formattedDate = `${String(selectedDate.getMonth() + 1).padStart(2, '0')}월 ${String(selectedDate.getDate()).padStart(2, '0')}일 (${week[selectedDate.getDay()]})`;
+
     document.getElementById('hidden-date').value = val;
     document.getElementById('display-date-text').innerText = formattedDate;
     nextStep(3);
@@ -57,20 +70,56 @@ function confirmAdminCancel(id) {
 
 // 6. 예약 제출
 async function submitReservation() {
-    const data = {
-        facilityName: document.getElementById('hidden-facility').value,
-        reservationDate: document.getElementById('hidden-date').value,
-        startTime: document.querySelector('input[name="startTime"]:checked')?.value
-    };
-    if (!data.startTime) { alert("시간을 선택해주세요!"); return; }
+    const facilityName = document.getElementById('hidden-facility').value;
+    const reservationDate = document.getElementById('hidden-date').value;
+    const startTimeInput = document.querySelector('input[name="startTime"]:checked');
+    // 관리자가 등록한 이용 시간 가져오기 (기본값 1)
+    const usageTime = parseInt(document.getElementById('selected-facility-usage-time').value) || 1;
 
-    const response = await fetch('/hometop/api/reservations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    if (response.ok) {
-        alert("예약 신청이 완료되었습니다.");
-        location.href = "/hometop/reservation/my";
+    if (!facilityName || !reservationDate || !startTimeInput) {
+        alert("시설, 날짜, 시간을 모두 선택해 주세요.");
+        return;
+    }
+
+    const startTime = startTimeInput.value; // 예: "11:00"
+
+    // 종료 시간 계산 (시작 시간 + 이용 시간)
+    let startHour = parseInt(startTime.split(':')[0]);
+    let endHour = startHour + usageTime;
+    const endTime = endHour.toString().padStart(2, '0') + ":00";
+
+    // 보안 토큰
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+
+    const data = {
+        facilityName: facilityName,
+        reservationDate: reservationDate,
+        startTime: startTime,
+        endTime: endTime
+    };
+
+    try {
+        const response = await fetch('/hometop/api/reservations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [header]: token
+            },
+            body: JSON.stringify(data) // JSON 형식이 맞는지 확인
+        });
+
+        if (response.ok) {
+            alert("예약 신청이 완료되었습니다!");
+            location.href = "/hometop/reservation/my";
+        } else {
+            // 서버에서 보낸 에러 메시지 확인
+            const errorResult = await response.json();
+            alert("예약 실패: " + (errorResult.message || "데이터 형식을 확인하세요."));
+        }
+    } catch (error) {
+        console.error("에러:", error);
+        alert("서버 연결 실패");
     }
 }

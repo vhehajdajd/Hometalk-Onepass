@@ -25,8 +25,9 @@ public class InquiryController {
      */
     @PostMapping(consumes = {"multipart/form-data"})
     public Long register(
-            @RequestPart("dto") InquiryDto inquiryDto,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) throws IOException {
+            @ModelAttribute InquiryDto inquiryDto,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files
+    ) throws IOException {
 
         // 통합된 서비스 메서드 호출 (dto와 files를 같이 넘겨줌)
         return inquiryService.register(inquiryDto, files);
