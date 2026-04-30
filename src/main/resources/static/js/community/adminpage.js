@@ -36,7 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     codeInput.classList.remove('error');
                 }
 
-                // 제 버튼 활성화 및 기능 연결
+                if (colorInput) {
+                    colorInput.value = '#EB6E57';
+                }
+
+                // 삭제 버튼 활성화 및 기능 연결
                 const removeBtn = newItem.querySelector('.btn-remove');
                 if (removeBtn) {
                     removeBtn.disabled = false;

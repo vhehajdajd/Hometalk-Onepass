@@ -76,7 +76,9 @@ public class CommunityAdminService {
             for (int i = 0; i < dto.getCategoryNames().size(); i++) {
                 String catName = dto.getCategoryNames().get(i);
                 String catCode = dto.getCategoryCodes().get(i);
-                createCustomCategory(board, catName, catCode);
+                String color = (dto.getCategoryColors() != null && dto.getCategoryColors().size() > i)
+                        ? dto.getCategoryColors().get(i) : "#888888";
+                createCustomCategory(board, catName, catCode, color);
             }
         }
     }
@@ -170,13 +172,14 @@ public class CommunityAdminService {
                 .name("전체").code("all").system(true).board(board).build());
     }
 
-    private void createCustomCategory(Board board, String name, String code) {
+    private void createCustomCategory(Board board, String name, String code, String color) {
         if (categoryRepository.existsByCodeAndBoardId(code, board.getId())) {
             throw new IllegalStateException("해당 게시판 내에 중복된 카테고리 코드가 있습니다: " + code);
         }
         categoryRepository.save(Category.builder()
                 .name(name)
                 .code(code)
+                .color(color)
                 .system(false)
                 .board(board)
                 .build());

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
-<div th:fragment="tagList(tags, boardCode)" class="tag-wrapper" style="margin: 5px 0;">
+<div th:fragment="tagList(tags, boardCode)" class="tag-list-container">
   <th:block th:if="${tags != null}">
     <a th:each="tagName : ${tags}"
        th:if="${tagName != null and #strings.length(tagName) > 0}"

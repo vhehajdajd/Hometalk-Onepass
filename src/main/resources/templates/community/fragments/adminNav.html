@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<nav th:fragment="adminNav(activeTab)" class="admin-tab-nav">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<nav th:fragment="adminNav(activeTab)" class="admin-tab-nav"
+     sec:authorize="hasRole('ADMIN')">
     <style>
         .admin-tab-nav {
             display: flex;

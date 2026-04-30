@@ -162,3 +162,23 @@ input.error {
     transition: 0.3s;
 }
 .btn-hard-delete:hover { background-color: #cf1322; }
+
+/* 카테고리 색상 피커 */
+.color-picker-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+input[type="color"] {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%; /* 동그랗게 */
+    cursor: pointer;
+    background: none;
+}
+
+input[type="color"]::-webkit-color-swatch {
+    border-radius: 50%;
+    border: 1px solid #ddd;
+}

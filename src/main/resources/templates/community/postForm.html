@@ -1,12 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
 <head>
-    <th:block th:replace="~{fragments/head :: head(pageTitle='커뮤니티')}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/community/common.css}">
-    <link rel="stylesheet" href="/css/community/poststyle.css" th:href="@{/css/community/post-form.css}">
+    <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/community/post-form.css}">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body>
 <div class="main-layout" style="display: flex; min-height: 100vh;">

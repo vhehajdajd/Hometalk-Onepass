@@ -1,12 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <th:block th:replace="~{fragments/head :: head(pageTitle='커뮤니티')}"></th:block>
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-    <link rel="stylesheet" th:href="@{/css/community/common.css}">
-    <link rel="stylesheet" href="/css/community/poststyle.css" th:href="@{/css/community/post-detail.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/community/post-detail.css}">
 </head>
 <body>
 <div class="main-layout" style="display: flex; min-height: 100vh;">
@@ -63,7 +59,7 @@
                             <span class="date" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span>
                             <span class="views">조회수 <span th:text="${post.viewCount}">0</span></span>
 
-                            <div th:if="${loginUser != null and loginUser.role == 'ADMIN'}" class="admin-tools"
+                            <div sec:authorize="hasRole('ADMIN')" class="admin-tools"
                                  th:data-board-code="${boardCode}"
                                  th:data-category-code="${currentCategoryCode}" >
                                 <button id="pinBtn" th:onclick="|togglePin(${post.id})|" class="btn-pin"
@@ -93,9 +89,11 @@
                     <div class="page-body post-content" style="word-break: break-all;"> <!-- white-space: pre-wrap; 보고 추가하기 -->
                         <div th:utext="${post.content}">게시글 내용</div>
                     </div>
-                    <div class="tag-filter-container" th:if="${postTags != null and !postTags.isEmpty()}" style="padding: 15px 25px; background: #fdfdfd; border-bottom: 1px solid #eee;">
-                        <span style="font-size: 13px; color: #888; margin-right: 12px;"><i class="fa-solid fa-tags"></i></span>
-                        <div th:replace="~{community/fragments/postTag :: tagList(tags=${postTags}, boardCode=${currentBoardCode})}" style="display: inline-block;"></div>
+                    <div class="tag-filter-wrapper" th:if="${boardTags != null and !boardTags.isEmpty()}">
+                        <div class="tag-filter-inner">
+                            <span class="tag-icon"><i class="fa-solid fa-tags"></i></span>
+                            <div th:replace="~{community/fragments/postTag :: tagList(tags=${boardTags}, boardCode=${currentBoardCode})}"></div>
+                        </div>
                     </div>
 
                     <hr>
@@ -103,7 +101,7 @@
                     <div class="page-footer">
                         <a th:href="@{/community/{code}(code=${board.code})}" class="btn">목록</a>
 
-                        <div class="edit-delete-group" th:if="${post.editable}">
+                        <div class="edit-delete-group" th:if="${#authentication.name == post.authorId}">
                             <a th:href="@{/community/{code}/edit/{id}(code=${board.code}, id=${post.id})}" class="btn-edit">수정</a>
                             <form th:action="@{/community/{code}/delete/{id}(code=${boardCode}, id=${post.id})}"
                                   method="post" style="display:inline;" id="deleteForm">

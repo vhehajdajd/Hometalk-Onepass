@@ -1,11 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <th:block th:replace="~{fragments/head :: head(pageTitle='커뮤니티')}"></th:block>
-
-    <link rel="stylesheet" th:href="@{/css/community/common.css}">
+    <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/community/post-list.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
@@ -23,9 +20,7 @@
         <!-- 상단 헤더 -->
         <th:block th:each="board : ${boards}">
             <div th:if="${boardId == board.id}">
-
                 <div th:switch="${categoryId}">
-
                     <div th:case="2">
                         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '자유' } })}"></div>
                     </div>
@@ -41,9 +36,7 @@
                     <div th:case="*" >
                         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '전체' } })}"></div>
                     </div>
-
                 </div>
-
             </div>
         </th:block>
 
@@ -55,9 +48,11 @@
             <div th:replace="~{community/fragments/boardListHeader :: boardListHeader(boards=${boards}, boardId=${boardId}, loginUser=${loginUser})}"></div>
             <div th:replace="~{community/fragments/categoryBanner :: categoryBanner(board=${board}, categories=${categories}, categoryId=${categoryId})}"></div>
 
-            <div class="tag-filter-container" th:if="${boardTags != null and !boardTags.isEmpty()}" style="padding: 15px 25px; background: #fdfdfd; border-bottom: 1px solid #eee;">
-                <span style="font-size: 13px; color: #888; margin-right: 12px;"><i class="fa-solid fa-tags"></i></span>
-                <div th:replace="~{community/fragments/postTag :: tagList(tags=${boardTags}, boardCode=${currentBoardCode})}" style="display: inline-block;"></div>
+            <div class="tag-filter-wrapper" th:if="${boardTags != null and !boardTags.isEmpty()}">
+                <div class="tag-filter-inner">
+                    <span class="tag-icon"><i class="fa-solid fa-tags"></i></span>
+                    <div th:replace="~{community/fragments/postTag :: tagList(tags=${boardTags}, boardCode=${currentBoardCode})}"></div>
+                </div>
             </div>
 
             <div class="content-container">

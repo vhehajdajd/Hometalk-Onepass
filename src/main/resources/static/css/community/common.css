@@ -2,7 +2,7 @@
     --main-navy: #032154;
     --point-coral: #EB6E57;
     --soft-mint: #D1E8E4;
-    --bg-gray: #F4F7F9;
+    --bg-gray: #fff;
     --border-color: #E2E8F0;
 }
 
@@ -10,7 +10,6 @@
 
 body {
     font-family: 'Segoe UI', Arial, Sans-serif;
-    background: #FAF4F0;
     color: #1e293b;
     line-height: 1.6;
 }
@@ -40,8 +39,8 @@ body {
 /* 페이지 공통 컨테이너 */
 .content-container {
     width: 100%; /* 모든 페이지 너비 통일 */
-    max-width: 1200px;
-    margin: 40px auto;
+    max-width: 1400px;
+    margin: 0 auto;
     padding: 40px;
     background: #ffffff;
     border-radius: 16px;
@@ -147,19 +146,52 @@ ul, li {
 .list-category.survey { background-color: #F6FFED; color: #52C41A; }
 
 /* 태그 스타일 */
+
+/* 태그 필터 전체 영역 */
+.tag-filter-wrapper {
+    width: 100%;
+    background: #ffffff; /* 배경을 흰색으로 통일하거나 아주 연한 회색으로 설정 */
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.tag-filter-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 15px 40px; /* 카테고리 배너와 좌우 패딩 일치 */
+    display: flex;
+    align-items: center;
+}
+
+.tag-icon {
+    font-size: 14px;
+    color: #cbd5e1;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+}
+
+/* 태그 리스트 내부 정렬 */
+.tag-list-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .tag-badge {
     display: inline-block;
-    background-color: #e9ecef;
-    color: #495057;
-    padding: 0.2em 0.6em;
-    font-size: 0.85em;
+    background-color: #f8fafc;
+    color: #64748b;
+    padding: 5px 12px;
+    font-size: 0.85rem;
     font-weight: 500;
-    border-radius: 4px;
-    margin-right: 5px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    transition: 0.2s ease;
 }
 .tag-badge:hover {
-    background-color: #e6f7ff;
-    border-color: #91d5ff;
+    background-color: var(--soft-mint);
+    color: var(--main-navy);
+    border-color: #b2d2cd;
 }
 
 .tag-badge::before {

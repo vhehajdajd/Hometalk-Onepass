@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <th:block th:replace="~{fragments/head :: head(pageTitle='커뮤니티')}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/community/common.css}">
+    <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/community/adminpage.css}">
 </head>
 
@@ -49,6 +48,9 @@
                                     <div class="category-item">
                                         <input type="text" name="categoryNames" placeholder="카테고리 이름 (예: 사진)" required>
                                         <input type="text" name="categoryCodes" placeholder="카테고리 영문명 (예: photo)" required style="flex: 1;">
+                                        <div class="color-picker-wrapper">
+                                            <input type="color" name="categoryColors" value="#EB6E57" title="카테고리 색상 선택">
+                                        </div>
                                         <button type="button" class="btn-remove" disabled>×</button>
                                     </div>
                                 </div>
