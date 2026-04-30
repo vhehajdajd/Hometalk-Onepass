@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 
 <body>
@@ -7,68 +7,90 @@
     Fragment Style 1 : main banner - BoardList
       - postList, postDetail, postForm에서 사용
 -->
-  <div th:fragment="boardListHeader(boards, boardId, loginUser)" class="boardList-header">
-    <style>
-      /* 게시판 전체 헤더 */
-      .boardList-header {
-        max-width: 100%; padding: 2rem 1rem; border-bottom: 1px solid #032154; margin-bottom: 2rem;
-      }
-      .boardList-header h1 {
-        font-size: 1.5rem; color: #170124; margin-bottom: 1.5rem;
-      }
-      /* 게시판 메뉴 네비게이션 */
-      .boardList-header nav {
-        display: flex; gap: 30px;
-      }
-      .boardList-header nav a {
-        text-decoration: none; color: #9EBFDB;
-        font-weight: 600; font-size: 1.1rem;
-        padding-bottom: 10px;
-        transition: all 0.2s ease;
-        border-bottom: 3px solid transparent;
-      }
-      .boardList-header nav a:hover {
-        color: #032154;
-        border-bottom: 3px solid #032154;
-      }
-      .boardList-header nav a.active {
-        color: #032154;
-        border-bottom: 3px solid #032154;
-      }
-      .boardList-header nav a:hover:not(.active) {
-        color: #3C6ABC;
-      }
+<div th:fragment="boardListHeader(boards, boardId, loginUser)" class="board-header-outer">
+  <style>
+    /* 1. 상단 전체 배경 및 중앙 정렬 */
+    .board-header-outer {
+      width: 100%;
+      background-color: #fff;
+      border-bottom: 1px solid var(--main-navy);
+      display: flex;
+      justify-content: center;
+    }
 
+    .board-header-inner {
+      width: 100%;
+      max-width: 1400px;
+      padding: 2rem 40px;
+    }
 
-      /* 관리자 링크 전용 스타일 추가 */
-      .admin-setup-link {
-        margin-left: auto; /* 게시판 메뉴와 떨어뜨려 오른쪽 끝으로 배치 */
-        color: #d9534f !important; /* 관리자용 강조 색상 */
-        display: flex;
-        align-items: center;
-        gap: 5px;
-      }
-      .admin-setup-link:hover {
-        color: #c9302c !important;
-        border-bottom-color: #c9302c !important;
-      }
-    </style>
+    .board-header-inner h1 {
+      font-size: 1.8rem;
+      color: var(--main-navy);
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
 
+    /* 2. 게시판 네비게이션 및 관리자 버튼 밀어내기 */
+    .board-nav {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: space-between; /* 양 끝 정렬 */
+    }
 
+    .board-links {
+      display: flex;
+      gap: 50px;
+    }
+
+    .board-links a {
+      color: #9EBFDB;
+      font-weight: 600;
+      font-size: 1.1rem;
+      padding-bottom: 10px;
+      border-bottom: 3px solid transparent;
+      transition: 0.2s;
+    }
+
+    .board-links a.active, .board-links a:hover {
+      color: var(--main-navy);
+      border-bottom: 3px solid var(--main-navy);
+    }
+
+    .admin-setup-link {
+      margin-left: auto; /* 게시판 링크들 다음 공간을 다 차지해서 오른쪽으로 밀어냄 */
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      color: #9EBFDB;
+      transition: 0.2s;
+    }
+
+    .admin-setup-link:hover {
+      background-color: #f1f5f9;
+      color: var(--main-navy);
+    }
+  </style>
+
+  <div class="board-header-inner">
     <h1>커뮤니티</h1>
-    <nav>
-      <a th:each="board : ${boards}" th:text="${board.name}"
-         th:href="@{/community/{code}(code=${board.code})}"
-         th:classappend="${boardId == board.id ? 'active' : ''}">
-        게시판 이름
-      </a>
-
-      <a th:if="${loginUser != null and loginUser.role == 'ADMIN'}"
-         href="/admin/main"
-         class="admin-setup-link">
-        <i class="fas fa-cog"></i> 관리자 설정
+    <nav class="board-nav">
+      <div class="board-links">
+        <a th:each="board : ${boards}"
+           th:href="@{/community/{code}(code=${board.code})}"
+           th:classappend="${boardId == board.id ? 'active' : ''}"
+           th:text="${board.name}">게시판 이름</a>
+      </div>
+      <!-- 관리자 버튼 -->
+      <a sec:authorize="hasRole('ADMIN')" th:href="@{/community/admin}" class="admin-setup-link">
+        <i class="fas fa-cog"></i>
       </a>
     </nav>
   </div>
+</div>
 </body>
 </html>

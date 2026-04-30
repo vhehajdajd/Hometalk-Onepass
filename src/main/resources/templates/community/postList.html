@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <th:block th:replace="~{fragments/head :: head(pageTitle='커뮤니티')}"></th:block>
-
-    <link rel="stylesheet" th:href="@{/css/community/common.css}">
+    <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/community/post-list.css}">
 </head>
 
@@ -22,9 +20,7 @@
         <!-- 상단 헤더 -->
         <th:block th:each="board : ${boards}">
             <div th:if="${boardId == board.id}">
-
                 <div th:switch="${categoryId}">
-
                     <div th:case="2">
                         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '자유' } })}"></div>
                     </div>
@@ -40,9 +36,7 @@
                     <div th:case="*" >
                         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '전체' } })}"></div>
                     </div>
-
                 </div>
-
             </div>
         </th:block>
 
@@ -53,7 +47,14 @@
         <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">
             <div th:replace="~{community/fragments/boardListHeader :: boardListHeader(boards=${boards}, boardId=${boardId}, loginUser=${loginUser})}"></div>
             <div th:replace="~{community/fragments/categoryBanner :: categoryBanner(board=${board}, categories=${categories}, categoryId=${categoryId})}"></div>
-            <p>태그(tags)</p> <!-- fragment 구현 예정 -->
+
+            <div class="tag-filter-wrapper" th:if="${boardTags != null and !boardTags.isEmpty()}">
+                <div class="tag-filter-inner">
+                    <span class="tag-icon"><i class="fa-solid fa-tags"></i></span>
+                    <div th:replace="~{community/fragments/postTag :: tagList(tags=${boardTags}, boardCode=${currentBoardCode})}"></div>
+                </div>
+            </div>
+
             <div class="content-container">
 
                 <div class="list-top-area">
@@ -110,7 +111,7 @@
                         <tbody th:if="${not #lists.isEmpty(posts)}">
                             <tr th:each="post : ${posts}" th:classappend="${post.pinned} ? 'pinned-row' : ''">
                                 <td>
-                                    <span th:if="${post.pinned}" class="pin-badge">📌</span>
+                                    <span th:if="${post.pinned}" class="pin-badge"></span>
                                     <span th:text="${post.categoryName}" class="list-category"
                                           th:classappend="${post.categoryCode != null} ? ${#strings.toLowerCase(post.categoryCode)} : ''">카테고리</span>
                                 </td>
@@ -119,6 +120,7 @@
                                        th:text="${post.title}"></a> <span th:if="${post.commentCount > 0}"
                                           th:text="'[' + ${post.commentCount} + ']'"
                                           class="comment-count-inline"></span>
+                                    <span th:if="${post.hasImage}" class="img-icon-grey"><i class="fa-regular fa-image"></i>️</span>
                                 </td>
                                 <td th:text="${post.viewCount}" class="view-count"></td>
                                 <td th:text="${post.writer}">작성자</td>
@@ -134,7 +136,7 @@
                 </div>
 
                 <div class="page-footer">
-                    <div class="pagination-wrapper" th:if="${not #lists.isEmpty(posts)}">
+                    <div class="pagination-wrapper">
                         <div th:replace="~{community/fragments/postpaging :: pagination(page=${page}, boardCode=${boardCode}, categoryCode=${categoryCode})}"></div>
                     </div>
                 </div>

@@ -9,8 +9,6 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder
 @Table(name = "tags")
 public class Tag {
 
@@ -20,6 +18,11 @@ public class Tag {
 
     @Column(nullable = false, unique = true)
     private String name;
+
+    @Builder
+    public Tag(String name) {
+        this.name = name;
+    }
 
     // 변경 method
     public void updateName(String name) {

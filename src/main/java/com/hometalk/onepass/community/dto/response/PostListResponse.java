@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @NoArgsConstructor
@@ -21,6 +24,9 @@ public class PostListResponse {
     private LocalDateTime createdAt;
     private int viewCount;
     private int commentCount;
+    private boolean hasImage;
+
+    private List<String> tags;
 
     public PostListResponse(Post post) {
         this.id = post.getId();
@@ -33,9 +39,21 @@ public class PostListResponse {
         this.createdAt = post.getCreatedAt();
         this.viewCount = post.getViewCount();
         this.commentCount = post.getComments().size();
+        this.hasImage = post.getContent() != null && post.getContent().contains("<img");
+        if (post.getPostTags() != null && !post.getPostTags().isEmpty()) {
+            this.tags = post.getPostTags().stream()
+                    .map(pt -> pt.getTag().getName())
+                    .collect(Collectors.toList());
+        } else {
+            this.tags = new ArrayList<>(); // null 대신 빈 리스트
+        }
     }
 
     public String getCategoryCode() {
         return categoryCode;
+    }
+
+    public boolean isHasImage() {
+        return this.hasImage;
     }
 }

@@ -2,7 +2,80 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
 <div th:fragment="boardList">
-    <p style="background: #eee; padding: 20px;">[게시판 목록 영역 준비 중]</p>
+    <table class="admin-management-table">
+        <thead>
+        <tr>
+            <th>게시판 명</th>
+            <th>카테고리 수</th>
+            <th>관리</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(boards)}">
+            <td colspan="6" class="no-data">등록된 게시판이 없습니다.</td>
+        </tr>
+
+        <tr th:each="board : ${boards}">
+            <td class="board-name">
+                <strong th:text="${board.name}">광장</strong>
+            </td>
+            <td>
+                <span class="badge-count" th:text="${#lists.size(board.categories)} + '개'">3개</span>
+            </td>
+            <td class="action-btns">
+                <a th:href="@{/community/admin/board/detail/{id}(id=${board.id})}"
+                   class="btn-detail"
+                   style="text-decoration: none; padding: 6px 12px; background: #4e73df; color: white; border-radius: 4px;">
+                    상세
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <script>
+        function toggleCreateForm() {
+        const form = document.getElementById('createFormContainer');
+        const btn = document.getElementById('btnToggleForm');
+
+        if (form.style.display === 'none') {
+            form.style.display = 'block';
+            btn.innerText = '× 닫기';
+            btn.classList.add('active');
+        } else {
+            form.style.display = 'none';
+            btn.innerText = '+ 새 게시판 등록';
+            btn.classList.remove('active');
+            }
+        }
+
+        function openEditModal(boardId, boardName) {
+            // 1. 모달의 기본 제목과 게시판 ID 세팅
+            document.getElementById('editBoardId').value = boardId;
+            document.getElementById('editBoardName').value = boardName;
+
+            // 2. 해당 게시판의 카테고리 목록을 서버에서 비동기로 가져오기 (fetch 사용)
+            fetch(`/admin/community/boards/${boardId}/categories`)
+                .then(res => res.json())
+                .then(categories => {
+                const listArea = document.getElementById('currentCategoryList');
+                listArea.innerHTML = ''; // 기존 내용 초기화
+
+                categories.forEach(cat => {
+                    // "all" 코드가 아닌 것만 수정/삭제 가능하게 표시
+                    if(cat.code !== 'all') {
+                        const tag = document.createElement('span');
+                        tag.className = 'category-tag';
+                        tag.innerHTML = `${cat.name} <i class="delete-icon" onclick="removeCategory(${cat.id})">×</i>`;
+                        listArea.appendChild(tag);
+                    }
+                });
+            });
+
+            // 3. 모달 띄우기
+            document.getElementById('editBoardModal').style.display = 'block';
+        }
+    </script>
 </div>
 
 </html>

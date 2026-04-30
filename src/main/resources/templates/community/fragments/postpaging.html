@@ -64,10 +64,10 @@
     </style>
 
 
-    <div th:if="${!page.isEmpty()}" class="pagination-container">
+    <div class="pagination-container">
         <div class="left-wing" style="grid-column: 1;"></div>
 
-        <nav aria-label="Page navigation" class="pagination-nav">
+        <nav aria-label="Page navigation" class="pagination-nav" th:if="${!page.isEmpty()}">
             <ul class="pagination">
 
                 <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
@@ -100,10 +100,10 @@
 
             </ul>
         </nav>
-
         <div class="action-wrapper">
             <a th:href="@{/community/{code}/write(code=${board.code})}" class="btn add-post-btn">글 작성</a>
         </div>
     </div>
+
 </div>
 </html>

@@ -1,5 +1,7 @@
 package com.hometalk.onepass.community.service;
 
+
+
 import com.hometalk.onepass.community.dto.response.CategoryResponseDTO;
 import com.hometalk.onepass.community.entity.Category;
 import com.hometalk.onepass.community.exception.CategoryNotFoundException;
@@ -47,4 +49,5 @@ public class CategoryService {
                 .orElseThrow(() -> new CategoryNotFoundException(categoryId, boardCode));
         return CategoryResponseDTO.from(category);
     }
+
 }

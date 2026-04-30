@@ -1,46 +1,81 @@
-// 1. 카테고리 추가 버튼 클릭 시
-document.getElementById('btn-add-category').addEventListener('click', () => {
+// 모달 열기
+function openCreateModal() {
+    document.getElementById('createModal').classList.add('show');
+}
+
+// 모달 닫기
+function closeModal() {
+    const modal = document.getElementById('createModal');
+    modal.classList.remove('show');
+
+    document.getElementById('createBoardForm').reset();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('category-container');
-    const newItem = document.querySelector('.category-item').cloneNode(true);
+    const addBtn = document.getElementById('btn-add-category');
+    const createBoardForm = document.getElementById('createBoardForm');
 
-    // 입력값 초기화 및 삭제 버튼 활성화
-    newItem.querySelectorAll('input').forEach(input => {
-        input.value = '';
-        input.classList.remove('error'); // 이전 에러 표시 제거
-    });
+    // 1. 카테고리 추가 로직 (게시판 생성 페이지용)
+    if (addBtn && container) {
+        addBtn.addEventListener('click', () => {
+            // 현재 존재하는 카테고리 아이템 중 첫 번째 것을 기준으로 복사
+            const items = document.querySelectorAll('.category-item');
+            if (items.length > 0) {
+                const newItem = items[0].cloneNode(true);
 
-    const removeBtn = newItem.querySelector('.btn-remove');
-    removeBtn.disabled = false; // 추가된 칸은 삭제 가능
-    removeBtn.addEventListener('click', () => newItem.remove());
+                // 이름(Names)과 코드(Codes) input을 모두 찾아서 초기화
+                const nameInput = newItem.querySelector('input[name="categoryNames"]');
+                const codeInput = newItem.querySelector('input[name="categoryCodes"]');
+                if (nameInput) {
+                    nameInput.value = '';
+                    nameInput.classList.remove('error');
+                }
+                if (codeInput) {
+                    codeInput.value = '';
+                    codeInput.classList.remove('error');
+                }
 
-    container.appendChild(newItem);
-});
+                if (colorInput) {
+                    colorInput.value = '#EB6E57';
+                }
 
-// 2. 저장 버튼 클릭 시 유효성 검사
-document.getElementById('btn-submit').addEventListener('click', () => {
-    let isValid = true;
-    const categoryInputs = document.querySelectorAll('input[name="categoryNames"]');
-
-    categoryInputs.forEach(input => {
-        if (input.value.trim() === "") {
-            input.classList.add('error'); // 코랄색 테두리 활성화
-            isValid = false;
-        } else {
-            input.classList.remove('error');
-        }
-    });
-
-    if (!isValid) {
-        alert("카테고리명은 필수입니다.");
-        return;
+                // 삭제 버튼 활성화 및 기능 연결
+                const removeBtn = newItem.querySelector('.btn-remove');
+                if (removeBtn) {
+                    removeBtn.disabled = false;
+                    removeBtn.onclick = function() {
+                        newItem.remove();
+                    };
+                }
+                container.appendChild(newItem);
+                // 새로 생긴 이름 칸에 바로 타이핑할 수 있게 포커스
+                nameInput?.focus();
+            }
+        });
     }
 
-    // 유효성 검사 통과 시 Fetch API로 서버에 데이터 전송
-    // AdminBoardCreateRequestDTO 형태에 맞춰서 JSON 구성
+    // 2. 폼 전송 전 유효성 검사 (게시판 생성 페이지용)
+    // 요소가 있을 때만 addEventListener를 실행하도록 수정
+    if (createBoardForm) {
+        createBoardForm.addEventListener('submit', (e) => {
+            const inputs = document.querySelectorAll('input[name="categoryNames"]');
+            const codeInputs = document.querySelectorAll('input[name="categoryCodes"]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('error');
+                    isValid = false;
+                } else {
+                    input.classList.remove('error');
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                alert("모든 칸(이름 및 영문 코드)을 입력해주세요.");
+            }
+        });
+    }
 });
-
-
-function toggleCreateForm() {
-    const form = document.getElementById('createFormArea');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-}

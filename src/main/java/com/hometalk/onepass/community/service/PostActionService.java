@@ -1,9 +1,11 @@
 package com.hometalk.onepass.community.service;
 
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
+import com.hometalk.onepass.community.entity.Category;
 import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.entity.Post;
 import com.hometalk.onepass.community.enums.PostStatus;
+import com.hometalk.onepass.community.repository.CategoryRepository;
 import com.hometalk.onepass.community.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,10 +40,11 @@ public class PostActionService {
         return post.isPinned();
     }
 
+    @Transactional
     public void saveAsDraft(Long postId, PostRequestDTO dto) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
-        post.update(dto);
+        post.update(dto.getTitle(), dto.getContent(), post.getCategory(), dto.getPostStatus());
         post.updateStatus(PostStatus.DRAFT);
     }
 
