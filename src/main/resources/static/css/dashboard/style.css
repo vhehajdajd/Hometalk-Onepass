@@ -5,7 +5,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
-    background: #f0f4f8; color: #1e293b;
+    /*background: #f0f4f8; color: #1e293b;*/
     line-height: 1.6;
     min-height: 100vh; display: flex;
     flex-direction: column;
@@ -169,9 +169,79 @@ body {
     푸터
 */
 .site-footer {
-    background: #1a1f35; padding: 1.5rem; text-align: center; color: #94a3b8;
+    background:  #1a1f35; padding: 1.5rem; text-align: center; padding: 1.5rem; text-align: center; color: #94a3b8; font-weight: 600;
     font-size: 0.85rem;
 }
 .site-footer .small {
     font-site: 0.75rem; color: #64748b;
 }
+
+/*
+카드 그리드 (.card-grid)
+- 카드 목록을 가로로 배치
+*/
+.card-grid {
+    display: grid;
+    /* 한 줄에 동일한 크기로 3개 배치 (1fr 1fr 1fr) */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 100px; /* 카드 사이의 간격 */
+    padding: 20px;
+}
+
+/*
+    카드 (.card)
+*/
+.card {
+    /* 기존 크기보다 크게 설정 */
+    width: 100%;           /* 부모 그리드 너비에 맞춤 */
+    min-height: 400px;     /* 높이를 기존의 약 2배로 설정 */
+    padding: 40px;         /* 내부 여백을 넉넉하게 (2배) */
+    border-radius: 20px;
+    background-color: #fff;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* 내용 중앙 정렬 */
+
+    position: relative; /* 위치 기준점 */
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;  /* 선 두께 */
+    height: 100%; /* 카드 높이 전체 */
+    background: linear-gradient(to bottom, #3498db, #2980b9); /* 파란색 그라데이션 */
+    border-radius: 4px 0 0 4px; /* 왼쪽 모서리만 둥글게 */
+}
+
+.card h2 {
+    font-size: 2.5rem;     /* 제목 크기 대폭 확대 */
+    margin-bottom: 20px;
+}
+.card .author {
+    font-size: 1.4rem;     /* 저자 이름 확대 */
+    color: #666;
+    margin-bottom: 30px;
+}
+.card .info {
+    font-size: 1.2rem;     /* 정보 텍스트 확대 */
+    line-height: 2;        /* 줄 간격 조절 */
+}
+
+.card .info span {
+    font-weight: bold;
+    color: #2c4f4a;        /* 강조색 */
+}
+
+/*
+    버튼 (.btn)
+*/
+.btn { display: inline-block; padding: 0.5rem 1.2rem; background: #3b82f6;
+    color: #fff; text-decoration: none; border-radius: 8px; font-size: 0.85rem;
+    font-weight: bold; border:none; cursor: pointer;
+}
+.btn:hover { background: #2563eb; }

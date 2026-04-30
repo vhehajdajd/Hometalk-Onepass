@@ -8,17 +8,17 @@
             <li style="margin-bottom: 30px;">
                 <a th:href="@{/}"
                    th:classappend="${currentPage == 'home'} ? 'active' : ''">
-                    My Website
+                    포레스트리움
                 </a>
             </li>
 
             <!-- 2. 메뉴 영역: 경로가 /notification으로 시작하면 강조 -->
-            <li>
-                <a th:href="@{/notification}"
-                   th:classappend="${currentPage == 'notification'} ? 'active' : ''">
-                    📚 알람 목록
-                </a>
-            </li>
+<!--            <li>-->
+<!--                <a th:href="@{/notification}"-->
+<!--                   th:classappend="${currentPage == 'notification'} ? 'active' : ''">-->
+<!--                    📚 알람 목록-->
+<!--                </a>-->
+<!--            </li>-->
 
             <!-- 3. 메뉴 영역: 경로가 /notice로 시작하면 강조 -->
             <li>

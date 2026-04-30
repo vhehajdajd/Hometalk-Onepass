@@ -5,6 +5,7 @@ import com.hometalk.onepass.parking.dto.request.VehicleApprovalRequest;
 import com.hometalk.onepass.parking.dto.response.VehicleApprovalResponse;
 import com.hometalk.onepass.parking.dto.response.VehicleResponse;
 import com.hometalk.onepass.parking.entity.Vehicle;
+import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -34,4 +35,13 @@ public interface VehicleService {
 
     // 관리자 - 차량 반려
     void reject(Long userId, Long approvalId, String rejectReason);
+
+    // 입주자 차량 삭제
+    void delete(Long vehicleId);
+
+    // 관리자 차량 삭제
+    void adminDelete(Long vehicleId);
+
+    //페이지네이션
+    Page<VehicleApprovalResponse> getApprovalList(Vehicle.VehicleStatus status, int page, int size);
 }

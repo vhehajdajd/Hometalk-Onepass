@@ -4,10 +4,8 @@ import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.parking.dto.response.ParkingLogResponse;
 import com.hometalk.onepass.parking.entity.ParkingLog;
 import com.hometalk.onepass.parking.entity.ParkingTicket;
-import com.hometalk.onepass.parking.entity.TicketUsage;
 import com.hometalk.onepass.parking.repository.ParkingLogRepository;
 import com.hometalk.onepass.parking.repository.ParkingTicketRepository;
-import com.hometalk.onepass.parking.repository.TicketUsageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,7 +24,6 @@ public class StaffExitService {
 
     private final ParkingLogRepository parkingLogRepository;
     private final ParkingTicketRepository parkingTicketRepository;
-    private final TicketUsageRepository ticketUsageRepository;
 
     // ─── 출차 차량 퀵서치 ────────────────────────────────────────
     @Transactional(readOnly = true)
@@ -47,10 +44,11 @@ public class StaffExitService {
     // ─── 주차 중인 방문 차량 목록 ────────────────────────────────
     @Transactional(readOnly = true)
     public List<ParkingLogResponse> getParkedVisitList() {
-        return parkingLogRepository.findByStatus(ParkingLog.ParkingStatus.PARKED)
+        return parkingLogRepository.findValidParkedLogs()   // 🔥 핵심 변경
                 .stream()
-                .filter(parkingLog -> parkingLog.getEntryType() == ParkingLog.EntryType.RESERVATION
-                        || parkingLog.getEntryType() == ParkingLog.EntryType.MANUAL)
+                .filter(parkingLog ->
+                        parkingLog.getEntryType() == ParkingLog.EntryType.RESERVATION
+                                || parkingLog.getEntryType() == ParkingLog.EntryType.MANUAL)
                 .map(parkingLog -> {
                     int availableMinutes = getAvailableMinutes(parkingLog);
                     return new ParkingLogResponse(parkingLog, availableMinutes);
@@ -61,9 +59,10 @@ public class StaffExitService {
     // ─── 주차 중인 입주자 차량 목록 ──────────────────────────────
     @Transactional(readOnly = true)
     public List<ParkingLogResponse> getParkedResidentList() {
-        return parkingLogRepository.findByStatus(ParkingLog.ParkingStatus.PARKED)
+        return parkingLogRepository.findValidParkedLogs()   // 🔥 핵심 변경
                 .stream()
-                .filter(parkingLog -> parkingLog.getEntryType() == ParkingLog.EntryType.NORMAL)
+                .filter(parkingLog ->
+                        parkingLog.getEntryType() == ParkingLog.EntryType.NORMAL)
                 .map(parkingLog -> {
                     int availableMinutes = getAvailableMinutes(parkingLog);
                     return new ParkingLogResponse(parkingLog, availableMinutes);
@@ -81,7 +80,6 @@ public class StaffExitService {
             throw new IllegalStateException("이미 출차된 차량입니다.");
         }
 
-        // 세대 미확인 차량은 일반 출차 불가
         if (parkingLog.getHousehold() == null) {
             throw new IllegalStateException("세대 미확인 차량입니다. 강제 출차 처리해주세요.");
         }
@@ -89,7 +87,13 @@ public class StaffExitService {
         int totalMinutes = (int) Duration.between(
                 parkingLog.getEntryTime(), LocalDateTime.now()).toMinutes();
 
-        // 미리 적용된 티켓 시간으로 출차 가능 여부 확인
+        // 입주자 차량은 티켓 체크 없이 바로 출차
+        if (parkingLog.getEntryType() == ParkingLog.EntryType.NORMAL) {
+            parkingLog.exit(totalMinutes, totalMinutes);
+            return;
+        }
+
+        // 방문/수동 차량은 티켓으로 커버 가능해야 출차
         int applied = parkingLog.getAppliedMinutes() != null
                 ? parkingLog.getAppliedMinutes() : 0;
 
@@ -98,10 +102,9 @@ public class StaffExitService {
         }
 
         parkingLog.exit(totalMinutes, Math.min(applied, totalMinutes));
-        // TODO: 알림 - "출차 완료"
     }
 
-    // ─── 강제 출차 처리 (현장 결제 완료 후) ─────────────────────
+    // ─── 강제 출차 처리 ─────────────────────────────────────────
     @Transactional
     public void forceExit(Long parkingId) {
         ParkingLog parkingLog = parkingLogRepository.findByIdWithLock(parkingId)
@@ -117,12 +120,10 @@ public class StaffExitService {
         int appliedMinutes = parkingLog.getAppliedMinutes() != null
                 ? parkingLog.getAppliedMinutes() : 0;
 
-        // appliedMinutes가 totalMinutes 초과하지 않도록 보정
         appliedMinutes = Math.min(appliedMinutes, totalMinutes);
 
         parkingLog.exit(totalMinutes, appliedMinutes);
         log.info("강제 출차 처리 - parkingId: {}, 현장 결제 완료", parkingId);
-        // TODO: 알림 - "출차 완료"
     }
 
     // ─── 사용 가능한 티켓 시간 계산 ─────────────────────────────
@@ -138,6 +139,7 @@ public class StaffExitService {
                 .findByHouseholdAndTypeAndIssueYearAndIssueMonth(
                         household, ParkingTicket.TicketType.DAY,
                         today.getYear(), today.getMonthValue());
+
         if (dayTicketOpt.isPresent()) {
             availableMinutes += dayTicketOpt.get().getRemainingCount()
                     * ParkingTicket.TicketType.DAY.toMinutes(1);
@@ -148,6 +150,7 @@ public class StaffExitService {
                 .findByHouseholdAndTypeAndIssueYearAndIssueMonth(
                         household, ParkingTicket.TicketType.HOUR,
                         today.getYear(), today.getMonthValue());
+
         if (hourTicketOpt.isPresent()) {
             availableMinutes += hourTicketOpt.get().getRemainingCount()
                     * ParkingTicket.TicketType.HOUR.toMinutes(1);

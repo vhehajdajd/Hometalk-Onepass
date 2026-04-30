@@ -21,7 +21,14 @@
             <!-- 메인 콘텐츠 -->
             <main class="content" style="flex: 1;">
                 <div style="min-height: 930px;">
-                    <h1>대시보드 홈 화면 입니다.</h1>
+<!--                    <h1>대시보드 홈 화면 입니다.</h1>-->
+                    <div class="card-grid">
+                        <div th:each="num : ${#numbers.sequence(1, 6)}">
+                            <div th:replace="~{dashboard/dashboard-card :: dashboardCard}">
+                                북 카드 자리 (서버 실행시 fragment로 교체됨)
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
 

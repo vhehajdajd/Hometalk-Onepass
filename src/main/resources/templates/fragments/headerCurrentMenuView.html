@@ -51,10 +51,11 @@
                 <th:block th:if="${iter.index == 0}">
                     <span style="color: #0526ad; font-weight: 500" th:switch="${p}">
                         <span th:case="'home'">대시보드</span>
-                        <span th:case="'notification'">알람 목록</span>
+                        <span th:case="'notification'">알림</span>
                         <span th:case="'parking'">주차</span>
                         <span th:case="'billing'">관리비</span>
-                        <span th:case="'notice'">일정관리</span>
+                        <span th:case="'notice'">공지 사항</span>
+                        <span th:case="'schedule'">일정</span>
                         <span th:case="'community'">커뮤니티</span>
                     </span>
                 </th:block>
