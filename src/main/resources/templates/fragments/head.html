@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <!--알림-->
+    <meta name="ctx" th:content="@{/}">
+    <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
+    <script th:src="@{/js/notification/notification-sse.js}"></script>
+    <script th:src="@{/js/notification/notification-bell.js}"></script>
+
     <title th:text="${pageTitle} + ' | Forest Lium'">Forest Lium</title>
     <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
 </head>

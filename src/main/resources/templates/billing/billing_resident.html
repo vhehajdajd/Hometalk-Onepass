@@ -31,7 +31,6 @@
             <!-- 미납 배너 (미납 시만 노출) -->
             <div class="bp-alert-box" th:if="${unpaidList != null and !unpaidList.isEmpty()}">
                 <div class="bp-alert-inner">
-                    <div class="bp-alert-icon">!</div>
                     <div class="bp-alert-title">
                         <span th:each="b, stat : ${unpaidList}">
                             <th:block th:text="${b.billingMonth}"></th:block>

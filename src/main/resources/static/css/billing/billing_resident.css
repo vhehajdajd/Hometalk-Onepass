@@ -37,9 +37,9 @@
     margin-bottom: 28px;
 }
 .bp-card {
-    background: #f5f6f9;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
+    border-shadow: 5px;
     padding: 14px 16px;
 }
 .bp-card-label { font-size: 13px; color: var(--color-text-muted); margin-bottom: 6px; }

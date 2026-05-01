@@ -53,7 +53,7 @@
 
 .data-table thead th {
     padding: 18px 16px;
-    text-align: left;
+    text-align: center;
     font-size: 15px;
     font-weight: 600;
     color: var(--color-text-muted);
@@ -150,23 +150,6 @@
 }
 .btn-danger:hover    { background: #d83c2d; color: #fff; opacity: 1; }
 .btn-danger:disabled { opacity: .6; cursor: not-allowed; }
-
-/* ── 관리자 탭 네비게이션 ── */
-.admin-tab-nav { display: flex; gap: 0; height: 100%; align-items: flex-end; }
-.admin-tab-btn {
-    display: flex;
-    align-items: center;
-    padding: 0 22px;
-    height: 44px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-text-muted);
-    text-decoration: none;
-    border-bottom: 2px solid transparent;
-    transition: color .15s, border-color .15s;
-}
-.admin-tab-btn:hover  { color: var(--color-main); }
-.admin-tab-btn.active { color: var(--color-sub); border-bottom-color: var(--color-sub); }
 
 /* ── 업로드 완료 배너 ── */
 .upload-done-banner {

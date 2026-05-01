@@ -183,13 +183,13 @@ public class BillingApiController {
     //   → { insertCount, updateCount }
     // ─────────────────────────────────────────────
 
- /*   @PostMapping("/admin/upload/confirm")
+    @PostMapping("/admin/upload/confirm")
     public ResponseEntity<BillingUploadService.UploadConfirmResult> confirmUpload(
             @RequestBody  List<BillingUploadService.UploadRow> rows,
             @RequestParam(defaultValue = "1") Long adminId   // TODO: CustomUserDetails로 교체
     ) {
         return ResponseEntity.ok(billingUploadService.confirmUpload(rows, adminId));
-    }*/
+    }
     // ─────────────────────────────────────────────
     // 관리자: 월별 전체 삭제 (실수 업로드 복구용)
     //   DELETE /api/billing/admin/month/2026-03?adminId=1

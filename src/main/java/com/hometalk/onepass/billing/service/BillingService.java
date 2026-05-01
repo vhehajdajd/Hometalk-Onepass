@@ -126,6 +126,7 @@ public class BillingService {
             long   paidCount,          // 필터 기준 PAID 수
             long   unpaidCount,        // 필터 기준 UNPAID 수
             double paidRate,           // paidCount / totalHouseholds * 100
+            long   unpaidAmount,             // 당월 미납 총액
 
             // 아랫줄: 전체 기간 고정
             long   globalUnpaidBillings,    // 전체 기간 UNPAID billing 건수
@@ -153,6 +154,13 @@ public class BillingService {
                 ? Math.round((double) paidCount / totalHouseholds * 1000.0) / 10.0
                 : 0.0;
 
+        // 당월 미납 총액
+        String currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+        Long unpaidSum = billingRepository.sumTotalAmountByBillingMonthAndStatus(
+                currentMonth, BillingStatus.UNPAID);
+        long unpaidAmount = unpaidSum != null ? unpaidSum : 0L;
+
+
         // 아랫줄: 전체 기간 고정 통계
         String overdueBefore = YearMonth.now().minusMonths(3).toString();
         long globalUnpaidBillings   = billingRepository.countAllUnpaid();
@@ -161,8 +169,11 @@ public class BillingService {
 
         return new AdminDashboardStats(
                 totalHouseholds, paidCount, unpaidCount, paidRate,
-                globalUnpaidBillings, globalUnpaidHouseholds, globalOverdueHouseholds
+                globalUnpaidBillings, globalUnpaidHouseholds, globalOverdueHouseholds, unpaidAmount
         );
+
+
+
     }
 
 

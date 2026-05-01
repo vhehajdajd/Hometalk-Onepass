@@ -7,6 +7,7 @@ package com.hometalk.onepass.billing.dto;
  *  - 입주민 관리비 내역 리스트
  *  - 관리자 미납 세대 관리 목록
  *  - 관리자 고지서 업로드 유효성 검사 + 미리보기 테이블
+ *  - 대시보드 알림 연동
  */
 
 import com.hometalk.onepass.billing.entity.Billing;
@@ -16,6 +17,7 @@ import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Getter
 @Builder
@@ -66,6 +68,22 @@ public class BillingSummaryResponse {
                 .status(billing.getStatus())
                 .lastUploadType(billing.getLastUploadType())
                 .build();
+    }
+
+    // com.hometalk.onepass.billing.service.BillingService
+
+    public BillingSummaryResponse convertToSummary(Long householdId, String month) {
+        // 1. 해당 가구와 월에 해당하는 데이터가 이미 있는지 조회
+        Optional<Billing> existingBilling = billingRepository.findByHouseholdIdAndBillingMonth(householdId, month);
+
+        // 2. 있다면 ID를 넘기고(UPDATE 대상), 없다면 null을 넘김(INSERT 대상)
+        return new BillingSummaryResponse(
+                existingBilling.map(Billing::getId).orElse(null),
+                householdName,
+                month,
+                totalAmount,
+                "UNPAID"
+        );
     }
 
 }

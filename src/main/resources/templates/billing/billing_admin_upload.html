@@ -27,8 +27,9 @@
 
         <header class="category-menu-bar">
             <nav class="admin-tab-nav">
-                <a th:href="@{/billing/admin/upload}"  class="admin-tab-btn active">고지서 업로드</a>
-                <a th:href="@{/billing/admin/monthly}" class="admin-tab-btn">월별 관리</a>
+                <a th:href="@{/billing/admin/unpaid}"  class="admin-tab-btn" th:classappend="${currentUri != null and currentUri.contains('unpaid')}  ? ' active'">미납 세대 관리</a>
+                <a th:href="@{/billing/admin/monthly}" class="admin-tab-btn" th:classappend="${currentUri != null and currentUri.contains('monthly')} ? ' active'">월별 DB 관리</a>
+                <a th:href="@{/billing/admin/upload}"  class="admin-tab-btn" th:classappend="${currentUri != null and currentUri.contains('upload')}  ? ' active'">고지서 업로드</a>
             </nav>
         </header>
 

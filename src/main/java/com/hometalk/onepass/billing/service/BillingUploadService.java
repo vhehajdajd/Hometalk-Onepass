@@ -33,7 +33,6 @@ public class BillingUploadService {
     // 유효성 검사 + 미리보기
     // ─────────────────────────────────────────────
 
-/*
     @Transactional(readOnly = true)
     public UploadPreviewResult validateAndPreview(List<UploadRow> rows) {
 
@@ -54,7 +53,7 @@ public class BillingUploadService {
             UpsertType upsertType = UpsertType.ERROR;
 
             if (!hasError) {
-                Optional<Household> householdOpt = findHousehold(row.getHouseholdId());
+                Optional<Household> householdOpt = findHousehold(row.getHouseholdId(), "00000");
 
                 if (householdOpt.isPresent()) {
                     Household household = householdOpt.get();
@@ -91,13 +90,12 @@ public class BillingUploadService {
 
         return new UploadPreviewResult(rows.size(), errorCount, previewRows);
     }
-*/
 
     // ─────────────────────────────────────────────
     // 업로드 확정 (UPSERT)
     // ─────────────────────────────────────────────
 
-   /* @Transactional
+    @Transactional
     public UploadConfirmResult confirmUpload(List<UploadRow> rows, Long adminId) {
 
         int insertCount = 0;
@@ -106,7 +104,7 @@ public class BillingUploadService {
         for (UploadRow row : rows) {
             if (validate(row) != null) continue;
 
-            Optional<Household> householdOpt = findHousehold(row.getHouseholdId());
+            Optional<Household> householdOpt = findHousehold(row.getHouseholdId(), "00000");
             if (householdOpt.isEmpty()) continue;
 
             Household household = householdOpt.get();
@@ -156,7 +154,7 @@ public class BillingUploadService {
         }
 
         return new UploadConfirmResult(insertCount, updateCount);
-    }*/
+    }
 
     // ─────────────────────────────────────────────
     // 유효성 검사
@@ -175,14 +173,12 @@ public class BillingUploadService {
     // 내부 유틸
     // ─────────────────────────────────────────────
 
-    private Optional<Household> findHousehold(
-            String householdId, String postNum) {
+    private Optional<Household> findHousehold(String householdId, String postNum) {
         String[] parts = householdId.split("-");
         if (parts.length < 2) return Optional.empty();
         String dong = parts[0] + "동";
         String ho   = parts[1] + "호";
-        return householdRepository
-                .findByPostNumAndDongAndHo(postNum, dong, ho);
+        return householdRepository.findByPostNumAndDongAndHo(postNum, dong, ho);
     }
 
     // ─────────────────────────────────────────────

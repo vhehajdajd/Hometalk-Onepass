@@ -140,6 +140,7 @@ body {
     padding: 3px 10px;
     border-radius: 4px;
     font-size: 14px;
+    text-align: center;
 }
 .badge-unpaid  { background: var(--color-unpaid-bg);  color: var(--color-unpaid-text); }
 .badge-paid    { background: var(--color-paid-bg);    color: var(--color-paid-text);   }
