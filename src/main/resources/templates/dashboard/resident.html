@@ -111,22 +111,31 @@
                             <div class="ticket-row">
                                 <div class="ticket-box">
                                     <div class="ticket-label">1일권</div>
-                                    <div class="ticket-count" id="dayTicket">-</div>
-                                    <div class="ticket-unit">개</div>
+                                    <div class="ticket-count-wrap">
+                                        <div class="ticket-count" id="dayTicket">-</div>
+                                        <div class="ticket-unit">개</div>
+                                    </div>
                                 </div>
                                 <div class="ticket-box">
                                     <div class="ticket-label">1시간권</div>
-                                    <div class="ticket-count" id="hourTicket">-</div>
-                                    <div class="ticket-unit">개</div>
+                                    <div class="ticket-count-wrap">
+                                        <div class="ticket-count" id="hourTicket">-</div>
+                                        <div class="ticket-unit">개</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
+
                 <!-- 3행 -->
                 <div class="row-3">
                     <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">관리비</span>
+                            <a class="card-more" th:href="@{/billing}">더보기 &rsaquo;</a>
+                        </div>
                         <div id="billingContent"><div class="loading">불러오는 중...</div></div>
                     </div>
                     <div class="card">
@@ -311,20 +320,18 @@
         var st = data.status==='UNPAID' ? '미납' : '납부완료';
         var dateStr = data.dueDate ? data.dueDate.replace(/-/g, '년 ').replace(/년 (\d+)년 (\d+)/, '년 $1월 $2일') : '-';
         el.innerHTML =
-            '<div class="billing-card-header">'+
-                '<div class="billing-card-left">'+
-                    '<span class="billing-card-label">관리비</span>'+
-                    '<span class="billing-status-badge '+data.status+'">'+st+'</span>'+
-                '</div>'+
-                '<a class="card-more" href="/hometop/billing">더보기 &rsaquo;</a>'+
+            '<div style="display:flex; justify-content:flex-end;">'+
+                '<span class="billing-status-badge '+data.status+'">'+st+'</span>'+
+            '</div>'+
+            '<div class="billing-card-row-wrap">'+
+            '<div class="billing-card-row">'+
+            '<span class="billing-card-row-label">'+data.billingMonth+' 관리비</span>'+
+            '<span class="billing-card-row-value">'+comma(data.totalAmount)+'원</span>'+
             '</div>'+
             '<div class="billing-card-row">'+
-                '<span class="billing-card-row-label">'+data.billingMonth+' 관리비</span>'+
-                '<span class="billing-card-row-value">'+comma(data.totalAmount)+'원</span>'+
+            '<span class="billing-card-row-label">납부기한</span>'+
+            '<span class="billing-card-row-value">'+dateStr+'</span>'+
             '</div>'+
-            '<div class="billing-card-row">'+
-                '<span class="billing-card-row-label">납부기한</span>'+
-                '<span class="billing-card-row-value">'+dateStr+'</span>'+
             '</div>';
     }
 

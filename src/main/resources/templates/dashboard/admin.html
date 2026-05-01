@@ -102,20 +102,16 @@
                             <span class="card-title">주차 현황</span>
                             <a class="card-more" th:href="@{/admin/vehicle/approval}">더보기 &rsaquo;</a>
                         </div>
-                        <div class="parking-section">
-                            <div class="parking-section-title">현재 주차 중</div>
-                            <div class="ticket-box" style="margin-bottom:10px;">
-                                <div class="ticket-label">주차 중인 차량</div>
-                                <div class="ticket-count" id="parkedCount">-</div>
-                                <div class="ticket-unit">대</div>
+                        <div class="parking-stat-row">
+                            <div class="parking-stat-box blue">
+                                <div class="parking-stat-count" id="parkedCount">-</div>
+                                <div class="parking-stat-unit">대</div>
+                                <div class="parking-stat-label">현재 주차 중</div>
                             </div>
-                        </div>
-                        <div class="parking-section">
-                            <div class="parking-section-title">승인 대기</div>
-                            <div class="ticket-box">
-                                <div class="ticket-label">승인 대기 차량</div>
-                                <div class="ticket-count" id="pendingCount">-</div>
-                                <div class="ticket-unit">대</div>
+                            <div class="parking-stat-box yellow">
+                                <div class="parking-stat-count" id="pendingCount">-</div>
+                                <div class="parking-stat-unit">대</div>
+                                <div class="parking-stat-label">승인 대기</div>
                             </div>
                         </div>
                     </div>
