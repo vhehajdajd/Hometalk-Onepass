@@ -5,7 +5,6 @@
  * 헤더 fragment에 다음 마크업 필요:
  *   <div class="noti-bell-wrap" style="position:relative">
  *       <a class="noti-bell" id="noti-bell-trigger">
- *           <span class="noti-bell__icon">🔔</span>
  *           <span class="noti-bell__badge" id="noti-bell-badge"></span>
  *       </a>
  *       <div class="noti-dropdown" id="noti-dropdown">
@@ -82,11 +81,15 @@
 
         if (count > 0) {
             badge.textContent = count > 99 ? '99+' : count;
+            badge.style.display = 'flex';     // 추가: 숫자가 있을 때만 노출
             badge.classList.add('is-active');
         } else {
+            badge.style.display = 'none';     // 추가: 숫자가 없으면 숨김
             badge.classList.remove('is-active');
         }
     }
+
+
 
     // ─────────────────── 드롭다운 토글 ───────────────────
 

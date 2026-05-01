@@ -70,20 +70,6 @@ public class BillingSummaryResponse {
                 .build();
     }
 
-    // com.hometalk.onepass.billing.service.BillingService
 
-    public BillingSummaryResponse convertToSummary(Long householdId, String month) {
-        // 1. 해당 가구와 월에 해당하는 데이터가 이미 있는지 조회
-        Optional<Billing> existingBilling = billingRepository.findByHouseholdIdAndBillingMonth(householdId, month);
-
-        // 2. 있다면 ID를 넘기고(UPDATE 대상), 없다면 null을 넘김(INSERT 대상)
-        return new BillingSummaryResponse(
-                existingBilling.map(Billing::getId).orElse(null),
-                householdName,
-                month,
-                totalAmount,
-                "UNPAID"
-        );
-    }
 
 }

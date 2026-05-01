@@ -1,5 +1,6 @@
 package com.hometalk.onepass.notification.service;
 
+import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.notification.dto.NotificationResponse;
 import com.hometalk.onepass.notification.entity.Notification;
 import com.hometalk.onepass.notification.entity.NotificationRead;
@@ -19,6 +20,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.management.relation.Role;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,6 +31,28 @@ public class NotificationService {
 
     private final NotificationRepository     notificationRepository;
     private final NotificationReadRepository notificationReadRepository;
+
+    // ─────────────────── 전 모듈 호출  ───────────────────
+
+// com.hometalk.onepass.notification.service.NotificationService
+
+    @Transactional
+    public void sendAdminNotification(String category, String title, String message) {
+        // Role.ADMIN -> Role.ROLE_ADMIN 으로 수정 (에러 해결)
+        List<User> admins = userRepository.findByRole(Role.ROLE_ADMIN);
+
+        for (User admin : admins) {
+            Notification noti = Notification.builder()
+                    .user(admin)
+                    .category(category)
+                    .title(title)
+                    .message(message)
+                    .isRead(false)
+                    .build();
+            notificationRepository.save(noti);
+            sseService.send(admin.getId(), NotificationResponse.from(noti));
+        }
+    }
 
     // ─────────────────── 조회 ───────────────────
 

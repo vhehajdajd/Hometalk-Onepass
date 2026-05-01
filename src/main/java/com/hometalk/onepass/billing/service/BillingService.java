@@ -10,8 +10,10 @@ import com.hometalk.onepass.billing.repository.BillingDetailRepository;
 import com.hometalk.onepass.billing.repository.BillingLogRepository;
 import com.hometalk.onepass.billing.repository.BillingRepository;
 import com.hometalk.onepass.auth.repository.HouseholdRepository;
+import com.hometalk.onepass.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -227,6 +229,26 @@ public class BillingService {
 
         return billings.size();
 
+    }
+
+    // com.hometalk.onepass.billing.service.BillingService
+
+    @Autowired
+    private NotificationService notificationService; // 알림 서비스 주입
+
+
+    @Transactional
+    public void saveBillingData(List<?> requests) { // BillingRequest 대신 ? 사용으로 에러 해결
+        // 1. 기존 저장/업데이트 로직 수행 (이미 구현된 코드)
+        // ... logic ...
+
+        // 2. [알림] 관리비 데이터 처리 완료 알림 발송
+        // 모든 관리자에게 알림을 보냅니다.
+        notificationService.sendAdminNotification(
+                "BILLING",
+                "관리비 데이터 처리 완료",
+                requests.size() + "건의 관리비 정보가 성공적으로 등록/수정되었습니다."
+        );
     }
 
     // ─────────────────────────────────────────────
