@@ -5,7 +5,7 @@
     <link rel="stylesheet" th:href="@{/css/community/adminpage.css}">
 </head>
 
-<body class="main-layout">
+<body>
 <div class="main-layout" style="display: flex; min-height: 100vh;">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
     <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
@@ -27,9 +27,20 @@
                         <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
                     </div>
                 </div>
+
+                <div class="admin-guide">
+                    <h3>📌 관리자 페이지 안내</h3>
+                    <p>게시판과 카테고리를 생성 및 관리할 수 있습니다.</p>
+                    <ul>
+                        <li>게시판은 최대 5개까지 생성 가능합니다.</li>
+                        <li>카테고리는 게시판별로 최대 5개까지 생성 가능합니다.</li>
+                        <li>시스템 기본 데이터는 수정/삭제가 불가능합니다.</li>
+                    </ul>
+                </div>
+
                 <div class="admin-header">
                     <h2>커뮤니티 설정</h2>
-                    <button type="button" class="btn-create-main" onclick="openCreateModal()">
+                    <button type="button" class="btn btn-primary" onclick="openCreateModal()">
                         + 새 게시판
                     </button>
                 </div>
@@ -63,8 +74,8 @@
                             </div>
 
                             <div class="form-actions">
-                                <button type="submit" class="btn-save" id="btn-submit">저장하기</button>
-                                <button type="button" class="btn-close" onclick="closeModal()">취소</button>
+                                <button type="submit" class="btn btn-save" id="btn-submit">저장하기</button>
+                                <button type="button" class="btn btn-close" onclick="closeModal()">취소</button>
                             </div>
                         </form>
                     </div>

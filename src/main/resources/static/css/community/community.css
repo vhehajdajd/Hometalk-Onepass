@@ -65,6 +65,8 @@
     font-size: var(--font-small);
     font-weight: 600;
     display: inline-block;
+    background-color: #f0f0f0;
+    color: #333;
 }
 
 /* 카테고리별 색상 */

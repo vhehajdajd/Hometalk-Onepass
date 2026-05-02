@@ -32,7 +32,7 @@
 
                         <!-- 카테고리 -->
                         <span class="list-category"
-                              th:classappend="${post.categoryCode}"
+                              th:style="|background-color: ${post.categoryBgColor ?: '#eee'}; color: ${post.categoryTextColor ?: '#333'};|"
                               th:text="${post.categoryName}">카테고리</span>
                         <span th:if="${post.categoryCode == 'share' and post.marketStatus != null}"
                               th:text="${post.marketStatusDescription}"></span>

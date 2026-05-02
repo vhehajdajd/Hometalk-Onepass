@@ -81,7 +81,7 @@ ul, li {
     white-space: nowrap;
 }
 
-.title-cell:hover {
+.title-cell a:hover {
     color: var(--color-btn-point);
     text-decoration: underline;
     cursor: pointer;
@@ -251,9 +251,18 @@ ul, li {
     justify-self: end;
 }
 
+/* =========================
+   9. 배지 (상태)
+========================= */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+}
 
 /* =========================
-   7. UTILS
+   8. UTILS
 ========================= */
 .mt-sm { margin-top: var(--spacing-sm); }
 .mt-md { margin-top: var(--spacing-md); }

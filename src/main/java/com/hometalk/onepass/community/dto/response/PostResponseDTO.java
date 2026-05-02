@@ -35,6 +35,9 @@ public class PostResponseDTO {
 
     private boolean hasImage;
 
+    private String categoryBgColor;
+    private String categoryTextColor;
+
     // 1. 시스템 관리 상태
     private String postStatus;                  // 로직용 - "ACTIVE", "HIDDEN" (CSS 클래스나 조건문용)
     private String postStatusDescription;       // 표시용 - "활성", "숨김" (사용자 화면 출력용)
@@ -58,6 +61,9 @@ public class PostResponseDTO {
             this.categoryId = post.getCategory().getId();
             this.categoryName = post.getCategory().getName();
             this.categoryCode = post.getCategory().getCode();
+            // 색상 필드 매핑
+            this.categoryBgColor = post.getCategory().getBgColor();
+            this.categoryTextColor = post.getCategory().getTextColor();
 
             // 종속 관계를 안전하게 연결
             if (post.getCategory().getBoard() != null) {

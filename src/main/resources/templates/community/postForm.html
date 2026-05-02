@@ -19,10 +19,18 @@
             <div th:replace="~{community/fragments/categoryBanner :: categoryBanner(board=${board}, categories=${categories}, categoryId=${categoryId})}"></div>
 
             <div class="content-container">
+
                 <div class="form-top-actions">
-                    <button type="button" id="btnLoadTemp" class="btn-sub" th:data-board-code="${boardCode}">
-                        임시저장 목록 (<span th:text="${tempCount}">0</span>)
-                    </button>
+                    <div class="temp-action-group">
+                        <button type="button" th:if="${post.id == null}"
+                                id="btnSaveTemp" th:data-board-code="${boardCode}"
+                                class="btn btn-temp-save">
+                            임시저장
+                        </button>
+                        <button type="button" id="btnLoadTemp" class="btn btn-temp-sub" th:data-board-code="${boardCode}">
+                            임시저장 목록 (<span th:text="${tempCount}">0</span>)
+                        </button>
+                    </div>
                 </div>
 
                 <form th:action="${post.id == null}
@@ -52,7 +60,7 @@
 
                         <div class="editor-wrapper">
                             <input type="hidden" id="content" name="content" th:field="*{content}">
-                            <div id="editor" style="height: 450px; background: white;"></div>
+                            <div id="editor"></div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">태그 입력</label>
@@ -68,16 +76,16 @@
                     </div>
 
                     <div class="page-footer">
-                        <div class="left-box">
-                            <a th:href="@{/community/{code}(code=${board.code})}"
-                               onclick="return confirmCancel()" class="btn btn-outlinel">취소</a>
-                        </div>
+                        <div class="footer-content">
+                            <div class="left-box">
+                                <a th:href="@{/community/{code}(code=${board.code})}"
+                                   onclick="return confirmCancel()" class="btn btn-outline">취소</a>
+                            </div>
 
-                        <div class="right-box">
-                            <button type="button" th:if="${post.id == null}"
-                                    id="btnSaveTemp" th:data-board-code="${boardCode}">임시저장</button>
-                            <button type="submit" onclick="document.getElementById('isTemp').value='false'"
-                                    class="btn btn-primary">등록</button>
+                            <div class="right-box">
+                                <button type="submit" onclick="document.getElementById('isTemp').value='false'"
+                                        class="btn btn-primary">등록</button>
+                            </div>
                         </div>
                     </div>
                 </form>

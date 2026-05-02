@@ -76,8 +76,10 @@
                             <tbody th:if="${not #lists.isEmpty(posts)}">
                                 <tr th:each="post : ${posts}" th:classappend="${post.pinned} ? 'pinned' : ''">
                                     <td class="text-center">
-                                        <span th:text="${post.categoryName}" class="list-category"
-                                              th:classappend="${post.categoryCode != null} ? ${#strings.toLowerCase(post.categoryCode)} : ''">카테고리</span>
+                                        <span th:if="${post.category != null}"
+                                              th:text="${post.categoryName}"
+                                              class="list-category"
+                                              th:style="|background-color: ${post.categoryBgColor ?: '#eee'}; color: ${post.categoryTextColor ?: '#333'};|">카테고리</span>
                                     </td>
                                     <td class="title-cell">
                                         <th:block th:if="${post.marketStatus != null and post.marketStatus != ''}">
@@ -87,7 +89,7 @@
                                             </span>
                                         </th:block>
                                         <a th:href="@{/community/{bCode}/{cCode}/{id}(bCode=${board.code}, cCode=${categoryCode}, id=${post.id})}"
-                                           th:text="${post.title}" class="title-cell"></a> <span th:if="${post.commentCount > 0}"
+                                           th:text="${post.title}"></a> <span th:if="${post.commentCount > 0}"
                                               th:text="'[' + ${post.commentCount} + ']'"
                                               class="text-small comment-count-inline"></span>
                                         <span th:if="${post.hasImage}" class="img-icon-grey"><i class="fa-regular fa-image"></i>️</span>

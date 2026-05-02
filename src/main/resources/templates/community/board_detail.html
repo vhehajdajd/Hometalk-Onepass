@@ -4,7 +4,7 @@
     <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/community/adminpage.css}">
 </head>
-<body class="main-layout">
+<body>
 <div class="main-layout" style="display: flex; min-height: 100vh;">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
     <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
@@ -68,15 +68,16 @@
                 <div class="add-category-area">
                     <form th:action="@{/community/admin/category/create}" method="post">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <input type="hidden" name="boardId" th:value="${board.id}">
                         <div id="category-container">
                             <div th:replace="~{community/fragments/categoryItem :: categoryItem}"></div>
                         </div>
-                        <button type="submit" class="btn-add-sub">+ 카테고리 추가</button>
+                        <button type="submit" class="btn btn-add-sub">+ 카테고리 추가</button>
                     </form>
                 </div>
 
                 <div style="margin-top: 30px;">
-                    <a th:href="@{/community/admin}" style="text-decoration: none; color: #666;">← 목록으로 돌아가기</a>
+                    <a th:href="@{/community/admin}" class="btn btn-outline">← 목록으로 돌아가기</a>
                 </div>
             </div>
 

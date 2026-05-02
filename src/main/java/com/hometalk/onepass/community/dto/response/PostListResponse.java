@@ -27,6 +27,9 @@ public class PostListResponse {
     private int commentCount;
     private boolean hasImage;
 
+    private String categoryBgColor;
+    private String categoryTextColor;
+
     private String marketStatus;
     private String marketStatusDescription;
 
@@ -44,6 +47,14 @@ public class PostListResponse {
         this.viewCount = post.getViewCount();
         this.commentCount = post.getComments().size();
         this.hasImage = post.getContent() != null && post.getContent().contains("<img");
+
+        if (post.getCategory() != null) {
+            this.categoryName = post.getCategory().getName();
+            this.categoryCode = post.getCategory().getCode();
+            this.categoryBgColor = post.getCategory().getBgColor();
+            this.categoryTextColor = post.getCategory().getTextColor();
+        }
+
         if (post.getPostTags() != null && !post.getPostTags().isEmpty()) {
             this.tags = post.getPostTags().stream()
                     .map(pt -> pt.getTag().getName())
