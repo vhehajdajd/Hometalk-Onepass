@@ -9,28 +9,8 @@
 <div class="main-layout" style="display: flex; min-height: 100vh;">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
     <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
-        <th:block th:each="board : ${boards}">
-            <div th:if="${boardId == board.id}">
-                <div th:switch="${categoryId}">
-                    <div th:case="2">
-                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '자유' } })}"></div>
-                    </div>
-                    <div th:case="3">
-                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '토론' } })}"></div>
-                    </div>
-                    <div th:case="4">
-                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '나눔' } })}"></div>
-                    </div>
-                    <div th:case="5">
-                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '분실문' } })}"></div>
-                    </div>
-                    <div th:case="*" >
-                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '전체' } })}"></div>
-                    </div>
-                </div>
-            </div>
-        </th:block>
         <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community'} })}"></div>
         <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
 
         <!-- 메인 -->
@@ -90,13 +70,14 @@
                     <div class="page-footer">
                         <div class="left-box">
                             <a th:href="@{/community/{code}(code=${board.code})}"
-                               onclick="return confirmCancel()" class="btn-cancel">취소</a>
+                               onclick="return confirmCancel()" class="btn btn-outlinel">취소</a>
                         </div>
 
                         <div class="right-box">
                             <button type="button" th:if="${post.id == null}"
                                     id="btnSaveTemp" th:data-board-code="${boardCode}">임시저장</button>
-                            <button type="submit" onclick="document.getElementById('isTemp').value='false'">등록</button>
+                            <button type="submit" onclick="document.getElementById('isTemp').value='false'"
+                                    class="btn btn-primary">등록</button>
                         </div>
                     </div>
                 </form>

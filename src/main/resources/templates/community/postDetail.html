@@ -2,46 +2,24 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
+    <!-- 후에 제거할 meta들 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link rel="stylesheet" th:href="@{/css/community/post-detail.css}">
 </head>
 <body>
-<div class="main-layout" style="display: flex; min-height: 100vh;">
+<div class="main-layout" style="background-color: #ffffff">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
-    <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
-        <th:block th:each="board : ${boards}">
-            <div th:if="${boardId == board.id}">
-                <div th:switch="${categoryId}">
-                    <div th:case="2">
-                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '자유' } })}"></div>
-                    </div>
-                    <div th:case="3">
-                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '토론' } })}"></div>
-                    </div>
-                    <div th:case="4">
-                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '나눔' } })}"></div>
-                    </div>
-                    <div th:case="5">
-                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '분실문' } })}"></div>
-                    </div>
-                    <div th:case="*" >
-                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '전체' } })}"></div>
-                    </div>
-                </div>
-            </div>
-        </th:block>
+    <div class="main-wrapper">
         <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community'} })}"></div>
         <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
 
-        <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">
+        <main class="dashboard-content">
+            <div class="container">
             <div th:replace="~{community/fragments/boardListHeader :: boardListHeader(boards=${boards}, boardId=${boardId}, loginUser=${loginUser})}"></div>
             <div th:replace="~{community/fragments/categoryBanner :: categoryBanner(board=${board}, categories=${categories}, categoryId=${categoryId})}"></div>
-
-            <div class="tag-filter-wrapper" th:if="${boardTags != null and !boardTags.isEmpty()}">
-                <div class="tag-filter-inner">
-                    <span class="tag-icon"><i class="fa-solid fa-tags"></i></span>
-                    <div th:replace="~{community/fragments/postTag :: tagList(tags=${boardTags}, boardCode=${currentBoardCode})}"></div>
-                </div>
-            </div>
 
             <br>
 
@@ -49,30 +27,37 @@
                     <span th:text="${successMessage}"></span>
                 </div>
                 <div class="content-container">
+
                     <div class="post-header">
-                        <span class="list-category" th:classappend="${post.categoryCode}" th:text="${post.categoryName}">카테고리</span>
+
+                        <!-- 카테고리 -->
+                        <span class="list-category"
+                              th:classappend="${post.categoryCode}"
+                              th:text="${post.categoryName}">카테고리</span>
                         <span th:if="${post.categoryCode == 'share' and post.marketStatus != null}"
                               th:text="${post.marketStatusDescription}"></span>
+
+                        <!-- 관리자 도구 -->
+                        <div sec:authorize="hasRole('ADMIN')" class="admin-tools"
+                             th:data-board-code="${boardCode}"
+                             th:data-category-code="${currentCategoryCode}" >
+                            <button id="pinBtn" th:onclick="|togglePin(${post.id})|" class="btn-pin"
+                                    th:classappend="${post.pinned} ? 'active' : ''">
+                                <i class="fas fa-thumbtack"></i>
+                                <span th:text="${post.pinned} ? '고정 해제' : '상단 고정'">상단 고정</span>
+                            </button>
+
+                            <button type="button" th:onclick="|hidePost(${post.id})|" class="btn-hide">
+                                <i class="fas fa-eye-slash"></i> 숨김
+                            </button>
+                        </div>
+
                         <h1 class="post-title" th:text="${post.title}">게시글 제목</h1>
 
                         <div class="post-meta">
                             <span class="author" th:text="${post.writer}">작성자</span>
                             <span class="date" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span>
                             <span class="views">조회수 <span th:text="${post.viewCount}">0</span></span>
-
-                            <div sec:authorize="hasRole('ADMIN')" class="admin-tools"
-                                 th:data-board-code="${boardCode}"
-                                 th:data-category-code="${currentCategoryCode}" >
-                                <button id="pinBtn" th:onclick="|togglePin(${post.id})|" class="btn-pin"
-                                        th:classappend="${post.pinned} ? 'active' : ''">
-                                <i class="fas fa-thumbtack"></i>
-                                <span th:text="${post.pinned} ? '고정 해제' : '상단 고정'">상단 고정</span>
-                                </button>
-
-                                <button type="button" th:onclick="|hidePost(${post.id})|" class="btn-hide">
-                                    <i class="fas fa-eye-slash"></i> 숨김
-                                </button>
-                            </div>
 
                             <div th:if="${post.categoryCode == 'share' and post.editable and post.marketStatus != null}"
                                  class="writer-only-tools" style="display: inline-block; margin-left: 5px;">
@@ -87,20 +72,29 @@
 
                     <hr>
 
-                    <div class="page-body post-content" style="word-break: break-all;"> <!-- white-space: pre-wrap; 보고 추가하기 -->
+                    <div class="page-body post-content">
                         <div th:utext="${post.content}">게시글 내용</div>
+                    </div>
+
+                    <div class="tag-filter-wrapper" th:if="${postTags != null and !postTags.isEmpty()}">
+                        <div class="tag-filter-inner">
+                            <span class="tag-icon"><i class="fa-solid fa-tags"></i></span>
+                            <div th:replace="~{community/fragments/postTag :: tagList(tags=${postTags}, boardCode=${currentBoardCode})}"></div>
+                        </div>
                     </div>
 
                     <hr>
 
                     <div class="page-footer">
-                        <a th:href="@{/community/{code}(code=${board.code})}" class="btn">목록</a>
+                        <a th:href="@{/community/{code}(code=${board.code})}" class="btn btn-outline">목록</a>
 
                         <div class="edit-delete-group" th:if="${post.editable}">
-                            <a th:href="@{/community/{code}/edit/{id}(code=${board.code}, id=${post.id})}" class="btn-edit">수정</a>
+                            <a th:href="@{/community/{code}/edit/{id}(code=${board.code}, id=${post.id})}"
+                               class="btn btn-primary" style="margin-right: 8px;">수정</a>
+
                             <form th:action="@{/community/{code}/delete/{id}(code=${boardCode}, id=${post.id})}"
                                   method="post" style="display:inline;" id="deleteForm">
-                                <button type="button" class="btn-delete"
+                                <button type="button" class="btn btn-danger-outline"
                                         id="btn-delete" th:data-id="${post.id}">삭제</button>
                             </form>
                         </div>
@@ -110,6 +104,7 @@
                         <div th:replace="~{community/postComment :: postComment(${boardCode}, ${categoryCode}, ${post.id}, ${comments})}"></div>
                     </div>
                 </div>
+            </div>
         </main>
         <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
