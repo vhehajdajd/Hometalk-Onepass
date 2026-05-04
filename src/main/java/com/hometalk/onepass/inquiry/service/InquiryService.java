@@ -77,15 +77,18 @@ public class InquiryService {
     }
 
     // --- 나머지 조회 및 삭제 로직은 동일 ---
+    @Transactional(readOnly = true)
     public List<InquiryDto> findAll() {
         return inquiryRepository.findAll().stream()
                 .map(InquiryDto::fromEntity)
                 .toList();
     }
 
-    public Inquiry findOne(Long id) {
-        return inquiryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 문의글입니다."));
+    @Transactional(readOnly = true)
+    public InquiryDto getInquiryDetail(Long id) {
+        Inquiry inquiry = inquiryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("문의글 없음"));
+        return InquiryDto.fromEntity(inquiry);
     }
 
     @Transactional

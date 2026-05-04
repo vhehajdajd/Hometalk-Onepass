@@ -32,7 +32,7 @@ public class InquiryPageController {
     // 2. 문의 등록 페이지 이동
     @GetMapping("/write")
     public String writePage() {
-        return "inquiry/complaintWrite";
+        return "inquiry/inquiryWrite";
     }
 
     // 3. 문의 등록 처리 (API가 아닌 페이지 전환용일 경우)
@@ -42,6 +42,18 @@ public class InquiryPageController {
 
         inquiryService.register(inquiryDto, files);
 
-        return "redirect:/hometop/inquiries/list";
+        return "redirect:/inquiries/list";
+    }
+
+    // 4. 문의 상세 페이지 이동
+    @GetMapping("/detail/{id}")
+    public String detailPage(@PathVariable("id") Long id, Model model) {
+        // 👈 서비스가 아예 DTO를 반환하게 만듭니다.
+        InquiryDto inquiryDto = inquiryService.getInquiryDetail(id);
+
+        // HTML 코드에 맞게 변수명 확인 (지난번엔 complaint라고 쓰셨던데, 확인해보세요!)
+        model.addAttribute("inquiry", inquiryDto);
+
+        return "inquiry/inquiryDetail";
     }
 }

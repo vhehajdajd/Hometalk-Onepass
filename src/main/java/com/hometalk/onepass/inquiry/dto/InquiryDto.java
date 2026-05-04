@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class InquiryDto {
+public class  InquiryDto {
     private Long id; // 상세보기 링크 이동을 위해 필수!
     private Long userId;
     private String title;

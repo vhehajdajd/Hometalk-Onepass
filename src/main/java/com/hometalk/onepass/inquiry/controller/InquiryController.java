@@ -1,9 +1,11 @@
 package com.hometalk.onepass.inquiry.controller;
 
+import com.hometalk.onepass.auth.repository.LocalAccountRepository;
 import com.hometalk.onepass.inquiry.dto.InquiryDto;
 import com.hometalk.onepass.inquiry.entity.Inquiry;
 import com.hometalk.onepass.inquiry.service.InquiryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +18,7 @@ import java.util.List;
 public class InquiryController {
 
     private final InquiryService inquiryService;
+    private final LocalAccountRepository localAccountRepository;
 
 
     /*
@@ -26,7 +29,19 @@ public class InquiryController {
     @PostMapping(consumes = {"multipart/form-data"})
     public Long register(
             @RequestPart("dto") InquiryDto inquiryDto,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) throws IOException {
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.User userDetails) throws IOException {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요한 서비스입니다.");
+        }
+
+        String loginId = userDetails.getUsername();
+
+        com.hometalk.onepass.auth.entity.LocalAccount account = localAccountRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new RuntimeException("사용자 계정을 찾을 수 없습니다."));
+
+        // account.getUser().getId()로 내 도메인에 필요한 userId를 조용히 가져옵니다.
+        inquiryDto.setUserId(account.getUser().getId());
 
         // 통합된 서비스 메서드 호출 (dto와 files를 같이 넘겨줌)
         return inquiryService.register(inquiryDto, files);
@@ -45,11 +60,11 @@ public class InquiryController {
         상세 조회 (GET)
 
      */
-    @GetMapping("/{id}")
+/*    @GetMapping("/{id}")
     public InquiryDto detail(@PathVariable("id") Long id) {
-        Inquiry inquiry = inquiryService.findOne(id);
+        Inquiry inquiry = inquiryService.getInquiryDetail(id);
         return InquiryDto.fromEntity(inquiry);
-    }
+    }*/
 
     /*
         삭제 (DELETE)
