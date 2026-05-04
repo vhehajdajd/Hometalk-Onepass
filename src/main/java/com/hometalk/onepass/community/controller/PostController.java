@@ -1,5 +1,7 @@
 package com.hometalk.onepass.community.controller;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
+import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.community.dto.response.CommentRsDTO;
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
 import com.hometalk.onepass.community.dto.response.*;
@@ -14,11 +16,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.File;
@@ -42,11 +46,12 @@ public class PostController {
                             @RequestParam(defaultValue = "1") int page,
                             @RequestParam(required = false) String searchType,
                             @RequestParam(required = false) String keyword,
-                            Model model) {
+                            Model model,
+                            @AuthenticationPrincipal CustomUserDetails user) {
         BoardResponseDTO board = boardService.findByCode(boardCode);
         // 사용자의 첫 페이지(1)은 JPA에서 0으로 처리하므로 1씩 빼줘야 함
         int pageIndex = (page < 1) ? 0 : page - 1;
-        return fillCommunityModel(board, null, pageIndex, searchType, keyword,  model);
+        return fillCommunityModel(board, null, pageIndex, searchType, keyword,  model, user);
     }
 
     // 카테고리별 목록
@@ -56,22 +61,24 @@ public class PostController {
                                @RequestParam(defaultValue = "1") int page,
                                @RequestParam(required = false) String searchType,
                                @RequestParam(required = false) String keyword,
-                               Model model) {
+                               Model model,
+                               @AuthenticationPrincipal CustomUserDetails user) {
         BoardResponseDTO board = boardService.findByCode(boardCode);
         CategoryResponseDTO category = "all".equals(categoryCode) ? null
                                         : categoryService.findByCode(categoryCode);
         int pageIndex = (page < 1) ? 0 : page - 1;
 
-        return fillCommunityModel(board, category, pageIndex, searchType, keyword, model);
+        return fillCommunityModel(board, category, pageIndex, searchType, keyword, model, user);
     }
 
     // 게시글 작성 폼
     @GetMapping("/{boardCode}/write")
-    public String postForm(@PathVariable String boardCode, Model model) {
+    public String postForm(@PathVariable String boardCode, Model model,
+                           @AuthenticationPrincipal CustomUserDetails user) {
         // 1. URL에서 받은 boardCode로 게시판 정보 조회
         BoardResponseDTO board = boardService.findByCode(boardCode);
         // 2. 공통 레이아웃(배너) 데이터
-        addLayoutAttributes(board, null, model, true); // 배너와 헤더는 나오지만 목록은 안 가져옴
+        addLayoutAttributes(board, null, model, true, user); // 배너와 헤더는 나오지만 목록은 안 가져옴
         // 3. 폼 입력을 위한 빈 DTO
         model.addAttribute("post", new PostRequestDTO());
 
@@ -85,10 +92,11 @@ public class PostController {
     public String postForm(@PathVariable String boardCode,
                            @PathVariable Long id,
                            Model model,
-                           RedirectAttributes redirectAttributes) {
+                           RedirectAttributes redirectAttributes,
+                           @AuthenticationPrincipal CustomUserDetails user) {
         // 공통 레이아웃(배너) 데이터
         BoardResponseDTO board = boardService.findByCode(boardCode);
-        addLayoutAttributes(board, null, model, true); // 배너와 헤더는 나오지만 목록은 안 가져옴
+        addLayoutAttributes(board, null, model, true, user); // 배너와 헤더는 나오지만 목록은 안 가져옴
 
         // ID가 있으면 - 임시저장 불러오기
         try {
@@ -117,16 +125,19 @@ public class PostController {
     @PostMapping("/{boardCode}/save")
     public String createPost(@PathVariable String boardCode, @ModelAttribute PostRequestDTO dto,
                              @RequestParam(name = "isTemp", defaultValue = "false") boolean isTemp,
-                             RedirectAttributes redirectAttributes) {
+                             RedirectAttributes redirectAttributes,
+                             @AuthenticationPrincipal CustomUserDetails user) {
 
         // 1. 임시저장 상태 설정
         dto.setPostStatus(isTemp ? PostStatus.DRAFT : PostStatus.ACTIVE);
 
-        // [임시] 로그인 연동 전이므로 1번 유저로 고정
-        Long tempUserId = 1L;
+        if (user == null) {
+            return "redirect:/login"; // 또는 로그인 페이지
+        }
+        Long userId = user.getUserId();
 
         // 2. 서비스 호출 및 저장
-        Long id = postService.postSave(boardCode, dto, tempUserId);
+        Long id = postService.postSave(boardCode, dto, userId);
 
         // 3. 상황에 맞는 성공 메시지 추가
         String msg = isTemp ? "게시글이 임시저장되었습니다." : "글이 성공적으로 등록되었습니다.";
@@ -142,18 +153,21 @@ public class PostController {
     // 게시글 수정
     @PostMapping("/{boardCode}/edit/{id}")
     public String updatePost(@PathVariable String boardCode, @PathVariable Long id, PostRequestDTO dto,
-                             RedirectAttributes redirectAttributes) {
+                             RedirectAttributes redirectAttributes,
+                             @AuthenticationPrincipal CustomUserDetails user) {
         dto.setId(id);
         if (dto.getPostStatus() == null) {
             dto.setPostStatus(PostStatus.ACTIVE);
         }
 
-        // [임시] 수정 권한 테스트를 위한 고정 ID
-        Long tempUserId = 1L;
+        if (user == null) {
+            return "redirect:/login"; // 또는 로그인 페이지
+        }
+        Long userId = user.getUserId();
 
         String categoryPath = (dto.getCategoryCode() != null && !dto.getCategoryCode().isEmpty())
                 ? dto.getCategoryCode() : "all";
-        postService.postSave(boardCode, dto, tempUserId);
+        postService.postSave(boardCode, dto, userId);
         redirectAttributes.addFlashAttribute("successMessage", "게시글이 수정되었습니다.");
         return "redirect:/community/" + boardCode + "/" + categoryPath + "/" + id;
     }
@@ -161,11 +175,14 @@ public class PostController {
     // 게시글 삭제
     @PostMapping("/{boardCode}/delete/{id}")
     public String deletePost(@PathVariable String boardCode, @PathVariable Long id,
-                             RedirectAttributes redirectAttributes) {
-        // [임시] 테스트를 위해 1번 유저라고 가정
-        Long tempUserId = 1L;
+                             RedirectAttributes redirectAttributes,
+                             @AuthenticationPrincipal CustomUserDetails user) {
+        if (user == null) {
+            return "redirect:/login"; // 또는 로그인 페이지
+        }
+        Long userId = user.getUserId();
+        postService.deletePost(id, userId, boardCode);
 
-        postService.deletePost(id, tempUserId, boardCode);
         redirectAttributes.addFlashAttribute("successMessage", "게시글이 삭제되었습니다.");
         return "redirect:/community/" + boardCode + "/all";
     }
@@ -173,17 +190,26 @@ public class PostController {
     // 임시저장
     @GetMapping("/{boardCode}/temp-list")
     @ResponseBody // JSON으로 반환
-    public List<PostListResponse> getTempPosts(@PathVariable String boardCode) {
-        Long tempUserId = 1L; // 테스트용 ID
-        return postService.getTempPosts(boardCode, tempUserId);
+    public List<PostListResponse> getTempPosts(@PathVariable String boardCode,
+                                               @AuthenticationPrincipal CustomUserDetails user) {
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인 필요");
+        }
+        Long userId = user.getUserId();
+        return postService.getTempPosts(boardCode, userId);
     }
 
     // 임시저장 글 삭제
     @PostMapping("/{boardCode}/delete-temp/{id}")
     @ResponseBody
-    public ResponseEntity<String> deleteTemp(@PathVariable String boardCode, @PathVariable Long id) {
+    public ResponseEntity<String> deleteTemp(@PathVariable String boardCode, @PathVariable Long id,
+                                             @AuthenticationPrincipal CustomUserDetails user) {
         try {
-            postService.deletePost(id, 1L, boardCode);
+            if (user == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인 필요");
+            }
+            Long userId = user.getUserId();
+            postService.deletePost(id, userId, boardCode);
             return ResponseEntity.ok("Success");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Fail");
@@ -197,12 +223,10 @@ public class PostController {
                              @PathVariable String categoryCode,
                              @PathVariable Long id,
                              HttpSession session,
-                             Model model) {
-        // [임시] 아직 로그인 연동 전이므로 테스트용 유저 정보 직접 생성
-        PostUserRsDTO tempUser = PostUserRsDTO.builder()
-                .id(1L)           // 테스트하고 싶은 유저 ID
-                .role("MEMBER")   // 또는 "ADMIN"
-                .build();
+                             Model model,
+                             @AuthenticationPrincipal CustomUserDetails user) {
+
+        PostUserRsDTO currentUser = (user != null) ? PostUserRsDTO.from(user) : null;
 
         List<Long> viewedPosts = (List<Long>) session.getAttribute("viewedPosts");
         if (viewedPosts == null) {
@@ -211,7 +235,7 @@ public class PostController {
         }
 
         // 1. 게시글 데이터 가져오기 (tempUser를 넘겨서 editable, admin 여부를 계산함)
-        PostResponseDTO post = postService.postDetail(id, tempUser, boardCode, viewedPosts);
+        PostResponseDTO post = postService.postDetail(id, currentUser, boardCode, viewedPosts);
         model.addAttribute("post", post);
 
         // 2. 카테고리 배너 활성
@@ -224,7 +248,7 @@ public class PostController {
 
         // 3. 공통 레이아웃 데이터
         BoardResponseDTO board = boardService.findByCode(boardCode);
-        addLayoutAttributes(board, category, model, false);
+        addLayoutAttributes(board, category, model, false, user);
         model.addAttribute("boardCode", boardCode);
         model.addAttribute("currentCategoryCode", categoryCode);
 
@@ -273,20 +297,19 @@ public class PostController {
 
 
     // 공통 데이터 method
-    private void addLayoutAttributes(BoardResponseDTO board, CategoryResponseDTO category,
-                                     Model model, boolean isWriteMode) {
+    private void addLayoutAttributes(BoardResponseDTO board,
+                                     CategoryResponseDTO category,
+                                     Model model,
+                                     boolean isWriteMode,
+                                     CustomUserDetails user) {
         if (board == null) return;
 
         model.addAttribute("board", board);
         model.addAttribute("category", category);
         model.addAttribute("boards", boardService.findAll()); // 게시판 헤더용
 
-        // [임시] 관리자 정보
-        PostUserRsDTO tempAdmin = PostUserRsDTO.builder()
-                .id(1L)
-                .role("ADMIN") // HTML의 th:if 조건인 'ADMIN'과 일치해야 함
-                .build();
-        model.addAttribute("loginUser", tempAdmin);
+        model.addAttribute("loginUser",
+                user != null ? PostUserRsDTO.from(user) : null);
 
         // 글쓰기 모드일 때만 '전체'가 빠진 목록을 가져옴
         List<CategoryResponseDTO> categories;
@@ -307,7 +330,8 @@ public class PostController {
                                       int page,
                                       String searchType,
                                       String keyword,
-                                      Model model) {
+                                      Model model,
+                                      CustomUserDetails user) {
         if (board == null) return "redirect:/community";    // 게시판 정보 없으면 메인 페이지
 
         if (category == null) {
@@ -319,7 +343,7 @@ public class PostController {
         }
 
         // 공통 레이아웃 데이터 채우기
-        addLayoutAttributes(board, category, model, false);
+        addLayoutAttributes(board, category, model, false, user);
 
         if (StringUtils.hasText(keyword) && !StringUtils.hasText(searchType)) {
             model.addAttribute("searchError", "검색 유형을 선택해주세요.");

@@ -1,5 +1,6 @@
 package com.hometalk.onepass.community.controller;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.community.dto.request.CommentRqDTO;
 import com.hometalk.onepass.community.dto.response.CommentRsDTO;
 import com.hometalk.onepass.community.dto.response.PostResponseDTO;
@@ -8,6 +9,7 @@ import com.hometalk.onepass.community.service.CommentService;
 import com.hometalk.onepass.community.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +32,15 @@ public class CommentController {
                               @PathVariable String categoryCode,
                               @PathVariable Long postId,
                               @ModelAttribute CommentRqDTO commentRqDTO,
-                              RedirectAttributes redirectAttributes) {
-        // [임시] 로그인 연동 전 더미 ID
-        Long tempUserId = 1L;
+                              RedirectAttributes redirectAttributes,
+                              @AuthenticationPrincipal CustomUserDetails user) {
+        if (user == null) {
+            return "redirect:/login";
+        }
+        Long userId = user.getUserId();
 
         // 댓글 저장
-        commentService.saveComment(postId, tempUserId, commentRqDTO);
+        commentService.saveComment(postId, userId, commentRqDTO);
 
         redirectAttributes.addFlashAttribute("successMessage", "댓글이 등록되었습니다.");
         log.info("입력된 댓글 내용: {}", commentRqDTO.getContent());
@@ -50,10 +55,13 @@ public class CommentController {
                                 @PathVariable String categoryCode,
                                 @PathVariable Long postId,
                                 @PathVariable Long commentId,
-                                @ModelAttribute CommentRqDTO commentRqDTO) {
+                                @ModelAttribute CommentRqDTO commentRqDTO,
+                                @AuthenticationPrincipal CustomUserDetails user) {
 
-        Long tempUserId = 1L;
-        commentService.updateComment(commentId, tempUserId, commentRqDTO);
+        if (user == null) {
+            return "redirect:/login";
+        }
+        commentService.updateComment(commentId, user.getUserId(), commentRqDTO);
 
         return String.format("redirect:/community/%s/%s/%d", boardCode, categoryCode, postId);
     }
@@ -65,9 +73,12 @@ public class CommentController {
                                 @PathVariable String categoryCode,
                                 @PathVariable Long postId,
                                 @PathVariable Long commentId,
-                                RedirectAttributes redirectAttributes) {
-        Long tempUserId = 1L;
-        commentService.deleteComment(commentId, tempUserId);
+                                RedirectAttributes redirectAttributes,
+                                @AuthenticationPrincipal CustomUserDetails user) {
+        if (user == null) {
+            return "redirect:/login";
+        }
+        commentService.deleteComment(commentId, user.getUserId());
 
         redirectAttributes.addFlashAttribute("successMessage", "댓글이 삭제되었습니다.");
         return String.format("redirect:/community/%s/%s/%d", boardCode, categoryCode, postId);
