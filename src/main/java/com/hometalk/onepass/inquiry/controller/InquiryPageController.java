@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Controller
-@RequestMapping("/hometop/inquiries")
+@RequestMapping("/inquiries")
 @RequiredArgsConstructor
 public class InquiryPageController {
 
@@ -26,21 +26,19 @@ public class InquiryPageController {
         List<InquiryDto> inquiries = inquiryService.findAll();
         model.addAttribute("inquiries", inquiries);
 
-
         return "inquiry/inquiryList";
     }
 
     // 2. 문의 등록 페이지 이동
     @GetMapping("/write")
     public String writePage() {
-        return "inquiry/write";
+        return "inquiry/complaintWrite";
     }
 
     // 3. 문의 등록 처리 (API가 아닌 페이지 전환용일 경우)
     @PostMapping("/write")
     public String registerInquiry(@ModelAttribute InquiryDto inquiryDto, // Inquiry 대신 InquiryDto 사용
                                   @RequestParam(value = "files", required = false) List<MultipartFile> files) throws IOException {
-
 
         inquiryService.register(inquiryDto, files);
 

@@ -1,4 +1,4 @@
-package com.hometalk.onepass.inquiry.entity;
+package com.hometalk.onepass.complaint.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

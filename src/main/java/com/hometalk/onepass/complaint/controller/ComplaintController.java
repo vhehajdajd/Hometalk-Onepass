@@ -1,8 +1,8 @@
-package com.hometalk.onepass.inquiry.controller;
+package com.hometalk.onepass.complaint.controller;
 
-import com.hometalk.onepass.inquiry.dto.ComplaintDto;
-import com.hometalk.onepass.inquiry.entity.Complaint;
-import com.hometalk.onepass.inquiry.service.ComplaintService;
+import com.hometalk.onepass.complaint.dto.ComplaintDto;
+import com.hometalk.onepass.complaint.entity.Complaint;
+import com.hometalk.onepass.complaint.service.ComplaintService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -46,7 +46,7 @@ public class ComplaintController {
     }
 
     /**
-     * 내 민원 목록 조회
+     * 내 민원 목록 조회 (지현님이 말씀하신 기능)
      */
     @GetMapping("/my/{userId}")
     public List<ComplaintDto> myLimitList(@PathVariable("userId") Long userId) {

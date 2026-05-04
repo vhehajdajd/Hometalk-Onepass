@@ -1,13 +1,13 @@
-package com.hometalk.onepass.inquiry.controller;
+package com.hometalk.onepass.complaint.controller;
 
-import com.hometalk.onepass.inquiry.service.ComplaintService;
+import com.hometalk.onepass.complaint.service.ComplaintService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller; // RestController가 아님!
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@Controller // HTML 뷰를 반환하기 위해 사용
+@Controller
 @RequestMapping("/complaints")
 @RequiredArgsConstructor
 public class ComplaintPageController {
@@ -18,7 +18,6 @@ public class ComplaintPageController {
     public String listPage(Model model) {
         // 1. 서비스에서 데이터를 가져와서
         model.addAttribute("complaints", complaintService.findAll());
-
         // 2. templates/complaints/list.html 파일을 찾아서 띄워줌
         return "inquiry/complaintlist";
     }

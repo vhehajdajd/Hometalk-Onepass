@@ -1,12 +1,12 @@
-package com.hometalk.onepass.inquiry.service;
+package com.hometalk.onepass.complaint.service;
 
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.UserRepository;
-import com.hometalk.onepass.inquiry.dto.ComplaintDto;
-import com.hometalk.onepass.inquiry.entity.Complaint;
-import com.hometalk.onepass.inquiry.entity.ComplaintAttachment;
-import com.hometalk.onepass.inquiry.repository.ComplaintAttachmentRepository;
-import com.hometalk.onepass.inquiry.repository.ComplaintRepository;
+import com.hometalk.onepass.complaint.dto.ComplaintDto;
+import com.hometalk.onepass.complaint.entity.Complaint;
+import com.hometalk.onepass.complaint.entity.ComplaintAttachment;
+import com.hometalk.onepass.complaint.repository.ComplaintAttachmentRepository;
+import com.hometalk.onepass.complaint.repository.ComplaintRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

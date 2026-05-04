@@ -1,36 +1,75 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>민원 게시판</title>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='민원 게시판')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
 </head>
 <body>
-<h2>민원 게시판</h2>
-<a th:href="@{/complaints/write}">글쓰기</a>
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='inquiry')}"></div>
+    <div class="main-wrapper">
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'inquiry'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"></div>
+        <!-- 메인 콘텐츠 -->
+        <div class="dashboard-content">
 
-<table border="1">
-    <thead>
-    <tr>
-        <th>번호</th>
-        <th>카테고리</th>
-        <th>제목</th>
-        <th>작성자</th>
-        <th>상태</th>
-        <th>작성일</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="list : ${complaints}">
-        <td th:text="${list.id}"></td>
-        <td th:text="${list.category}"></td>
-        <td>
-            <span th:if="${list.isSecret}">🔒</span>
-            <a th:href="@{/complaints/detail/{id}(id=${list.id})}" th:text="${list.title}"></a>
-        </td>
-        <td th:text="${list.userId}"></td>
-        <td th:text="${list.status}"></td>
-        <td th:text="${#temporals.format(list.createdAt, 'yyyy-MM-dd')}"></td>
-    </tr>
-    </tbody>
-</table>
+            <main class="container">
+                <h2 class="title">민원 게시판</h2>
+
+                <table class="table mt-md">
+                    <colgroup>
+                        <!-- 공지사항 리스트와 유사한 비율 배치 -->
+                        <col style="width: 70px">  <!-- 번호 -->
+                        <col style="width: 120px"> <!-- 카테고리 -->
+                        <col style="width: auto">  <!-- 제목 (가장 넓게) -->
+                        <col style="width: 120px"> <!-- 작성자 -->
+                        <col style="width: 100px"> <!-- 상태 -->
+                        <col style="width: 130px"> <!-- 작성일 -->
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>카테고리</th>
+                            <th>제목</th>
+                            <th>작성자</th>
+                            <th>상태</th>
+                            <th>작성일</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="list : ${complaints}">
+                            <td>
+                                <span class="badge category-badge" th:text="${list.category}">시설/기술</span>
+                            </td>
+                            <td class="title-cell">
+                                <span th:if="${list.isSecret}" style="margin-right: 4px;">🔒</span>
+                                <a th:href="@{/complaints/detail/{id}(id=${list.id})}" th:text="${list.title}">민원 제목입니다.</a>
+                            </td>
+                            <td th:text="${list.userId}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${list.status == '처리완료' ? 'status-complete' : 'status-waiting'}"
+                                      th:text="${list.status}">접수중</span>
+                            </td>
+                            <td class="text-muted" th:text="${#temporals.format(list.createdAt, 'yyyy-MM-dd')}"></td>
+                        </tr>
+
+                        <tr th:if="${#lists.isEmpty(complaints)}">
+                            <td colspan="6" class="text-muted" style="padding: 100px 0; text-align: center;">등록된 민원 내역이 없습니다.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="flex-between mt-lg">
+                    <div class="pagination-area">
+                        <!-- 페이지네이션 번호가 들어갈 자리 -->
+                    </div>
+                    <a th:href="@{/complaints/write}" class="btn btn-primary">글 작성</a>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
 </body>
 </html>

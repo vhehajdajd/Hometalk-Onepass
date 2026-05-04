@@ -1,6 +1,6 @@
-package com.hometalk.onepass.inquiry.dto;
+package com.hometalk.onepass.complaint.dto;
 
-import com.hometalk.onepass.inquiry.entity.Complaint;
+import com.hometalk.onepass.complaint.entity.Complaint;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -45,8 +45,8 @@ public class ComplaintDto {
                 // 엔티티의 파일 리스트를 DTO 리스트로 변환
                 .attachments(complaint.getAttachments() != null ?
                         complaint.getAttachments().stream()
-                                .map(ComplaintAttachmentDto::fromEntity)
-                                .collect(Collectors.toList()) : null)
+                        .map(ComplaintAttachmentDto::fromEntity)
+                        .collect(Collectors.toList()) : null)
                 .build();
     }
 

@@ -1,33 +1,53 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>나의 민원 내역</title>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='내 민원 내역')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
 </head>
 <body>
-<h2>내가 작성한 민원</h2>
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='inquiry')}"></div>
+    <div class="main-wrapper">
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'inquiry'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"></div>
+        <!-- 메인 콘텐츠 -->
+        <div class="dashboard-content">
+            <main class="container">
+                <h2 class="title">내가 작성한 민원</h2>
 
-<table border="1">
-    <thead>
-    <tr>
-        <th>번호</th>
-        <th>카테고리</th>
-        <th>제목</th>
-        <th>처리상태</th>
-        <th>작성일</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="my : ${myComplaints}">
-        <td th:text="${my.id}"></td>
-        <td th:text="${my.category}"></td>
-        <td>
-            <a th:href="@{/complaints/detail/{id}(id=${my.id})}" th:text="${my.title}"></a>
-        </td>
-        <td th:text="${my.status}"></td>
-        <td th:text="${#temporals.format(my.createdAt, 'yyyy-MM-dd')}"></td>
-    </tr>
-    </tbody>
-</table>
-<a th:href="@{/complaints}">전체 목록으로</a>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>카테고리</th>
+                        <th>제목</th>
+                        <th>처리상태</th>
+                        <th>작성일</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="my : ${myComplaints}">
+                        <td th:text="${my.category}"></td>
+                        <td class="title-cell">
+                            <a th:href="@{/complaints/detail/{id}(id=${my.id})}" th:text="${my.title}"></a>
+                        </td>
+                        <td class="text-small badge" th:text="${my.status}"></td>
+                        <td class="text-muted" th:text="${#temporals.format(my.createdAt, 'yyyy-MM-dd')}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div class="flex-between mt-lg">
+                    <span></span> <!-- 왼쪽 공간 확보용 -->
+                    <div class="action-wrapper">
+                        <a th:href="@{/complaints}" class="btn btn-outline">전체 목록으로</a>
+                    </div>
+                </div>
+            </main>
+
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

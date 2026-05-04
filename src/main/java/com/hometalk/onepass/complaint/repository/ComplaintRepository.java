@@ -1,6 +1,6 @@
-package com.hometalk.onepass.inquiry.repository;
+package com.hometalk.onepass.complaint.repository;
 
-import com.hometalk.onepass.inquiry.entity.Complaint;
+import com.hometalk.onepass.complaint.entity.Complaint;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

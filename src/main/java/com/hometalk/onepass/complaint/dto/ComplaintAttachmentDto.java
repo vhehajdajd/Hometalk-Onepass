@@ -1,5 +1,6 @@
-package com.hometalk.onepass.inquiry.dto;
+package com.hometalk.onepass.complaint.dto;
 
+import com.hometalk.onepass.complaint.entity.ComplaintAttachment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,7 +15,7 @@ public class ComplaintAttachmentDto {
     private String originFileName;
     private String storedFileName;
 
-    public static ComplaintAttachmentDto fromEntity(com.hometalk.onepass.inquiry.entity.ComplaintAttachment attachment) {
+    public static ComplaintAttachmentDto fromEntity(ComplaintAttachment attachment) {
         return ComplaintAttachmentDto.builder()
                 .id(attachment.getId())
                 .originFileName(attachment.getOriginFileName())
