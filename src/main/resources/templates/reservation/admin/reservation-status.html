@@ -1,34 +1,56 @@
-<div class="container">
-    <h1 class="module-title">전체 예약 현황 관리</h1>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='예약 현황 관리')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
+</head>
+<body>
 
-    <div class="summary-card" style="padding: 0; overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-            </thead>
-            <tbody>
-            <tr th:each="res : ${reservations}" style="border-bottom: 1px solid var(--border-color);">
-                <td th:text="${res.facilityName}">시설명</td>
-                <td th:text="${res.userName}">예약자</td>
-                <td th:text="${#temporals.format(res.startTime, 'MM/dd HH:mm') + ' ~ ' + #temporals.format(res.endTime, 'HH:mm')}">시간</td>
-                <td>
-                       <span class="status-badge"
-                             th:classappend="${res.status.name() == 'CANCEL' ? 'status-canceled' : 'status-active'}"
-                             th:text="${res.status.name() == 'CANCEL' ? '취소됨' : '예약완료'}">상태</span>
-                </td>
-                <td>
-                    <button th:if="${res.status.name() != 'CANCEL'}"
-                            type="button"
-                            class="btn btn-point"
-                            th:onclick="'confirmAdminCancel(' + ${res.id} + ')'"
-                            style="padding: 5px 10px; font-size: 12px;">강제취소</button>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(reservations)}">
-                <td colspan="5" style="padding: 40px; text-align: center; color: #999;">현재 등록된 예약 내역이 없습니다.</td>
-            </tr>
-            </tbody>
-        </table>
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='reservation')}"></div>
+    <div class="main-wrapper">
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'reservation'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: reservation}"></div>
+
+        <!-- 메인 콘텐츠 -->
+        <div class="dashboard-content">
+            <main class="container">
+                <h1 class="module-title">전체 예약 현황 관리</h1>
+
+                <div class="summary-card" style="padding: 0; overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                        </thead>
+                        <tbody>
+                        <tr th:each="res : ${reservations}" style="border-bottom: 1px solid var(--border-color);">
+                            <td th:text="${res.facilityName}">시설명</td>
+                            <td th:text="${res.userName}">예약자</td>
+                            <td th:text="${#temporals.format(res.startTime, 'MM/dd HH:mm') + ' ~ ' + #temporals.format(res.endTime, 'HH:mm')}">시간</td>
+                            <td>
+                                   <span class="status-badge"
+                                         th:classappend="${res.status.name() == 'CANCEL' ? 'status-canceled' : 'status-active'}"
+                                         th:text="${res.status.name() == 'CANCEL' ? '취소됨' : '예약완료'}">상태</span>
+                            </td>
+                            <td>
+                                <button th:if="${res.status.name() != 'CANCEL'}"
+                                        type="button"
+                                        class="btn btn-point"
+                                        th:onclick="'confirmAdminCancel(' + ${res.id} + ')'"
+                                        style="padding: 5px 10px; font-size: 12px;">강제취소</button>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(reservations)}">
+                            <td colspan="5" style="padding: 40px; text-align: center; color: #999;">현재 등록된 예약 내역이 없습니다.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script th:src="@{/js/reservation/reservation.js}"></script>
+</body>
+</html>

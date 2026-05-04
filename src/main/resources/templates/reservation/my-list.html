@@ -1,45 +1,56 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>One Pass - 내 예약 확인</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='내 예약 현황')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
 </head>
 <body>
-<div class="container">
-    <h1 class="module-title">나의 예약 현황</h1>
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='reservation')}"></div>
+    <div class="main-wrapper">
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'reservation'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: reservation}"></div>
 
-    <div class="summary-card" style="padding: 0; overflow-x: auto;" th:if="${not #lists.isEmpty(reservations)}">
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-            <tr style="background-color: var(--color-modal-line); border-bottom: 1px solid var(--border-color); text-align: left;">
-                <th style="padding: 15px;">이용 시설</th>
-                <th style="padding: 15px;">이용 일시</th>
-                <th style="padding: 15px;">상태</th>
-                <th style="padding: 15px;">비고</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="res : ${reservations}" style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 15px; font-weight: 600; color: var(--color-main);" th:text="${res.facilityName}">테니스장</td>
-                <td style="padding: 15px;" th:text="${#temporals.format(res.startTime, 'MM/dd HH:mm') + ' ~ ' + #temporals.format(res.endTime, 'HH:mm')}">04/29 09:00 ~ 10:00</td>
-                <td style="padding: 15px;">
-                        <span class="status-badge"
-                              th:classappend="${res.status.name() == 'CANCEL' ? 'status-canceled' : 'status-active'}"
-                              th:text="${res.status.name() == 'CANCEL' ? '취소됨' : '예약완료'}">상태</span>
-                </td>
-                <td style="padding: 15px;">
-                    <button th:if="${res.status.name() != 'CANCEL'}" class="btn btn-point" style="padding: 5px 10px; font-size: 12px;">취소요청</button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+        <!-- 메인 콘텐츠 -->
+        <div class="dashboard-content">
+            <main class="container">
+                <h1 class="title">나의 예약 현황</h1>
 
-    <div class="summary-card" style="text-align: center; padding: 50px;" th:if="${#lists.isEmpty(reservations)}">
-        <p style="color: #999;">아직 예약한 내역이 없습니다.</p>
-        <a th:href="@{/reservation/apply}" class="btn btn-main"
-           style="display: inline-block; margin-top: 20px; text-decoration: none;">시설 예약하러 가기</a>
+                <div class="summary-card" style="padding: 0; overflow-x: auto;" th:if="${not #lists.isEmpty(reservations)}">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                        <tr style="background-color: var(--color-modal-line); border-bottom: 1px solid var(--border-color); text-align: left;">
+                            <th style="padding: 15px;">이용 시설</th>
+                            <th style="padding: 15px;">이용 일시</th>
+                            <th style="padding: 15px;">상태</th>
+                            <th style="padding: 15px;">비고</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="res : ${reservations}" style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 15px; font-weight: 600; color: var(--color-main);" th:text="${res.facilityName}">테니스장</td>
+                            <td style="padding: 15px;" th:text="${#temporals.format(res.startTime, 'MM/dd HH:mm') + ' ~ ' + #temporals.format(res.endTime, 'HH:mm')}">04/29 09:00 ~ 10:00</td>
+                            <td style="padding: 15px;">
+                                    <span class="status-badge"
+                                          th:classappend="${res.status.name() == 'CANCEL' ? 'status-canceled' : 'status-active'}"
+                                          th:text="${res.status.name() == 'CANCEL' ? '취소됨' : '예약완료'}">상태</span>
+                            </td>
+                            <td style="padding: 15px;">
+                                <button th:if="${res.status.name() != 'CANCEL'}" class="btn btn-point" style="padding: 5px 10px; font-size: 12px;">취소요청</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="summary-card" style="text-align: center; padding: 50px;" th:if="${#lists.isEmpty(reservations)}">
+                    <p style="color: #999;">아직 예약한 내역이 없습니다.</p>
+                    <a th:href="@{/reservation/apply}" class="btn btn-main"
+                       style="display: inline-block; margin-top: 20px; text-decoration: none;">시설 예약하러 가기</a>
+                </div>
+            </main>
+        </div>
     </div>
 </div>
 </body>

@@ -113,7 +113,7 @@
     display: none;
     animation: fadeIn 0.4s ease-out;
 }
-.step-section.active { display: block; }
+.step-section.active { display: block; animation: fadeIn 0.5s ease-in-out; }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -122,26 +122,27 @@
 
 /* 시설 아이템 */
 .facility-item {
-    padding: 20px;
+    padding: 30px 20px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
     margin-bottom: 10px;
 }
-.facility-item:hover {
-    background-color: var(--color-bg-white-btn);
+.facility-item:hover, .facility-item.active {
     border-color: var(--color-main);
-    color: var(--color-main);
+    background-color: rgba(3, 33, 84, 0.02);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 /* 타임 칩 그리드 (4열 배치) */
 .time-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
     margin-top: 15px;
 }
 .time-radio { display: none; }
@@ -159,6 +160,14 @@
     background-color: var(--color-main);
     color: white;
     border-color: var(--color-main);
+}
+
+.bg-light {
+    background-color: #f8fafc;
+    padding: 40px;
+    border-radius: var(--radius);
+    display: flex;
+    justify-content: center;
 }
 
 /* =========================
@@ -198,5 +207,51 @@
     border-color: var(--color-main);
 }
 
-.mt-xl { margin-top: 50px; }
 .flex-end { display: flex; justify-content: flex-end; }
+.flex-center { display: flex; justify-content: center; }
+.gap-md { gap: 15px; }
+.mb-md { margin-bottom: 20px; }
+.mb-lg { margin-bottom: 30px; }
+.mb-xl { margin-bottom: 40px; }
+.mt-xl { margin-top: 50px; }
+
+
+
+/* =========================
+   6. 폼 레이아웃
+========================= */
+.write-form {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--color-text);
+}
+
+.select-field {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,..."); /
+}
+
+.textarea-field {
+    min-height: 300px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+/* 파일 업로드 관련 */
+.file-upload-wrapper {
+    padding: 15px;
+    background-color: #fcfcfc;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius);
+}
+
+.file-hint {
+    font-size: 13px;
+    color: #94a3b8;
+}
