@@ -51,7 +51,7 @@ public class InquiryPageController {
         // 👈 서비스가 아예 DTO를 반환하게 만듭니다.
         InquiryDto inquiryDto = inquiryService.getInquiryDetail(id);
 
-        // HTML 코드에 맞게 변수명 확인 (지난번엔 complaint라고 쓰셨던데, 확인해보세요!)
+        // HTML 코드에 맞게 변수명 확인
         model.addAttribute("inquiry", inquiryDto);
 
         return "inquiry/inquiryDetail";

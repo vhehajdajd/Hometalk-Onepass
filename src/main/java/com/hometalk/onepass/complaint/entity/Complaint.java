@@ -26,7 +26,7 @@ public class Complaint {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public void setUser(User user) {
+    public void assignUser(User user) {
         this.user = user;
     }
 

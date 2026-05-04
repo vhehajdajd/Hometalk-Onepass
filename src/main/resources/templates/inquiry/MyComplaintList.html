@@ -27,7 +27,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="my : ${myComplaints}">
+                    <tr th:each="my : ${paging.content}">
                         <td th:text="${my.category}"></td>
                         <td class="title-cell">
                             <a th:href="@{/complaints/detail/{id}(id=${my.id})}" th:text="${my.title}"></a>
@@ -35,10 +35,42 @@
                         <td class="text-small badge" th:text="${my.status}"></td>
                         <td class="text-muted" th:text="${#temporals.format(my.createdAt, 'yyyy-MM-dd')}"></td>
                     </tr>
+                    <tr th:if="${paging.isEmpty()}">
+                        <td colspan="4" style="text-align: center; padding: 50px 0;">작성한 민원이 없습니다.</td>
+                    </tr>
                     </tbody>
                 </table>
-                <div class="flex-between mt-lg">
-                    <span></span> <!-- 왼쪽 공간 확보용 -->
+
+                <div class="pagination-container">
+                    <!-- 가운데 페이징 버튼 -->
+                    <nav class="pagination-nav">
+                        <ul class="pagination" th:if="${!paging.isEmpty()}">
+
+                            <!-- 이전 페이지 -->
+                            <li class="page-item" th:classappend="${!paging.hasPrevious} ? 'disabled'">
+                                <a class="page-link" th:href="@{|?page=${paging.number - 1}|}" aria-label="Previous">
+                                    &laquo;
+                                </a>
+                            </li>
+
+                            <!-- 페이지 번호 루프 -->
+                            <li class="page-item"
+                                th:each="page: ${#numbers.sequence(0, paging.totalPages - 1)}"
+                                th:if="${page >= paging.number - 2 and page <= paging.number + 2}"
+                                th:classappend="${page == paging.number} ? 'active'">
+                                <a class="page-link" th:text="${page + 1}" th:href="@{|?page=${page}|}"></a>
+                            </li>
+
+                            <!-- 다음 페이지 -->
+                            <li class="page-item" th:classappend="${!paging.hasNext} ? 'disabled'">
+                                <a class="page-link" th:href="@{|?page=${paging.number + 1}|}" aria-label="Next">
+                                    &raquo;
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <!-- 오른쪽 버튼 영역 (CSS의 action-wrapper 활용) -->
                     <div class="action-wrapper">
                         <a th:href="@{/complaints}" class="btn btn-outline">전체 목록으로</a>
                     </div>

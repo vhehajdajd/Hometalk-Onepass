@@ -27,14 +27,14 @@
                     <h1 class="title mt-sm" th:text="${complaint.title}">민원 제목</h1>
 
                     <div class="post-info text-muted mt-sm">
-                        <span th:text="|작성자 ID: ${complaint.userId}|">작성자</span>
+                        <span th:text="|작성자 : ${complaint.userName}|">작성자</span>
                         <span class="divider">|</span>
                         <span th:text="${complaint.createdAt != null ? #temporals.format(complaint.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">작성일</span>
                     </div>
                 </div>
 
                 <div class="post-content">
-                    <div class="content-body" th:utext="${complaint.content}">내용이 출력됩니다.</div>
+                    <div class="content-body" th:text="${complaint.content}" style="min-height: 200px; white-space: pre-wrap;">내용이 출력됩니다.</div>
 
                     <!-- 첨부파일 (이미지 미리보기 및 다운로드) -->
                     <div th:if="${not #lists.isEmpty(complaint.attachments)}" class="attachments mt-lg">
@@ -42,7 +42,10 @@
                         <div class="attachment-list mt-sm">
                             <div th:each="file : ${complaint.attachments}" class="attachment-item">
                                 <img th:src="@{/api/complaints/display(fileName=${file.storedFileName})}" class="img-preview mb-xs">
-                                <a th:href="@{/api/complaints/download/{id}(id=${file.id})}" th:text="${file.originFileName}" class="text-small">파일명</a>
+                                <a th:href="@{/api/complaints/download(fileName=${file.storedFileName}, originName=${file.originFileName})}"
+                                   th:text="${file.originFileName}" class="text-small" style="word-break: break-all; color: var(--color-sub);">
+                                    파일명
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -57,9 +60,9 @@
                 <div class="admin-only admin-answer-form mt-xl pt-lg">
                     <h3 class="sub-title">관리자 답변 등록</h3>
                     <form th:action="@{/api/complaints/{id}/respond(id=${complaint.id})}" method="post" class="mt-sm">
-                        <textarea name="response" rows="5" class="input-field" placeholder="여기에 답변을 입력하세요..."></textarea>
+                        <textarea id="adminResponse" name="response" rows="5" class="input-field" placeholder="여기에 답변을 입력하세요..."></textarea>
                         <div class="flex-end mt-sm">
-                            <button type="submit" class="btn btn-primary">답변 저장하기</button>
+                            <button type="button" class="btn btn-primary" th:onclick="submitResponse([[${complaint.id}]])">답변 저장하기</button>
                         </div>
                     </form>
                 </div>
@@ -67,6 +70,7 @@
                 <div class="post-footer flex-between mt-xl">
                     <a th:href="@{/complaints/list}" class="btn btn-outline">목록으로</a>
                     <div class="auth-buttons">
+                        <!-- 본인 글일 때만 수정/삭제 버튼 노출 로직 필요 -->
                         <a th:href="@{/complaints/edit/{id}(id=${complaint.id})}" class="btn btn-primary">수정</a>
                     </div>
                 </div>
@@ -74,5 +78,37 @@
         </div>
     </div>
 </div>
+<script th:inline="javascript">
+    async function submitResponse(id) {
+        const answerText = document.getElementById('adminResponse').value;
+        if(!answerText.trim()) {
+            alert("답변 내용을 입력해주세요.");
+            return;
+        }
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        try {
+            const response = await fetch(`/hometop/api/complaints/${id}/respond`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ "answer": answerText })
+            });
+
+            if (response.ok) {
+                alert("답변이 등록되었습니다.");
+                location.reload(); // 새로고침하여 답변 확인
+            } else {
+                alert("답변 등록에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+</script>
 </body>
 </html>

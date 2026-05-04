@@ -13,6 +13,9 @@
 /* =========================
    1-1. TABLE CUSTOM (리스트)
 ========================= */
+.table thead th {
+    text-align: center;
+}
 .table td {
     text-align: center; /* 기본 중앙 정렬 */
 }
