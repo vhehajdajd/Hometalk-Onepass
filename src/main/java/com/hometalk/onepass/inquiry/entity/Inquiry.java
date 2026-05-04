@@ -22,7 +22,7 @@ public class Inquiry {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public void setUser(User user) { this.user = user; }
+    public void assignUser(User user) { this.user = user; }
 
     private String category;
     private String title;

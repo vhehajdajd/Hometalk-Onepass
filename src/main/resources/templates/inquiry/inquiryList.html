@@ -33,7 +33,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="inquiry, loop : ${inquiries}">
+                        <tr th:each="inquiry, loop : ${inquiries.content}">
                             <td th:text="${inquiry.category}">시설/기술</td>
                             <td class="title-cell">
                                 <a th:href="@{|/inquiries/detail/${inquiry.id}|}" th:text="${inquiry.title}">문의 제목입니다.</a>
@@ -47,15 +47,39 @@
                             </td>
                             <td class="text-muted" th:text="${#temporals.format(inquiry.createdAt, 'yyyy-MM-dd')}">2026-04-16</td>
                         </tr>
-                        <tr th:if="${#lists.isEmpty(inquiries)}">
+                        <tr th:if="${inquiries.empty}">
                             <td colspan="5" class="text-muted" style="padding: 100px 0; text-align: center;">등록된 문의 내역이 없습니다.</td>
                     </tr>
                     </tbody>
                 </table>
 
-                <div class="flex-between mt-lg">
-                    <div class="pagination-container">페이지네이션</div>
-                    <a th:href="@{/inquiries/write}" class="btn btn-primary">문의하기</a>
+                <div class="pagination-container mt-lg">
+                    <nav class="pagination-nav">
+                        <ul class="pagination" th:if="${!inquiries.isEmpty()}">
+                            <!-- 이전 페이지 -->
+                            <li class="page-item" th:classappend="${!inquiries.hasPrevious} ? 'disabled'">
+                                <a class="page-link" th:href="@{|?page=${inquiries.number - 1}|}">&laquo;</a>
+                            </li>
+
+                            <!-- 페이지 번호 -->
+                            <li class="page-item"
+                                th:each="page: ${#numbers.sequence(0, inquiries.totalPages - 1)}"
+                                th:if="${page >= inquiries.number - 2 and page <= inquiries.number + 2}"
+                                th:classappend="${page == inquiries.number} ? 'active'">
+                                <a class="page-link" th:text="${page + 1}" th:href="@{|?page=${page}|}"></a>
+                            </li>
+
+                            <!-- 다음 페이지 -->
+                            <li class="page-item" th:classappend="${!inquiries.hasNext} ? 'disabled'">
+                                <a class="page-link" th:href="@{|?page=${inquiries.number + 1}|}">&raquo;</a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <!-- 오른쪽 버튼 영역 -->
+                    <div class="action-wrapper">
+                        <a th:href="@{/inquiries/write}" class="btn btn-primary">문의하기</a>
+                    </div>
                 </div>
             </main>
         </div>

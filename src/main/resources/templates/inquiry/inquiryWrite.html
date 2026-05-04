@@ -19,19 +19,21 @@
                 <h2 class="title">문의 등록</h2>
 
                 <form id="writeForm" enctype="multipart/form-data" class="write-form">
-                    <div class="form-group mb-md">
-                        <label for="category" class="form-label">분류</label>
-                        <select name="category" id="category" class="input-field select-field">
-                            <option value="시설/기술">시설/기술</option>
-                            <option value="환경/위생">환경/위생</option>
-                            <option value="보안/안전">보안/안전</option>
-                            <option value="기타문의">기타문의</option>
-                        </select>
-                    </div>
+                    <div class="flex gap-md mb-md">
+                        <div class="form-group" style="flex: 0 0 150px;">
+                            <label for="category" class="form-label">분류</label>
+                            <select name="category" id="category" class="input-field select-field">
+                                <option value="시설/기술">시설/기술</option>
+                                <option value="환경/위생">환경/위생</option>
+                                <option value="보안/안전">보안/안전</option>
+                                <option value="기타문의">기타문의</option>
+                            </select>
+                        </div>
 
-                    <div class="form-group mb-md">
-                        <label for="title" class="form-label">제목</label>
-                        <input type="text" id="title" name="title" class="input-field" placeholder="제목을 입력하세요" required>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="title" class="form-label">제목</label>
+                            <input type="text" id="title" name="title" class="input-field" placeholder="제목을 입력하세요" required>
+                        </div>
                     </div>
 
                     <div class="form-group mb-md">
@@ -69,16 +71,25 @@
             alert("제목과 내용을 입력해주세요.");
             return;
         }
+        if (fileInput.files.length > 3) {
+            alert("이미지는 최대 3개까지만 업로드 가능합니다.");
+            return;
+        }
 
         const formData = new FormData();
+
+        // [수정] 사용자 연동 전까지는 임시 ID(예: 1)를 사용합니다.
+        const tempUserId = 1;
 
         // 2. DTO 생성 및 Blob 추가
         const complaintDto = {
             title: title,
             content: content,
-            category: category
+            category: category,
+            userId: tempUserId, // 💡 임시 ID 주입
+            userName: "테스트유저"
         };
-        formData.append("dto", new Blob([JSON.stringify(complaintDto)], { type: "application/json" }));
+        formData.append("dto", new Blob([JSON.stringify(inquiryDto)], { type: "application/json" }));
 
         // 3. 파일 추가
         for (let i = 0; i < fileInput.files.length; i++) {

@@ -1,10 +1,15 @@
 package com.hometalk.onepass.inquiry.controller;
 
 import com.hometalk.onepass.auth.repository.LocalAccountRepository;
+import com.hometalk.onepass.complaint.dto.ComplaintDto;
 import com.hometalk.onepass.inquiry.dto.InquiryDto;
 import com.hometalk.onepass.inquiry.entity.Inquiry;
 import com.hometalk.onepass.inquiry.service.InquiryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,9 +39,7 @@ public class InquiryController {
         if (userDetails == null) {
             throw new RuntimeException("로그인이 필요한 서비스입니다.");
         }
-
         String loginId = userDetails.getUsername();
-
         com.hometalk.onepass.auth.entity.LocalAccount account = localAccountRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new RuntimeException("사용자 계정을 찾을 수 없습니다."));
 
@@ -52,26 +55,44 @@ public class InquiryController {
         관리자나 본인이 작성한 리스트를 볼 때 사용
      */
     @GetMapping
-    public List<InquiryDto> list() {
-        return inquiryService.findAll();
+    public Page<InquiryDto> list(@PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        return inquiryService.findAll(pageable);
+    }
+
+    /*
+     * 내 문의 목록 조회
+     */
+    @GetMapping("/my/{userId}")
+    public Page<InquiryDto> myLimitList(@PathVariable Long userId,
+                                        @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        return inquiryService.findByUserId(userId, pageable);
     }
 
     /*
         상세 조회 (GET)
-
      */
-/*    @GetMapping("/{id}")
-    public InquiryDto detail(@PathVariable("id") Long id) {
-        Inquiry inquiry = inquiryService.getInquiryDetail(id);
-        return InquiryDto.fromEntity(inquiry);
-    }*/
+    @GetMapping("/{id}")
+    public InquiryDto detail(@PathVariable Long id) {
+        return inquiryService.getInquiryDetail(id);
+    }
+
+    /*
+        관리자 답변 등록 (POST)
+     */
+    @PostMapping("/{id}/respond")
+    public void respond(@PathVariable Long id, @RequestBody java.util.Map<String, String> body) {
+        String answer = body.get("answer");
+        if (answer == null || answer.trim().isEmpty()) {
+            throw new RuntimeException("답변 내용을 입력해주세요.");
+        }
+        inquiryService.answer(id, answer);
+    }
 
     /*
         삭제 (DELETE)
-
      */
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable("id") Long id) {
+    public void delete(@PathVariable Long id) {
         inquiryService.deleteInquiry(id);
     }
 }

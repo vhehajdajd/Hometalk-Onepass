@@ -4,6 +4,10 @@ import com.hometalk.onepass.inquiry.dto.InquiryDto;
 import com.hometalk.onepass.inquiry.entity.Inquiry;
 import com.hometalk.onepass.inquiry.service.InquiryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -21,10 +25,13 @@ public class InquiryPageController {
 
     // 1. 문의 목록 페이지
     @GetMapping("/list")
-    public String listPage(Model model) {
+    public String listPage(Model model,
+                           @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         System.out.println("🚩 리스트 페이지 컨트롤러 진입 성공!");
-        List<InquiryDto> inquiries = inquiryService.findAll();
+        Page<InquiryDto> inquiries = inquiryService.findAll(pageable);
         model.addAttribute("inquiries", inquiries);
+        model.addAttribute("currentPage", inquiries.getNumber());
+        model.addAttribute("totalPages", inquiries.getTotalPages());
 
         return "inquiry/inquiryList";
     }
@@ -47,13 +54,9 @@ public class InquiryPageController {
 
     // 4. 문의 상세 페이지 이동
     @GetMapping("/detail/{id}")
-    public String detailPage(@PathVariable("id") Long id, Model model) {
-        // 👈 서비스가 아예 DTO를 반환하게 만듭니다.
+    public String detailPage(@PathVariable Long id, Model model) {
         InquiryDto inquiryDto = inquiryService.getInquiryDetail(id);
-
-        // HTML 코드에 맞게 변수명 확인
         model.addAttribute("inquiry", inquiryDto);
-
         return "inquiry/inquiryDetail";
     }
 }

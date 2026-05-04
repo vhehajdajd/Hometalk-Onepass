@@ -2,12 +2,15 @@ package com.hometalk.onepass.inquiry.service;
 
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.UserRepository;
+import com.hometalk.onepass.complaint.dto.ComplaintDto;
 import com.hometalk.onepass.inquiry.dto.InquiryDto;
 import com.hometalk.onepass.inquiry.entity.Inquiry;
 import com.hometalk.onepass.inquiry.entity.InquiryAttachment;
 import com.hometalk.onepass.inquiry.repository.InquiryAttachmentRepository;
 import com.hometalk.onepass.inquiry.repository.InquiryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -78,21 +81,35 @@ public class InquiryService {
 
     // --- 나머지 조회 및 삭제 로직은 동일 ---
     @Transactional(readOnly = true)
-    public List<InquiryDto> findAll() {
-        return inquiryRepository.findAll().stream()
-                .map(InquiryDto::fromEntity)
-                .toList();
+    public Page<InquiryDto> findAll(Pageable pageable) {
+        return inquiryRepository.findAll(pageable)
+                .map(InquiryDto::fromEntity);
+    }
+
+    /*
+     *  내 민원 리스트 조회 (내 작성글 보기)
+     */
+    public Page<InquiryDto> findByUserId(Long userId, Pageable pageable) {
+        return inquiryRepository.findByUserId(userId, pageable)
+                .map(InquiryDto::fromEntity);
     }
 
     @Transactional(readOnly = true)
     public InquiryDto getInquiryDetail(Long id) {
-        Inquiry inquiry = inquiryRepository.findById(id)
+        return inquiryRepository.findByIdWithAttachments(id)
+                .map(InquiryDto::fromEntity)
                 .orElseThrow(() -> new RuntimeException("문의글 없음"));
-        return InquiryDto.fromEntity(inquiry);
     }
 
     @Transactional
     public void deleteInquiry(Long id) {
         inquiryRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void answer(Long id, String answer) {
+        Inquiry inquiry = inquiryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 문의글을 찾을 수 없습니다. ID: " + id));
+        inquiry.updateAnswer(answer);
     }
 }

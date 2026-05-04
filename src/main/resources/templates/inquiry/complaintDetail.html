@@ -37,7 +37,7 @@
                     <div class="content-body" th:text="${complaint.content}" style="min-height: 200px; white-space: pre-wrap;">내용이 출력됩니다.</div>
 
                     <!-- 첨부파일 (이미지 미리보기 및 다운로드) -->
-                    <div th:if="${not #lists.isEmpty(complaint.attachments)}" class="attachments mt-lg">
+                    <div th:if="${not #lists.isEmpty(complaint.attachments)}" class="attachments mt-lg" style="margin-top: 30px;">
                         <p class="sub-title">📎 첨부파일</p>
                         <div class="attachment-list mt-sm">
                             <div th:each="file : ${complaint.attachments}" class="attachment-item">
@@ -58,7 +58,7 @@
 
                 <!-- 관리자 전용 답변 등록 폼 -->
                 <div class="admin-only admin-answer-form mt-xl pt-lg">
-                    <h3 class="sub-title">관리자 답변 등록</h3>
+                    <h3 class="sub-title" style="margin-top: 20px;">관리자 답변 등록</h3>
                     <form th:action="@{/api/complaints/{id}/respond(id=${complaint.id})}" method="post" class="mt-sm">
                         <textarea id="adminResponse" name="response" rows="5" class="input-field" placeholder="여기에 답변을 입력하세요..."></textarea>
                         <div class="flex-end mt-sm">

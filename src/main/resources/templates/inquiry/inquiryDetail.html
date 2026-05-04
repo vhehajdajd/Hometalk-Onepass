@@ -27,17 +27,17 @@
                     <h1 class="title mt-sm" th:text="${inquiry.title}">민원 제목</h1>
 
                     <div class="post-info text-muted mt-sm">
-                        <span th:text="|작성자 ID: ${inquiry.userId}|">작성자</span>
+                        <span th:text="|작성자 : ${inquiry.userName}|">작성자</span>
                         <span th:text="${inquiry.createdAt != null ? #temporals.format(inquiry.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">작성일</span>
                     </div>
                 </div>
 
                 <div class="post-content">
-                    <div class="content-body" th:utext="${inquiry.content}">민원 내용</div>
+                    <div class="content-body" th:utext="${inquiry.content}" style="min-height: 200px; white-space: pre-wrap;">문의 내용</div>
 
                     <div th:if="${inquiry.attachments != null and not #lists.isEmpty(inquiry.attachments)}" class="attachments mt-lg" style="margin-top: 30px;">
                         <p class="sub-title">📎 첨부파일</p>
-                        <ul class="mt-sm">
+                        <ul class="attachment-list mt-sm">
                             <li th:each="file : ${inquiry.attachments}">
                                 <a th:href="@{/inquiries/download(fileName=${file.storedFileName})}"
                                    th:text="${file.originFileName}"
@@ -52,6 +52,16 @@
                 <div th:if="${inquiry.answer != null}" class="admin-answer-section">
                     <h4 class="sub-title">✉️ 관리자 답변</h4>
                     <p th:text="${inquiry.answer}" class="answer-box mt-sm">답변 내용</p>
+                </div>
+
+                <div class="admin-only admin-answer-form mt-xl pt-lg">
+                    <h3 class="sub-title" style="margin-top: 20px;">관리자 답변 등록</h3>
+                    <form th:action="@{/api/inquiries/{id}/respond(id=${inquiry.id})}" method="post" class="mt-sm">
+                        <textarea id="adminResponse" name="response" rows="5" class="input-field" placeholder="여기에 답변을 입력하세요..."></textarea>
+                        <div class="flex-end mt-sm">
+                            <button type="button" class="btn btn-primary" th:onclick="submitResponse([[${inquiry.id}]])">답변 저장하기</button>
+                        </div>
+                    </form>
                 </div>
 
                 <div class="post-footer flex-between mt-lg pt-lg">
@@ -71,6 +81,37 @@
     function confirmDelete(id) {
         if (confirm("정말로 이 문의글을 삭제하시겠습니까?")) {
             location.href = "/hometop/inquiries/delete/" + id;
+        }
+    }
+
+    async function submitResponse(id) {
+        const answerText = document.getElementById('adminResponse').value;
+        if(!answerText.trim()) {
+            alert("답변 내용을 입력해주세요.");
+            return;
+        }
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        try {
+            const response = await fetch(`/hometop/api/inquiries/${id}/respond`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ "answer": answerText })
+            });
+
+            if (response.ok) {
+                alert("답변이 등록되었습니다.");
+                location.reload(); // 새로고침하여 답변 확인
+            } else {
+                alert("답변 등록에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
         }
     }
 </script>

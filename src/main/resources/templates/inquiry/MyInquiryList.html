@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='내 민원 내역')}"></th:block>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='내 문의 내역')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
 </head>
 <body>
@@ -15,7 +15,7 @@
         <!-- 메인 콘텐츠 -->
         <div class="dashboard-content">
             <main class="container">
-                <h2 class="title">내가 작성한 민원</h2>
+                <h2 class="title">내 문의</h2>
 
                 <table class="table">
                     <thead>
@@ -30,13 +30,13 @@
                     <tr th:each="my : ${paging.content}">
                         <td th:text="${my.category}"></td>
                         <td class="title-cell">
-                            <a th:href="@{/complaints/detail/{id}(id=${my.id})}" th:text="${my.title}"></a>
+                            <a th:href="@{/inquiries/detail/{id}(id=${my.id})}" th:text="${my.title}"></a>
                         </td>
                         <td class="text-small badge" th:text="${my.status}"></td>
                         <td class="text-muted" th:text="${#temporals.format(my.createdAt, 'yyyy-MM-dd')}"></td>
                     </tr>
                     <tr th:if="${paging.isEmpty()}">
-                        <td colspan="4" style="text-align: center; padding: 50px 0;">작성한 민원이 없습니다.</td>
+                        <td colspan="4" style="text-align: center; padding: 50px 0;">작성한 문의가 없습니다.</td>
                     </tr>
                     </tbody>
                 </table>
@@ -72,7 +72,7 @@
 
                     <!-- 오른쪽 버튼 영역 (CSS의 action-wrapper 활용) -->
                     <div class="action-wrapper">
-                        <a th:href="@{/complaints}" class="btn btn-outline">전체 목록</a>
+                        <a th:href="@{/inquiries}" class="btn btn-outline">전체 목록</a>
                     </div>
                 </div>
             </main>

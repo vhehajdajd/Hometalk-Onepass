@@ -51,7 +51,7 @@ public class ComplaintController {
     }
 
     /*
-     * 내 민원 목록 조회 (지현님이 말씀하신 기능)
+     * 내 민원 목록 조회
      */
     @GetMapping("/my/{userId}")
     public Page<ComplaintDto> myLimitList(@PathVariable("userId") Long userId,

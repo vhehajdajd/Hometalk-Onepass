@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 public class  InquiryDto {
     private Long id; // 상세보기 링크 이동을 위해 필수!
     private Long userId;
+    private String userName;
     private String title;
     private String category;
     private String content;
@@ -30,6 +31,7 @@ public class  InquiryDto {
         return InquiryDto.builder()
                 .id(inquiry.getId())
                 .userId(inquiry.getUser() != null ? inquiry.getUser().getId() : null)
+                .userName(inquiry.getUser() != null ? inquiry.getUser().getName() : "익명")
                 .title(inquiry.getTitle())
                 .category(inquiry.getCategory())
                 .content(inquiry.getContent())
