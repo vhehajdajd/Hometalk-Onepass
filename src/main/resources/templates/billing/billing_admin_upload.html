@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<!--
+    고지서업로드 페이지 (billing/admin/upload)
+    nav 탭1 - 엑셀파일 업로드, 유효성 검사(금액누락), 고지서 미리보기, DB저장된 월 재업로드시 UPSERT 확인, DB저장
+-->
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>고지서 업로드</title>
+    <meta name="_csrf"        th:content="${_csrf?.token}" />
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}" />
+    <link rel="stylesheet" th:href="@{/css/dashboard/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/billing/billing_common.css}" />
+    <link rel="stylesheet" th:href="@{/css/billing/billing_admin_upload.css}" />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div class="main-layout" style="display:flex; min-height:100vh;">
+
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='billing')}"></div>
+
+    <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
+
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'billing'} })}"></div>
+
+        <header class="category-menu-bar">
+            <nav class="admin-tab-nav">
+                <a th:href="@{/billing/admin/upload}"  class="admin-tab-btn active">고지서 업로드</a>
+                <a th:href="@{/billing/admin/monthly}" class="admin-tab-btn">월별 관리</a>
+            </nav>
+        </header>
+
+        <div class="container">
+            <div class="page-title">고지서 업로드</div>
+
+            <!-- 업로드 존 -->
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">⬆</div>
+                <div class="upload-title">엑셀 파일을 드래그하거나 클릭하여 업로드</div>
+                <div class="upload-hint">.xlsx · 파일명 형식: 2026_01.xlsx</div>
+                <input type="file" id="fileInput" accept=".xlsx,.csv" style="display:none" />
+            </div>
+
+            <!-- 업로드 완료 배너 -->
+            <div class="upload-done-banner" id="uploadDoneBanner" style="display:none">
+                <span class="done-icon">✓</span>
+                <span id="uploadDoneMsg"></span>
+                <div class="upload-done-actions">
+                    <button class="btn btn-ghost" onclick="resetUpload()">새 파일 업로드</button>
+                    <a th:href="@{/billing/admin/monthly}" class="btn btn-point">월별 관리 보기 →</a>
+                </div>
+            </div>
+
+            <!-- 동 필터 (파일 드롭 후 표시) -->
+            <div class="filter-row" id="filterBar" style="display:none">
+                <select id="selDong" onchange="onDongChange()">
+                    <option value="">전체 동</option>
+                </select>
+            </div>
+
+            <!-- 미리보기 / 결과 테이블 -->
+            <div class="table-section" id="tableSection" style="display:block">
+
+                <div class="table-header-row">
+                    <div class="table-header-title" id="tableTitle">유효성 검사 + 고지서 미리보기 + 업로드 확정</div>
+                    <div class="table-header-meta" id="tableMeta"></div>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>NUM</th>
+                            <th class="sortable" onclick="sortBy('unit')">동/호 <span class="sort-icon">▼</span></th>
+                            <th>부과월</th>
+                            <th class="sortable" onclick="sortBy('total_amount')">청구금액 <span class="sort-icon">▼</span></th>
+                            <th class="sortable" onclick="sortBy('valid')">검증 <span class="sort-icon">▼</span></th>
+                            <th>고지서 미리보기</th>
+                            <th id="thUpsert" style="display:none" class="sortable" onclick="sortBy('upsertType')">비고 (UPSERT) <span class="sort-icon">▼</span></th>
+                        </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        <tr>
+                            <td colspan="7" style="text-align:center;padding:36px;color:#aaa;">
+                                파일을 업로드하면 여기에 표시됩니다.
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-footer">
+                    <div class="table-summary" id="tableSummary"></div>
+                    <div class="table-actions" id="tableActions">
+                        <button class="btn-confirm-upload disabled" id="btnConfirm" onclick="confirmUpload()">업로드 확정</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    </div>
+</div>
+
+<!-- 중복 체크 팝업 (드롭 직후) -->
+<div class="confirm-overlay" id="dupOverlay" style="display:none">
+    <div class="confirm-box">
+        <div class="confirm-title">이미 데이터가 존재합니다</div>
+        <div class="confirm-msg" id="dupMsg"></div>
+        <div class="confirm-msg-warn">변경된 세대만 UPDATE 처리됩니다.</div>
+        <div class="confirm-btns">
+            <button class="btn btn-ghost" onclick="cancelDup()">취소</button>
+            <button class="btn btn-point" onclick="confirmDup()">확인</button>
+        </div>
+    </div>
+</div>
+
+<!-- 업로드 확정 팝업 -->
+<div class="confirm-overlay" id="confirmOverlay" style="display:none">
+    <div class="confirm-box">
+        <div class="confirm-title"    id="confirmTitle">업로드 확정</div>
+        <div class="confirm-msg"      id="confirmMsg"></div>
+        <div class="confirm-msg-warn" id="confirmMsgWarn"></div>
+        <div class="confirm-btns">
+            <button class="btn btn-ghost" onclick="cancelConfirm()">취소</button>
+            <button class="btn btn-point" onclick="doConfirmUpload()">확인</button>
+        </div>
+    </div>
+</div>
+
+<!-- 고지서 미리보기 모달 -->
+<div class="modal-overlay" id="previewOverlay" style="display:none" onclick="closePreview(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-header-title" id="modalHeaderTitle">고지서 미리보기</span>
+            <button class="modal-close-btn" onclick="closePreviewBtn()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="bill-head">
+                <div class="bill-head-title">관리비 고지서</div>
+                <div class="bill-head-sub" id="modalPeriod"></div>
+            </div>
+            <div class="bill-col-hint">항목명</div>
+            <div class="bill-rows" id="modalRows"></div>
+            <div class="bill-total-row">
+                <span class="bill-total-label">합계</span>
+                <span class="bill-total-amount" id="modalTotal"></span>
+            </div>
+            <div class="bill-preview-note">✱ 입주민에게 보여지는 화면과 동일한 미리보기입니다.</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closePreviewBtn()">닫기</button>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const CONTEXT_PATH = /*[[${contextPath}]]*/ '/hometop';
+    const CSRF_TOKEN   = document.querySelector('meta[name="_csrf"]')?.content;
+    const CSRF_HEADER  = document.querySelector('meta[name="_csrf_header"]')?.content;
+    /*]]>*/
+</script>
+<script th:src="@{/js/billing/billing_upload.js}"></script>
+
+</body>
+</html>

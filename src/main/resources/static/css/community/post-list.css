@@ -1,0 +1,175 @@
+/* =========================
+   1. 상단 레이아웃
+========================= */
+.list-top-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+/* =========================
+   2. 검색 영역 (전용 UI)
+========================= */
+.search-form {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* 공통 스타일: 테두리와 둥근 모서리 */
+.search-select, .search-input {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 14px;
+    color: #4b5563;
+    outline: none;
+}
+
+/* select 상자 스타일 */
+.search-select {
+    min-width: 100px;
+    appearance: none; /* 기본 화살표 숨기기 (원할 경우 커스텀 가능) */
+    background: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%234b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 10px center;
+    background-size: 12px;
+    padding-right: 30px;
+    background-color: white;
+}
+
+.search-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-input {
+    width: 250px;
+    padding-right: 40px;
+}
+.search-input::placeholder {
+    color: #9ca3af;
+}
+.search-select:focus, .search-input:focus {
+    border-color: #9ca3af;
+}
+
+.btn-search-submit {
+    position: absolute;
+    right: 50px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+.btn-search-submit:hover {
+    background-color: #eee;
+}
+
+.btn-reset-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    background-color: #f3f4f6;
+}
+.btn-reset-icon:hover {
+    background-color: #e5e7eb;
+    transform: rotate(180deg);
+}
+.btn-reset-icon svg {
+    stroke: #6b7280; /* 아이콘 색상 좀 더 진하게 */
+}
+
+/* =========================
+   3. 테이블 (공통 + 보완)
+========================= */
+.post-table {
+    table-layout: fixed;
+}
+.post-table th,
+.post-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.post-table th:nth-child(1) { width: 12%; }
+.post-table th:nth-child(3) { width: 8%; }
+.post-table th:nth-child(4) { width: 15%; }
+.post-table th:nth-child(5) { width: 15%; }
+
+
+.comment-count-inline {
+    color: #00b894;
+    margin-left: 5px;
+    font-weight: bold;
+}
+
+/* =========================
+   5. 전용 UI 요소
+========================= */
+.date-cell {
+    color: #94a3b8;
+}
+
+.no-data {
+    text-align: center;
+    padding: 80px 0;
+}
+
+/* =========================
+   6. 상태 / 고정글
+========================= */
+.pinned-row {
+    background-color: #f1f3f5 !important;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+
+.img-icon-grey {
+    color: #adb5bd;
+    margin-left: 5px;
+    vertical-align: middle;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* =========================
+   7. 상태 뱃지 확장
+========================= */
+.status-badge-inline {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 12px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+/* 예약중 - 코랄 포인트 */
+.badge-reserved {
+    background-color: #FFF5F5;
+    color: #F687B3;
+    border: 1px solid #FED7E2;
+}
+
+/* 나눔중 - 민트 포인트 */
+.badge-shared {
+    background-color: #E6FFFA;
+    color: #38B2AC;
+    border: 1px solid #B2F5EA;
+}
+
+.badge-completed {
+    background-color: #EDF2F7;
+    color: #718096;
+    border: 1px solid #E2E8F0;
+}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>나의 민원 내역</title>
+</head>
+<body>
+<h2>내가 작성한 민원</h2>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>번호</th>
+        <th>카테고리</th>
+        <th>제목</th>
+        <th>처리상태</th>
+        <th>작성일</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="my : ${myComplaints}">
+        <td th:text="${my.id}"></td>
+        <td th:text="${my.category}"></td>
+        <td>
+            <a th:href="@{/complaints/detail/{id}(id=${my.id})}" th:text="${my.title}"></a>
+        </td>
+        <td th:text="${my.status}"></td>
+        <td th:text="${#temporals.format(my.createdAt, 'yyyy-MM-dd')}"></td>
+    </tr>
+    </tbody>
+</table>
+<a th:href="@{/complaints}">전체 목록으로</a>
+</body>
+</html>

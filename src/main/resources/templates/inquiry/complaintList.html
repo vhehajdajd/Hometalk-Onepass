@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>민원 게시판</title>
+</head>
+<body>
+<h2>민원 게시판</h2>
+<a th:href="@{/complaints/write}">글쓰기</a>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>번호</th>
+        <th>카테고리</th>
+        <th>제목</th>
+        <th>작성자</th>
+        <th>상태</th>
+        <th>작성일</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="list : ${complaints}">
+        <td th:text="${list.id}"></td>
+        <td th:text="${list.category}"></td>
+        <td>
+            <span th:if="${list.isSecret}">🔒</span>
+            <a th:href="@{/complaints/detail/{id}(id=${list.id})}" th:text="${list.title}"></a>
+        </td>
+        <td th:text="${list.userId}"></td>
+        <td th:text="${list.status}"></td>
+        <td th:text="${#temporals.format(list.createdAt, 'yyyy-MM-dd')}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

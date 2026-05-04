@@ -1,0 +1,185 @@
+/* 팝업 전체 배경과 기본 텍스트 톤 */
+.my-page-popup {
+    margin: 0;
+    background: #edf3fb;
+    color: #1d2a39;
+}
+
+/* 카드가 화면 중앙에 안정적으로 놓이도록 바깥 여백을 관리 */
+.my-page-popup__shell {
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* 마이페이지 메인 카드: 브랜드 컬러 헤더와 밝은 본문 대비를 준다. */
+.my-page-popup__panel {
+    max-width: 460px;
+    margin: 0 auto;
+    background: #3C6ABC;
+    color: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 18px 50px rgba(18, 39, 67, 0.16);
+    overflow: hidden;
+    border: 1px solid rgba(23, 59, 100, 0.08);
+}
+
+/* 제목 영역과 닫기 버튼을 분리해 팝업 UI 구조를 명확히 한다. */
+.my-page-popup__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px 24px 0 0;
+    background: #3C6ABC;
+    color: #ffffff;
+}
+
+.my-page-popup__login-info {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.my-page-popup__title {
+    margin: 0;
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 700;
+}
+
+.my-page-popup__close {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* 실제 정보가 보이는 본문은 밝은 카드 스타일로 읽기성을 높인다. */
+.my-page-popup__content {
+    padding: 24px;
+}
+
+.my-page-popup__section {
+    padding: 20px;
+    border-radius: 18px;
+    background: #f6f9fc;
+    border: 1px solid #e4ecf5;
+}
+
+.my-page-popup__section + .my-page-popup__section {
+    margin-top: 24px;
+}
+
+.my-page-popup__section-title {
+    margin: 0 0 16px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #032154;
+}
+
+.my-page-popup__info-list {
+    display: grid;
+    gap: 0;
+}
+
+/* 각 항목은 라벨/값 쌍으로 보여주고, 점선 구분선으로 밀도를 조절한다. */
+.my-page-popup__info-item {
+    position: relative;
+    padding: 12px 0;
+}
+
+.my-page-popup__info-item::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-bottom: 1px dashed rgba(64, 115, 201, 0.45);
+}
+
+.my-page-popup__info-item:first-child {
+    padding-top: 0;
+}
+
+.my-page-popup__info-item:last-child {
+    padding-bottom: 0;
+}
+
+.my-page-popup__info-item:last-child::after {
+    display: none;
+}
+
+.my-page-popup__label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #4073c9;
+    font-weight: 600;
+}
+
+.my-page-popup__value {
+    margin: 0;
+    font-size: 15px;
+    color: #170124;
+}
+
+.my-page-popup__actions {
+    padding: 0 24px 24px;
+}
+
+/* 로그아웃과 탈퇴를 색으로 구분해 의도치 않은 클릭을 줄인다. */
+.my-page-popup__logout-form {
+    margin: 0;
+}
+
+.my-page-popup__withdraw-form {
+    margin: 10px 0 0;
+}
+
+.my-page-popup__logout-btn {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 14px;
+    background: #7ED3D9;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.my-page-popup__withdraw-btn {
+    width: 100%;
+    height: 48px;
+    border: 1px solid #d45c5c;
+    border-radius: 14px;
+    background: #EB6E57;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+@media (max-width: 540px) {
+    /* 모바일에서는 여백과 제목 크기를 줄여 카드가 화면을 넘지 않게 조정한다. */
+    .my-page-popup__shell {
+        padding: 10px;
+    }
+
+    .my-page-popup__header,
+    .my-page-popup__content,
+    .my-page-popup__actions {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .my-page-popup__title {
+        font-size: 26px;
+    }
+}

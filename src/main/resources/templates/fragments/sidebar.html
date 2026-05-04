@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<aside th:fragment="sidebar(currentPage)" class="sidebar">
+    <!-- ── 로고 (클릭 시 대시보드) ── -->
+    <a th:href="@{/dashboard}" class="sidebar-logo">
+        <svg width="90" height="64" viewBox="0 0 90 64">
+            <circle cx="22" cy="8" r="1.5" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.2"/>
+            <circle cx="45" cy="4" r="1.5" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.2"/>
+            <circle cx="68" cy="8" r="1.5" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.2"/>
+            <path d="M22,10 Q30,19 36,16 Q40,14 45,6 Q50,14 54,16 Q60,19 68,10 L68,19 M22,10 L22,19"
+                  fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.2" stroke-linecap="round"/>
+            <text x="45" y="38" text-anchor="middle" fill="white" font-size="14" letter-spacing="4" font-weight="300">FOREST</text>
+            <line x1="10" y1="45" x2="80" y2="45" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+            <text x="45" y="60" text-anchor="middle" fill="white" font-size="15" letter-spacing="3" font-weight="700">LIUM</text>
+        </svg>
+    </a>
+
+    <!-- ── 메뉴 (입주민) ── -->
+    <nav class="sidebar-menu" sec:authorize="hasRole('RESIDENT')">
+        <a class="sidebar-item" th:href="@{/notice}"
+           th:classappend="${currentPage == 'notice'} ? ' active' : ''">공지</a>
+        <a class="sidebar-item" th:href="@{/schedule}"
+           th:classappend="${currentPage == 'schedule'} ? ' active' : ''">일정</a>
+        <a class="sidebar-item" th:href="@{/hometop/inquiries/list}"
+           th:classappend="${currentPage == 'inquiry'} ? ' active' : ''">문의</a>
+        <a class="sidebar-item" th:href="@{/reservation/apply}"
+           th:classappend="${currentPage == 'reservation'} ? ' active' : ''">예약</a>
+        <a class="sidebar-item" th:href="@{/parking/vehicle}"
+           th:classappend="${currentPage == 'parking'} ? ' active' : ''">주차</a>
+        <a class="sidebar-item" th:href="@{/billing}"
+           th:classappend="${currentPage == 'billing'} ? ' active' : ''">관리비</a>
+        <a class="sidebar-item" th:href="@{/community/square}"
+           th:classappend="${currentPage == 'community'} ? ' active' : ''">커뮤니티</a>
+        <a class="sidebar-item" th:href="@{/myPage}"
+           th:classappend="${currentPage == 'myPage'} ? ' active' : ''">마이페이지</a>
+    </nav>
+
+    <!-- ── 메뉴 (관리자) ── -->
+    <nav class="sidebar-menu" sec:authorize="hasRole('ADMIN')">
+        <a class="sidebar-item" th:href="@{/notice}"
+           th:classappend="${currentPage == 'notice'} ? ' active' : ''">공지</a>
+        <a class="sidebar-item" th:href="@{/schedule}"
+           th:classappend="${currentPage == 'schedule'} ? ' active' : ''">일정</a>
+        <a class="sidebar-item" th:href="@{/hometop/inquiries/list}"
+           th:classappend="${currentPage == 'inquiry'} ? ' active' : ''">문의</a>
+        <a class="sidebar-item" th:href="@{/reservation/admin/status}"
+           th:classappend="${currentPage == 'reservation'} ? ' active' : ''">예약</a>
+        <a class="sidebar-item" th:href="@{/admin/vehicle/approval}"
+           th:classappend="${currentPage == 'parking'} ? ' active' : ''">주차</a>
+        <a class="sidebar-item" th:href="@{/billing/admin/unpaid}"
+           th:classappend="${currentPage == 'billing'} ? ' active' : ''">관리비</a>
+        <a class="sidebar-item" th:href="@{/community/admin}"
+           th:classappend="${currentPage == 'community'} ? ' active' : ''">커뮤니티</a>
+        <a class="sidebar-item" th:href="@{/myPage}"
+           th:classappend="${currentPage == 'myPage'} ? ' active' : ''">마이페이지</a>
+    </nav>
+
+    <!-- ── 하단 ── -->
+    <div class="s-bottom">
+        <div class="s-phone">
+            <div class="s-phone-label">관리사무소</div>
+            <div class="s-phone-num">02-3456-7890</div>
+        </div>
+        <a class="s-logout" th:href="@{/auth/logout}">로그아웃</a>
+    </div>
+</aside>
+
+</body>
+</html>

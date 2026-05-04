@@ -1,0 +1,424 @@
+/* style.css */
+
+:root {
+    --color-bg:              white;
+    --color-main:            #032154;
+    --color-sub:             #3C6ABC;
+    --color-btn:             #4073C9;
+    --color-btn-secondary:   #9EBFDB;
+    --color-btn-point:       #EB6E57;
+    --color-btn-point-hover: #D65A45;
+    --color-text-muted:      #888888;
+    --color-bg-white-btn:    #F5F5F5;
+    --color-modal-line:      #F1F5F9;
+    --color-text:            #000000;
+    --border-color:          #E2E8F0;
+    --badge-facility:        #d2eed8;
+    --badge-facility-font:   #6c977a;
+    --badge-safety:          #fff8e1;
+    --badge-safety-font:     #b8860b;
+    --badge-normal:          #e6f4f5;
+    --badge-normal-font:     #2a9da4;
+    --badge-default:         #c9c9c9;
+    --badge-default-font:    #5b5b5b;
+    --sidebar-width:         180px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #eef1f8;
+    color: var(--color-text);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* ── 전체 레이아웃 ── */
+.main-layout { display: flex; min-height: 100vh; }
+
+/* ── 사이드바 ── */
+.sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, #3a5fcd 0%, #6b8de3 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+.sidebar-logo {
+    width: 100%;
+    padding: 20px 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.sidebar-menu {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 8px;
+}
+
+.sidebar-item {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.8);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.sidebar-item:hover { background: rgba(255,255,255,0.15); color: white; }
+.sidebar-item.active { background: rgba(255,255,255,0.25); color: white; font-weight: 700; }
+
+/* ── 사이드바 하단 ── */
+.s-bottom {
+    margin-top: auto;
+    width: 100%;
+    padding: 16px 8px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.s-phone { text-align: center; }
+.s-phone-label { font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 2px; }
+.s-phone-num { font-size: 12px; color: white; font-weight: 600; }
+
+.s-logout {
+    width: 100%;
+    padding: 7px 0;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.s-logout:hover { background: rgba(255,255,255,0.25); }
+
+/* ── 메인 래퍼 ── */
+.main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── 헤더 ── */
+.header {
+    height: 52px;
+    background: white;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-main);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+/* ── 카테고리 바 ── */
+.category-bar {
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 24px;
+    display: flex;
+    gap: 24px;
+    height: 40px;
+    align-items: center;
+    position: sticky;
+    top: 52px;
+    z-index: 99;
+}
+
+.category-item {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    text-decoration: none;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.category-item:hover { color: var(--color-main); }
+.category-item.active { color: var(--color-main); font-weight: 700; border-bottom: 2px solid var(--color-main); }
+
+/* ── 콘텐츠 ── */
+.dashboard-content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+
+/* ── 그리드 ── */
+.dashboard-grid { display: flex; flex-direction: column; gap: 14px; max-width: 1300px; margin: 0 auto; }
+.row-1 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.row-2 { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 14px; }
+.row-3 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+/* ── 카드 ── */
+.card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 12px;
+}
+
+.card-title { font-size: 15px; font-weight: 700; color: var(--color-main); }
+.card-more { font-size: 13px; color: var(--color-text-muted); text-decoration: none; transition: color 0.2s; }
+.card-more:hover { color: var(--color-btn-point); }
+
+/* ── 공지 ── */
+.notice-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--color-modal-line);
+    text-decoration: none;
+    color: inherit;
+}
+
+.notice-item:last-child { border-bottom: none; }
+.notice-item:hover .notice-title { color: var(--color-btn-point); text-decoration: underline; }
+
+.notice-badge {
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.notice-badge.FACILITY { background: var(--badge-facility); color: var(--badge-facility-font); }
+.notice-badge.SAFETY   { background: var(--badge-safety);   color: var(--badge-safety-font); }
+.notice-badge.NORMAL   { background: var(--badge-normal);   color: var(--badge-normal-font); }
+
+.notice-title { flex: 1; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notice-date  { font-size: 12px; color: var(--color-text-muted); white-space: nowrap; }
+
+/* ── 커뮤니티 ── */
+.community-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--color-modal-line);
+    text-decoration: none;
+    color: inherit;
+}
+
+.community-item:last-child { border-bottom: none; }
+.community-item:hover .community-title { color: var(--color-btn-point); text-decoration: underline; }
+
+.community-badge {
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--badge-default);
+    color: var(--badge-default-font);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.community-title { flex: 1; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── 달력 ── */
+.cal-nav { display: flex; align-items: center; gap: 8px; }
+
+.cal-nav button {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    width: 24px; height: 24px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--color-main);
+    transition: background 0.2s;
+}
+
+.cal-nav button:hover { background: var(--color-bg-white-btn); }
+.cal-nav-title { font-size: 14px; font-weight: 700; color: var(--color-main); }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-top: 4px; }
+
+.cal-day-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--color-text-muted); padding: 4px 0; }
+.cal-day-header.sun { color: #e74c3c; }
+.cal-day-header.sat { color: var(--color-sub); }
+
+.cal-cell {
+    text-align: center;
+    padding: 3px 1px;
+    font-size: 11px;
+    color: var(--color-text);
+    border-radius: 4px;
+    min-height: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.cal-cell.other-month { color: #c8d0da; }
+.cal-cell.today .cal-date { background: var(--color-btn); color: white; border-radius: 50%; }
+
+.cal-date { font-size: 11px; font-weight: 600; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+
+.cal-dots { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
+.cal-dot { width: 4px; height: 4px; border-radius: 50%; }
+.cal-dot.FACILITY { background: var(--badge-facility-font); }
+.cal-dot.SAFETY   { background: var(--badge-safety-font); }
+.cal-dot.NORMAL   { background: var(--badge-normal-font); }
+.cal-dot.DEFAULT  { background: var(--badge-default-font); }
+
+/* ── 오늘의 일정 ── */
+.today-schedule-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-modal-line);
+}
+
+.today-schedule-item:last-child { border-bottom: none; }
+.today-schedule-title { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.today-schedule-time  { font-size: 12px; color: var(--color-text-muted); }
+
+.today-schedule-badge {
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    align-self: flex-start;
+}
+
+.today-schedule-badge.FACILITY { background: var(--badge-facility); color: var(--badge-facility-font); }
+.today-schedule-badge.SAFETY   { background: var(--badge-safety);   color: var(--badge-safety-font); }
+.today-schedule-badge.NORMAL   { background: var(--badge-normal);   color: var(--badge-normal-font); }
+.today-schedule-badge.DEFAULT  { background: var(--badge-default);  color: var(--badge-default-font); }
+
+/* ── 주차 ── */
+.parking-section { margin-bottom: 14px; }
+.parking-section:last-child { margin-bottom: 0; }
+.parking-section-title { font-size: 12px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 6px; }
+
+.parking-vehicle-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--color-modal-line);
+    font-size: 13px;
+}
+
+.parking-vehicle-item:last-child { border-bottom: none; }
+
+.parking-status { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
+.parking-status.approved { background: var(--badge-facility); color: var(--badge-facility-font); }
+.parking-status.pending  { background: var(--badge-safety);   color: var(--badge-safety-font); }
+.parking-status.rejected { background: #fde8e8; color: #c0392b; }
+
+.ticket-row { display: flex; gap: 8px; margin-top: 4px; }
+
+.ticket-box {
+    flex: 1;
+    background: var(--color-bg-white-btn);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    padding: 10px 8px;
+    text-align: center;
+}
+
+.ticket-label { font-size: 11px; color: var(--color-text-muted); margin-bottom: 4px; }
+.ticket-count { font-size: 20px; font-weight: 700; color: var(--color-main); }
+.ticket-unit  { font-size: 11px; color: var(--color-text-muted); }
+
+/* ── 하단 카드 ── */
+.small-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-modal-line);
+    gap: 6px;
+}
+
+.small-item:last-child { border-bottom: none; }
+.small-item-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; }
+.small-status { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+
+.s-answered   { background: var(--badge-normal);   color: var(--badge-normal-font); }
+.s-pending    { background: var(--badge-safety);   color: var(--badge-safety-font); }
+.s-confirmed  { background: var(--badge-facility); color: var(--badge-facility-font); }
+.s-unanswered { background: #fde8e8; color: #c0392b; }
+.s-processing { background: #e8eaf6; color: #3949ab; }
+.s-received   { background: var(--badge-default);  color: var(--badge-default-font); }
+
+/* ── 관리비 ── */
+.billing-month  { font-size: 13px; color: var(--color-text-muted); margin-bottom: 4px; }
+.billing-amount { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+.billing-amount.UNPAID { color: var(--color-btn-point); }
+.billing-amount.PAID   { color: var(--color-btn); }
+.billing-due { font-size: 12px; color: var(--color-text-muted); margin-bottom: 14px; }
+
+.btn-detail {
+    display: inline-block;
+    padding: 6px 10px;
+    background: var(--color-main);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s;
+    align-self: flex-start;
+}
+
+.btn-detail:hover { opacity: 0.88; }
+
+/* ── 로딩 ── */
+.loading { color: var(--color-text-muted); font-size: 13px; text-align: center; padding: 16px 0; }
+
+/* ── 푸터 ── */
+.footer {
+    height: 48px;
+    background: white;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+}

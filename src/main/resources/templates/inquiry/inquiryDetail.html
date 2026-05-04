@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeTOP - 문의 상세 보기</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    <style>
+        body { font-family: 'Pretendard', sans-serif; background-color: #f9f9f9; color: #333; margin: 0; padding: 20px; }
+        .post-detail-container { max-width: 800px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .post-header { margin-bottom: 20px; }
+        .category { display: inline-block; background: #f0f0f0; padding: 4px 12px; border-radius: 4px; font-size: 13px; color: #666; margin-bottom: 10px; }
+        .status-badge { float: right; font-weight: 700; font-size: 14px; }
+        h1 { font-size: 28px; margin: 10px 0; color: #111; }
+        .post-info { font-size: 14px; color: #999; margin-top: 15px; }
+        .post-info span { margin-right: 15px; }
+        hr { border: 0; border-top: 1px solid #eee; margin: 25px 0; }
+        .post-content { line-height: 1.8; font-size: 16px; min-height: 200px; }
+        .attachments { background: #f8f9fa; padding: 15px; border-radius: 8px; font-size: 14px; }
+        .attachments ul { list-style: none; padding: 0; margin: 10px 0 0 0; }
+        .attachments a { color: #0066cc; text-decoration: none; }
+        .post-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; }
+        .btn { padding: 10px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; transition: 0.2s; cursor: pointer; border: none; }
+        .btn-list { background: #333; color: #fff; }
+        .btn-edit { background: #eee; color: #333; margin-right: 8px; }
+        .btn-delete { background: #ffebee; color: #d32f2f; }
+        /* 관리자 답변 영역 */
+        .admin-answer-section { background-color: #fcfaf5; padding: 25px; border-left: 4px solid #d4a373; border-radius: 4px; margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="post-detail-container">
+    <div class="post-header">
+        <span class="category" th:text="${complaint.category}">카테고리</span>
+        <span class="status-badge"
+              th:text="${complaint.status}"
+              th:style="${complaint.status == '처리완료'} ? 'color: #1976d2;' : 'color: #e53935;'">상태</span>
+
+        <h1 th:text="${complaint.title}">민원 제목</h1>
+
+        <div class="post-info">
+            <span th:text="|작성자 ID: ${complaint.userId}|">작성자</span>
+            <span th:text="${complaint.createdAt != null ? #temporals.format(complaint.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">작성일</span>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="post-content">
+        <div th:utext="${complaint.content}">민원 내용</div>
+
+        <div th:if="${complaint.attachments != null and not #lists.isEmpty(complaint.attachments)}" class="attachments" style="margin-top: 30px;">
+            <p><strong>📎 첨부파일</strong></p>
+            <ul>
+                <li th:each="file : ${complaint.attachments}">
+                    <a th:href="@{/hometop/inquiries/download(fileName=${file.storedFileName})}"
+                       th:text="${file.originFileName}">파일명</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div th:if="${complaint.answer != null}" class="admin-answer-section">
+        <h4 style="margin-top:0;">✉️ 관리자 답변</h4>
+        <p th:text="${complaint.answer}" style="margin-bottom:0; white-space: pre-wrap;">답변 내용</p>
+    </div>
+
+    <hr>
+
+    <div class="post-footer">
+        <a th:href="@{/hometop/inquiries/list}" class="btn btn-list">목록으로</a>
+
+        <div class="auth-buttons">
+            <a th:href="@{/hometop/inquiries/edit/{id}(id=${complaint.id})}" class="btn btn-edit">수정</a>
+            <button type="button" class="btn btn-delete" th:onclick="|confirmDelete(${complaint.id})|">삭제</button>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    function confirmDelete(id) {
+        if (confirm("정말로 이 문의글을 삭제하시겠습니까?")) {
+            location.href = "/hometop/inquiries/delete/" + id;
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,272 @@
+/* =========================
+   1. DESIGN TOKENS (Variables)
+========================= */
+:root {
+    /* Colors */
+    --color-main: #032154;        /* 제목, 서브 버튼 */
+    --color-text: #000000;        /* 일반 내용 */
+    --color-text-muted: #888888;  /* 연한 글자 (메타정보) */
+    --color-btn: #4073C9;         /* 메인 버튼 */
+    --color-sub: #3C6ABC;
+    --color-btn-point: #EB6E57;   /* 포인트 버튼 (코랄) */
+    --color-btn-point-hover: #D65A45;
+    --color-bg-white-btn: #F5F5F5;   /* 흰 버튼 호버 */
+    --border-color: #E2E8F0;      /* 테두리 */
+    --color-modal-line: #F1F5F9;  /* 모달 구분선 */
+
+    /* Typography */
+    --font-base: 'Segoe UI', Arial, sans-serif;
+    --font-title: 30px;           /* 모듈 제목 */
+    --font-sub-title: 16px;       /* 표 제목 */
+    --font-meta: 15px;            /* 작성일, 조회수 */
+    --font-small: 14px;           /* 페이지네이션, 배지 */
+
+    /* Layout & Geometry */
+    --radius: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --table-row-padding: 18px;
+}
+
+/* =========================
+   2. RESET & BASE
+========================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-base);
+    color: var(--color-text);
+    line-height: 1.6;
+    background-color: #fff;
+    -webkit-font-smoothing: antialiased;
+}
+/* 링크의 파란색과 밑줄 제거 */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* 리스트의 점(불렛) 제거 */
+ul, li {
+    list-style: none;
+}
+
+/* =========================
+   3. TEXT & TYPOGRAPHY
+========================= */
+.title {
+    font-size: var(--font-title);
+    font-weight: 600;
+    color: var(--color-main);
+    margin-bottom: var(--spacing-md);
+}
+
+.sub-title {
+    font-size: var(--font-sub-title);
+    font-weight: 600;
+}
+
+.title-cell { text-align: left !important; white-space: nowrap; }
+
+.title-cell a {
+    max-width: 80%;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.title-cell a:hover {
+    color: var(--color-btn-point);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.text-muted {
+    color: var(--color-text-muted);
+    font-size: var(--font-meta);
+}
+
+.text-small {
+    font-size: var(--font-small);
+}
+
+/* =========================
+   4. BUTTONS
+========================= */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: var(--font-small);
+    font-weight: 600;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 1.5;
+}
+
+/* 상태별 공통 효과 */
+.btn:hover { opacity: 0.88; }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* 메인 버튼 (네이비) */
+.btn-primary {
+    background-color: var(--color-btn);
+    color: #fff;
+}
+
+/* 포인트 버튼 (코랄) */
+.btn-point {
+    background-color: var(--color-btn-point);
+    color: #fff;
+}
+.btn-point:hover {
+    background-color: var(--color-btn-point-hover);
+    opacity: 1;
+}
+
+/* 아웃라인/화이트 버튼 - 취소, 목록 등 */
+.btn-outline {
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    color: var(--color-text);
+}
+.btn-outline:hover {
+    background-color: var(--color-bg-white-btn);
+}
+
+/* 위험/삭제 버튼 */
+.btn-danger-outline {
+    background-color: #fff;
+    border: 1px solid var(--color-btn-point);
+    color: var(--color-btn-point);
+}
+
+/* =========================
+   5. TABLE & LIST
+========================= */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th {
+    text-align: left;
+    font-size: var(--font-small);
+    padding: 12px 10px;
+    border-bottom: 2px solid var(--border-color);
+    color: var(--color-main);
+}
+
+.table td {
+    padding: var(--table-row-padding) 10px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+/* 고정글 스타일 (별도 바탕색 + 굵은글씨) */
+.table tr.pinned {
+    background-color: #F2F2F2;
+    font-weight: 600;
+}
+
+/* =========================
+   6. PAGINATION (FIXED)
+========================= */
+.pagination-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    width: 100%;
+    margin-top: var(--spacing-lg);
+}
+
+/* 가운데 정렬 유지 */
+.pagination-nav {
+    grid-column: 2;
+    display: flex;
+    justify-content: center;
+}
+
+/* ul */
+.pagination {
+    display: flex;
+    gap: var(--spacing-sm);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* li */
+.page-item {
+    display: flex;
+}
+
+/* 기본 링크 */
+.page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    font-size: var(--font-small);
+    color: #94a3b8;
+    text-decoration: none;
+    transition: 0.2s ease;
+    border-radius: var(--radius);
+}
+
+/* hover */
+.page-link:hover {
+    color: var(--color-main);
+    background-color: var(--color-bg-white-btn);
+}
+
+/* active 상태 */
+.page-item.active .page-link {
+    color: var(--color-btn-point);
+    font-weight: 700;
+}
+
+/* disabled */
+.page-item.disabled .page-link {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* 오른쪽 버튼 */
+.action-wrapper {
+    grid-column: 3;
+    justify-self: end;
+}
+
+/* =========================
+   9. 배지 (상태)
+========================= */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* =========================
+   8. UTILS
+========================= */
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+
+.flex { display: flex; align-items: center; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }

@@ -1,16 +1,33 @@
 server:
   servlet:
     context-path: /hometop
+  port: 8090                # 포트 번호 명시 (사용 중인 포트로 확인)
 
 spring:
   application:
     name: onepass
+
   profiles:
     active: dev
+
   jpa:
     open-in-view: false
+    hibernate:
+      ddl-auto: update      # 개발 중에는 보통 update로 둡니다
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
   thymeleaf:
+    cache: false            # 개발 중에 HTML 수정을 바로 보려면 false가 편해요
     encoding: UTF-8
+    prefix: classpath:/templates/
+    suffix: .html
+
+  servlet:
+    multipart:
+      max-file-size: 10MB   # 파일 업로드 용량 제한 설정
+      max-request-size: 10MB
+
