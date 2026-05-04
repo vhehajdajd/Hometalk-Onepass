@@ -4,6 +4,7 @@ import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.UserRepository;
 import com.hometalk.onepass.facility.entity.Facility;
 import com.hometalk.onepass.facility.repository.FacilityRepository;
+import com.hometalk.onepass.reservation.dto.ReservationCalendarDto;
 import com.hometalk.onepass.reservation.dto.ReservationRequestDto;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.entity.Reservation;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -101,6 +103,17 @@ public class ReservationService {
     public List<ReservationResponseDto> findAllWithDetails() {
         return reservationRepository.findAllByOrderByIdDesc().stream()
                 .map(ReservationResponseDto::fromEntity)
+                .toList();
+    }
+
+    // 캘린더 전용
+    public List<ReservationCalendarDto> getCalendar(int year, int month) {
+        LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
+        LocalDateTime end = start.plusMonths(1).minusSeconds(1);
+
+        return reservationRepository.findByMonthRange(start, end)
+                .stream()
+                .map(ReservationCalendarDto::from)
                 .toList();
     }
 }

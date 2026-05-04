@@ -79,7 +79,8 @@
                             <div>
                                 <div style="font-size: 18px; font-weight: 600; color: var(--color-main);" th:text="${f.name}">테니스장 A코트</div>
                                 <div style="font-size: 14px; color: var(--color-text-muted); margin-top: 4px;">
-                                    운영 시간: <span th:text="${f.openTime}">09:00</span> ~ <span th:text="${f.closeTime}">22:00</span>
+                                    운영 시간: <span th:text="${f.openTime}">09:00</span>
+                                    ~ <span th:text="${f.closeTime}">22:00</span>
                                 </div>
                             </div>
                             <form th:action="@{/reservation/admin/facilities/{id}/delete(id=${f.id})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">

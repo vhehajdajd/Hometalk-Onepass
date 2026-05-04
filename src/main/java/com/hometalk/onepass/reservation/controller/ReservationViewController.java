@@ -77,4 +77,10 @@ public class ReservationViewController {
     }
 
 
+    // 캘린더 전용
+    @GetMapping("/calendar")
+    public String calendarPage() {
+        return "reservation/calendar";
+    }
+
 }

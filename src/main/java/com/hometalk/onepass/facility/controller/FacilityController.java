@@ -1,6 +1,7 @@
 package com.hometalk.onepass.facility.controller;
 
 import com.hometalk.onepass.facility.dto.FacilityRequestDto; // DTO 사용
+import com.hometalk.onepass.facility.dto.FacilityResponseDto;
 import com.hometalk.onepass.facility.entity.Facility;
 import com.hometalk.onepass.facility.service.FacilityService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class FacilityController {
      * 시설 전체 목록 조회
      */
     @GetMapping
-    public List<Facility> findAll() {
+    public List<FacilityResponseDto> findAll() {
         return facilityService.findAll();
     }
 
@@ -35,7 +36,7 @@ public class FacilityController {
      * 시설 상세 조회
      */
     @GetMapping("/{id}")
-    public Facility findOne(@PathVariable Long id) {
+    public FacilityResponseDto findOne(@PathVariable Long id) {
         return facilityService.findOne(id);
     }
 

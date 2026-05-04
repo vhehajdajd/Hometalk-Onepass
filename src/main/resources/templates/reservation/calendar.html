@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='전체 예약 현황')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
+    <link rel="stylesheet" th:href="@{/css/reservation/calendar.css}">
+</head>
+<body>
+
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='reservation')}"></div>
+    <div class="main-wrapper">
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'reservation'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: reservation}"></div>
+
+        <!-- 메인 콘텐츠 -->
+        <div class="dashboard-content">
+            <main class="container">
+                <h1 class="module-title" style="margin-bottom: 24px;">전체 예약 현황</h1>
+
+                <div id="facilityButtons"></div>
+
+                <div id="calendarWrap" style="display:none;">
+                    <div id="calendarHeader"></div>
+                    <div id="calendarBody"></div>
+                    <div id="todayCount"></div>
+                </div>
+
+                <div class="cal-top-wrap">
+
+                    <div class="cal-today-card">
+                        <div class="cal-today-top">
+                            <div class="cal-today-info">
+                                <div class="cal-today-label">TODAY</div>
+                                <div class="cal-today-date-num" id="todayDateNum"></div>
+                                <div class="cal-today-weekday" id="todayWeekday"></div>
+                                <div class="cal-today-count" id="todayCount">오늘 예약 · 0건</div>
+                            </div>
+
+                            <div class="cal-today-btns">
+                                <button class="cal-today-btn" id="goToday">오늘로 이동</button>
+
+                                <div class="cal-badge-legend">
+                                    <span class="legend-item badge-confirmed">확정</span>
+                                    <span class="legend-item badge-pending">대기</span>
+                                    <span class="legend-item badge-canceled">취소</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cal-nav-card">
+                        <div class="cal-nav-year" id="navYear"></div>
+
+                        <div class="cal-nav-month-row">
+                            <button class="cal-nav-btn" id="prevMonth">←</button>
+                            <div class="cal-nav-month-num" id="navMonthNum"></div>
+                            <button class="cal-nav-btn" id="nextMonth">→</button>
+                        </div>
+
+                        <div class="cal-nav-selects">
+                            <select id="yearSelect" class="cal-select"></select>
+                            <select id="monthSelect" class="cal-select">
+                                <option value="1">1월</option>
+                                <option value="2">2월</option>
+                                <option value="3">3월</option>
+                                <option value="4">4월</option>
+                                <option value="5">5월</option>
+                                <option value="6">6월</option>
+                                <option value="7">7월</option>
+                                <option value="8">8월</option>
+                                <option value="9">9월</option>
+                                <option value="10">10월</option>
+                                <option value="11">11월</option>
+                                <option value="12">12월</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="cal-grid-wrap">
+
+                    <div class="cal-day-header sun">SUN</div>
+                    <div class="cal-day-header">MON</div>
+                    <div class="cal-day-header">TUE</div>
+                    <div class="cal-day-header">WED</div>
+                    <div class="cal-day-header">THU</div>
+                    <div class="cal-day-header">FRI</div>
+                    <div class="cal-day-header sat">SAT</div>
+
+                    <div id="calendarBody" style="display: contents;"></div>
+
+                </div>
+
+            </main>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/reservation/calendar.js}"></script>
+</body>
+</html>

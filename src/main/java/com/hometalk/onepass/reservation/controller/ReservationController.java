@@ -2,6 +2,7 @@ package com.hometalk.onepass.reservation.controller;
 
 import com.hometalk.onepass.facility.dto.FacilityRequestDto;
 import com.hometalk.onepass.facility.service.FacilityService;
+import com.hometalk.onepass.reservation.dto.ReservationCalendarDto;
 import com.hometalk.onepass.reservation.dto.ReservationRequestDto;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.service.ReservationService;
@@ -52,4 +53,13 @@ public class ReservationController {
         reservationService.cancel(id);
     }
 
+
+    // 캘린더 전용
+    @GetMapping("/calendar")
+    public List<ReservationCalendarDto> calendar(
+            @RequestParam int year,
+            @RequestParam int month
+    ) {
+        return reservationService.getCalendar(year, month);
+    }
 }
