@@ -76,10 +76,14 @@
                             <tbody th:if="${not #lists.isEmpty(posts)}">
                                 <tr th:each="post : ${posts}" th:classappend="${post.pinned} ? 'pinned' : ''">
                                     <td class="text-center">
-                                        <span th:if="${post.category != null}"
+                                        <span th:if="${post.categoryName != null}"
                                               th:text="${post.categoryName}"
                                               class="list-category"
-                                              th:style="|background-color: ${post.categoryBgColor ?: '#eee'}; color: ${post.categoryTextColor ?: '#333'};|">카테고리</span>
+                                              th:classappend="${post.categoryCode}"
+                                              th:style="${post.categoryBgColor != null} ?
+                                                        'background-color:' + ${post.categoryBgColor} + '; color:' + ${post.categoryTextColor} + ';' : ''">
+                                            카테고리
+                                        </span>
                                     </td>
                                     <td class="title-cell">
                                         <th:block th:if="${post.marketStatus != null and post.marketStatus != ''}">
