@@ -1,8 +1,8 @@
 
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='민원 게시판')}"></th:block>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='민원 작성')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
 </head>
 <body>
@@ -16,63 +16,105 @@
         <div class="dashboard-content">
 
             <main class="container">
-                <h2 class="title">민원 게시판</h2>
+                <h2 class="title">민원 등록</h2>
 
-                <table class="table mt-md">
-                    <colgroup>
-                        <!-- 공지사항 리스트 비율 반영 -->
-                        <col style="width: 70px">  <!-- 번호 -->
-                        <col style="width: 120px"> <!-- 카테고리 -->
-                        <col style="width: auto">  <!-- 제목 (최대 확장) -->
-                        <col style="width: 120px"> <!-- 작성자 -->
-                        <col style="width: 100px"> <!-- 상태 -->
-                        <col style="width: 130px"> <!-- 작성일 -->
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th>카테고리</th>
-                            <th>제목</th>
-                            <th>작성자</th>
-                            <th>상태</th>
-                            <th>작성일</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="list : ${complaints}">
-                            <td>
-                                <!-- 카테고리 배지 (공지사항 일반/시설 배지 스타일) -->
-                                <span class="badge category-badge" th:text="${list.category}">시설</span>
-                            </td>
-                            <td class="title-cell">
-                                <span th:if="${list.isSecret}" style="margin-right: 5px;">🔒</span>
-                                <a th:href="@{/complaints/detail/{id}(id=${list.id})}" th:text="${list.title}"></a>
-                            </td>
-                            <td th:text="${list.userId}"></td>
-                            <td>
-                                <!-- 상태 배지 (처리완료/접수중 등 색상 구분) -->
-                                <span class="badge"
-                                      th:classappend="${list.status == '처리완료' ? 'status-complete' : 'status-waiting'}"
-                                      th:text="${list.status}">접수중</span>
-                            </td>
-                            <td class="text-muted" th:text="${#temporals.format(list.createdAt, 'yyyy-MM-dd')}"></td>
-                        </tr>
-                        <!-- 내역 없음 -->
-                        <tr th:if="${#lists.isEmpty(complaints)}">
-                            <td colspan="6" class="text-muted" style="padding: 150px 0; text-align: center;">등록된 민원 내역이 없습니다.</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <!-- 하단 버튼 영역 -->
-                <div class="flex-between mt-lg">
-                    <div class="pagination-placeholder">
-                        <!-- 페이지네이션 컴포넌트 위치 -->
+                <form id="writeForm" enctype="multipart/form-data" class="write-form">
+                    <div class="form-group mb-md">
+                        <label for="category" class="form-label">분류</label>
+                        <select name="category" id="category" class="input-field select-field">
+                            <option value="시설/기술">시설/기술</option>
+                            <option value="환경/위생">환경/위생</option>
+                            <option value="보안/안전">보안/안전</option>
+                            <option value="기타문의">기타문의</option>
+                        </select>
                     </div>
-                    <a th:href="@{/complaints/write}" class="btn btn-primary">글 작성</a>
-                </div>
+
+                    <div class="form-group mb-md">
+                        <label for="title" class="form-label">제목</label>
+                        <input type="text" id="title" name="title" class="input-field" placeholder="제목을 입력하세요" required>
+                    </div>
+
+                    <div class="form-group mb-md">
+                        <label for="content" class="form-label">내용</label>
+                        <textarea id="content" name="content" class="input-field textarea-field" placeholder="내용을 상세히 입력해주세요" required></textarea>
+                    </div>
+
+                    <div class="form-group mb-xl">
+                        <label for="files" class="form-label">첨부파일</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="files" name="files" class="file-input" multiple>
+                            <p class="file-hint mt-xs">* 이미지는 최대 3개까지 업로드 가능합니다.</p>
+                        </div>
+                    </div>
+
+                    <div class="btn-area flex-center gap-md">
+                        <a th:href="@{/complaints/list}" class="btn btn-outline">취소</a>
+                        <button type="button" class="btn btn-primary" onclick="submitForm()">등록</button>
+                    </div>
+                </form>
             </main>
         </div>
     </div>
 </div>
+
+<script th:inline="javascript">
+        async function submitForm() {
+        // 1. 값 추출 및 기본 유효성 검사
+        const title = document.getElementById('title').value;
+        const content = document.getElementById('content').value;
+        const category = document.getElementById('category').value;
+        const fileInput = document.getElementById('files');
+
+        if(!title || !content) {
+        alert("제목과 내용을 입력해주세요.");
+        return;
+    }
+
+        const formData = new FormData();
+
+        // 2. DTO 생성 및 Blob 추가
+        const complaintDto = {
+        title: title,
+        content: content,
+        category: category
+    };
+        formData.append("dto", new Blob([JSON.stringify(complaintDto)], { type: "application/json" }));
+
+        // 3. 파일 추가
+        for (let i = 0; i < fileInput.files.length; i++) {
+        formData.append("files", fileInput.files[i]);
+    }
+
+        // 4. [중요] CSRF 토큰 추출
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        try {
+        const response = await fetch('/hometop/api/complaints', {
+        method: 'POST',
+        headers: {
+        // 헤더 이름과 값을 동적으로 매핑
+        [csrfHeader]: csrfToken
+    },
+        body: formData
+    });
+
+        if (response.ok) {
+        alert("성공적으로 등록되었습니다!");
+        location.href = "/hometop/complaints/list";
+    } else {
+        const status = response.status;
+        if(status === 403) {
+        alert("권한이 없거나 보안 세션이 만료되었습니다. (403)");
+    } else {
+        alert("등록에 실패했습니다. (Error: " + status + ")");
+    }
+    }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("서버 연결 중 에러가 발생했습니다.");
+    }
+    }
+</script>
 </body>
 </html>

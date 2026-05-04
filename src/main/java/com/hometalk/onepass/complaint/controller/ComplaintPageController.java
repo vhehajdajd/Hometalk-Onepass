@@ -19,7 +19,7 @@ public class ComplaintPageController {
         // 1. 서비스에서 데이터를 가져와서
         model.addAttribute("complaints", complaintService.findAll());
         // 2. templates/complaints/list.html 파일을 찾아서 띄워줌
-        return "inquiry/complaintlist";
+        return "inquiry/complaintList";
     }
 
     // 2. 글쓰기 페이지
