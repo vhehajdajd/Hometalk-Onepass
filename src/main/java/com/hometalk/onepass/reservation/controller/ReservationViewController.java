@@ -73,14 +73,13 @@ public class ReservationViewController {
         return "redirect:/reservation/admin/facilities";
     }
 
-    /*   [스태프] 전체 예약 현황 관리 화면
-     * 파일 트리 확인 결과: templates/reservation/admin/reservation-statu.html (오타 수정 필요)
+    /*
+         [스태프] 전체 예약 현황 관리 화면
      */
     @GetMapping("/admin/status")
     public String manageStatus(Model model) {
         model.addAttribute("reservations", reservationService.findAllWithDetails());
-        // 파일명을 reservation-status.html로 수정하신 후 아래 경로를 사용하세요.
-        return "reservation/admin/reservation-status"; // 👈 경로 수정 및 오타 정정
+        return "reservation/admin/reservation-status";
     }
 
 

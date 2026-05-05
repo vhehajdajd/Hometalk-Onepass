@@ -57,6 +57,9 @@ function initCalendar() {
         initialView: 'dayGridMonth',
         displayEventTime: false,
         locale: 'ko',
+        dayCellContent: function(info) {
+            return info.date.getDate();
+        },
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -91,8 +94,7 @@ function initCalendar() {
                         const startTime = r.startAt ? r.startAt.substring(11, 16) : '';
                         const endTime = r.endAt ? r.endAt.substring(11, 16) : '';
 
-                        // 2. 타이틀에서 이름만 추출 (만약 '시설명 (이름)' 형식이라면)
-                        // 만약 서버에서 이름 필드를 따로 준다면 r.userName 등을 쓰면 더 정확합니다.
+                        // 2. 타이틀에서 이름만 추출
                         let displayName = r.title || '예약자';
                         const nameMatch = displayName.match(/\((.*?)\)/); // 괄호 안의 이름 추출
                         if (nameMatch) {

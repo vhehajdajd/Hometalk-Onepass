@@ -124,38 +124,21 @@
     background: #eff6ff !important;
 }
 
-/* ★ 이벤트(막대기) 스타일 ★ */
-
-/* 1. 배경색 강제 적용 */
-.fc-daygrid-event,
-.fc-v-event,
-.fc-h-event,
 .fc-event {
-    /* JS에서 backgroundColor로 설정한 값이 이 변수에 담깁니다. */
-    background-color: var(--fc-event-bg-color) !important;
-    /* 만약 변수가 안 먹을 경우를 대비해 인라인 스타일 상속 */
-    background: inherit;
     border: none !important;
     box-shadow: none !important;
+    color: #444 !important;
 }
 
-/* 2. 이벤트 내부 컨테이너 및 텍스트 */
-.fc-event-main,
-.fc-event-title,
-.fc-event-title-container {
-    background: transparent !important; /* 내부 배경색 초기화 */
-    color: #444444 !important;        /* 글자색 진한 회색으로 강제 */
+/* 캘린더 날짜 숫자 크기 조절 */
+.fc-daygrid-day-number {
+    font-size: 1rem !important;
     font-weight: 600 !important;
-    padding: 2px 4px !important;
+    color: var(--color-main) !important;
+    padding: 8px !important;
+    text-decoration: none !important;
 }
 
-/* 3. 불필요한 요소 제거 */
-.fc-daygrid-event-dot,
-.fc-event-time {
-    display: none !important;
-}
-
-/* 4. 마우스 오버 시 효과 (선택사항) */
-.fc-event:hover {
-    opacity: 0.85;
+.fc-day-today .fc-daygrid-day-number {
+    color: var(--color-btn-point) !important;
 }

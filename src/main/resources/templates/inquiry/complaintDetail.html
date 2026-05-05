@@ -69,9 +69,8 @@
 
                 <div class="post-footer flex-between mt-xl">
                     <a th:href="@{/complaints/list}" class="btn btn-outline">목록으로</a>
-                    <div class="auth-buttons">
-                        <!-- 본인 글일 때만 수정/삭제 버튼 노출 로직 필요 -->
-                        <a th:href="@{/complaints/edit/{id}(id=${complaint.id})}" class="btn btn-primary">수정</a>
+                    <div class="auth-buttons flex" style="gap: var(--spacing-sm);">
+                        <button type="button" class="btn btn-danger-outline" th:onclick="|confirmDelete(${complaint.id})|">삭제</button>
                     </div>
                 </div>
             </main>
@@ -79,6 +78,12 @@
     </div>
 </div>
 <script th:inline="javascript">
+    function confirmDelete(id) {
+        if (confirm("정말로 이 문의글을 삭제하시겠습니까?")) {
+            location.href = "/hometop/complaints/delete/" + id;
+        }
+    }
+
     async function submitResponse(id) {
         const answerText = document.getElementById('adminResponse').value;
         if(!answerText.trim()) {

@@ -68,7 +68,6 @@
                     <a th:href="@{/inquiries/list}" class="btn btn-outline">>목록으로</a>
 
                     <div class="auth-buttons flex" style="gap: var(--spacing-sm);">
-                        <a th:href="@{/inquiries/edit/{id}(id=${inquiry.id})}" class="btn btn-primary">수정</a>
                         <button type="button" class="btn btn-danger-outline" th:onclick="|confirmDelete(${inquiry.id})|">삭제</button>
                     </div>
                 </div>
