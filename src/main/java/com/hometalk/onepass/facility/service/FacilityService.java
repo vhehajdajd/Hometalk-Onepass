@@ -71,20 +71,14 @@ public class FacilityService {
      */
     @Transactional
     public void update(Long id, FacilityRequestDto dto) {
-
         Facility facility = getFacility(id);
+        String imagePath = (dto.getImagePath() == null) ? facility.getImagePath() : dto.getImagePath();
 
         OperationTime opTime = OperationTime.builder()
                 .openTime(LocalTime.parse(dto.getOpenTime()))
                 .closeTime(LocalTime.parse(dto.getCloseTime()))
                 .build();
 
-        facility.updateInfo(
-                dto.getName(),
-                dto.getLocation(),
-                dto.getIconType(),
-                dto.getImagePath(),
-                opTime
-        );
+        facility.updateInfo(dto.getName(), dto.getLocation(), dto.getIconType(), imagePath, opTime);
     }
 }

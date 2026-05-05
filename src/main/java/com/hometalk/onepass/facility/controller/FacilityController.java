@@ -47,4 +47,12 @@ public class FacilityController {
     public void update(@PathVariable Long id, @RequestBody FacilityRequestDto dto) {
         facilityService.update(id, dto);
     }
+
+    /*
+     * 시설 삭제
+     */
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        facilityService.delete(id);
+    }
 }

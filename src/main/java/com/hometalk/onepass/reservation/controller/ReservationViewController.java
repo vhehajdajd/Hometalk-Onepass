@@ -1,6 +1,7 @@
 package com.hometalk.onepass.reservation.controller;
 
 import com.hometalk.onepass.facility.dto.FacilityRequestDto;
+import com.hometalk.onepass.facility.dto.FacilityResponseDto;
 import com.hometalk.onepass.facility.service.FacilityService;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.service.ReservationService;
@@ -46,10 +47,19 @@ public class ReservationViewController {
     /*
      * [스태프] 시설 설정 및 관리 화면
      */
-    @GetMapping("/admin/facilities")
-    public String manageFacilities(Model model) {
+    // 시설 목록
+    @GetMapping("/admin/list")
+    public String listPage(Model model) { // Model 파라미터 추가
         model.addAttribute("facilities", facilityService.findAll());
-        return "reservation/admin/facility-admin"; // 👈 경로에 reservation/admin/ 추가
+        return "reservation/admin/facilityList";
+    }
+
+    // 시설 등록 폼
+    @GetMapping("/admin/facilities")
+    public String registerForm(Model model) {
+        model.addAttribute("facility", null); // 새 등록임을 명시
+        model.addAttribute("isEdit", false);
+        return "reservation/admin/facility-admin";
     }
 
     // 시설 등록
@@ -58,19 +68,34 @@ public class ReservationViewController {
                                    @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) {
         // 1. 서비스 호출해서 저장
         facilityService.register(dto);
+        // 2. 관리 목록 페이지로 리다이렉트
+        return "redirect:/reservation/admin/list";
+    }
 
-        // 2. 관리 목록 페이지로 리다이렉트 (이제 정상 작동함)
-        return "redirect:/reservation/admin/facilities";
+    // 시설 수정 폼
+    @GetMapping("/admin/edit/{id}")
+    public String editPage(@PathVariable Long id, Model model) {
+        FacilityResponseDto facility = facilityService.findOne(id);
+        model.addAttribute("facility", facility);
+        model.addAttribute("isEdit", true);
+        return "reservation/admin/facility-admin";
+    }
+
+    // 시설 수정
+    @PostMapping("/admin/facilities/update/{id}")
+    public String updateFacility(@PathVariable Long id,
+                                 @ModelAttribute FacilityRequestDto dto) {
+        facilityService.update(id, dto);
+        return "redirect:/reservation/admin/list";
     }
 
     // 시설 삭제
     @PostMapping("/admin/facilities/{id}/delete")
-    public String deleteFacility(@PathVariable("id") Long id) {
+    public String deleteFacility(@PathVariable Long id) {
         // 1. 서비스 호출해서 DB 데이터 삭제
         facilityService.delete(id);
-
-        // 2. 삭제 후 다시 관리 목록 페이지로 리다이렉트
-        return "redirect:/reservation/admin/facilities";
+        // 2. 삭제 후 다시 관리 목록 페이지
+        return "redirect:/reservation/admin/list";
     }
 
     /*

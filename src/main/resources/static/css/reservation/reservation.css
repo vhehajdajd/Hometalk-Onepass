@@ -218,17 +218,20 @@
 /* =========================
    5. UTILS (보완)
 ========================= */
-.input-field {
+/* 입력 필드 공통 */
+.input-field, .select-field, .file-upload-wrapper {
     width: 100%;
-    padding: 15px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    resize: none;
-    font-family: inherit;
+    padding: 14px 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.2s ease;
+    background-color: #fff;
 }
 .input-field:focus {
     outline: none;
     border-color: var(--color-main);
+    box-shadow: 0 0 0 3px rgba(3, 33, 84, 0.1);
 }
 
 .flex-end { display: flex; justify-content: flex-end; }
@@ -249,11 +252,16 @@
     margin: 0 auto;
 }
 
+.form-group {
+    margin-bottom: 32px;
+}
+
 .form-label {
     display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: var(--color-text);
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #334155;
 }
 
 .select-field {
@@ -276,6 +284,8 @@
 }
 
 .file-hint {
-    font-size: 13px;
-    color: #94a3b8;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
 }

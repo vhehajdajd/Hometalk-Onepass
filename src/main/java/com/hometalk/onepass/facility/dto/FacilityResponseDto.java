@@ -26,6 +26,8 @@ public class FacilityResponseDto {
                 .location(entity.getLocation())
                 .iconType(entity.getIconType())
                 .imagePath(entity.getImagePath())
+                .openTime(entity.getOperationTime().getOpenTime().toString())
+                .closeTime(entity.getOperationTime().getCloseTime().toString())
                 .operationTime(entity.getOperationTime())
                 .build();
     }
