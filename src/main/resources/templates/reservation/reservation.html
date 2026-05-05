@@ -31,12 +31,14 @@
               <!-- DB의 facilities 목록을 반복해서 출력 -->
               <div th:each="f : ${facilities}"
                    class="facility-item card-hover"
-                   th:onclick="|selectFacility('${f.name}', 1, ${f.id})|">
+                   th:data-name="${f.name}"
+                   th:data-id="${f.id}"
+                   onclick="handleFacilityClick(this)"> <!-- 함수 호출 방식을 변경 -->
 
                 <strong th:text="${f.name}">시설명</strong>
                 <p class="time-info" style="font-size: 12px; color: gray;">
-                  운영: <span th:text="${f.operationTime.formattedOpenTime}">09:00</span>
-                  ~ <span th:text="${f.operationTime.formattedCloseTime}">22:00</span>
+                  운영: <span th:text="${f.operationTime?.formattedOpenTime}">09:00</span>
+                  ~ <span th:text="${f.operationTime?.formattedCloseTime}">22:00</span>
                 </p>
                 <span class="badge">(1시간 단위)</span>
               </div>

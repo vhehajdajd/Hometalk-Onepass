@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +28,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
 
-    /**
+    /*
      * 시설 예약 등록 (DTO 기반)
      */
     @Transactional
@@ -63,13 +64,13 @@ public class ReservationService {
                 .facility(facility)
                 .user(user)
                 .reservationTime(new ReservationTime(dto.getStartTime(), dto.getEndTime()))
-                .status(ReservationStatus.CONFIRMED)
+                .status(ReservationStatus.PENDING)
                 .build();
 
         return reservationRepository.save(reservation).getId();
     }
 
-    /**
+    /*
      * 특정 예약 조회 (엔티티 반환)
      * 컨트롤러에서 .fromEntity()로 변환해서 쓸 수 있게 엔티티를 던져줍니다.
      */
@@ -78,17 +79,16 @@ public class ReservationService {
                 .orElseThrow(() -> new RuntimeException("해당 예약을 찾을 수 없습니다."));
     }
 
-    /**
+    /*
      * 모든 예약 조회 (DTO 리스트 반환)
-     * 서비스에서 리스트를 DTO로 변환해서 넘겨주는 게 컨트롤러 코드가 깔끔해집니다.
      */
     public List<ReservationResponseDto> findAll() {
         return reservationRepository.findAll().stream()
                 .map(ReservationResponseDto::fromEntity)
-                .toList();
+                .collect(Collectors.toList());
     }
 
-    /**
+    /*
      * 예약 취소
      */
     @Transactional
@@ -97,13 +97,13 @@ public class ReservationService {
         reservation.cancel();
     }
 
-    /** * 관리자용: 모든 예약 내역을 최신순으로 조회
+    /* * 관리자용: 모든 예약 내역을 최신순으로 조회
      * 에러 해결 부분
      */
     public List<ReservationResponseDto> findAllWithDetails() {
         return reservationRepository.findAllByOrderByIdDesc().stream()
                 .map(ReservationResponseDto::fromEntity)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     // 캘린더 전용
@@ -114,6 +114,13 @@ public class ReservationService {
         return reservationRepository.findByMonthRange(start, end)
                 .stream()
                 .map(ReservationCalendarDto::from)
-                .toList();
+                .collect(Collectors.toList());
+    }
+
+    // 내 예약 현황
+    public List<ReservationResponseDto> findByUserId(Long userId) {
+        return reservationRepository.findByUserIdOrderByIdDesc(userId)
+                .stream().map(ReservationResponseDto::fromEntity)
+                .collect(Collectors.toList());
     }
 }

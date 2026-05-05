@@ -1,282 +1,164 @@
-// 기본 뼈대
-let currentFacilityId = null; // null = 전체
-let currentYear;
-let currentMonth;
-let reservationData = [];
+/** @namespace FullCalendar */
+/* global FullCalendar */
 
-let facilities = [];
+const CSRF_TOKEN = document.querySelector('meta[name="_csrf"]')?.content;
+const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content;
 
-const WEEKDAYS = ['일','월','화','수','목','금','토'];
+
+
+let calendar = null;
+let currentFacilityId = null; // 현재 선택된 시설 ID
 
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
-    const today = new Date();
-    currentYear = today.getFullYear();
-    currentMonth = today.getMonth() + 1;
-
-    const saved = localStorage.getItem('facilityId');
-    currentFacilityId = saved ? Number(saved) : null;
-
-    initSelects();
-    bindEvents();
-
+    // 1. 시설 목록을 먼저 불러옵니다.
     await loadFacilities();
 
-    updateHeader(today);
+    // 2. 캘린더를 초기화합니다.
+    initCalendar();
+}
 
-    if (currentFacilityId !== null) {
-        showCalendar();
-        await loadReservations();
-    } else {
-        hideCalendar();
+// 시설 버튼 목록 로드 및 생성
+async function loadFacilities() {
+    try {
+        const res = await fetch('/hometop/api/facility');
+        const facilities = await res.json();
+        renderFacilityButtons(facilities);
+    } catch (err) {
+        console.error("시설 로드 실패:", err);
     }
 }
 
-function initSelects() {
-    const yearSelect = document.getElementById('yearSelect');
-    const monthSelect = document.getElementById('monthSelect');
-
-    const today = new Date();
-    const baseYear = today.getFullYear();
-
-    for (let y = baseYear - 5; y <= baseYear + 5; y++) {
-        const opt = document.createElement('option');
-        opt.value = y;
-        opt.text = `${y}년`;
-        if (y === currentYear) opt.selected = true;
-        yearSelect.appendChild(opt);
-    }
-
-    monthSelect.value = currentMonth;
-}
-
-function loadFacilities() {
-    return fetch('/hometop/api/facility')
-        .then(res => res.json())
-        .then(data => {
-            facilities = data;
-            renderFacilityButtons();
-        });
-}
-
-function renderFacilityButtons() {
+function renderFacilityButtons(facilities) {
     const wrap = document.getElementById('facilityButtons');
     wrap.innerHTML = '';
 
-    // 시설 없음 예외 처리
-    if (!facilities || facilities.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'facility-empty';
-        empty.innerText = '등록된 시설이 없습니다';
-        wrap.appendChild(empty);
-        return;
-    }
-
-    // 전체 버튼
-    const allBtn = document.createElement('button');
-    allBtn.innerText = '전체';
-    allBtn.classList.add('facility-btn');
-
-    if (currentFacilityId === null) {
-        allBtn.classList.add('active');
-    }
-
-    allBtn.onclick = () => {
-        currentFacilityId = null;
-        localStorage.removeItem('facilityId');
-
-        hideCalendar();   // 여기서 숨김
-        reservationData = [];
-        renderTodayCount();
-    };
-
-    wrap.appendChild(allBtn);
-
-    // 시설 버튼
     facilities.forEach(f => {
         const btn = document.createElement('button');
         btn.innerText = f.name;
         btn.classList.add('facility-btn');
 
-        if (currentFacilityId === f.id) {
+        btn.onclick = () => {
+            // 버튼 클릭 시 처리
+            document.querySelectorAll('.facility-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-        }
 
-        btn.onclick = async () => {
-            currentFacilityId = f.id;
-            localStorage.setItem('facilityId', f.id);
-
-            showCalendar();
-            await loadReservations();
-            renderFacilityButtons();
+            onFacilitySelect(f.id);
         };
-
         wrap.appendChild(btn);
     });
 }
 
-function updateHeader(today) {
-    document.getElementById('navYear').innerText = currentYear;
-    document.getElementById('navMonthNum').innerText = currentMonth + '월';
+function initCalendar() {
+    const calendarEl = document.getElementById('calendar');
 
-    document.getElementById('todayDateNum').innerText = today.getDate();
-    document.getElementById('todayWeekday').innerText =
-        WEEKDAYS[today.getDay()];
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        displayEventTime: false,
+        locale: 'ko',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek'
+        },
+        height: '700px',
+        events: function(info, successCallback, failureCallback) {
+            if (!currentFacilityId) {
+                successCallback([]);
+                return;
+            }
 
-    document.getElementById('yearSelect').value = currentYear;
-    document.getElementById('monthSelect').value = currentMonth;
-}
+            const currentView = calendar ? calendar.view : info.view;
+            const viewDate = currentView.currentStart;
 
-function onFacilitySelect(id) {
-    currentFacilityId = id;
-    localStorage.setItem('facilityId', id);
+            const year = viewDate.getFullYear();
+            const month = viewDate.getMonth() + 1;
 
-    showCalendar();   // 여기서만 켜짐
-    loadReservations();
-}
+            const url = `/hometop/api/reservations/calendar?facilityId=${currentFacilityId}&year=${year}&month=${month}`;
 
-function showCalendar() {
-    document.getElementById('calendarWrap').style.display = 'block';
-}
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('Network response was not ok');
+                    return res.json();
+                })
+                .then(data => {
+                    const events = Array.isArray(data) ? data.map(r => {
+                        const currentStatus = r.badge || 'PENDING';
+                        const eventColor = getStatusColor(currentStatus);
 
-function hideCalendar() {
-    document.getElementById('calendarWrap').style.display = 'none';
-}
+                        // 1. 시간 포맷팅 (18:00~19:00 형식)
+                        const startTime = r.startAt ? r.startAt.substring(11, 16) : '';
+                        const endTime = r.endAt ? r.endAt.substring(11, 16) : '';
 
-// API 호출
-async function loadReservations() {
-    if (currentFacilityId === null) return;
+                        // 2. 타이틀에서 이름만 추출 (만약 '시설명 (이름)' 형식이라면)
+                        // 만약 서버에서 이름 필드를 따로 준다면 r.userName 등을 쓰면 더 정확합니다.
+                        let displayName = r.title || '예약자';
+                        const nameMatch = displayName.match(/\((.*?)\)/); // 괄호 안의 이름 추출
+                        if (nameMatch) {
+                            displayName = nameMatch[1];
+                        }
 
-    let url = `/hometop/api/reservations/calendar?year=${currentYear}&month=${currentMonth}&facilityId=${currentFacilityId}`;
+                        // 3. 최종 포맷: [18:00~19:00] 홍길동
+                        const finalTitle = `[${startTime}~${endTime}] ${displayName}`;
 
-    const res = await fetch(url);
-    reservationData = await res.json();
-
-    renderCalendar();
-    renderTodayCount();
-}
-
-// 캘린더 렌더
-function renderCalendar() {
-    const body = document.getElementById('calendarBody');
-    body.innerHTML = '';
-
-    const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
-    const lastDate = new Date(currentYear, currentMonth, 0).getDate();
-
-    let cells = [];
-
-    for (let i = 0; i < firstDay; i++) {
-        cells.push(null);
-    }
-
-    for (let d = 1; d <= lastDate; d++) {
-        cells.push(d);
-    }
-
-    cells.forEach((day, idx) => {
-        const div = document.createElement('div');
-        div.className = 'cal-cell';
-
-        if (!day) {
-            div.classList.add('empty');
-        } else {
-            div.innerHTML = `<div class="cal-date-num">${day}</div>`;
-
-            const dayReservations = reservationData.filter(r => {
-                const d = new Date(r.startAt);
-                return d.getDate() === day &&
-                    d.getMonth() + 1 === currentMonth &&
-                    d.getFullYear() === currentYear;
-            });
-
-            const slot = document.createElement('div');
-            slot.className = 'cal-slot-container';
-
-            dayReservations.forEach(r => {
-                const badge = createBadge(r);
-                slot.appendChild(badge);
-            });
-
-            div.appendChild(slot);
+                        return {
+                            id: r.id,
+                            title: finalTitle,
+                            start: r.startAt,
+                            end: r.endAt,
+                            backgroundColor: eventColor,
+                            borderColor: eventColor,
+                            textColor: '#444444',
+                            display: 'block',
+                            extendedProps: { status: currentStatus },
+                            color: eventColor
+                        };
+                    }) : [];
+                    successCallback(events);
+                })
+                .catch(err => {
+                    console.error("데이터 로드 실패:", err);
+                    failureCallback(err);
+                });
         }
-
-        body.appendChild(div);
     });
+    calendar.render();
 }
 
-// 배지 생성
-function createBadge(r) {
+function getStatusColor(status) {
+    if (status === undefined || status === null) return '#95a5a6';
 
-    const statusMap = {
-        CONFIRMED: 'facility',
-        PENDING: 'normal',
-        CANCELED: 'safety',
-        COMPLETED: 'default'
-    };
+    // 문자열로 변환 후 공백 제거 및 대문자 변환
+    const s = String(status).trim().toUpperCase();
 
-    const badge = document.createElement('div');
-
-    badge.className = `cal-badge badge-${statusMap[r.status] || 'default'}`;
-
-    badge.innerHTML = `
-        ${r.title}<br>
-        ${formatTime(r.startAt, r.endAt)}
-    `;
-
-    return badge;
+    switch(s) {
+        case 'CONFIRMED':
+        case '1':
+            return '#D0E2FF';
+        case 'PENDING':
+        case 'WAITING':
+        case '0':
+            return '#FFE5B4';
+        case 'CANCELED':
+        case 'CANCEL':
+            return '#F0F0F0';
+        default:
+            console.warn("정의되지 않은 상태값입니다:", s);
+            return '#E5E4E2'; // 기본 회색
+    }
 }
 
-// 시간 포맷
-function formatTime(startAt, endAt) {
-    const s = new Date(startAt);
-    const e = new Date(endAt);
+async function onFacilitySelect(id) {
+    currentFacilityId = id;
 
-    return `${pad(s.getHours())}시 ~ ${pad(e.getHours())}시`;
-}
+    // 예약 신청 버튼의 링크에 facilityId를 파라미터로
+    const applyBtn = document.querySelector('a[href*="/reservation/apply"]');
+    if (applyBtn) {
+        applyBtn.href = `/hometop/reservation/apply?facilityId=${id}`;
+    }
 
-function pad(n) {
-    return n < 10 ? '0' + n : n;
-}
-
-// 이벤트 (월 이동)
-function bindEvents() {
-    document.getElementById('prevMonth').onclick = () => {
-        currentMonth--;
-        if (currentMonth < 1) {
-            currentMonth = 12;
-            currentYear--;
-        }
-        loadReservations();
-        updateHeader(new Date(currentYear, currentMonth - 1, 1));
-    };
-
-    document.getElementById('nextMonth').onclick = () => {
-        currentMonth++;
-        if (currentMonth > 12) {
-            currentMonth = 1;
-            currentYear++;
-        }
-        loadReservations();
-        updateHeader(new Date(currentYear, currentMonth - 1, 1));
-    };
-}
-
-// 오늘 카운트
-function renderTodayCount() {
-    const today = new Date();
-
-    const count = reservationData.filter(r => {
-        const d = new Date(r.startAt);
-
-        return (
-            d.getFullYear() === currentYear &&
-            d.getMonth() + 1 === currentMonth &&
-            d.getDate() === today.getDate()
-        );
-    }).length;
-
-    document.getElementById('todayCount').innerText =
-        `오늘 예약 · ${count}건`;
+    if (calendar) {
+        calendar.refetchEvents();
+    }
 }

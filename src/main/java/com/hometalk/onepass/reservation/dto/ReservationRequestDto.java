@@ -11,8 +11,7 @@ import java.time.LocalDateTime;
 public class ReservationRequestDto {
     private Long facilityId;
 
-    // [수정 예정] private String memberId;
-    private Long userId; // TODO: 팀 공통 User 엔티티의 ID(PK)를 받도록 변경
+    private Long userId;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startTime;

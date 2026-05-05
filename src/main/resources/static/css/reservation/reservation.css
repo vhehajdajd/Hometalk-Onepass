@@ -176,18 +176,39 @@
 /* =========================
    4. STATUS BADGES (상태 배지 고도화)
 ========================= */
-/* 처리완료 / 예약완료 */
-.status-complete, .status-active {
-    background-color: rgba(3, 33, 84, 0.1);
-    color: var(--color-main);
+
+/* 공통 뱃지 스타일 */
+.status-badge, .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--radius); /* 정의된 4px 변수 활용 */
+    font-size: var(--font-small); /* 14px */
+    font-weight: 600;
+    text-align: center;
+    min-width: 65px;
+    line-height: 1.5;
+    border: none !important;
 }
 
-/* 미답변 / 취소됨 (코랄 계열) */
-.status-waiting, .status-canceled {
-    background-color: rgba(235, 110, 87, 0.1);
-    color: var(--color-btn-point);
+/* 1. 예약완료 / 승인완료 (CONFIRMED) - 파스텔 블루 */
+.status-active, .status-complete, .badge-confirmed {
+    background-color: #AEC6CF !important;
+    color: #334155 !important; /* 가독성을 위한 진한 슬레이트 그레이 */
 }
 
+/* 2. 승인대기 (PENDING) - 파스텔 핑크/살구 */
+.status-waiting, .status-pending, .badge-pending {
+    background-color: #FFD1DC !important;
+    color: #444444 !important;
+}
+
+/* 3. 취소됨 (CANCELED) - 라이트 그레이 */
+.status-canceled, .badge-canceled {
+    background-color: #E5E4E2 !important;
+    color: #64748b !important;
+}
+
+/* 시설/카테고리용 기본 배지 */
 .category-badge {
     background-color: #f1f5f9;
     color: #64748b;

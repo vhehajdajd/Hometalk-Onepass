@@ -2,12 +2,15 @@ package com.hometalk.onepass.reservation.controller;
 
 import com.hometalk.onepass.facility.dto.FacilityRequestDto;
 import com.hometalk.onepass.facility.service.FacilityService;
+import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -31,8 +34,12 @@ public class ReservationViewController {
      * [입주민] 내 예약 목록
      * 파일 트리 확인 결과: templates/reservation/my-list.html (있다고 가정)
      */
+// ReservationViewController.java (예시)
     @GetMapping("/my")
-    public String myReservations() {
+    public String myReservations(Model model) {
+        Long currentUserId = 1L; // 👈 현재는 강제로 1번 세팅, 나중에 로그인 연동 시 수정
+        List<ReservationResponseDto> myRes = reservationService.findByUserId(currentUserId);
+        model.addAttribute("reservations", myRes); // 여기서 보낸 이름이 HTML의 reservations와 일치해야 함
         return "reservation/my-list";
     }
 

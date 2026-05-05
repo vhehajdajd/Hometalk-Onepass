@@ -132,7 +132,7 @@ public class PostController {
         dto.setPostStatus(isTemp ? PostStatus.DRAFT : PostStatus.ACTIVE);
 
         if (user == null) {
-            return "redirect:/login"; // 또는 로그인 페이지
+            return "redirect:/auth"; // 또는 로그인 페이지
         }
         Long userId = user.getUserId();
 
@@ -161,7 +161,7 @@ public class PostController {
         }
 
         if (user == null) {
-            return "redirect:/login"; // 또는 로그인 페이지
+            return "redirect:/auth";
         }
         Long userId = user.getUserId();
 
@@ -178,7 +178,7 @@ public class PostController {
                              RedirectAttributes redirectAttributes,
                              @AuthenticationPrincipal CustomUserDetails user) {
         if (user == null) {
-            return "redirect:/login"; // 또는 로그인 페이지
+            return "redirect:/auth";
         }
         Long userId = user.getUserId();
         postService.deletePost(id, userId, boardCode);

@@ -1,3 +1,18 @@
+const CSRF_TOKEN = document.querySelector('meta[name="_csrf"]')?.content;
+const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+function handleFacilityClick(element) {
+    // data- 속성 값
+    const name = element.getAttribute('data-name');
+    const id = element.getAttribute('data-id');
+    const usageTime = 1; // 고정값이라면 직접 입력
+
+    document.getElementById('hidden-facility-id').value = id;
+    document.getElementById('hidden-facility').value = name;
+
+    selectFacility(name, usageTime, id);
+}
+
 // 1. 시설 선택 (이용 시간 저장)
 function selectFacility(name, usageTime, id) {
     document.getElementById('hidden-facility').value = name;
@@ -56,6 +71,28 @@ function confirmAdminCancel(id) {
     }
 }
 
+// 5-1. 사용자 예약 취소
+function confirmCancel(id) {
+    if (confirm("예약을 취소하시겠습니까?")) {
+        // 관리자와 같은 API를 쓰거나 별도의 사용자 취소 API를 호출
+        fetch(`/hometop/api/reservations/${id}/cancel`, {
+            method: 'POST',
+            headers: {
+                // CSRF 토큰이 필요하면 추가
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => {
+            if (res.ok) {
+                alert("예약이 취소되었습니다.");
+                location.reload(); // 화면 새로고침
+            } else {
+                alert("취소에 실패했습니다.");
+            }
+        });
+    }
+}
+
 // 6. 예약 제출
 async function submitReservation() {
     const startTimeInput = document.querySelector('input[name="startTime"]:checked');
@@ -76,6 +113,7 @@ async function submitReservation() {
     const data = {
         // DTO의 필드명과 일치시켜야 함
         facilityId: parseInt(facilityId),
+        userId: 1,  // 테스트용 유저 ID
         startTime: startDateTime,
         endTime: endDateTime
     };
@@ -103,4 +141,25 @@ async function submitReservation() {
         console.error("Error:", error);
         alert("서버 통신 중 오류가 발생했습니다.");
     }
+}
+
+// 예약 승인
+function approveReservation(reservationId) {
+    if (!confirm("이 예약을 승인하시겠습니까?")) return;
+
+    fetch(`/hometop/api/admin/reservations/${reservationId}/approve`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(CSRF_HEADER && CSRF_TOKEN ? { [CSRF_HEADER]: CSRF_TOKEN } : {})
+        }
+    })
+        .then(res => {
+            if (res.ok) {
+                alert("예약이 승인되었습니다.");
+                location.reload();
+            } else {
+                alert("승인 처리 중 오류가 발생했습니다.");
+            }
+        });
 }

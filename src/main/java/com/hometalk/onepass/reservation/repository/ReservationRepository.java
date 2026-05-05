@@ -22,6 +22,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     // 서비스의 findAllWithDetails에서 사용할 메서드
     List<Reservation> findAllByOrderByIdDesc(); // 또는 createdAt 기준
 
+    // 특정 유저의 예약을 최신순으로 가져오는 메서드
+    List<Reservation> findByUserIdOrderByIdDesc(Long userId);
+
     @Query("""
             SELECT r FROM Reservation r
             WHERE r.reservationTime.startTime 

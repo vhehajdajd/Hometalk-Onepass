@@ -57,28 +57,13 @@ public class FacilityService {
 
     public List<FacilityResponseDto> findAll() {
         return facilityRepository.findAll().stream()
-                .map(f -> FacilityResponseDto.builder()
-                        .id(f.getId())
-                        .name(f.getName())
-                        .location(f.getLocation())
-                        .iconType(f.getIconType())
-                        .openTime(f.getOperationTime().getFormattedOpenTime())
-                        .closeTime(f.getOperationTime().getFormattedCloseTime())
-                        .build())
+                .map(FacilityResponseDto::from)
                 .toList();
     }
 
     public FacilityResponseDto findOne(Long id) {
         Facility facility = getFacility(id);
-
-        return FacilityResponseDto.builder()
-                .id(facility.getId())
-                .name(facility.getName())
-                .location(facility.getLocation())
-                .iconType(facility.getIconType())
-                .openTime(facility.getOperationTime().getFormattedOpenTime())
-                .closeTime(facility.getOperationTime().getFormattedCloseTime())
-                .build();
+        return FacilityResponseDto.from(facility);
     }
 
     /*

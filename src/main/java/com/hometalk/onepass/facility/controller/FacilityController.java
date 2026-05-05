@@ -16,7 +16,7 @@ public class FacilityController {
 
     private final FacilityService facilityService;
 
-    /**
+    /*
      * 시설 등록 (DTO 기반)
      */
     @PostMapping
@@ -24,7 +24,7 @@ public class FacilityController {
         return facilityService.register(dto);
     }
 
-    /**
+    /*
      * 시설 전체 목록 조회
      */
     @GetMapping
@@ -32,7 +32,7 @@ public class FacilityController {
         return facilityService.findAll();
     }
 
-    /**
+    /*
      * 시설 상세 조회
      */
     @GetMapping("/{id}")
@@ -40,7 +40,7 @@ public class FacilityController {
         return facilityService.findOne(id);
     }
 
-    /**
+    /*
      * 시설 정보 수정 (DTO 활용)
      */
     @PatchMapping("/{id}")
