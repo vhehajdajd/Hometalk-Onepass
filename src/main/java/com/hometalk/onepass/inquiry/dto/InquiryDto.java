@@ -16,11 +16,18 @@ public class  InquiryDto {
     private Long id; // 상세보기 링크 이동을 위해 필수!
     private Long userId;
     private String userName;
+
     private String title;
     private String category;
     private String content;
     private String answer;
     private String status;
+
+    private Boolean canView;
+    private Boolean canEdit;
+    private Boolean isAdmin;
+    private Boolean isSecret;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -38,11 +45,14 @@ public class  InquiryDto {
                 .answer(inquiry.getAnswer())
                 .status(inquiry.getStatus())
                 .createdAt(inquiry.getCreatedAt())
-                // 엔티티의 InquiryAttachment 리스트를 DTO 리스트로 변환
+                .canView(true)
+                .canEdit(true)
+                .isAdmin(false)
+                .isSecret(inquiry.getIsSecret())
                 .attachments(inquiry.getAttachments() != null ?
                         inquiry.getAttachments().stream()
-                                .map(InquiryAttachmentDto::fromEntity)
-                                .collect(Collectors.toList()) : null)
+                        .map(InquiryAttachmentDto::fromEntity)
+                        .collect(Collectors.toList()) : null)
                 .build();
     }
 

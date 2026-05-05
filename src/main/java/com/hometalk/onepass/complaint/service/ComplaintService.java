@@ -83,16 +83,12 @@ public class ComplaintService {
      * 내 민원 목록
      */
     public Page<ComplaintDto> findByUserId(Long userId, Pageable pageable) {
-        return complaintRepository.findByUserId(userId, pageable)
-                .map(c -> {
-                    ComplaintDto dto = ComplaintDto.fromEntity(c);
-                    dto.setCanView(true);
-                    dto.setCanEdit(true);
-                    dto.setIsAdmin(false);
-                    return dto;
-                });
+        Page<Complaint> complaints = complaintRepository.findByUser_Id(userId, pageable);
+        if (complaints == null) {
+            return Page.empty(pageable);
+        }
+        return complaints.map(ComplaintDto::fromEntity);
     }
-
 
     /*
      * 전체 목록 (권한 포함 DTO 세팅)
@@ -102,28 +98,30 @@ public class ComplaintService {
                 .map(c -> {
                     ComplaintDto dto = ComplaintDto.fromEntity(c);
 
-                    boolean isOwner = c.getUser() != null
-                            && c.getUser().getId().equals(userId);
+                    // 2. 권한 판별 로직
+                    boolean isOwner = (userId != null && c.getUser() != null
+                            && c.getUser().getId().equals(userId));
 
                     boolean canView = isOwner || isAdmin;
-                    boolean canEdit = isOwner || isAdmin;
 
                     dto.setCanView(canView);
-                    dto.setCanEdit(canEdit);
+                    dto.setCanEdit(isOwner || isAdmin);
                     dto.setIsAdmin(isAdmin);
 
-                    // 비밀글이면 권한 없을 때 내용 제한
-                    if (Boolean.TRUE.equals(dto.getIsSecret()) && !canView) {
-                        dto.setContent("🔒 비밀글입니다.");
+                    // 비밀글 처리 로직
+                    // 비밀글 + (작성자도 아니고 관리자도 아님) -> 제목만 노출, 나머지는 마스킹
+                    if (Boolean.TRUE.equals(dto.getSecret()) && !canView) {
+                        dto.setTitle("🔒 비밀글입니다. (작성자와 관리자만 확인 가능)");
+                        dto.setContent(null);
                         dto.setUserName("비공개");
                     }
-
+                    // 일반글이거나 권한이 있으면 그대로 반환
                     return dto;
                 });
     }
 
     public Page<ComplaintDto> findAllPublic(Long userId, boolean isAdmin, Pageable pageable) {
-        return complaintRepository.findAllByIsSecretFalse(pageable)
+        return complaintRepository.findAllBySecretFalse(pageable)
                 .map(c -> {
                     ComplaintDto dto = ComplaintDto.fromEntity(c);
 
@@ -196,7 +194,8 @@ public class ComplaintService {
 
         Complaint complaint = findOne(id);
 
-        boolean isOwner = complaint.getUser().getId().equals(userDetails.getUserId());
+        boolean isOwner = complaint.getUser() != null
+                && complaint.getUser().getId().equals(userDetails.getUserId());
         boolean isAdmin = userDetails.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 

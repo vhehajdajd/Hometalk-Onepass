@@ -35,7 +35,8 @@
                             <th>작성일</th>
                         </tr>
                     </thead>
-                    <tbody>
+
+                    <tbody th:if="${paging != null}">
                         <tr th:each="list : ${paging.content}">
                             <td>
                                 <span class="badge category-badge" th:text="${list.category}">시설/기술</span>
@@ -58,18 +59,18 @@
                             <td class="text-muted" th:text="${#temporals.format(list.createdAt, 'yyyy-MM-dd')}"></td>
                         </tr>
 
-                        <tr th:if="${paging.isEmpty()}">
-                            <td colspan="6" class="text-muted" style="padding: 100px 0; text-align: center;">등록된 민원 내역이 없습니다.</td>
+                        <tr th:if="${paging == null or paging.isEmpty()}">
+                            <td colspan="5" class="text-muted" style="padding: 100px 0; text-align: center;">등록된 민원 내역이 없습니다.</td>
                         </tr>
                     </tbody>
                 </table>
 
                 <div class="pagination-container mt-lg">
                     <nav class="pagination-nav">
-                        <ul class="pagination" th:if="${!paging.isEmpty()}">
+                        <ul class="pagination" th:if="${paging != null and !paging.isEmpty()}">
                             <!-- 이전 페이지 -->
                             <li class="page-item" th:classappend="${!paging.hasPrevious} ? 'disabled'">
-                                <a class="page-link" th:href="@{|?page=${paging.number - 1}|}">&laquo;</a>
+                                <a class="page-link" th:href="@{/complaints/list(page=${paging.number - 1})}">&laquo;</a>
                             </li>
 
                             <!-- 페이지 번호 -->
@@ -82,7 +83,7 @@
 
                             <!-- 다음 페이지 -->
                             <li class="page-item" th:classappend="${!paging.hasNext} ? 'disabled'">
-                                <a class="page-link" th:href="@{|?page=${paging.number + 1}|}">&raquo;</a>
+                                <a class="page-link" th:href="@{/complaints/list(page=${paging.number + 1})}">&raquo;</a>
                             </li>
                         </ul>
                     </nav>

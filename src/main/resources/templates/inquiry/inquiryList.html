@@ -1,4 +1,5 @@
-
+<!--/* @thymesVar id="inquiries" type="org.springframework.data.domain.Page<com.hometalk.onepass.inquiry.dto.InquiryDto>" */-->
+<!--/* @thymesVar id="inquiry" type="com.hometalk.onepass.inquiry.dto.InquiryDto" */-->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -33,7 +34,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="inquiry, loop : ${inquiries.content}">
+                        <tr th:each="inquiry : ${inquiries.content}">
                             <td th:text="${inquiry.category}">시설/기술</td>
                             <td class="title-cell">
                                 <a th:href="@{|/inquiries/detail/${inquiry.id}|}" th:text="${inquiry.title}">문의 제목입니다.</a>
@@ -47,7 +48,7 @@
                             </td>
                             <td class="text-muted" th:text="${#temporals.format(inquiry.createdAt, 'yyyy-MM-dd')}">2026-04-16</td>
                         </tr>
-                        <tr th:if="${inquiries.empty}">
+                        <tr th:if="${inquiries.isEmpty()}">
                             <td colspan="5" class="text-muted" style="padding: 100px 0; text-align: center;">등록된 문의 내역이 없습니다.</td>
                     </tr>
                     </tbody>
@@ -57,7 +58,7 @@
                     <nav class="pagination-nav">
                         <ul class="pagination" th:if="${!inquiries.isEmpty()}">
                             <!-- 이전 페이지 -->
-                            <li class="page-item" th:classappend="${!inquiries.hasPrevious} ? 'disabled'">
+                            <li class="page-item" th:classappend="${!inquiries.hasPrevious} ? '' : 'disabled'">
                                 <a class="page-link" th:href="@{|?page=${inquiries.number - 1}|}">&laquo;</a>
                             </li>
 
@@ -70,7 +71,7 @@
                             </li>
 
                             <!-- 다음 페이지 -->
-                            <li class="page-item" th:classappend="${!inquiries.hasNext} ? 'disabled'">
+                            <li class="page-item" th:classappend="${!inquiries.hasNext} ? '' : 'disabled'">
                                 <a class="page-link" th:href="@{|?page=${inquiries.number + 1}|}">&raquo;</a>
                             </li>
                         </ul>

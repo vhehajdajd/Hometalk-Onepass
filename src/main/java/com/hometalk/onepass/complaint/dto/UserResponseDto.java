@@ -1,4 +1,4 @@
-package com.hometalk.onepass.auth.dto;
+package com.hometalk.onepass.complaint.dto;
 
 import com.hometalk.onepass.auth.entity.User;
 import lombok.AllArgsConstructor;

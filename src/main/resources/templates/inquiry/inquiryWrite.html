@@ -78,16 +78,11 @@
 
         const formData = new FormData();
 
-        // [수정] 사용자 연동 전까지는 임시 ID(예: 1)를 사용합니다.
-        const tempUserId = 1;
-
         // 2. DTO 생성 및 Blob 추가
-        const complaintDto = {
+        const inquiryDto = {
             title: title,
             content: content,
-            category: category,
-            userId: tempUserId, // 💡 임시 ID 주입
-            userName: "테스트유저"
+            category: category
         };
         formData.append("dto", new Blob([JSON.stringify(inquiryDto)], { type: "application/json" }));
 
@@ -103,10 +98,9 @@
         try {
             const response = await fetch('/hometop/api/inquiries', {
                 method: 'POST',
-                headers: {
-                    // 헤더 이름과 값을 동적으로 매핑
+                headers: csrfToken && csrfHeader ? {
                     [csrfHeader]: csrfToken
-                },
+                } : {},
                 body: formData
             });
 

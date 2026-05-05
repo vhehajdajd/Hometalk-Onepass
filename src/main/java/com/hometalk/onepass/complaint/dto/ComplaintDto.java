@@ -20,7 +20,7 @@ public class ComplaintDto {
     private String title;
     private String category;
     private String content;
-    private Boolean isSecret;       // 비밀글 여부
+    private Boolean secret;       // 비밀글 여부
     private Integer viewCount;
     private String status;
     private String answer;
@@ -44,7 +44,7 @@ public class ComplaintDto {
                 .title(complaint.getTitle())
                 .category(complaint.getCategory())
                 .content(complaint.getContent())
-                .isSecret(complaint.isSecret())
+                .secret(Boolean.TRUE.equals(complaint.getSecret()))
                 .viewCount(complaint.getViewCount())
                 .status(complaint.getStatus())
                 .answer(complaint.getAnswer())
@@ -64,23 +64,9 @@ public class ComplaintDto {
                 .title(this.title)
                 .content(this.content)
                 .category(this.category)
-                .isSecret(this.isSecret)
+                .secret(Boolean.TRUE.equals(this.secret))
                 .viewCount(this.viewCount != null ? this.viewCount : 0)
                 .status(this.status != null ? this.status : "접수완료") // 기본값 세팅
                 .build();
-    }
-
-    public void setPermission(Long loginUserId, boolean isAdminUser) {
-        this.isAdmin = isAdminUser;
-        if (this.userId == null) {
-            this.canView = true;
-            this.canEdit = false;
-            return;
-        }
-
-        boolean isOwner = this.userId.equals(loginUserId);
-
-        this.canView = isOwner || isAdminUser;
-        this.canEdit = isOwner || isAdminUser;
     }
 }

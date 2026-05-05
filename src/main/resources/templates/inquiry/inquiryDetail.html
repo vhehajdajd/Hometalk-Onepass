@@ -57,7 +57,7 @@
                 <div class="admin-only admin-answer-form mt-xl pt-lg">
                     <h3 class="sub-title" style="margin-top: 20px;">관리자 답변 등록</h3>
                     <form th:action="@{/api/inquiries/{id}/respond(id=${inquiry.id})}" method="post" class="mt-sm">
-                        <textarea id="adminResponse" name="response" rows="5" class="input-field" placeholder="여기에 답변을 입력하세요..."></textarea>
+                        <textarea id="adminResponse" name="answer" rows="5" class="input-field" placeholder="여기에 답변을 입력하세요..."></textarea>
                         <div class="flex-end mt-sm">
                             <button type="button" class="btn btn-primary" th:onclick="submitResponse([[${inquiry.id}]])">답변 저장하기</button>
                         </div>
@@ -65,7 +65,7 @@
                 </div>
 
                 <div class="post-footer flex-between mt-lg pt-lg">
-                    <a th:href="@{/inquiries/list}" class="btn btn-outline">>목록으로</a>
+                    <a th:href="@{/inquiries/list}" class="btn btn-outline">목록으로</a>
 
                     <div class="auth-buttons flex" style="gap: var(--spacing-sm);">
                         <button type="button" class="btn btn-danger-outline" th:onclick="|confirmDelete(${inquiry.id})|">삭제</button>
@@ -79,7 +79,9 @@
 <script th:inline="javascript">
     function confirmDelete(id) {
         if (confirm("정말로 이 문의글을 삭제하시겠습니까?")) {
-            location.href = "/hometop/inquiries/delete/" + id;
+            fetch(`/hometop/api/inquiries/${id}`, {
+                method: 'DELETE'
+            })
         }
     }
 

@@ -28,15 +28,15 @@ public class ComplaintPageController {
      * 민원 리스트
      */
     @GetMapping("/list")
-    public String listPage(Model model,
-                           @AuthenticationPrincipal CustomUserDetails user,
-                           @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+    public String list(Model model,
+                       @AuthenticationPrincipal CustomUserDetails user,
+                       @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        if (user == null) {
+            return "redirect:/auth";
+        }
+        Page<ComplaintDto> paging = complaintService.findByUserId(user.getUserId(), pageable);
 
-        Page<ComplaintDto> paging =
-                complaintService.findByUserId(user.getUserId(), pageable);
-
-        model.addAttribute("paging", paging);
-
+        model.addAttribute("paging", paging != null ? paging : Page.empty(pageable));
         return "inquiry/complaintList";
     }
 

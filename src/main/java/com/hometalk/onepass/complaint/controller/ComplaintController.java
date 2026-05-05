@@ -73,9 +73,11 @@ public class ComplaintController {
     public Page<ComplaintDto> myLimitList(
             @AuthenticationPrincipal CustomUserDetails user,
             Pageable pageable) {
-        if (user == null) {
+
+        if (user == null || user.getUserId() == null) {
             throw new AccessDeniedException("로그인 필요");
         }
+
         return complaintService.findByUserId(user.getUserId(), pageable);
     }
 
@@ -97,11 +99,15 @@ public class ComplaintController {
             @RequestParam String fileName,
             @RequestParam String originName) throws IOException {
 
-        Path basePath = Paths.get(fileProperties.getUploadPath());
+        Path basePath = Paths.get(fileProperties.getUploadPath()).toAbsolutePath().normalize();
         Path path = basePath.resolve(fileName).normalize();
 
         if (!path.startsWith(basePath)) {
             throw new IllegalArgumentException("잘못된 파일 경로");
+        }
+
+        if (!Files.exists(path)) {
+            throw new IllegalArgumentException("파일 없음");
         }
 
         Resource resource = new InputStreamResource(Files.newInputStream(path));
@@ -121,11 +127,15 @@ public class ComplaintController {
     @GetMapping("/display")
     public ResponseEntity<Resource> display(@RequestParam String fileName) throws IOException {
 
-        Path basePath = Paths.get(fileProperties.getUploadPath());
+        Path basePath = Paths.get(fileProperties.getUploadPath()).toAbsolutePath().normalize();
         Path path = basePath.resolve(fileName).normalize();
 
         if (!path.startsWith(basePath)) {
             throw new IllegalArgumentException("잘못된 파일 경로");
+        }
+
+        if (!Files.exists(path)) {
+            throw new IllegalArgumentException("파일 없음");
         }
 
         Resource resource = new InputStreamResource(Files.newInputStream(path));

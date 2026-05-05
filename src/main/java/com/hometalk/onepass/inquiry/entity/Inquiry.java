@@ -30,6 +30,8 @@ public class Inquiry {
     private String status; // 미답변, 처리중, 완료 등
     private String answer;
 
+    private Boolean isSecret;
+
     private LocalDateTime createdAt;
 
     @PrePersist

@@ -12,8 +12,8 @@ import java.util.Optional;
 @Repository
 public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
-    Page<Complaint> findByUserId(Long userId, Pageable pageable);
+    Page<Complaint> findByUser_Id(Long userId, Pageable pageable);
 
-    Page<Complaint> findAllByIsSecretFalse(Pageable pageable);
+    Page<Complaint> findAllBySecretFalse(Pageable pageable);
 
 }

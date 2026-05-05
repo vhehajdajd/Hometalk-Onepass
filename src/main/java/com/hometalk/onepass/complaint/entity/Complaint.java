@@ -38,7 +38,7 @@ public class Complaint {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    private boolean isSecret;
+    private Boolean secret;
     private int viewCount;
     private String status;
     private String answer;
@@ -72,8 +72,7 @@ public class Complaint {
     @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ComplaintAttachment> attachments = new ArrayList<>();
 
-    // 조회수 증가 메서드 (상세보기 할 때 사용)
-    public void incrementViewCount() {
-        this.viewCount++;
+    public boolean isSecret() {
+        return Boolean.TRUE.equals(this.secret);
     }
 }
