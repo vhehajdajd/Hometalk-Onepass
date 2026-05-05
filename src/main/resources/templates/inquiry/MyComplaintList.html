@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='내 민원 내역')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
@@ -70,9 +70,9 @@
                         </ul>
                     </nav>
 
-                    <!-- 오른쪽 버튼 영역 (CSS의 action-wrapper 활용) -->
+                    <!-- 오른쪽 버튼 영역 -->
                     <div class="action-wrapper">
-                        <a th:href="@{/complaints}" class="btn btn-outline">전체 목록</a>
+                        <a th:href="@{/complaints/list}" class="btn btn-outline">전체 목록</a>
                     </div>
                 </div>
             </main>

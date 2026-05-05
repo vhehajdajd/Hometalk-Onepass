@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='민원 내용')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
@@ -27,17 +27,21 @@
                     <h1 class="title mt-sm" th:text="${complaint.title}">민원 제목</h1>
 
                     <div class="post-info text-muted mt-sm">
-                        <span th:text="|작성자 : ${complaint.userName}|">작성자</span>
+                        <span th:text="${complaint.isSecret and !complaint.canView ? '비공개' : complaint.userName}"></span>작성자</span>
                         <span class="divider">|</span>
                         <span th:text="${complaint.createdAt != null ? #temporals.format(complaint.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">작성일</span>
                     </div>
                 </div>
 
                 <div class="post-content">
-                    <div class="content-body" th:text="${complaint.content}" style="min-height: 200px; white-space: pre-wrap;">내용이 출력됩니다.</div>
+                    <div class="content-body"
+                         th:text="${complaint.isSecret and !complaint.canView ? '🔒 비밀글입니다.' : complaint.content}"
+                         style="min-height: 200px; white-space: pre-wrap;">
+                    </div>
 
                     <!-- 첨부파일 (이미지 미리보기 및 다운로드) -->
-                    <div th:if="${not #lists.isEmpty(complaint.attachments)}" class="attachments mt-lg" style="margin-top: 30px;">
+                    <div th:if="${not #lists.isEmpty(complaint.attachments) and (not complaint.isSecret or complaint.canView)}"
+                         class="attachments mt-lg">
                         <p class="sub-title">📎 첨부파일</p>
                         <div class="attachment-list mt-sm">
                             <div th:each="file : ${complaint.attachments}" class="attachment-item">
@@ -51,13 +55,14 @@
                     </div>
                 </div>
 
-                <div th:if="${complaint.answer != null}" class="admin-answer-section">
+                <div th:if="${complaint.answer != null and (not complaint.isSecret or complaint.canView)}"
+                     class="admin-answer-section">
                     <h4 class="sub-title">✉️ 관리자 답변</h4>
                     <div class="answer-box mt-sm" th:text="${complaint.answer}">답변 내용</div>
                 </div>
 
                 <!-- 관리자 전용 답변 등록 폼 -->
-                <div class="admin-only admin-answer-form mt-xl pt-lg">
+                <div th:if="${complaint.isAdmin}" class="admin-answer-form mt-xl pt-lg">
                     <h3 class="sub-title" style="margin-top: 20px;">관리자 답변 등록</h3>
                     <form th:action="@{/api/complaints/{id}/respond(id=${complaint.id})}" method="post" class="mt-sm">
                         <textarea id="adminResponse" name="response" rows="5" class="input-field" placeholder="여기에 답변을 입력하세요..."></textarea>
@@ -69,8 +74,12 @@
 
                 <div class="post-footer flex-between mt-xl">
                     <a th:href="@{/complaints/list}" class="btn btn-outline">목록으로</a>
-                    <div class="auth-buttons flex" style="gap: var(--spacing-sm);">
-                        <button type="button" class="btn btn-danger-outline" th:onclick="|confirmDelete(${complaint.id})|">삭제</button>
+                    <div th:if="${complaint.canEdit}">
+                        <button type="button"
+                                class="btn btn-danger-outline"
+                                th:onclick="|confirmDelete(${complaint.id})|">
+                            삭제
+                        </button>
                     </div>
                 </div>
             </main>
@@ -78,9 +87,24 @@
     </div>
 </div>
 <script th:inline="javascript">
-    function confirmDelete(id) {
-        if (confirm("정말로 이 문의글을 삭제하시겠습니까?")) {
-            location.href = "/hometop/complaints/delete/" + id;
+    async function confirmDelete(id) {
+        if (!confirm("정말로 삭제하시겠습니까?")) return;
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        const response = await fetch(`/hometop/api/complaints/${id}`, {
+            method: 'DELETE',
+            headers: {
+                [csrfHeader]: csrfToken
+            }
+        });
+
+        if (response.ok) {
+            alert("삭제되었습니다.");
+            location.href = "/hometop/complaints/list";
+        } else {
+            alert("삭제 실패");
         }
     }
 

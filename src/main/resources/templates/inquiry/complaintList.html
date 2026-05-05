@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='민원 게시판')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
@@ -42,7 +42,12 @@
                             </td>
                             <td class="title-cell">
                                 <span th:if="${list.isSecret}" style="margin-right: 4px;">🔒</span>
-                                <a th:href="@{/complaints/detail/{id}(id=${list.id})}" th:text="${list.title}">민원 제목입니다.</a>
+                                <a th:if="${!list.isSecret}"
+                                   th:href="@{/complaints/detail/{id}(id=${list.id})}"
+                                   th:text="${list.title}"></a>
+                                <span th:if="${list.isSecret}">
+                                    🔒 비밀글입니다
+                                </span>
                             </td>
                             <td th:text="${list.userName}"></td>
                             <td>

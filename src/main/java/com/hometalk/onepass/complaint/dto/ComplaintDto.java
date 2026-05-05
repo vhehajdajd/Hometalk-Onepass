@@ -20,10 +20,15 @@ public class ComplaintDto {
     private String title;
     private String category;
     private String content;
-    private Boolean isSecret;
+    private Boolean isSecret;       // 비밀글 여부
     private Integer viewCount;
     private String status;
     private String answer;
+
+    private Boolean canView;   // 작성자 or ADMIN
+    private Boolean canEdit;   // 작성자 or ADMIN
+    private Boolean isAdmin;   // ADMIN 여부
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -31,7 +36,8 @@ public class ComplaintDto {
     private List<ComplaintAttachmentDto> attachments;
 
     public static ComplaintDto fromEntity(Complaint complaint) {
-        return ComplaintDto.builder()
+
+        ComplaintDto dto = ComplaintDto.builder()
                 .id(complaint.getId())
                 .userId(complaint.getUser() != null ? complaint.getUser().getId() : null)
                 .userName(complaint.getUser() != null ? complaint.getUser().getName() : "익명")
@@ -44,12 +50,13 @@ public class ComplaintDto {
                 .answer(complaint.getAnswer())
                 .createdAt(complaint.getCreatedAt())
                 .updatedAt(complaint.getUpdatedAt())
-                // 엔티티의 파일 리스트를 DTO 리스트로 변환
                 .attachments(complaint.getAttachments() != null ?
                         complaint.getAttachments().stream()
                         .map(ComplaintAttachmentDto::from)
                         .collect(Collectors.toList()) : null)
                 .build();
+
+        return dto;
     }
 
     public Complaint toEntity() {
@@ -61,5 +68,19 @@ public class ComplaintDto {
                 .viewCount(this.viewCount != null ? this.viewCount : 0)
                 .status(this.status != null ? this.status : "접수완료") // 기본값 세팅
                 .build();
+    }
+
+    public void setPermission(Long loginUserId, boolean isAdminUser) {
+        this.isAdmin = isAdminUser;
+        if (this.userId == null) {
+            this.canView = true;
+            this.canEdit = false;
+            return;
+        }
+
+        boolean isOwner = this.userId.equals(loginUserId);
+
+        this.canView = isOwner || isAdminUser;
+        this.canEdit = isOwner || isAdminUser;
     }
 }
