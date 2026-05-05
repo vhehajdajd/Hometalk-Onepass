@@ -10,6 +10,8 @@ import com.hometalk.onepass.billing.repository.BillingDetailRepository;
 import com.hometalk.onepass.billing.repository.BillingLogRepository;
 import com.hometalk.onepass.billing.repository.BillingRepository;
 import com.hometalk.onepass.auth.repository.HouseholdRepository;
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+import com.hometalk.onepass.notification.entity.NotificationType;
 import com.hometalk.onepass.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -242,13 +244,15 @@ public class BillingService {
         // 1. 기존 저장/업데이트 로직 수행 (이미 구현된 코드)
         // ... logic ...
 
-        // 2. [알림] 관리비 데이터 처리 완료 알림 발송
-        // 모든 관리자에게 알림을 보냅니다.
-        notificationService.sendAdminNotification(
-                "BILLING",
-                "관리비 데이터 처리 완료",
-                requests.size() + "건의 관리비 정보가 성공적으로 등록/수정되었습니다."
-        );
+//        // 2. [알림] 관리비 데이터 처리 완료 알림 발송
+//        // 모든 관리자에게 알림을 보냅니다.
+//        notificationPublisher.publishToAll(
+//                NotificationTargetRole.ADMIN,
+//                NotificationType.XXX,           // ← 상황에 맞는 타입
+//                "어떤 제목",
+//                "어떤 메시지",
+//                "/admin/billing"                // ← 이동할 링크
+//        );
     }
 
     // ─────────────────────────────────────────────

@@ -126,7 +126,7 @@
 .btn-process.done-txt { background: none; color: #aaa; cursor: default; font-size: 12px; }
 
 /* ── 페이지네이션 ── */
-.pagination {
+.pagination-billing {
     display: flex;
     justify-content: center;
     align-items: center;
