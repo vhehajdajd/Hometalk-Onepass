@@ -3,6 +3,10 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
+<!-- ── 대시보드 ── -->
+<div th:fragment="home" class="category-bar">
+</div>
+
 <!-- ── 주차 - 입주민 ── -->
 <div th:fragment="parking" class="category-bar">
     <a class="category-item" th:href="@{/parking/vehicle}">차량 목록</a>
@@ -33,33 +37,42 @@
     <a class="category-item" th:href="@{/billing/admin/unpaid}">미납 세대 관리</a>
 </div>
 
-<!-- ── 커뮤니티 ── -->
+<!-- ── 커뮤니티 - 입주민 (동적 구조, 항목 비워둠) ── -->
 <div th:fragment="community" class="category-bar">
-    <a class="category-item" th:each="board : ${boards}"
-       th:href="@{/community/{code}(code=${board.code})}"
-       th:text="${board.name}">게시판</a>
+</div>
+
+<!-- ── 커뮤니티 - 관리자 ── -->
+<div th:fragment="communityAdmin" class="category-bar">
+    <a class="category-item" th:href="@{/community/admin}">게시판/카테고리 설정</a>
+    <a class="category-item" th:href="@{/community/admin/posts}">게시글 숨김/삭제 관리</a>
 </div>
 
 <!-- ── 공지 ── -->
 <div th:fragment="notice" class="category-bar">
-    <a class="category-item" th:href="@{/notice}">공지 목록</a>
+    <a class="category-item" th:href="@{/notice}">목록</a>
 </div>
 
 <!-- ── 일정 ── -->
 <div th:fragment="schedule" class="category-bar">
-    <a class="category-item" th:href="@{/schedule}">달력</a>
+    <a class="category-item" th:href="@{/schedule}"></a>
 </div>
 
-<!-- ── 예약 ── -->
+<!-- ── 예약 - 입주민 ── -->
 <div th:fragment="reservation" class="category-bar">
     <a class="category-item" th:href="@{/reservation/apply}">예약 신청</a>
     <a class="category-item" th:href="@{/reservation/my}">내 예약</a>
 </div>
 
-<!-- ── 문의 ── -->
+<!-- ── 예약 - 관리자 ── -->
+<div th:fragment="reservationAdmin" class="category-bar">
+    <a class="category-item" th:href="@{/reservation/admin/facilities}">시설 관리</a>
+    <a class="category-item" th:href="@{/reservation/admin/status}">전체 예약 현황</a>
+</div>
+
+<!-- ── 문의/민원 - 입주민 ── -->
 <div th:fragment="inquiry" class="category-bar">
-    <a class="category-item" th:href="@{/hometop/inquiries/list}">문의 목록</a>
-    <a class="category-item" th:href="@{/hometop/inquiries/write}">문의 작성</a>
+    <a class="category-item" th:href="@{/inquiries/list}">문의 목록</a>
+    <a class="category-item" th:href="@{/inquiries/write}">문의 작성</a>
     <a class="category-item" th:href="@{/complaints/list}">민원 목록</a>
     <a class="category-item" th:href="@{/complaints/write}">민원 작성</a>
 </div>

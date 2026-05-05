@@ -21,7 +21,7 @@
     --badge-normal-font:     #2a9da4;
     --badge-default:         #c9c9c9;
     --badge-default-font:    #5b5b5b;
-    --sidebar-width:         180px;
+    --sidebar-width:         170px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }

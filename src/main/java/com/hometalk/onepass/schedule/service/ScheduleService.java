@@ -189,17 +189,15 @@ public class ScheduleService {
             group.sort(Comparator.comparing(Schedule::getStartAt));
             scheduleRepository.deleteAll(group);
 
-            // 그룹의 첫 번째 일정 날짜로 시작일 교체
-            LocalDateTime originalStart = group.get(0).getStartAt();
-            LocalDateTime newStart = originalStart.toLocalDate()
-                    .atTime(dto.getStartAt().toLocalTime());
-            dto.setStartAt(newStart);
+            // dto의 날짜+시간을 그대로 새 시작일로 사용 (기존 originalStart 고정 제거)
+            LocalDateTime newStart = dto.getStartAt();
 
             if (dto.getEndAt() != null) {
                 long durationMinutes = java.time.Duration.between(dto.getStartAt(), dto.getEndAt()).toMinutes();
                 dto.setEndAt(newStart.plusMinutes(durationMinutes));
             }
 
+            dto.setStartAt(newStart);
             dto.setRepeatGroupId(schedule.getRepeatGroupId());
             createRepeatSchedule(dto);
         } else if (dto.getRepeatType() != null && dto.getRepeatType() != RepeatType.NONE) {

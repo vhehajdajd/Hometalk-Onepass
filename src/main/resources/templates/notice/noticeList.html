@@ -16,13 +16,16 @@
 
 <body>
 
-<div class="main-layout" style="display: flex; min-height: 100vh;">
+<div class="main-layout">
 
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='notice')}"></div>
 
     <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+        <!-- 상단 헤더 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='notice')}"></div>
 
-        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=#{'notice'})}"></div>
+        <!-- 카테고리바 -->
+        <div th:replace="~{fragments/headerCategoryMenu :: notice}"></div>
 
         <div class="container">
 
