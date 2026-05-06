@@ -8,7 +8,6 @@
     <meta name="_csrf_header" th:content="${_csrf?.headerName}" />
     <link rel="stylesheet" th:href="@{/css/dashboard/style.css}" />
     <link rel="stylesheet" th:href="@{/css/billing/billing_common.css}" />
-    <link rel="stylesheet" th:href="@{/css/billing/billing_admin_upload.css}" />
     <link rel="stylesheet" th:href="@{/css/billing/billing_resident.css}" />
 </head>
 <body>
@@ -20,7 +19,6 @@
     <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
 
             <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='billing')}"></div>
-            <div th:replace="~{fragments/headerCategoryMenu :: billingAdmin}"></div>
 
         <header class="category-menu-bar">&nbsp;</header>
 

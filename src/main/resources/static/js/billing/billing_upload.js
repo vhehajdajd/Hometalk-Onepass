@@ -272,9 +272,6 @@ function showPreviewSection() {
     document.getElementById('tableTitle').textContent         =
         '유효성 검사 + 고지서 미리보기 + 업로드 확정';
 
-    // UPSERT 컬럼: DB 있을 때만 표시
-    document.getElementById('thUpsert').style.display = dbHasData ? '' : 'none';
-
     renderTable();
 }
 
@@ -326,7 +323,7 @@ function renderTable() {
     const updateCount = validRows.filter(r => r.upsertType === 'UPDATE').length;
     const noChangeCount = validRows.filter(r => r.valid === '정상' && !r.upsertType).length;
 
-    const showUpsert = dbHasData || mode === 'result';
+    const showUpsert = true;
 
     if (mode === 'preview') {
         document.getElementById('tableMeta').innerHTML =

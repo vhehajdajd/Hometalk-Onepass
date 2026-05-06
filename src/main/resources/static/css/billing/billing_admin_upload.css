@@ -29,52 +29,6 @@
 .upload-title { font-size: 16px; font-weight: 600; color: var(--color-text); margin-bottom: 6px; }
 .upload-hint  { font-size: 14px; color: var(--color-text-muted); }
 
-/* ── 테이블 섹션 ── */
-.table-section {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-}
-.table-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 20px;
-    border-bottom: 2px solid var(--color-border-light);
-}
-.table-header-title { font-size: 16px; font-weight: 600; color: var(--color-text); }
-.table-header-meta  { font-size: 15px; color: var(--color-text-muted); }
-.meta-error         { color: var(--color-btn-point); font-weight: 600; }
-
-/* ── 테이블 ── */
-.table-wrap { overflow-x: auto; }
-.data-table { width: 100%; border-collapse: collapse; font-size: 15px; }
-
-.data-table thead th {
-    padding: 18px 16px;
-    text-align: center;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--color-text-muted);
-    background: var(--color-surface-2);
-    border-bottom: 1px solid var(--color-border-light);
-    white-space: nowrap;
-}
-.data-table thead th.sortable { cursor: pointer; user-select: none; }
-.data-table thead th.sortable:hover { color: var(--color-sub); }
-.sort-icon { font-size: 10px; opacity: .4; }
-
-.data-table tbody td {
-    padding: 18px 16px;
-    border-bottom: 1px solid var(--color-border-light);
-    color: var(--color-text);
-    vertical-align: middle;
-}
-.data-table tbody tr:last-child td { border-bottom: none; }
-.data-table tbody tr:hover td      { background: var(--color-surface-2); }
-.data-table tbody tr.row-error td  { background: var(--color-error-bg); }
-.data-table tbody tr.row-error:hover td { background: var(--color-unpaid-bg); }
 
 /* ── 미리보기 버튼 ── */
 .btn-preview {
@@ -97,17 +51,7 @@
     background: var(--color-surface-2);
 }
 
-/* ── 테이블 푸터 ── */
-.table-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 20px;
-    border-top: 1px solid var(--color-border-light);
-    background: var(--color-surface-2);
-}
-.table-summary { font-size: 15px; color: var(--color-text-muted); }
-.table-actions { display: flex; gap: 10px; }
+/* ── 업로드 팝업 ── */
 
 .btn-confirm-upload {
     padding: 6px 10px;
