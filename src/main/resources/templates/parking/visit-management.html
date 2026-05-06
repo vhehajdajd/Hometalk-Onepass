@@ -8,37 +8,57 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
     <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+    <link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
 </head>
 <body>
+<div class="main-layout">
+    <!-- 1. 왼쪽 사이드바 (currentPage='parking' 설정) -->
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
-<div class="container">
-    <h2 class="page-title">방문 차량 관리</h2>
+    <!-- 2. 오른쪽 영역 (헤더 + 본문) -->
+    <div class="main-wrapper">
 
-    <!-- 차량 번호 검색 -->
-    <div class="form-group">
-        <label for="vehicleNumber">차량 번호</label>
-        <div class="search-group">
-            <input
-                    type="text"
-                    id="vehicleNumber"
-                    placeholder="차량 번호 4자리 입력"
-                    maxlength="4"
-            >
-            <button type="button" id="searchBtn" onclick="searchVehicle()">조회</button>
+        <!-- 상단 헤더 경로 표시 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='parking')}"></div>
+
+        <!-- 상단 카테고리 메뉴 (parking 전용 메뉴) -->
+        <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
+
+        <!-- 본문 컨텐츠 -->
+        <div class="container">
+            <h2 class="page-title">방문 차량 관리</h2>
+
+            <!-- 차량 번호 검색 -->
+            <div class="form-group">
+                <label for="vehicleNumber">차량 번호</label>
+                <div class="search-group">
+                    <input
+                            type="text"
+                            id="vehicleNumber"
+                            placeholder="차량 번호 4자리 입력"
+                            maxlength="4"
+                    >
+                    <button type="button" id="searchBtn" onclick="searchVehicle()">조회</button>
+                </div>
+                <span class="error-msg" id="searchError"></span>
+            </div>
+
+            <!-- 검색 결과 리스트 -->
+            <div id="searchResult" style="display:none;">
+                <ul id="vehicleList"></ul>
+            </div>
+
+            <!-- 입차 등록 버튼 -->
+            <div class="form-actions" id="registerBtnBox" style="display:none;">
+                <button type="button" id="registerBtn" disabled onclick="registerVehicle()">내 방문자로 등록</button>
+            </div>
         </div>
-        <span class="error-msg" id="searchError"></span>
-    </div>
 
-    <!-- 검색 결과 리스트 -->
-    <div id="searchResult" style="display:none;">
-        <ul id="vehicleList"></ul>
-    </div>
+        <!-- 하단 푸터 삽입 -->
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
 
-    <!-- 입차 등록 버튼 - 검색 결과 있을 때만 표시 -->
-    <div class="form-actions" id="registerBtnBox" style="display:none;">
-        <button type="button" id="registerBtn" disabled onclick="registerVehicle()">내 방문자로 등록</button>
-    </div>
-</div>
+    </div> <!-- .main-wrapper 닫기 -->
+</div> <!-- .main-layout 닫기 -->
 
 <script th:inline="javascript">
     const contextPath = /*[[@{/}]]*/ '/';
@@ -46,13 +66,13 @@
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
     let selectedReservationId = null;
 
-    // URL 파라미터에서 차량 번호 추출해서 자동 입력 및 조회
+    // URL 파라미터에서 차량 번호 추출 및 자동 입력 (Redundant 경고 해결 버전)
     window.onload = () => {
         const params = new URLSearchParams(window.location.search);
         const vehicleNumber = params.get('vehicleNumber');
         if (vehicleNumber) {
-            const last4 = vehicleNumber.replace(/\s/g, '').slice(-4);
-            document.getElementById('vehicleNumber').value = last4;
+            // 변수 선언 없이 바로 대입하여 72행 경고 해결
+            document.getElementById('vehicleNumber').value = vehicleNumber.replace(/\s/g, '').slice(-4);
             searchVehicle();
         }
     };
@@ -68,7 +88,7 @@
         if (e.key === 'Enter') searchVehicle();
     });
 
-    // 차량 조회 - PENDING_CONFIRM 상태 차량 검색
+    // 차량 조회 로직
     function searchVehicle() {
         const keyword = document.getElementById('vehicleNumber').value.trim();
         const searchError = document.getElementById('searchError');
@@ -125,13 +145,11 @@
             });
     }
 
-    // 차량 선택
     function selectVehicle(reservationId) {
         selectedReservationId = reservationId;
         document.getElementById('registerBtn').disabled = false;
     }
 
-    // 내 방문자로 등록
     function registerVehicle() {
         if (!selectedReservationId) return;
         if (!confirm('해당 차량을 우리 세대 방문 차량으로 등록하시겠습니까?')) return;
