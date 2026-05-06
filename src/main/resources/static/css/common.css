@@ -8,11 +8,15 @@
     --color-text-muted: #888888;  /* 연한 글자 (메타정보) */
     --color-btn: #4073C9;         /* 메인 버튼 */
     --color-sub: #3C6ABC;
+    --color-btn-secondary: #9EBFDB;
     --color-btn-point: #EB6E57;   /* 포인트 버튼 (코랄) */
     --color-btn-point-hover: #D65A45;
     --color-bg-white-btn: #F5F5F5;   /* 흰 버튼 호버 */
+    --color-surface-2: #F5F5F5;
     --border-color: #E2E8F0;      /* 테두리 */
+    --color-border-light: #F1F5F9;
     --color-modal-line: #F1F5F9;  /* 모달 구분선 */
+    --color-surface: #ffffff;
 
     /* Typography */
     --font-base: 'Segoe UI', Arial, sans-serif;
@@ -23,6 +27,11 @@
 
     /* Layout & Geometry */
     --radius: 4px;
+    --radius-sm: 4px;
+    --radius-md: 4px;
+    --radius-lg: 4px;
+    --radius-xl: 4px;
+
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
@@ -107,6 +116,7 @@ ul, li {
     border-radius: var(--radius);
     border: 1px solid transparent;
     cursor: pointer;
+    font-family: inherit;
     font-size: var(--font-small);
     font-weight: 600;
     transition: all 0.2s ease;
@@ -144,6 +154,7 @@ ul, li {
 }
 .btn-outline:hover {
     background-color: var(--color-bg-white-btn);
+    opacity: 1;
 }
 
 /* 위험/삭제 버튼 */

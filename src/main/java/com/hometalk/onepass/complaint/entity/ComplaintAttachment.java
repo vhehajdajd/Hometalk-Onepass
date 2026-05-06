@@ -1,13 +1,13 @@
-package com.hometalk.onepass.inquiry.entity;
+package com.hometalk.onepass.complaint.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Getter // ← 이거 하나면 getId, getOriginFileName 등이 자동으로 생겨요!
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder // ← 지현님이 직접 짜셨던 복잡한 빌더 코드를 롬복이 한 줄로 대신합니다.
+@Builder
 @Table(name = "kjh_complaint_attachment")
 public class ComplaintAttachment {
 

@@ -1,13 +1,18 @@
 package com.hometalk.onepass.inquiry.service;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.UserRepository;
+import com.hometalk.onepass.complaint.config.FileProperties;
 import com.hometalk.onepass.inquiry.dto.InquiryDto;
 import com.hometalk.onepass.inquiry.entity.Inquiry;
 import com.hometalk.onepass.inquiry.entity.InquiryAttachment;
 import com.hometalk.onepass.inquiry.repository.InquiryAttachmentRepository;
 import com.hometalk.onepass.inquiry.repository.InquiryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,71 +30,159 @@ public class InquiryService {
     private final InquiryRepository inquiryRepository;
     private final UserRepository userRepository;
     private final InquiryAttachmentRepository inquiryAttachmentRepository;
+    private final FileProperties fileProperties;
 
-    private final String uploadPath = "C:/onepass/inquiry_uploads/";
-
-    /**
-     * 문의 등록 (글 정보 + 파일들 한꺼번에 처리)
+    /*
+     * 문의 등록 (사용자 연동)
      */
     @Transactional
-    public Long register(InquiryDto dto, List<MultipartFile> files) throws IOException {
-        // 1. 유저 정보 조회
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new RuntimeException("작성 유저를 찾을 수 없습니다. ID: " + dto.getUserId()));
+    public Long register(InquiryDto dto,
+                         List<MultipartFile> files,
+                         CustomUserDetails userDetails) throws IOException {
 
-        // 2. Inquiry 엔티티 생성 및 저장
+        User user = userRepository.findById(userDetails.getUserId())
+                .orElseThrow(() -> new RuntimeException("유저 없음"));
+
         Inquiry inquiry = Inquiry.builder()
                 .user(user)
                 .title(dto.getTitle())
                 .category(dto.getCategory())
                 .content(dto.getContent())
-                .status("미답변") // 초기 상태 세팅
+                .status("미답변")
                 .build();
 
         inquiryRepository.save(inquiry);
 
-        // 3. 파일이 있을 경우 파일 저장 및 DB 기록
+        String uploadPath = fileProperties.getUploadPath();
+
         if (files != null && !files.isEmpty()) {
             File folder = new File(uploadPath);
             if (!folder.exists()) folder.mkdirs();
 
             for (MultipartFile file : files) {
-                if (!file.isEmpty()) {
-                    String uuid = UUID.randomUUID().toString();
-                    String savedName = uuid + "_" + file.getOriginalFilename();
+                if (file.isEmpty()) continue;
 
-                    // 실제 경로에 파일 저장
-                    file.transferTo(new File(uploadPath + savedName));
+                String uuid = UUID.randomUUID().toString();
+                String savedName = uuid + "_" + file.getOriginalFilename();
 
-                    // 첨부파일 엔티티 생성 및 저장
-                    InquiryAttachment attach = InquiryAttachment.builder()
-                            .originFileName(file.getOriginalFilename())
-                            .storedFileName(savedName) // [수정] storedFilePath 대신 storedFileName 사용
-                            .filePath(uploadPath + savedName) // [추가] 경로도 따로 저장하도록 필드 맞춰줌
-                            .inquiry(inquiry)
-                            .build();
+                file.transferTo(new File(uploadPath, savedName));
 
-                    inquiryAttachmentRepository.save(attach);
-                }
+                InquiryAttachment attach = InquiryAttachment.builder()
+                        .originFileName(file.getOriginalFilename())
+                        .storedFileName(savedName)
+                        .filePath(uploadPath + savedName)
+                        .inquiry(inquiry)
+                        .build();
+
+                inquiryAttachmentRepository.save(attach);
             }
         }
+
         return inquiry.getId();
     }
 
-    // --- 나머지 조회 및 삭제 로직은 동일 ---
-    public List<InquiryDto> findAll() {
-        return inquiryRepository.findAll().stream()
-                .map(InquiryDto::fromEntity)
-                .toList();
+    /*
+     * 전체 목록 (권한 포함)
+     */
+    public Page<InquiryDto> findAll(Long userId, boolean isAdmin, Pageable pageable) {
+
+        return inquiryRepository.findAll(pageable)
+                .map(i -> {
+
+                    InquiryDto dto = InquiryDto.fromEntity(i);
+
+                    boolean isOwner = i.getUser() != null
+                            && i.getUser().getId().equals(userId);
+
+                    boolean canView = isOwner || isAdmin;
+
+                    dto.setCanView(canView);
+                    dto.setCanEdit(canView);
+                    dto.setIsAdmin(isAdmin);
+
+                    if (!canView) {
+                        dto.setContent("🔒 비밀글입니다.");
+                        dto.setUserName("비공개");
+                    }
+
+                    return dto;
+                });
     }
 
-    public Inquiry findOne(Long id) {
-        return inquiryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 문의글입니다."));
+    /*
+     * 내 글
+     */
+    public Page<InquiryDto> findByUserId(Long userId, Pageable pageable) {
+        return inquiryRepository.findByUserId(userId, pageable)
+                .map(InquiryDto::fromEntity);
     }
 
+    /*
+     * 상세 (attachments 안전 로딩)
+     */
+    public InquiryDto getInquiryDetail(Long id,
+                                       CustomUserDetails userDetails) {
+
+        Inquiry inquiry = inquiryRepository.findByIdWithAttachments(id)
+                .orElseThrow(() -> new RuntimeException("문의 없음"));
+
+        boolean isOwner = inquiry.getUser() != null
+                && inquiry.getUser().getId().equals(userDetails.getUserId());
+
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("권한 없음");
+        }
+
+        InquiryDto dto = InquiryDto.fromEntity(inquiry);
+
+        dto.setCanView(true);
+        dto.setCanEdit(isOwner || isAdmin);
+        dto.setIsAdmin(isAdmin);
+
+        return dto;
+    }
+
+    /*
+     * 삭제 (권한 체크 추가)
+     */
     @Transactional
-    public void deleteInquiry(Long id) {
-        inquiryRepository.deleteById(id);
+    public void deleteInquiry(Long id, CustomUserDetails userDetails) {
+
+        Inquiry inquiry = inquiryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("문의 없음"));
+
+        boolean isOwner = inquiry.getUser() != null
+                && inquiry.getUser().getId().equals(userDetails.getUserId());
+
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("권한 없음");
+        }
+
+        inquiryRepository.delete(inquiry);
+    }
+
+    /*
+     * 답변
+     */
+    @Transactional
+    public void answer(Long id, String answer, CustomUserDetails userDetails) {
+
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+            throw new AccessDeniedException("관리자만 답변 가능");
+        }
+
+        Inquiry inquiry = inquiryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("문의 없음"));
+
+        inquiry.updateAnswer(answer);
     }
 }

@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -136,7 +137,9 @@ public class PostService {
     @Transactional
     public PostResponseDTO postDetail(Long postId, PostUserRsDTO currentUser, String boardCode, List<Long> viewedPosts) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException(postId, boardCode));
-        Long currentUserId = (currentUser != null) ? currentUser.getId() : null;
+        Long currentUserId = Optional.ofNullable(currentUser)
+                .map(PostUserRsDTO::getUserId)
+                .orElse(null);
         postActionService.increaseViewCount(postId, currentUserId, viewedPosts);
         PostResponseDTO dto = new PostResponseDTO(post);
         postValidator.setAuthority(dto, post, currentUser);
@@ -183,11 +186,10 @@ public class PostService {
 
     public List<PostListResponse> getTempPosts(String boardCode, Long userId) {
         PostStatus status = PostStatus.DRAFT;
-        List<Post> posts = postRepository.findTempPosts(boardCode, userId, status);
+        List<Post> posts = postRepository.findTempPosts(boardCode, userId, PostStatus.DRAFT);
 
         // boardCode와 userId가 일치하고 상태가 DRAFT인 글만 최신순으로 조회
-        return postRepository.findTempPosts(boardCode, userId, PostStatus.DRAFT)
-                .stream()
+        return posts.stream()
                 .map(PostListResponse::new)
                 .collect(Collectors.toList());
     }
@@ -202,7 +204,6 @@ public class PostService {
     public List<String> getTagsByPostId(Long postId) {
         return postRepository.findTagsByPostId(postId);
     }
-
 
 
     @Transactional(readOnly = true)
