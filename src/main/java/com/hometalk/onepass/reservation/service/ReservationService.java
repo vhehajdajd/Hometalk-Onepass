@@ -30,7 +30,7 @@ public class ReservationService {
     private final UserRepository userRepository;
 
     /*
-     * 시설 예약 등록 (DTO 기반)
+       시설 예약 등록
      */
     @Transactional
     public Long register(ReservationRequestDto dto) {
@@ -45,67 +45,67 @@ public class ReservationService {
         LocalDateTime now = LocalDateTime.now();
         LocalDate targetDate = start.toLocalDate();
 
-        // --- 비즈니스 로직 검증 시작 ---
+        // --- 비즈니스 로직 검증 ---
 
-        // [로직 1] 지난 요일(과거) 예약 불가
+        // [로직 1] 과거 시간 예약 불가
         if (start.isBefore(now)) {
             throw new RuntimeException("현재 시간보다 이전 시간으로는 예약할 수 없습니다.");
         }
 
-        // [로직 4] 1주일까지만 예약 가능 (오늘 포함 7일 또는 8일 설정 가능)
+        // [로직 2] 최대 1주일 이내만 예약 가능
         if (targetDate.isAfter(now.toLocalDate().plusWeeks(1))) {
             throw new RuntimeException("예약은 최대 1주일 이내만 가능합니다.");
         }
 
-        // [로직 3] 한 사람이 같은 날짜의 다른 시간대 예약 불가
+        // [로직 3] 사용자 중복 예약 체크
+        // 하루 한 번 제한 로직 유지 (시작~종료 범위 내 겹침 확인)
         LocalDateTime startOfDay = targetDate.atStartOfDay();
         LocalDateTime endOfDay = targetDate.atTime(23, 59, 59);
 
-        boolean alreadyReservedToday = reservationRepository.existsByUserIdAndFacilityIdAndDate(
+        boolean alreadyReservedToday = reservationRepository.existsByUserIdAndOverlapTime(
                 user.getId(), facility.getId(), startOfDay, endOfDay);
 
         if (alreadyReservedToday) {
-            throw new RuntimeException("이 시설은 하루에 한 번만 예약 가능합니다.");
+            throw new RuntimeException("해당 시설은 하루에 한 번만 예약 가능합니다.");
         }
 
-        // [로직 2] 시간대 중복 체크 (다른 사람이 예약 중인지)
-        // 팁: 단순 equals가 아니라 '겹침'을 방지하려면 리스트를 받아 비교하거나 existsOverlap 쿼리를 쓰는 게 좋습니다.
-        List<Reservation> existingReservations = reservationRepository.findAllByFacilityAndDate(
-                facility.getId(), startOfDay, endOfDay);
+        // [로직 4] 시설 시간대 겹침 체크 (DB 쿼리에서 처리)
+        List<Reservation> conflicting = reservationRepository.findConflictingReservations(
+                facility.getId(), start, end);
 
-        for (Reservation r : existingReservations) {
-            // 취소 상태는 중복 체크 제외
-            if (r.getStatus() == ReservationStatus.CANCELED) continue;
-            if (r.getReservationTime().getStartTime().isBefore(end) &&
-                    r.getReservationTime().getEndTime().isAfter(start)) {
-                throw new RuntimeException("해당 시간대에 이미 예약(또는 승인대기)이 존재합니다.");
-            }
+        if (!conflicting.isEmpty()) {
+            throw new RuntimeException("해당 시간대에 이미 예약(또는 승인대기)이 존재합니다.");
         }
 
-        // --- 검증 끝 ---
-
-        // 5. 엔티티 생성 및 저장
+        // --- 엔티티 생성 및 저장 ---
         Reservation reservation = Reservation.builder()
                 .facility(facility)
                 .user(user)
                 .reservationTime(new ReservationTime(start, end))
-                .status(ReservationStatus.PENDING) // 기본 대기 상태
+                .status(ReservationStatus.PENDING)
                 .build();
 
         return reservationRepository.save(reservation).getId();
     }
 
     /*
-     * 특정 예약 조회 (엔티티 반환)
-     * 컨트롤러에서 .fromEntity()로 변환해서 쓸 수 있게 엔티티를 던져줍니다.
+     * 특정 예약 조회
      */
-    public Reservation findOne(Long id) {
-        return reservationRepository.findById(id)
+    public ReservationResponseDto findOne(Long id, Long currentUserId, User.UserRole currentUserRole) {
+        Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("해당 예약을 찾을 수 없습니다."));
+
+        // 본인 예약이 아니면서 관리자도 아닌 경우 조회 차단
+        if (!reservation.getUser().getId().equals(currentUserId) &&
+                !currentUserRole.equals(User.UserRole.ADMIN)) {
+            throw new RuntimeException("조회 권한이 없습니다.");
+        }
+
+        return ReservationResponseDto.fromEntity(reservation);
     }
 
     /*
-     * 모든 예약 조회 (DTO 리스트 반환)
+     * 모든 예약 조회
      */
     public List<ReservationResponseDto> findAll() {
         return reservationRepository.findAll().stream()
@@ -114,7 +114,7 @@ public class ReservationService {
     }
 
     /*
-     * 예약 승인 (관리자용)
+     *  예약 승인 (관리자용)
      */
     @Transactional
     public void approve(Long id) {
@@ -132,18 +132,17 @@ public class ReservationService {
 
         // 3. 상태 변경 (CONFIRMED로 변경)
         reservation.approve();
-
         // 4. 저장
         reservationRepository.save(reservation);
     }
 
     /*
-     * 예약 취소
+     *  예약 취소
      */
     @Transactional
-    public void cancel(Long id) {
-    // 1. 해당 예약이 존재하는지 확인 및 영속성 컨텍스트에 로드
-        Reservation reservation = reservationRepository.findById(id)
+    public void cancel(Long reservationId, Long currentUserId, User.UserRole currentUserRole) {
+        // 1. 해당 예약이 존재하는지 확인 및 영속성 컨텍스트에 로드
+        Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("해당 예약을 찾을 수 없습니다."));
 
         // 2. 이미 취소된 건지 확인하는 방어 로직 추가
@@ -151,10 +150,13 @@ public class ReservationService {
             throw new RuntimeException("이미 취소된 예약입니다.");
         }
 
-        // 3. 상태 변경 (더티 체킹에 의해 자동 업데이트)
-        reservation.cancel();
+        if (!reservation.getUser().getId().equals(currentUserId)
+             && !currentUserRole.equals(User.UserRole.ADMIN)) {
+            throw new RuntimeException("취소 권한이 없습니다.");
+        }
 
-        // 4. (선택사항) 명시적 저장 - 확실하게 하고 싶을 때
+        // 3. 상태 변경
+        reservation.cancel();
         reservationRepository.save(reservation);
     }
 
@@ -162,7 +164,8 @@ public class ReservationService {
         관리자용: 모든 예약 내역을 최신순으로 조회
      */
     public List<ReservationResponseDto> findAllWithDetails() {
-        return reservationRepository.findAllByOrderByIdDesc().stream()
+        return reservationRepository.findAll().stream()
+                .sorted((r1, r2) -> r2.getId().compareTo(r1.getId()))
                 .map(ReservationResponseDto::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -181,7 +184,8 @@ public class ReservationService {
     // 내 예약 현황
     public List<ReservationResponseDto> findByUserId(Long userId) {
         return reservationRepository.findByUserIdOrderByIdDesc(userId)
-                .stream().map(ReservationResponseDto::fromEntity)
+                .stream()
+                .map(ReservationResponseDto::fromEntity)
                 .collect(Collectors.toList());
     }
 }

@@ -1,11 +1,14 @@
 package com.hometalk.onepass.reservation.controller;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.facility.dto.FacilityRequestDto;
 import com.hometalk.onepass.facility.dto.FacilityResponseDto;
 import com.hometalk.onepass.facility.service.FacilityService;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,34 +25,33 @@ public class ReservationViewController {
     private final ReservationService reservationService;
 
     /*
-     * [입주민] 예약 신청 화면
-     * 파일 트리 확인 결과: templates/reservation/reservation.html
+       [입주민] 예약 신청 화면
      */
     @GetMapping("/apply")
     public String showApplyForm(Model model) {
         model.addAttribute("facilities", facilityService.findAll());
-        return "reservation/reservation"; // 👈 파일명에 맞춰 수정
+        return "reservation/reservation";
     }
 
     /*
-     * [입주민] 내 예약 목록
-     * 파일 트리 확인 결과: templates/reservation/my-list.html (있다고 가정)
+       [입주민] 내 예약 목록
      */
-    // ReservationViewController.java (예시)
     @GetMapping("/my")
-    public String myReservations(Model model) {
-        Long currentUserId = 1L; // 👈 현재는 강제로 1번 세팅, 나중에 로그인 연동 시 수정
-        List<ReservationResponseDto> myRes = reservationService.findByUserId(currentUserId);
-        model.addAttribute("reservations", myRes); // 여기서 보낸 이름이 HTML의 reservations와 일치해야 함
+    public String myReservations(Model model,
+                                 @AuthenticationPrincipal CustomUserDetails user) {
+        List<ReservationResponseDto> myRes = reservationService.findByUserId(user.getUserId());
+        model.addAttribute("reservations", myRes);
         return "reservation/my-list";
     }
 
     /*
-     * 예약 취소 처리
+     *  예약 취소 처리
      */
     @PostMapping("/cancel/{id}")
-    public String cancelReservation(@PathVariable Long id, @RequestHeader(value = "Referer", required = false) String referer) {
-        reservationService.cancel(id);
+    public String cancelReservation(@PathVariable Long id,
+                                    @RequestHeader(value = "Referer", required = false) String referer,
+                                    @AuthenticationPrincipal CustomUserDetails user) {
+        reservationService.cancel(id, user.getUserId(), user.getRole());
         // 이전 페이지로
         if (referer != null) {
             return "redirect:" + referer;
@@ -62,13 +64,15 @@ public class ReservationViewController {
      */
     // 시설 목록
     @GetMapping("/admin/list")
-    public String listPage(Model model) { // Model 파라미터 추가
+    @PreAuthorize("hasRole('ADMIN')")
+    public String listPage(Model model) {
         model.addAttribute("facilities", facilityService.findAll());
         return "reservation/admin/facilityList";
     }
 
     // 시설 등록 폼
     @GetMapping("/admin/facilities")
+    @PreAuthorize("hasRole('ADMIN')")
     public String registerForm(Model model) {
         model.addAttribute("facility", null); // 새 등록임을 명시
         model.addAttribute("isEdit", false);
@@ -77,6 +81,7 @@ public class ReservationViewController {
 
     // 시설 등록
     @PostMapping("/admin/facilities/register")
+    @PreAuthorize("hasRole('ADMIN')")
     public String registerFacility(@ModelAttribute FacilityRequestDto dto,
                                    @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) {
         // 1. 서비스 호출해서 저장
@@ -87,6 +92,7 @@ public class ReservationViewController {
 
     // 시설 수정 폼
     @GetMapping("/admin/edit/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String editPage(@PathVariable Long id, Model model) {
         FacilityResponseDto facility = facilityService.findOne(id);
         model.addAttribute("facility", facility);
@@ -96,6 +102,7 @@ public class ReservationViewController {
 
     // 시설 수정
     @PostMapping("/admin/facilities/update/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String updateFacility(@PathVariable Long id,
                                  @ModelAttribute FacilityRequestDto dto) {
         facilityService.update(id, dto);
@@ -104,6 +111,7 @@ public class ReservationViewController {
 
     // 시설 삭제
     @PostMapping("/admin/facilities/{id}/delete")
+    @PreAuthorize("hasRole('ADMIN')")
     public String deleteFacility(@PathVariable Long id) {
         // 1. 서비스 호출해서 DB 데이터 삭제
         facilityService.delete(id);
@@ -115,7 +123,14 @@ public class ReservationViewController {
          [스태프] 전체 예약 현황 관리 화면
      */
     @GetMapping("/admin/status")
-    public String manageStatus(Model model) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public String manageStatus(Model model,
+                               @AuthenticationPrincipal CustomUserDetails user) {
+        if (user == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("adminName", user.getName());
+        Long adminId = user.getUserId();
         model.addAttribute("reservations", reservationService.findAllWithDetails());
         return "reservation/admin/reservation-status";
     }

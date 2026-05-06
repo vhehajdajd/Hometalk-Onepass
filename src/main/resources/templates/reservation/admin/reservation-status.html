@@ -5,7 +5,7 @@
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
 </head>
 <body>
-<div class="main-layout">
+<div class="main-layout" sec:authorize="hasRole('ADMIN')">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='reservation')}"></div>
     <div class="main-wrapper">
         <!-- 상단 메뉴 -->
@@ -87,7 +87,11 @@
         </div>
     </div>
 </div>
-
+<div sec:authorize="!hasRole('ADMIN')" style="text-align: center; margin-top: 100px;">
+    <h2>권한이 없습니다.</h2>
+    <p>이 페이지는 관리자만 접근 가능합니다.</p>
+    <a th:href="@{/}">홈으로 돌아가기</a>
+</div>
 <script th:src="@{/js/reservation/reservation.js}"></script>
 </body>
 </html>
