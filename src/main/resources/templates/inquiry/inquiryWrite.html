@@ -79,12 +79,12 @@
         const formData = new FormData();
 
         // 2. DTO 생성 및 Blob 추가
-        const inquiryDto = {
-            title: title,
-            content: content,
-            category: category
-        };
-        formData.append("dto", new Blob([JSON.stringify(inquiryDto)], { type: "application/json" }));
+
+        formData.append("title", title);
+        formData.append("content", content);
+        formData.append("category", category);
+
+
 
         // 3. 파일 추가
         for (let i = 0; i < fileInput.files.length; i++) {
@@ -95,13 +95,17 @@
         const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
 
+        console.log("Header Name:", csrfHeader);
+        console.log("Token Value:", csrfToken);
+
         try {
             const response = await fetch('/hometop/api/inquiries', {
                 method: 'POST',
                 headers: csrfToken && csrfHeader ? {
                     [csrfHeader]: csrfToken
                 } : {},
-                body: formData
+                body: formData,
+                credentials: 'same-origin'
             });
 
             if (response.ok) {
@@ -111,7 +115,11 @@
                 const status = response.status;
                 if(status === 403) {
                     alert("권한이 없거나 보안 세션이 만료되었습니다. (403)");
-                } else {
+                }
+                else if (response.status === 401) {
+                    alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+                    location.href = "/hometop/auth";}
+                else {
                     alert("등록에 실패했습니다. (Error: " + status + ")");
                 }
             }

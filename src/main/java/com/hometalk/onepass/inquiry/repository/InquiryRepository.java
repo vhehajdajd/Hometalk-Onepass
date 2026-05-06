@@ -1,5 +1,6 @@
 package com.hometalk.onepass.inquiry.repository;
 
+import aj.org.objectweb.asm.commons.Remapper;
 import com.hometalk.onepass.inquiry.entity.Inquiry;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,4 +26,6 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
 
     // 최신 순 고정 조회
     List<Inquiry> findTop10ByOrderByCreatedAtDesc();
+
+    Optional<Inquiry> findFirstByUserIdOrderByIdDesc(Long userId);
 }

@@ -1,0 +1,19 @@
+server:
+  servlet:
+    context-path: /hometop
+
+spring:
+  application:
+    name: onepass
+
+  profiles:
+    active: dev
+
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  thymeleaf:
+    encoding: UTF-8

@@ -16,4 +16,6 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     Page<Complaint> findAllBySecretFalse(Pageable pageable);
 
+    Optional<Complaint> findFirstByUserIdOrderByIdDesc(Long userId);
+
 }

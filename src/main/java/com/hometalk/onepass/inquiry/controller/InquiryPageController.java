@@ -39,7 +39,7 @@ public class InquiryPageController {
 
         Page<InquiryDto> inquiries = inquiryService.findAll(userId, isAdmin, pageable);
 
-        model.addAttribute("paging", inquiries);
+        model.addAttribute("inquiries", inquiries);
         model.addAttribute("currentPage", inquiries.getNumber());
         model.addAttribute("totalPages", inquiries.getTotalPages());
 
