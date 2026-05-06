@@ -55,21 +55,25 @@
                                 </td>
                                 <td>
                                     <div class="flex-center gap-md">
-                                        <!-- 승인 버튼 (PENDING일 때만) -->
+                                        <!-- 1. 승인 처리 영역 -->
                                         <button th:if="${res.status.name() == 'PENDING'}"
                                                 type="button"
                                                 class="btn btn-primary"
                                                 th:onclick="'approveReservation(' + ${res.id} + ')'">
                                             승인
                                         </button>
+                                        <!-- 이미 승인된 경우 표시 -->
+                                        <span th:if="${res.status.name() == 'CONFIRMED'}" class="txt-done">승인완료</span>
 
-                                        <!-- 강제취소 버튼 (CANCEL/CANCELED가 아닐 때만) -->
+                                        <!-- 2. 강제취소 버튼 -->
                                         <button th:if="${res.status.name() != 'CANCELED' and res.status.name() != 'CANCEL'}"
                                                 type="button"
                                                 class="btn btn-point"
                                                 th:onclick="'confirmAdminCancel(' + ${res.id} + ')'">
                                             강제취소
                                         </button>
+                                        <!-- 이미 취소된 경우 표시 -->
+                                        <span th:if="${res.status.name() == 'CANCELED' or res.status.name() == 'CANCEL'}" class="txt-cancel">취소됨</span>
                                     </div>
                                 </td>
                             </tr>
