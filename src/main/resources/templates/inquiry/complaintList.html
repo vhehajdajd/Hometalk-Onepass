@@ -42,11 +42,11 @@
                                 <span class="badge category-badge" th:text="${list.category}">시설/기술</span>
                             </td>
                             <td class="title-cell">
-                                <span th:if="${list.secret}" style="margin-right: 4px;">🔒</span>
-                                <a th:if="${!list.secret}"
+                                <span th:if="${list.isSecret}" style="margin-right: 4px;">🔒</span>
+                                <a th:if="${!list.isSecret}"
                                    th:href="@{/complaints/detail/{id}(id=${list.id})}"
                                    th:text="${list.title}"></a>
-                                <span th:if="${list.secret}">
+                                <span th:if="${list.isSecret}">
                                     🔒 비밀글입니다
                                 </span>
                             </td>

@@ -8,8 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 @Configuration
-@ConfigurationProperties(prefix = "file.upload")
+@ConfigurationProperties(prefix = "file")
 public class FileProperties {
-
-    private String path;
+    private String uploadPath;
 }
