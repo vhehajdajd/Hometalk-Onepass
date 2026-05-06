@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**")
                         .ignoringRequestMatchers("/admin/**")
+                        .ignoringRequestMatchers("/community/**")
                 )
 
                 .authorizeHttpRequests(auth -> auth
