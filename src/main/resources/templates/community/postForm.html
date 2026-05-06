@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<head>
+    <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/community/post-form.css}">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+</head>
+<body>
+<div class="main-layout" style="display: flex; min-height: 100vh;">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
+    <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
+
+        <!-- 메인 -->
+        <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">
+            <div th:replace="~{community/fragments/boardListHeader :: boardListHeader(boards=${boards}, boardId=${boardId}, loginUser=${loginUser})}"></div>
+            <div th:replace="~{community/fragments/categoryBanner :: categoryBanner(board=${board}, categories=${categories}, categoryId=${categoryId})}"></div>
+
+            <div class="content-container">
+
+                <div class="form-top-actions">
+                    <div class="temp-action-group">
+                        <button type="button" th:if="${post.id == null}"
+                                id="btnSaveTemp" th:data-board-code="${boardCode}"
+                                class="btn btn-temp-save">
+                            임시저장
+                        </button>
+                        <button type="button" id="btnLoadTemp" class="btn btn-temp-sub" th:data-board-code="${boardCode}">
+                            임시저장 목록 (<span th:text="${tempCount}">0</span>)
+                        </button>
+                    </div>
+                </div>
+
+                <form th:action="${post.id == null}
+                                 ? @{/community/{code}/save(code=${board.code})}
+                                 : @{/community/{code}/edit/{id}(code=${board.code}, id=${post.id})}"
+                      method="post" id="postForm" th:object="${post}">
+                    <input type="hidden" th:field="*{id}">
+                    <input type="hidden" name="categoryCode" value="all">
+                    <input type="hidden" name="isTemp" id="isTemp" value="false">
+                    <div class="page-body">
+
+                        <div class="form-inline-group">
+                            <div class="category-field">
+                                <select th:field="*{categoryId}" required class="category-select">
+                                    <option value="">카테고리 선택</option>
+                                    <option th:each="category : ${categories}" th:value="${category.id}"
+                                            th:text="${category.name}">카테고리 명</option>
+                                </select>
+                            </div>
+
+                            <div class="title-field">
+                                <input type="text" id="title" th:field="*{title}" placeholder="제목을 입력하세요 (최대 50자)"
+                                       maxlength="50" required class="input-control">
+                                <span class="char-limit"><span id="charCount">0</span>/50</span>
+                            </div>
+                        </div>
+
+                        <div class="editor-wrapper">
+                            <input type="hidden" id="content" name="content" th:field="*{content}">
+                            <div id="editor"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">태그 입력</label>
+                            <div class="tag-container">
+                                <div id="tag-list"></div>
+                                <input type="text" id="tagInput" />
+                            </div>
+                            <div class="tag-help-text">
+                                태그를 입력 후 Enter를 누르세요
+                            </div>
+                            <div id="hidden-tags"></div>
+                        </div>
+                    </div>
+
+                    <div class="page-footer">
+                        <div class="footer-content">
+                            <div class="left-box">
+                                <a th:href="@{/community/{code}(code=${board.code})}"
+                                   onclick="return confirmCancel()" class="btn btn-outline">취소</a>
+                            </div>
+
+                            <div class="right-box">
+                                <button type="submit" onclick="document.getElementById('isTemp').value='false'"
+                                        class="btn btn-primary">등록</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+            <div id="tempListModal" style="display:none;" class="temp-modal">
+                <div class="modal-content">
+                    <h3>임시저장 글 <span class="close-modal">&times;</span></h3>
+                    <ul id="tempListArea">
+                    </ul>
+                </div>
+            </div>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill-image-resize-module@3.0.0/image-resize.min.js"></script>
+<script th:inline="javascript">
+    window.initialTags = /*[[${post.tags}]]*/ [];
+</script>
+<script th:src="@{/js/community/post.js}"></script>
+</body>
+</html>

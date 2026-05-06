@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="path(paths)" class="header">
+    <span th:text="${paths != null and !#strings.toString(paths).isEmpty() ?
+        (#strings.toString(paths).contains('notice') ? '공지사항' :
+        #strings.toString(paths).contains('schedule') ? '일정' :
+        #strings.toString(paths).contains('inquiry') ? '문의' :
+        #strings.toString(paths).contains('reservation') ? '예약' :
+        #strings.toString(paths).contains('parking') ? '주차' :
+        #strings.toString(paths).contains('billing') ? '관리비' :
+        #strings.toString(paths).contains('community') ? '커뮤니티' :
+        #strings.toString(paths).contains('myPage') ? '마이페이지' :
+        #strings.toString(paths).contains('home') ? '대시보드' : '홈') : '홈'}">홈</span>
+
+    <div style="display:flex; align-items:center; gap:20px; margin-left:auto;">
+        <a th:href="@{/notification}" style="display:flex; align-items:center; color:var(--color-main); text-decoration:none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+        </a>
+        <a th:href="@{/myPage}" style="display:flex; align-items:center; gap:6px; color:var(--color-main); text-decoration:none; font-size:14px; font-weight:600;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M20 21a8 8 0 1 0-16 0"/>
+            </svg>
+            MyPage
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>차량 등록 재신청</title>
+  <meta name="_csrf" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
+  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+</head>
+<body>
+
+<div class="main-layout" style="display: flex; min-height: 100vh;">
+
+  <!-- 1. 왼쪽 사이드바 -->
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
+
+  <!-- 2. 오른쪽 영역 (헤더 + 본문) -->
+  <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+
+    <!-- 상단 헤더 -->
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'parking', 'status'} })}"></div>
+
+    <!-- 상단 메뉴 -->
+    <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="content" style="flex: 1;">
+      <div class="container">
+        <h2 class="page-title">차량 등록 재신청</h2>
+
+        <!-- 반려 사유 -->
+        <div class="reject-reason-box">
+          <h3>반려 사유</h3>
+          <p th:text="${rejectReason}"></p>
+        </div>
+
+        <!-- 차량 정보 (수정 불가) -->
+        <div class="form-group">
+          <label>차량 번호</label>
+          <input type="text" th:value="${vehicle.vehicleNumber}" readonly>
+        </div>
+
+        <div class="form-group">
+          <label>차량 모델</label>
+          <input type="text" th:value="${vehicle.model}" readonly>
+        </div>
+
+        <div class="form-group">
+          <label>차량 종류</label>
+          <input type="text" th:value="${vehicle.vehicleType}" readonly>
+        </div>
+
+        <form id="reapplyForm"
+              th:action="@{/parking/vehicle/reapply/{vehicleId}(vehicleId=${vehicle.vehicleId})}"
+              method="post"
+              enctype="multipart/form-data">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+          <div class="form-group">
+            <label>필수 서류</label>
+            <p class="hint">
+              &lt;필요 서류&gt;<br>
+              * 자동차등록증<br>
+              * 가족관계증명서<br>
+              * 경우에 따라 서류를 더 요청할 수 있습니다.
+            </p>
+            <div class="file-upload-box">
+              <table id="fileTable">
+                <thead>
+                <tr>
+                  <th><input type="checkbox" id="checkAll"></th>
+                  <th>파일 이름</th>
+                  <th>크기</th>
+                  <th>확장자</th>
+                </tr>
+                </thead>
+                <tbody id="fileList"></tbody>
+              </table>
+              <div class="file-actions">
+                <button type="button" id="addFileBtn">파일 추가</button>
+                <button type="button" id="removeFileBtn">항목 제거</button>
+                <button type="button" id="removeAllFileBtn">전체 항목 제거</button>
+              </div>
+              <input type="file" id="fileInput" name="documents"
+                     accept=".jpg,.jpeg,.pdf" multiple hidden>
+            </div>
+            <span class="error-msg" id="fileError"></span>
+            <p class="hint">*등록증 미첨부 시 승인이 거절될 수 있습니다.</p>
+          </div>
+
+          <div class="form-actions">
+            <button type="button"
+                    class="btn-cancel" th:onclick="'location.href=\'' + @{/parking/vehicle} + '\''">취소</button>
+            <button type="submit" id="submitBtn" disabled>재신청</button>
+          </div>
+
+        </form>
+      </div>
+    </main>
+
+    <!-- 하단 푸터 삽입 -->
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+  </div>
+</div>
+
+<script>
+  const uploadedFiles = [];
+  const fileInput = document.getElementById('fileInput');
+  const fileList = document.getElementById('fileList');
+  const fileError = document.getElementById('fileError');
+  const submitBtn = document.getElementById('submitBtn');
+  const allowedExtensions = ['jpg', 'jpeg', 'pdf'];
+  const allowedMimeTypes = ['image/jpeg', 'application/pdf'];
+
+  document.getElementById('addFileBtn').addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', () => {
+      const files = Array.from(fileInput.files);
+
+      files.forEach(file => {
+          const ext = file.name.split('.').pop().toLowerCase();
+
+          if (uploadedFiles.some(f => f.name === file.name)) {
+              fileError.textContent = `"${file.name}"은 이미 추가된 파일입니다.`;
+              return;
+          }
+
+          if (!allowedExtensions.includes(ext)) {
+              fileError.textContent = 'jpg, pdf 파일만 업로드 가능합니다.';
+              return;
+          }
+
+          if (!allowedMimeTypes.includes(file.type)) {
+              fileError.textContent = '올바르지 않은 파일 형식입니다.';
+              return;
+          }
+
+          fileError.textContent = '';
+          uploadedFiles.push(file);
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+              <td><input type="checkbox" class="fileCheck"></td>
+              <td>${file.name}</td>
+              <td>${(file.size / 1024).toFixed(1)} KB</td>
+              <td>${ext.toUpperCase()}</td>
+          `;
+          fileList.appendChild(row);
+      });
+
+      syncFileInput();
+      checkSubmitBtn();
+  });
+
+  function syncFileInput() {
+      const dt = new DataTransfer();
+      uploadedFiles.forEach(file => dt.items.add(file));
+      fileInput.files = dt.files;
+  }
+
+  document.getElementById('removeFileBtn').addEventListener('click', () => {
+      const rows = Array.from(fileList.querySelectorAll('tr'));
+      const toRemove = [];
+
+      rows.forEach((row, index) => {
+          const checkbox = row.querySelector('.fileCheck');
+          if (checkbox && checkbox.checked) {
+              toRemove.push(index);
+          }
+      });
+
+      toRemove.reverse().forEach(index => {
+          uploadedFiles.splice(index, 1);
+          rows[index].remove();
+      });
+
+      syncFileInput();
+      checkSubmitBtn();
+  });
+
+  document.getElementById('removeAllFileBtn').addEventListener('click', () => {
+      fileList.innerHTML = '';
+      uploadedFiles.length = 0;
+      syncFileInput();
+      checkSubmitBtn();
+  });
+
+  document.getElementById('checkAll').addEventListener('change', (e) => {
+      document.querySelectorAll('.fileCheck').forEach(cb => cb.checked = e.target.checked);
+  });
+
+  function checkSubmitBtn() {
+      submitBtn.disabled = uploadedFiles.length === 0;
+  }
+
+  document.getElementById('reapplyForm').addEventListener('submit', (e) => {
+      if (uploadedFiles.length === 0) {
+          e.preventDefault();
+          fileError.textContent = '필수 서류를 첨부해주세요.';
+      }
+  });
+</script>
+
+</body>
+</html>

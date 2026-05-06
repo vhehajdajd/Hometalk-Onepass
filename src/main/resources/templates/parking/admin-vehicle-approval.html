@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>차량 승인 관리</title>
+  <meta name="_csrf" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
+  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+</head>
+
+<body>
+
+<main class="content" style="flex: 1;">
+  <div class="container">
+    <h2 class="page-title">차량 승인 관리</h2>
+
+    <!-- 탭 버튼 -->
+    <div class="tab-group">
+      <button type="button" class="tab-btn active" onclick="switchTab('PENDING', event)">대기</button>
+      <button type="button" class="tab-btn" onclick="switchTab('APPROVED', event)">승인</button>
+      <button type="button" class="tab-btn" onclick="switchTab('REJECTED', event)">반려</button>
+    </div>
+
+    <!-- 차량 목록 테이블 -->
+    <table class="park-table">
+      <thead>
+      <tr>
+        <th>차량 번호</th>
+        <th>모델</th>
+        <th>종류</th>
+        <th>등록자</th>
+        <th>세대</th>
+        <th>등록일</th>
+        <th>서류</th>
+        <th>관리</th>
+      </tr>
+      </thead>
+      <tbody id="vehicleList">
+      <tr>
+        <td colspan="8" class="pk-empty">로딩 중...</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <!-- 페이지네이션 -->
+    <ul class="pk-pagination" id="pagination" style="display:flex; flex-direction:row; justify-content:center;"></ul>
+  </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</div>
+</div>
+
+<!-- 서류 모달 -->
+<div id="documentModal" style="display:none; position:fixed; inset:0; background:rgba(3,33,84,0.45); z-index:1000; align-items:center; justify-content:center;">
+  <div class="modal-content">
+    <h3>증빙 서류</h3>
+    <img id="documentImage"
+         src=""
+         alt="서류 이미지"
+         style="max-width: 100%; border-radius: 8px;"
+         onerror="this.style.display='none'; document.getElementById('documentError').style.display='block'">
+    <p id="documentError" style="display:none; color: var(--color-btn-point);">서류를 불러올 수 없습니다.</p>
+    <div class="modal-actions" style="margin-top: 16px;">
+      <button type="button" class="btn-ghost" onclick="closeDocumentModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 반려 모달 -->
+<div id="rejectModal" style="display:none; position:fixed; inset:0; background:rgba(3,33,84,0.45); z-index:1000; align-items:center; justify-content:center;">
+  <div class="modal-content">
+    <h3>반려 사유</h3>
+    <textarea id="rejectReason"
+              placeholder="반려 사유를 입력하세요"
+              style="width:100%; height:100px; padding:10px; border:1px solid var(--color-border);
+                     border-radius: var(--radius-sm); font-size:14px; resize:none; box-sizing:border-box;">
+    </textarea>
+    <p id="rejectReasonError" style="color: var(--color-btn-point); font-size:12px; min-height:18px;"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" onclick="closeRejectModal()">취소</button>
+      <button type="button" class="pk-btn pk-btn-point" onclick="confirmReject()">반려</button>
+    </div>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  const contextPath = /*[[@{/}]]*/ '/';
+  const csrfToken  = document.querySelector('meta[name="_csrf"]').content;
+  const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+  let currentStatus = 'PENDING';
+  let currentPage   = 0;
+  const PAGE_SIZE   = 10;
+  let selectedApprovalId = null;
+
+  function postFetch(url, body) {
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        [csrfHeader]: csrfToken
+      },
+      body: JSON.stringify(body)
+    });
+  }
+
+  function switchTab(status, e) {
+    currentStatus = status;
+    currentPage   = 0;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+    loadVehicleList();
+  }
+
+function loadVehicleList() {
+    const tbody = document.getElementById('vehicleList');
+    tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">로딩 중...</td></tr>`;
+
+    fetch(`${contextPath}admin/vehicle/approval/list?status=${currentStatus}&page=${currentPage}&size=${PAGE_SIZE}`)
+      .then(res => res.json())
+      .then(data => {
+        tbody.innerHTML = '';
+
+        if (!data || !data.content || data.content.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">데이터가 없습니다.</td></tr>`;
+          renderPagination(0);
+          return;
+        }
+
+        data.content.forEach(v => {
+          const docPath = v.documentPath ? v.documentPath.replace(/\\/g, '/') : null;
+          const row = `
+            <tr>
+              <td>${v.vehicleNumber}</td>
+              <td>${v.model ?? '-'}</td>
+              <td>${v.vehicleType ?? '-'}</td>
+              <td>${v.userName}</td>
+              <td>${v.household}</td>
+              <td>${v.createdAt}</td>
+              <td>
+                ${docPath
+                  ? `<button class="pk-btn pk-btn-primary" onclick="viewDocument('${docPath}')">보기</button>`
+                  : '없음'}
+              </td>
+              <td>
+                ${currentStatus === 'PENDING' ? `
+                  <button class="pk-btn pk-btn-primary" onclick="approveVehicle(${v.approvalId})">승인</button>
+                  <button class="pk-btn pk-btn-secondary" onclick="openRejectModal(${v.approvalId})">반려</button>
+                  <button class="btn-delete" onclick="adminDeleteVehicle(${v.vehicleId})">삭제</button>
+                ` : `
+                  <button class="btn-delete" onclick="adminDeleteVehicle(${v.vehicleId})">삭제</button>
+                `}
+              </td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+
+        renderPagination(data.page.totalPages);
+      })
+      .catch(err => {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">데이터 조회 실패</td></tr>`;
+      });
+  }
+
+  function renderPagination(totalPages) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+
+    if (totalPages <= 0) return;
+
+    const prevLi = document.createElement('li');
+    const prevA  = document.createElement('a');
+    prevA.textContent = '‹';
+    prevA.href = '#';
+    if (currentPage === 0) prevA.style.opacity = '0.4';
+    prevA.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentPage > 0) { currentPage--; loadVehicleList(); }
+    });
+    prevLi.appendChild(prevA);
+    pagination.appendChild(prevLi);
+
+    const startPage = Math.max(0, currentPage - 2);
+    const endPage   = Math.min(totalPages - 1, startPage + 4);
+
+    for (let i = startPage; i <= endPage; i++) {
+      const li = document.createElement('li');
+      const a  = document.createElement('a');
+      a.textContent = i + 1;
+      a.href = '#';
+      if (i === currentPage) li.classList.add('active');
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPage = i;
+        loadVehicleList();
+      });
+      li.appendChild(a);
+      pagination.appendChild(li);
+    }
+
+    const nextLi = document.createElement('li');
+    const nextA  = document.createElement('a');
+    nextA.textContent = '›';
+    nextA.href = '#';
+    if (currentPage === totalPages - 1) nextA.style.opacity = '0.4';
+    nextA.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentPage < totalPages - 1) { currentPage++; loadVehicleList(); }
+    });
+    nextLi.appendChild(nextA);
+    pagination.appendChild(nextLi);
+  }
+
+  function viewDocument(path) {
+    const img = document.getElementById('documentImage');
+    const err = document.getElementById('documentError');
+    img.style.display = 'block';
+    err.style.display = 'none';
+    img.src = encodeURI(path);
+    document.getElementById('documentModal').style.display = 'flex';
+  }
+
+  function closeDocumentModal() {
+    document.getElementById('documentModal').style.display = 'none';
+  }
+
+  function approveVehicle(approvalId) {
+    if (!confirm('승인하시겠습니까?')) return;
+
+    postFetch(`${contextPath}admin/vehicle/approval/approve`, { approvalId })
+      .then(() => {
+        alert('승인 완료');
+        loadVehicleList();
+      })
+      .catch(err => {
+        console.error(err);
+        alert('승인 실패');
+      });
+  }
+
+  function openRejectModal(approvalId) {
+    selectedApprovalId = approvalId;
+    document.getElementById('rejectReason').value = '';
+    document.getElementById('rejectReasonError').innerText = '';
+    document.getElementById('rejectModal').style.display = 'flex';
+  }
+
+  function closeRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+  }
+
+  function confirmReject() {
+    const reason = document.getElementById('rejectReason').value.trim();
+
+    if (!reason) {
+      document.getElementById('rejectReasonError').innerText = '반려 사유를 입력해주세요.';
+      return;
+    }
+
+    postFetch(`${contextPath}admin/vehicle/approval/reject`, {
+      approvalId: selectedApprovalId,
+      rejectReason: reason
+    })
+      .then(() => {
+        alert('반려 완료');
+        closeRejectModal();
+        loadVehicleList();
+      })
+      .catch(err => {
+        console.error(err);
+        alert('반려 실패');
+      });
+  }
+
+  function adminDeleteVehicle(vehicleId) {
+    if (!confirm('차량을 삭제하시겠습니까?')) return;
+
+    postFetch(`${contextPath}admin/vehicle/approval/delete/${vehicleId}`, {})
+      .then(async res => {
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(msg || '서버 오류');
+        }
+        alert('삭제되었습니다.');
+        loadVehicleList();
+      })
+      .catch(err => {
+        console.error(err);
+        alert('삭제 중 오류가 발생했습니다: ' + err.message);
+      });
+  }
+
+  loadVehicleList();
+</script>
+
+</body>
+</html>

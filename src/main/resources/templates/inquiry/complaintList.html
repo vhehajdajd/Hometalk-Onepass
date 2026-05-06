@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='민원 게시판')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
+</head>
+<body>
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='inquiry')}"></div>
+    <div class="main-wrapper">
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'inquiry'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"></div>
+        <!-- 메인 콘텐츠 -->
+        <div class="dashboard-content">
+
+            <main class="container">
+                <h2 class="title">민원 게시판</h2>
+
+                <table class="table mt-md">
+                    <colgroup>
+                        <col style="width: 120px"> <!-- 카테고리 -->
+                        <col style="width: auto">
+                        <col style="width: 120px"> <!-- 작성자 -->
+                        <col style="width: 100px"> <!-- 상태 -->
+                        <col style="width: 130px"> <!-- 작성일 -->
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>카테고리</th>
+                            <th>제목</th>
+                            <th>작성자</th>
+                            <th>상태</th>
+                            <th>작성일</th>
+                        </tr>
+                    </thead>
+
+                    <tbody th:if="${paging != null}">
+                        <tr th:each="list : ${paging.content}">
+                            <td>
+                                <span class="badge category-badge" th:text="${list.category}">시설/기술</span>
+                            </td>
+                            <td class="title-cell">
+                                <span th:if="${list.isSecret}" style="margin-right: 4px;">🔒</span>
+                                <a th:if="${!list.isSecret}"
+                                   th:href="@{/complaints/detail/{id}(id=${list.id})}"
+                                   th:text="${list.title}"></a>
+                                <span th:if="${list.isSecret}">
+                                    🔒 비밀글입니다
+                                </span>
+                            </td>
+                            <td th:text="${list.userName}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${list.status == '처리완료' ? 'status-complete' : 'status-waiting'}"
+                                      th:text="${list.status}">접수중</span>
+                            </td>
+                            <td class="text-muted" th:text="${#temporals.format(list.createdAt, 'yyyy-MM-dd')}"></td>
+                        </tr>
+
+                        <tr th:if="${paging == null or paging.isEmpty()}">
+                            <td colspan="5" class="text-muted" style="padding: 100px 0; text-align: center;">등록된 민원 내역이 없습니다.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="pagination-container mt-lg">
+                    <nav class="pagination-nav">
+                        <ul class="pagination" th:if="${paging != null and !paging.isEmpty()}">
+                            <!-- 이전 페이지 -->
+                            <li class="page-item" th:classappend="${!paging.hasPrevious} ? 'disabled'">
+                                <a class="page-link" th:href="@{/complaints/list(page=${paging.number - 1})}">&laquo;</a>
+                            </li>
+
+                            <!-- 페이지 번호 -->
+                            <li class="page-item"
+                                th:each="page: ${#numbers.sequence(0, paging.totalPages - 1)}"
+                                th:if="${page >= paging.number - 2 and page <= paging.number + 2}"
+                                th:classappend="${page == paging.number} ? 'active'">
+                                <a class="page-link" th:text="${page + 1}" th:href="@{|?page=${page}|}"></a>
+                            </li>
+
+                            <!-- 다음 페이지 -->
+                            <li class="page-item" th:classappend="${!paging.hasNext} ? 'disabled'">
+                                <a class="page-link" th:href="@{/complaints/list(page=${paging.number + 1})}">&raquo;</a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <!-- 오른쪽 버튼 영역 -->
+                    <div class="action-wrapper">
+                        <a th:href="@{/complaints/write}" class="btn btn-primary">글 작성</a>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+</body>
+</html>

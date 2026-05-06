@@ -1,0 +1,229 @@
+/* noticeList.css */
+
+/* ── 상단 헤더 ─────────────────────────────────────────────────────────────── */
+.notice-header {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.notice-header-title {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--color-main);
+    margin-bottom: 4px;
+}
+
+.notice-header-sub {
+    font-size: 15px;
+    color: var(--color-text-muted);
+}
+
+/* ── 작성하기 버튼 ─────────────────────────────────────────────────────────── */
+.top-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+}
+
+.btn-write {
+    background: var(--color-btn);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 16px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.btn-write:hover {
+    opacity: 0.88;
+}
+
+/* ── 공지 목록 테이블 ──────────────────────────────────────────────────────── */
+.notice-list {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+
+.notice-list thead tr {
+    border-bottom: 2px solid var(--color-main);
+}
+
+.notice-list th {
+    padding: 15px 10px;
+    color: var(--color-main);
+    font-weight: 600;
+    font-size: 16px;
+    text-align: center;
+    background: white;
+}
+
+.notice-list th:nth-child(1) { width: 5%; }
+.notice-list th:nth-child(2) { width: 8%; }
+.notice-list th:nth-child(3) { width: auto; }
+.notice-list th:nth-child(4) { width: 14%; }
+.notice-list th:nth-child(5) { width: 14%; }
+.notice-list th:nth-child(6) { width: 8%; }
+
+.notice-list td {
+    padding: 0 10px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 15px;
+    vertical-align: middle;
+    height: 52px;
+}
+
+/* ── 고정 아이콘 셀 ────────────────────────────────────────────────────────── */
+.pin-cell {
+    text-align: center;
+    vertical-align: middle;
+    padding: 10px;
+}
+
+/* ── 제목 셀 ───────────────────────────────────────────────────────────────── */
+.title-cell { text-align: left !important; }
+
+.title-cell a {
+    color: var(--color-main);
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.title-cell a:hover {
+    text-decoration: underline;
+    color: var(--color-btn-point);
+}
+
+
+/* ── 페이지네이션 ──────────────────────────────────────────────────────────── */
+.page-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 60px;
+    padding-top: 25px;
+    padding-bottom: 10px;
+    position: relative;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.pagination a {
+    text-decoration: none;
+    color: var(--color-main);
+    padding: 6px 12px;
+    font-size: 14px;
+}
+
+.pagination a.active-page {
+    color: var(--color-btn-point);
+    font-weight: 600;
+}
+
+/* ── 검색 (하단) ───────────────────────────────────────────────────────────── */
+.search-area {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+    margin-bottom: 50px;
+}
+
+.notice-search {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.select-wrapper select.search-select {
+    min-width: 100px;
+    padding: 10px 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #4b5563;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%234b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 10px center;
+    background-size: 12px;
+    padding-right: 30px;
+    background-color: white;
+}
+
+.select-wrapper select.search-select:focus {
+    border-color: #9ca3af;
+}
+
+.search-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-input {
+    width: 250px;
+    padding: 10px 15px;
+    padding-right: 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #4b5563;
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: #9ca3af;
+}
+
+.search-input:focus {
+    border-color: #9ca3af;
+}
+
+.btn-search-submit {
+    position: absolute;
+    right: 50px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.btn-search-submit:hover {
+    background-color: #eee;
+}
+
+.btn-reset-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    background-color: #f3f4f6;
+}
+
+.btn-reset-icon:hover {
+    background-color: #e5e7eb;
+    transform: rotate(180deg);
+}
+
+.btn-reset-icon svg {
+    stroke: #6b7280;
+}

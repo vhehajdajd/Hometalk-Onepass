@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- ── 주차 ── -->
+<div th:fragment="parking" class="category-bar">
+    <a class="category-item" th:href="@{/parking/vehicle}">차량 조회</a>
+    <a class="category-item" th:href="@{/parking/vehicle/register}">차량 등록</a>
+    <a class="category-item" th:href="@{/parking/visit}">방문 예약</a>
+    <a class="category-item" th:href="@{/parking/logs}">주차 기록</a>
+</div>
+
+<!-- ── 관리비 ── -->
+<div th:fragment="billing" class="category-bar">
+    <a class="category-item" th:href="@{/billing}">관리비 조회</a>
+</div>
+
+<!-- ── 커뮤니티 ── -->
+<div th:fragment="community" class="category-bar">
+    <a class="category-item" th:each="board : ${boards}"
+       th:href="@{/community/{code}(code=${board.code})}"
+       th:text="${board.name}">게시판</a>
+</div>
+
+<!-- ── 공지 ── -->
+<div th:fragment="notice" class="category-bar">
+    <a class="category-item" th:href="@{/notice}">공지 목록</a>
+</div>
+
+<!-- ── 일정 ── -->
+<div th:fragment="schedule" class="category-bar">
+    <a class="category-item" th:href="@{/schedule}">달력</a>
+</div>
+
+<!-- ── 예약 ── -->
+<div th:fragment="reservation" class="category-bar">
+    <a class="category-item" th:href="@{/reservation/apply}">예약 신청</a>
+    <a class="category-item" th:href="@{/reservation/my}">내 예약</a>
+</div>
+
+<!-- ── 문의 ── -->
+<div th:fragment="inquiry" class="category-bar">
+    <a class="category-item" th:href="@{/hometop/inquiries/list}">문의 목록</a>
+    <a class="category-item" th:href="@{/hometop/inquiries/write}">문의 작성</a>
+    <a class="category-item" th:href="@{/complaints/list}">민원 목록</a>
+    <a class="category-item" th:href="@{/complaints/write}">민원 작성</a>
+</div>
+
+</body>
+</html>

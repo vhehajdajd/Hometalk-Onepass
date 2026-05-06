@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<div th:fragment="pagination(page, boardCode, categoryCode)">
+    <div class="pagination-container">
+        <div class="left-wing"></div>
+
+        <nav aria-label="Page navigation" class="pagination-nav" th:if="${!page.isEmpty()}">
+            <ul class="pagination">
+
+                <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="${page.hasPrevious()}
+                               ? @{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${page.number})}
+                               : '#'"
+                       aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                <li class="page-item"
+                    th:each="pageNumber : ${#numbers.sequence(1, page.totalPages)}"
+                    th:classappend="${pageNumber == page.number + 1} ? 'active'">
+                    <a class="page-link"
+                       th:href="@{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${pageNumber})}"
+                       th:text="${pageNumber}">
+                    </a>
+                </li>
+
+                <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="${page.hasNext()}
+                          ? @{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${page.number + 2})}
+                          : '#'"
+                       aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+        <div class="action-wrapper">
+            <a th:href="@{/community/{code}/write(code=${board.code})}" class="btn btn-primary">글 작성</a>
+        </div>
+    </div>
+
+</div>
+</html>

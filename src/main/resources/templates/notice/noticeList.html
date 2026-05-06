@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>공지 목록 | Home talk</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+    <link rel="stylesheet" th:href="@{/css/notice/notice-common.css}">
+    <link rel="stylesheet" th:href="@{/css/notice/noticeList.css}">
+</head>
+
+<body>
+
+<div class="main-layout" style="display: flex; min-height: 100vh;">
+
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='notice')}"></div>
+
+    <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=#{'notice'})}"></div>
+
+        <div class="container">
+
+            <!-- ── 헤더 ───────────────────────────────────────────────────── -->
+            <div class="notice-header">
+                <div class="notice-header-title">공지사항</div>
+                <div class="notice-header-sub">단지 내 중요한 공지를 확인하세요</div>
+            </div>
+
+            <!-- ── 검색 + 결과건수 ────────────────────────────────────────── -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+                <div th:if="${keyword != null and !#strings.isEmpty(keyword)}" style="font-size:16px; color:#000000;">
+                    '<span th:text="${keyword}" style="font-weight:600;"></span>' 검색 결과 <span th:text="${notices.totalElements}"></span>건
+                </div>
+                <div th:if="${keyword == null or #strings.isEmpty(keyword)}"></div>
+
+                <form th:action="@{/notice}" method="get" class="notice-search">
+                    <div class="select-wrapper">
+                        <select name="searchType" class="search-select">
+                            <option value="tc" th:selected="${searchType == 'tc'}">제목+내용</option>
+                            <option value="title" th:selected="${searchType == 'title'}">제목</option>
+                        </select>
+                    </div>
+                    <div class="search-input-container">
+                        <input type="text" name="keyword" th:value="${keyword}" placeholder="검색어를 입력하세요." class="search-input">
+                        <button type="submit" class="btn-search-submit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                 stroke="#aebbca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </button>
+                        <a th:href="@{/notice}" class="btn-reset-icon" title="검색 초기화">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                 stroke="#98a4b3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M23 4v6h-6"></path>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ── 목록 테이블 ────────────────────────────────────────────── -->
+            <table class="notice-list">
+                <thead>
+                <tr>
+                    <th>고정</th>
+                    <th>분류</th>
+                    <th>제목</th>
+                    <th>작성일시</th>
+                    <th>수정일시</th>
+                    <th>조회수</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="notice : ${notices.content}"
+                    th:classappend="${notice.isPinned} ? ' pinned-row'">
+
+                    <td class="pin-cell">
+                        <svg th:if="${notice.isPinned}"
+                             xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                             viewBox="0 0 24 24" fill="none"
+                             stroke="#aebbca" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 17v5"/>
+                            <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>
+                        </svg>
+                    </td>
+                    <td th:class="'badge-' + ${notice.badge.name().toLowerCase()}">
+                        <span th:text="${notice.badge.label}">분류</span>
+                    </td>
+                    <td class="title-cell">
+                        <a th:href="@{/notice/{id}(id=${notice.id})}" th:text="${notice.title}">제목</a>
+                    </td>
+                    <td th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd')}"></td>
+                    <td th:text="${notice.updatedAt != null ? #temporals.format(notice.updatedAt, 'yyyy-MM-dd') : '-'}"></td>
+                    <td th:text="${notice.viewCount}"></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!-- ── 검색 결과 없음 ─────────────────────────────────────────── -->
+            <div th:if="${notices.content.isEmpty()}" style="text-align:center; padding:80px 0; color:#94a3b8; font-size:1rem; line-height:1.6;">
+                <p th:if="${keyword != null and !keyword.isEmpty()}">
+                    '<span th:text="${keyword}" style="font-weight:600;"></span>' 검색 결과와 일치하는 공지가 없습니다.
+                </p>
+                <p th:if="${keyword == null or keyword.isEmpty()}">
+                    등록된 공지가 없습니다.
+                </p>
+            </div>
+
+            <!-- ── 페이지네이션 + 글작성 ──────────────────────────────────── -->
+            <div class="page-footer">
+                <div class="pagination">
+                    <a th:if="${currentPage > 0}"
+                       th:href="@{/notice(page=${currentPage - 1}, keyword=${keyword != null ? keyword : ''}, searchType=${searchType})}">&laquo;</a>
+                    <span th:if="${currentPage == 0}" style="color:#ddd; padding:6px 12px;">&laquo;</span>
+
+                    <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                       th:if="${totalPages > 0}"
+                       th:href="@{/notice(page=${i}, keyword=${keyword != null ? keyword : ''}, searchType=${searchType})}"
+                       th:text="${i + 1}"
+                       th:classappend="${i == currentPage} ? 'active-page'"></a>
+
+                    <a th:if="${currentPage < totalPages - 1}"
+                       th:href="@{/notice(page=${currentPage + 1}, keyword=${keyword != null ? keyword : ''}, searchType=${searchType})}">&raquo;</a>
+                    <span th:if="${currentPage >= totalPages - 1}" style="color:#ddd; padding:6px 12px;">&raquo;</span>
+                </div>
+
+                <a th:href="@{/notice/write}"
+                   sec:authorize="hasRole('ADMIN')"
+                   class="btn-write"
+                   style="position:absolute; right:0; margin:0;">글 작성
+                </a>
+            </div>
+
+        </div>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    </div>
+</div>
+
+</body>
+</html>

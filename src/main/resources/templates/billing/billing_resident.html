@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>관리비</title>
+    <meta name="_csrf"        th:content="${_csrf?.token}" />
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}" />
+    <link rel="stylesheet" th:href="@{/css/dashboard/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/billing/billing_common.css}" />
+    <link rel="stylesheet" th:href="@{/css/billing/billing_admin_upload.css}" />
+    <link rel="stylesheet" th:href="@{/css/billing/billing_resident.css}" />
+</head>
+<body>
+
+<div class="main-layout" style="display:flex; min-height:100vh;">
+
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='billing')}"></div>
+
+    <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
+
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'billing'} })}"></div>
+
+        <header class="category-menu-bar">&nbsp;</header>
+
+        <div class="container">
+
+            <!-- 페이지 타이틀 -->
+            <div class="page-title">관리비</div>
+
+            <!-- 미납 배너 (미납 시만 노출) -->
+            <div class="bp-alert-box" th:if="${unpaidList != null and !unpaidList.isEmpty()}">
+                <div class="bp-alert-inner">
+                    <div class="bp-alert-icon">!</div>
+                    <div class="bp-alert-title">
+                        <span th:each="b, stat : ${unpaidList}">
+                            <th:block th:text="${b.billingMonth}"></th:block>
+                            <th:block th:if="!${stat.last}">, </th:block>
+                        </span>
+                        관리비가 미납 상태입니다. 관리사무소로 연락 바랍니다. ☎️02-888-9999
+                    </div>
+                </div>
+            </div>
+
+            <!-- 요약 카드 3개 -->
+            <div class="bp-summary-grid">
+                <div class="bp-card">
+                    <div class="bp-card-label">이번 달 청구액</div>
+                    <div class="bp-card-value"
+                         th:text="${currentMonthAmount != null}
+                                 ? ${#numbers.formatInteger(currentMonthAmount, 0, 'COMMA') + '원'}
+                                 : '—'">128,500원</div>
+                    <div class="bp-card-sub" th:text="${currentMonthLabel}">2026년 3월</div>
+                </div>
+                <div class="bp-card">
+                    <div class="bp-card-label">미납 건수</div>
+                    <div class="bp-card-value"
+                         th:classappend="${unpaidCount > 0} ? 'warn'"
+                         th:text="${unpaidCount > 0} ? ${unpaidCount + '건'} : '없음'">1건</div>
+                    <div class="bp-card-sub"
+                         th:text="${unpaidCount > 0} ? ${#strings.listJoin(unpaidMonths, ', ')} : '모두 납부 완료'">2026년 2월</div>
+                </div>
+                <div class="bp-card">
+                    <div class="bp-card-label">최근 납부일</div>
+                    <div class="bp-card-value md"
+                         th:text="${latestPaidDate != null} ? ${latestPaidDate} : '—'">2026.01.15</div>
+                    <div class="bp-card-sub"
+                         th:text="${latestPaidDate != null} ? ${latestPaidMonth + ' 완료'} : '납부 이력 없음'">1월 완료</div>
+                </div>
+            </div>
+
+            <!-- 섹션 타이틀 -->
+            <div class="bp-section-title">관리비 내역</div>
+
+            <!-- 필터 행 -->
+            <div class="bp-filter-row">
+                <select id="selYear" onchange="onFilterChange()">
+                    <option value="">전체 연도</option>
+                    <option value="2026" selected>2026년</option>
+                    <option value="2025">2025년</option>
+                    <option value="2024">2024년</option>
+                    <option value="2023">2023년</option>
+                </select>
+                <select id="selMonth" onchange="onFilterChange()">
+                    <option value="">전체 월</option>
+                    <option value="01">1월</option>
+                    <option value="02">2월</option>
+                    <option value="03">3월</option>
+                    <option value="04">4월</option>
+                    <option value="05">5월</option>
+                    <option value="06">6월</option>
+                    <option value="07">7월</option>
+                    <option value="08">8월</option>
+                    <option value="09">9월</option>
+                    <option value="10">10월</option>
+                    <option value="11">11월</option>
+                    <option value="12">12월</option>
+                </select>
+                <select id="selStatus" onchange="onFilterChange()">
+                    <option value="">전체 상태</option>
+                    <option value="UNPAID">미납</option>
+                    <option value="PAID">납부완료</option>
+                </select>
+            </div>
+
+            <!-- 관리비 목록 -->
+            <div class="bp-list" id="billingList">
+                <th:block th:each="b : ${billings}">
+                    <div th:with="isUnpaid=${b.status.name() == 'UNPAID'},
+                                  isOverdue=${b.status.name() == 'UNPAID' and #temporals.createToday().isAfter(b.dueDate)}"
+                         th:classappend="${isOverdue} ? 'overdue'"
+                         class="bp-item">
+                        <div class="bp-item-left">
+                            <div class="bp-item-month" th:text="${b.billingMonth + ' 관리비'}">2026년 3월 관리비</div>
+                            <div th:classappend="${isUnpaid} ? '' : 'paid-text'"
+                                 class="bp-item-due"
+                                 th:text="${isUnpaid}
+                                         ? '납부기한 ' + ${#temporals.format(b.dueDate, 'yyyy.MM.dd')}
+                                         : '납부 완료'">납부기한 2026.03.31</div>
+                        </div>
+                        <div class="bp-item-mid">
+                            <span th:classappend="${isUnpaid} ? 'unpaid' : 'paid'"
+                                  class="bp-badge"
+                                  th:text="${b.status}">UNPAID</span>
+                            <span th:classappend="${isUnpaid} ? 'unpaid'"
+                                  class="bp-amount"
+                                  th:text="${#numbers.formatInteger(b.totalAmount, 0, 'COMMA') + '원'}">128,500원</span>
+                        </div>
+                        <button th:classappend="${isUnpaid} ? 'primary' : 'secondary'"
+                                class="bp-btn-view"
+                                th:data-billing-id="${b.billingId}"
+                                onclick="openModal(this.dataset.billingId)">고지서 보기</button>
+                    </div>
+                </th:block>
+                <div class="bp-empty" th:if="${billings == null or billings.isEmpty()}">
+                    조회된 관리비 내역이 없습니다.
+                </div>
+            </div>
+
+            <!-- 더보기 -->
+            <div class="bp-load-more" id="loadMoreWrap" th:style="${hasMore} ? '' : 'display:none'">
+                <button class="bp-btn-load" onclick="loadMore()">더보기</button>
+            </div>
+
+        </div>
+
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    </div>
+</div>
+
+<!-- 고지서 모달 -->
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModal(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-header-title" id="modalHeaderTitle">디지털 고지서</span>
+            <button class="modal-close-btn" onclick="closeModalBtn()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="bill-head">
+                <div class="bill-head-title">관리비 고지서</div>
+                <div class="bill-head-sub" id="modalPeriod"></div>
+            </div>
+            <div class="bill-col-hint">항목명</div>
+            <div class="bill-rows" id="modalRows"></div>
+            <div class="bill-total-row">
+                <span class="bill-total-label">합계</span>
+                <span class="bill-total-amount" id="modalTotal"></span>
+            </div>
+            <div class="bm-status-box" id="modalStatusBox"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModalBtn()">닫기</button>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const CONTEXT_PATH = /*[[${contextPath}]]*/ '/hometop';
+    const UNIT_INFO    = /*[[${unitInfo}]]*/ '';
+    const HOUSEHOLD_ID = /*[[${householdId}]]*/ '';
+    const CSRF_TOKEN   = document.querySelector('meta[name="_csrf"]')?.content;
+    const CSRF_HEADER  = document.querySelector('meta[name="_csrf_header"]')?.content;
+    /*]]>*/
+</script>
+<script th:src="@{/js/billing/billing_resident.js}"></script>
+
+</body>
+</html>
