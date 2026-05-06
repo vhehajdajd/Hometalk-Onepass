@@ -74,10 +74,9 @@ public class Post extends BaseSoftDeleteEntity {
     @Enumerated(EnumType.STRING)
     private PostStatus postStatus = PostStatus.ACTIVE;
 
-    @Builder.Default
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     @Enumerated(EnumType.STRING)
-    private MarketStatus marketStatus = MarketStatus.SHARED;
+    private MarketStatus marketStatus;
 
     // 변경 method
     public void update(String title, String content, Category category, PostStatus status) {

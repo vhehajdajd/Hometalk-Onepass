@@ -1,42 +1,129 @@
 package com.hometalk.onepass.community.controller;
 
-/*
-    게시글 상태 변경, 상단 고정, 조회수, 좋아요/추천 기능
- */
-
+import com.hometalk.onepass.auth.config.CustomUserDetails;
+import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.community.enums.MarketStatus;
+import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
 import com.hometalk.onepass.community.service.PostActionService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class PostActionController {
+
     private final PostActionService postActionService;
 
-    // 1. 공지 고정 토글 (관리자용)
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @PostMapping("/{postId}/pin")
-    public ResponseEntity<Void> togglePin(@PathVariable Long postId) {
-        System.out.println("요청 성공");
-        // [임시] adminId는 서비스 내부나 세션에서 처리하도록 변경
-        Long tempAdminId = 1L;
-        postActionService.togglePin(postId, tempAdminId);
-        return ResponseEntity.ok().build(); // 200 OK만 반환
-    }
+    public ResponseEntity<Void> togglePin(@PathVariable Long postId,
+                                          Authentication authentication) {
 
-    // 2. 나눔 상태 변경 (작성자용)
-    @PostMapping("/{postId}/market-status")
-    public String updateMarketStatus(@PathVariable Long postId, @RequestParam MarketStatus status) {
-        postActionService.updateMarketStatus(postId, status);
-        return "redirect:/community/post/" + postId;
-    }
+        CustomUserDetails user = getLoginCustomUser(authentication);
 
-    // 3. 관리자 게시글 숨김
-    @PostMapping("/{postId}/hide")
-    public ResponseEntity<Void> hidePost(@PathVariable Long postId) {
-        postActionService.hidePost(postId);
+        postActionService.togglePin(postId, user);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{postId}/status")
+    public ResponseEntity<Void> updateMarketStatus(@PathVariable Long postId,
+                                                   @RequestBody java.util.Map<String, String> request,
+                                                   Authentication authentication) {
+
+        CustomUserDetails user = getLoginCustomUser(authentication);
+
+        MarketStatus marketStatus = MarketStatus.valueOf(request.get("marketStatus"));
+        postActionService.updateMarketStatus(postId, user, marketStatus);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{postId}/hide")
+    public ResponseEntity<Void> hidePost(@PathVariable Long postId,
+                                         Authentication authentication) {
+
+        CustomUserDetails user = getLoginCustomUser(authentication);
+
+        postActionService.hidePost(postId, user);
+        return ResponseEntity.ok().build();
+    }
+
+    private CustomUserDetails getLoginCustomUser(Authentication authentication) {
+
+        User user = getLoginUser(authentication);
+
+        return new CustomUserDetails(
+                user.getId(),
+                null,
+                null,
+                user.getName(),
+                user.getRole(),
+                getLoginId(authentication),
+                ""
+        );
+    }
+
+    private String getLoginId(Authentication authentication) {
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof CustomUserDetails customUserDetails
+                && customUserDetails.getLoginId() != null) {
+            return customUserDetails.getLoginId();
+        }
+
+        return authentication.getName();
+    }
+
+    private User getLoginUser(Authentication authentication) {
+
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new UnauthorizedAccessException("로그인이 필요합니다.");
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof CustomUserDetails customUserDetails) {
+            Long userId = customUserDetails.getUserId();
+
+            if (userId != null) {
+                User user = entityManager.find(User.class, userId);
+
+                if (user != null) {
+                    return user;
+                }
+            }
+        }
+
+        String loginId = authentication.getName();
+
+        List<User> users = entityManager.createQuery(
+                        "select u " +
+                                "from LocalAccount la " +
+                                "join la.user u " +
+                                "where la.loginId = :loginId",
+                        User.class
+                )
+                .setParameter("loginId", loginId)
+                .setMaxResults(1)
+                .getResultList();
+
+        if (users.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다.");
+        }
+
+        return users.get(0);
     }
 }

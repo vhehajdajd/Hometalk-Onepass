@@ -1,13 +1,15 @@
 package com.hometalk.onepass.reservation.controller;
 
-import com.hometalk.onepass.facility.dto.FacilityRequestDto;
-import com.hometalk.onepass.facility.service.FacilityService;
+import com.hometalk.onepass.auth.config.CustomUserDetails;
+import com.hometalk.onepass.reservation.dto.ReservationCalendarDto;
 import com.hometalk.onepass.reservation.dto.ReservationRequestDto;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,67 +19,71 @@ import java.util.List;
 public class ReservationController {
 
     private final ReservationService reservationService;
-    private final FacilityService facilityService;
 
-    /**
-     * 시설 예약 등록
-        */
+    /*
+       시설 예약 등록
+     */
     @PostMapping
-    public Long register(@RequestBody ReservationRequestDto dto) {
-        return reservationService.register(dto);
+    public Long register(@RequestBody ReservationRequestDto dto,
+                         Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("로그인 정보가 유효하지 않습니다. 다시 로그인해주세요.");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return reservationService.register(dto, userDetails.getUserId());
     }
 
-    /**
-     * 특정 예약 상세 조회
-     *
+    /*
+       특정 예약 상세 조회
      */
     @GetMapping("/{id}")
-    public ReservationResponseDto findOne(@PathVariable Long id) {
-        // 서비스에서 엔티티를 가져온 뒤 DTO로 변환해서 반환
-        return ReservationResponseDto.fromEntity(reservationService.findOne(id));
+    public ReservationResponseDto findOne(@PathVariable Long id,
+                                          Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("인증 정보가 없습니다.");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return reservationService.findOne(id, userDetails.getUserId(), userDetails.getRole());
     }
 
-    /**
-     * 모든 예약 조회
+    /*
+       모든 예약 조회
      */
     @GetMapping
     public List<ReservationResponseDto> list() {
         return reservationService.findAll();
     }
 
-    /**
-     * 예약 취소
+    /*
+        예약 승인 [관리자]
+     */
+    @PostMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> approveReservation(@PathVariable Long id) {
+        reservationService.approve(id); // 서비스의 approve 메서드 호출
+        return ResponseEntity.ok().build();
+    }
+
+    /*
+       예약 취소 [사용자/관리자 공용]
      */
     @PatchMapping("/{id}/cancel")
-    public void cancel(@PathVariable("id") Long id) {
-        reservationService.cancel(id);
-    }
-
-    /**
-     * [스태프용] 신규 시설 등록 (이미지 포함)
-     */
-    @PostMapping("/admin/facilities")
-    public String registerFacility(@ModelAttribute FacilityRequestDto dto,
-                                   @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) {
-        // 1. 이미지 업로드 처리 (기존 Inquiry 시스템에서 사용한 로직 활용)
-        if (imageFile != null && !imageFile.isEmpty()) {
-            // String saveName = fileService.upload(imageFile);
-            // dto.setImagePath(saveName);
+    public void cancel(@PathVariable("id") Long id,
+                       Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("인증 정보가 없습니다.");
         }
-
-        // 2. 시설 저장
-        facilityService.register(dto);
-
-        // 3. 다시 관리 목록 페이지로 이동
-        return "redirect:/reservation/admin/facilities";
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        reservationService.cancel(id, userDetails.getUserId(), userDetails.getRole());
     }
 
-    /**
-     * [스태프용] 시설 삭제
-     */
-    @PostMapping("/admin/facilities/{id}/delete")
-    public String deleteFacility(@PathVariable Long id) {
-        facilityService.delete(id);
-        return "redirect:/reservation/admin/facilities";
+
+    // 캘린더 전용
+    @GetMapping("/calendar")
+    public List<ReservationCalendarDto> calendar(
+            @RequestParam int year,
+            @RequestParam int month
+    ) {
+        return reservationService.getCalendar(year, month);
     }
 }

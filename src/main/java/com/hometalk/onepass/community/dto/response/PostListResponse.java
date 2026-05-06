@@ -1,6 +1,7 @@
 package com.hometalk.onepass.community.dto.response;
 
 import com.hometalk.onepass.community.entity.Post;
+import com.hometalk.onepass.community.enums.MarketStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,6 +27,12 @@ public class PostListResponse {
     private int commentCount;
     private boolean hasImage;
 
+    private String categoryBgColor;
+    private String categoryTextColor;
+
+    private String marketStatus;
+    private String marketStatusDescription;
+
     private List<String> tags;
 
     public PostListResponse(Post post) {
@@ -40,12 +47,31 @@ public class PostListResponse {
         this.viewCount = post.getViewCount();
         this.commentCount = post.getComments().size();
         this.hasImage = post.getContent() != null && post.getContent().contains("<img");
+
+        if (post.getCategory() != null) {
+            this.categoryName = post.getCategory().getName();
+            this.categoryCode = post.getCategory().getCode();
+            this.categoryBgColor = post.getCategory().getBgColor();
+            this.categoryTextColor = post.getCategory().getTextColor();
+        }
+
         if (post.getPostTags() != null && !post.getPostTags().isEmpty()) {
             this.tags = post.getPostTags().stream()
                     .map(pt -> pt.getTag().getName())
                     .collect(Collectors.toList());
         } else {
             this.tags = new ArrayList<>(); // null 대신 빈 리스트
+        }
+
+        // 나눔 게시글 상태
+        if ("share".equalsIgnoreCase(post.getCategory().getCode())
+                && post.getMarketStatus() != null
+                && !post.isPinned()) {
+            this.marketStatus = post.getMarketStatus().name();
+            this.marketStatusDescription = post.getMarketStatus().getDescription();
+        } else {
+            this.marketStatus = null;
+            this.marketStatusDescription = null;
         }
     }
 

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='시설 관리')}"></th:block>
+  <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
+</head>
+<body>
+<div class="main-layout" sec:authorize="hasRole('ADMIN')">
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='reservation')}"></div>
+  <div class="main-wrapper">
+    <!-- 상단 메뉴 -->
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'reservation'} })}"></div>
+    <div th:replace="~{fragments/headerCategoryMenu :: reservation}"></div>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="dashboard-content">
+      <main class="container">
+        <div class="header-section" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h1 class="module-title">시설 설정 및 관리</h1>
+            <p class="file-hint">현재 접속 관리자: <strong sec:authentication="principal.name">관리자</strong>님</p>
+          </div>
+          <!-- 시설 등록 페이지로 이동 -->
+          <a th:href="@{/reservation/admin/facilities}" class="btn btn-primary">신규 시설 등록</a>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>시설명</th>
+              <th>아이콘/운영시간</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="facility : ${facilities}">
+              <td th:text="${facility.id}">1</td>
+              <td th:text="${facility.name}">헬스장</td>
+              <td>
+                <span th:text="${facility.iconType}">DUMBBELL</span> |
+                <span th:text="|${facility.openTime} ~ ${facility.closeTime}|">09:00 ~ 22:00</span>
+              </td>
+              <td>
+                <!-- 수정 버튼 -->
+                <a th:href="@{/reservation/admin/edit/{id}(id=${facility.id})}" class="btn btn-primary">수정</a>
+
+                <!-- 삭제 버튼 -->
+                <form th:action="@{/reservation/admin/facilities/{id}/delete(id=${facility.id})}"
+                      method="post" style="display: inline;"
+                      onsubmit="return confirm('해당 시설을 삭제하시겠습니까? 관련 예약 데이터가 영향을 받을 수 있습니다.');">
+                  <button type="submit" class="btn btn-danger-outline">삭제</button>
+                </form>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(facilities)}">
+              <td colspan="4" style="text-align: center; padding: 50px 0; color: #94a3b8;">등록된 시설이 없습니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </main>
+    </div>
+  </div>
+</div>
+
+<div sec:authorize="!hasRole('ADMIN')" style="text-align: center; margin-top: 100px;">
+  <h2>권한이 없습니다.</h2>
+  <p>관리자 계정으로 로그인해 주세요.</p>
+  <a th:href="@{/}">홈으로 돌아가기</a>
+</div>
+
+</body>
+</html>

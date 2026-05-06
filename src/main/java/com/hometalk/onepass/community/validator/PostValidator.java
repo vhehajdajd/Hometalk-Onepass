@@ -21,7 +21,7 @@ public class PostValidator {
             return;
         }
         // 본인 확인
-        dto.setEditable(post.getWriter().getId().equals(currentUser.getId()));
+        dto.setEditable(post.getWriter().getId().equals(currentUser.getUserId()));
         // 관리자 확인
         dto.setAdmin(currentUser.isAdmin());
     }

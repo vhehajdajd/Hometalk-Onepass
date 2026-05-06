@@ -104,6 +104,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
 
     // --- [관리자용 영구 삭제 (Hard Delete)] ---
+    // 0. 게시글-태그 관계를 먼저 영구 삭제 (제약 조건 해결용)
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM post_tags WHERE post_id = :postId", nativeQuery = true)
+    void hardDeletePostTagsByPostId(@Param("postId") Long postId);
+
     // 1. 댓글을 먼저 영구 삭제 (Native Query로 Soft Delete 우회)
     @Modifying
     @Transactional
