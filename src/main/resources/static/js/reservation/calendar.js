@@ -82,47 +82,54 @@ function initCalendar() {
 
             fetch(url)
                 .then(res => {
-                    if (!res.ok) throw new Error('Network response was not ok');
-                    return res.json();
-                })
+                if (!res.ok) throw new Error('Network response was not ok');
+                return res.json();
+            })
                 .then(data => {
-                    const events = Array.isArray(data) ? data.map(r => {
-                        const currentStatus = r.badge || 'PENDING';
-                        const eventColor = getStatusColor(currentStatus);
+                // 1. 데이터 필터링 (취소된 건 제외)
+                const filteredData = Array.isArray(data) ? data.filter(r => {
+                    const s = String(r.badge || r.status || '').trim().toUpperCase();
+                    return s !== 'CANCEL' && s !== 'CANCELED';
+                }) : [];
 
-                        // 1. 시간 포맷팅 (18:00~19:00 형식)
-                        const startTime = r.startAt ? r.startAt.substring(11, 16) : '';
-                        const endTime = r.endAt ? r.endAt.substring(11, 16) : '';
+                // 2. 필터링된 데이터를 FullCalendar 이벤트 형식으로 변환
+                const events = filteredData.map(r => {
+                    const currentStatus = r.badge || 'PENDING';
+                    const eventColor = getStatusColor(currentStatus);
 
-                        // 2. 타이틀에서 이름만 추출
-                        let displayName = r.title || '예약자';
-                        const nameMatch = displayName.match(/\((.*?)\)/); // 괄호 안의 이름 추출
-                        if (nameMatch) {
-                            displayName = nameMatch[1];
-                        }
+                    // 시간 포맷팅
+                    const startTime = r.startAt ? r.startAt.substring(11, 16) : '';
+                    const endTime = r.endAt ? r.endAt.substring(11, 16) : '';
 
-                        // 3. 최종 포맷: [18:00~19:00] 홍길동
-                        const finalTitle = `[${startTime}~${endTime}] ${displayName}`;
+                    // 이름 추출
+                    let displayName = r.title || '예약자';
+                    const nameMatch = displayName.match(/\((.*?)\)/);
+                    if (nameMatch) {
+                        displayName = nameMatch[1];
+                    }
 
-                        return {
-                            id: r.id,
-                            title: finalTitle,
-                            start: r.startAt,
-                            end: r.endAt,
-                            backgroundColor: eventColor,
-                            borderColor: eventColor,
-                            textColor: '#444444',
-                            display: 'block',
-                            extendedProps: { status: currentStatus },
-                            color: eventColor
-                        };
-                    }) : [];
-                    successCallback(events);
-                })
-                .catch(err => {
-                    console.error("데이터 로드 실패:", err);
-                    failureCallback(err);
+                    const finalTitle = `[${startTime}~${endTime}] ${displayName}`;
+
+                    return {
+                        id: r.id,
+                        title: finalTitle,
+                        start: r.startAt,
+                        end: r.endAt,
+                        backgroundColor: eventColor,
+                        borderColor: eventColor,
+                        textColor: '#444444',
+                        display: 'block',
+                        extendedProps: { status: currentStatus }
+                    };
                 });
+
+                // 3. 최종 결과 전달
+                successCallback(events);
+            })
+                .catch(err => {
+                console.error("데이터 로드 실패:", err);
+                failureCallback(err);
+            });
         }
     });
     calendar.render();
