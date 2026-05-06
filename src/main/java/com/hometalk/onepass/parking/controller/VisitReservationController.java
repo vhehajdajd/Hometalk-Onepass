@@ -106,11 +106,11 @@ public class VisitReservationController {
 
     // 날짜 select용 데이터 공통 메서드
     private void addDateTimeAttributes(Model model) {
-        model.addAttribute("years", List.of(2025, 2026));
+        model.addAttribute("years", List.of(2026, 2027, 2028));
         model.addAttribute("months", IntStream.rangeClosed(1, 12).boxed().toList());
         model.addAttribute("days", IntStream.rangeClosed(1, 31).boxed().toList());
         model.addAttribute("hours", IntStream.rangeClosed(0, 23).boxed().toList());
-        model.addAttribute("minutes", List.of(0, 10, 20, 30, 40, 50));
+        model.addAttribute("minutes", List.of(00, 10, 20, 30, 40, 50));
     }
 
     // 방문 차량 관리 페이지
