@@ -122,7 +122,7 @@ function prevStep(step) {
 function confirmAdminCancel(id) {
     if (confirm("해당 예약을 강제로 취소하시겠습니까?")) {
         fetch(`/hometop/api/reservations/${id}/cancel`, {
-            method: 'POST',
+            method: 'PATCH',
             headers: getCsrfHeaders()
         })
             .then(res => {

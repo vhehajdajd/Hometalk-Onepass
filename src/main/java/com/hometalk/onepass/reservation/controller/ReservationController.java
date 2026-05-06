@@ -52,7 +52,7 @@ public class ReservationController {
     }
 
     /*
-       예약 취소
+       예약 취소 [사용자/관리자 공용]
      */
     @PatchMapping("/{id}/cancel")
     public void cancel(@PathVariable("id") Long id) {
