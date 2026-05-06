@@ -15,13 +15,17 @@
 
 <body>
 
-<div class="main-layout" style="display:flex; min-height:100vh;">
+<div class="main-layout">
 
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='schedule')}"></div>
 
     <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
 
-        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=#{'schedule'})}"></div>
+        <!-- 상단 헤더 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='schedule')}"></div>
+
+        <!-- 카테고리바 -->
+        <div th:replace="~{fragments/headerCategoryMenu :: schedule}"></div>
 
         <div class="container">
 
@@ -52,9 +56,9 @@
                 <div class="cal-nav-card">
                     <div class="cal-nav-year" id="navYear"></div>
                     <div class="cal-nav-month-row">
-                        <button class="cal-nav-btn" id="prevMonth">&#8592;</button>
+                        <button class="cal-nav-btn" id="prevMonth">&laquo;</button>
                         <div class="cal-nav-month-num" id="navMonthNum"></div>
-                        <button class="cal-nav-btn" id="nextMonth">&#8594;</button>
+                        <button class="cal-nav-btn" id="nextMonth">&raquo;</button>
                     </div>
                     <div class="cal-nav-selects">
                         <select id="yearSelect" class="cal-select"></select>
