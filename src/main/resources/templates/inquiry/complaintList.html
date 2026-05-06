@@ -27,41 +27,41 @@
                         <col style="width: 130px"> <!-- 작성일 -->
                     </colgroup>
                     <thead>
-                        <tr>
-                            <th>카테고리</th>
-                            <th>제목</th>
-                            <th>작성자</th>
-                            <th>상태</th>
-                            <th>작성일</th>
-                        </tr>
+                    <tr>
+                        <th>카테고리</th>
+                        <th>제목</th>
+                        <th>작성자</th>
+                        <th>상태</th>
+                        <th>작성일</th>
+                    </tr>
                     </thead>
 
                     <tbody th:if="${paging != null}">
-                        <tr th:each="list : ${paging.content}">
-                            <td>
-                                <span class="badge category-badge" th:text="${list.category}">시설/기술</span>
-                            </td>
-                            <td class="title-cell">
-                                <span th:if="${list.isSecret}" style="margin-right: 4px;">🔒</span>
-                                <a th:if="${!list.isSecret}"
-                                   th:href="@{/complaints/detail/{id}(id=${list.id})}"
-                                   th:text="${list.title}"></a>
-                                <span th:if="${list.isSecret}">
+                    <tr th:each="list : ${paging.content}">
+                        <td>
+                            <span class="badge category-badge" th:text="${list.category}">시설/기술</span>
+                        </td>
+                        <td class="title-cell">
+                            <span th:if="${list.secret}" style="margin-right: 4px;">🔒</span>
+                            <a th:if="${!list.secret}"
+                               th:href="@{/complaints/detail/{id}(id=${list.id})}"
+                               th:text="${list.title}"></a>
+                            <span th:if="${list.secret}">
                                     🔒 비밀글입니다
                                 </span>
-                            </td>
-                            <td th:text="${list.userName}"></td>
-                            <td>
+                        </td>
+                        <td th:text="${list.userName}"></td>
+                        <td>
                                 <span class="badge"
                                       th:classappend="${list.status == '처리완료' ? 'status-complete' : 'status-waiting'}"
                                       th:text="${list.status}">접수중</span>
-                            </td>
-                            <td class="text-muted" th:text="${#temporals.format(list.createdAt, 'yyyy-MM-dd')}"></td>
-                        </tr>
+                        </td>
+                        <td class="text-muted" th:text="${#temporals.format(list.createdAt, 'yyyy-MM-dd')}"></td>
+                    </tr>
 
-                        <tr th:if="${paging == null or paging.isEmpty()}">
-                            <td colspan="5" class="text-muted" style="padding: 100px 0; text-align: center;">등록된 민원 내역이 없습니다.</td>
-                        </tr>
+                    <tr th:if="${paging == null or paging.isEmpty()}">
+                        <td colspan="5" class="text-muted" style="padding: 100px 0; text-align: center;">등록된 민원 내역이 없습니다.</td>
+                    </tr>
                     </tbody>
                 </table>
 
