@@ -33,6 +33,7 @@ public class SecurityConfig {
                 // ★ 여기에 추가
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**")
+                        .ignoringRequestMatchers("/admin/**")
                 )
 
                 .authorizeHttpRequests(auth -> auth
@@ -46,6 +47,11 @@ public class SecurityConfig {
                                 "/oauth2/authorization/**",
                                 "/login/oauth2/**"
                         ).permitAll()
+
+                        // ✅ 3줄 -- 알림 테스트용
+                        .requestMatchers("/api/test/**").permitAll()          // 테스트 엔드포인트
+                        .requestMatchers("/api/notification/**").permitAll()  // SSE + 알림 API
+                        .requestMatchers("/admin/**").permitAll()
 
                         // 2. 그 외의 모든 요청은 인증(로그인)이 필요함
                         .anyRequest().authenticated()

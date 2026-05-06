@@ -236,7 +236,7 @@
         setTimeout(() => {
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 300);
-        }, 5000);
+        }, 7000);
     }
 
     // ─────────────────── 헬퍼 ───────────────────

@@ -10,6 +10,9 @@ import com.hometalk.onepass.billing.entity.BillingStatus;
 import com.hometalk.onepass.billing.repository.BillingDetailRepository;
 import com.hometalk.onepass.billing.repository.BillingLogRepository;
 import com.hometalk.onepass.billing.repository.BillingRepository;
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+import com.hometalk.onepass.notification.entity.NotificationType;
+import com.hometalk.onepass.notification.publisher.NotificationPublisher;
 import lombok.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,7 @@ public class BillingUploadService {
     private final BillingDetailRepository billingDetailRepository;
     private final BillingLogRepository    billingLogRepository;
     private final HouseholdRepository     householdRepository;
+    private final NotificationPublisher notificationPublisher;
 
     // ─────────────────────────────────────────────
     // 유효성 검사 + 미리보기
@@ -145,12 +149,38 @@ public class BillingUploadService {
             billingDetailRepository.saveAll(details);
         }
 
+// ✅ 수정
         if (insertCount + updateCount > 0) {
             billingLogRepository.save(BillingLog.builder()
                     .billing(null)
                     .userId(adminId)
                     .actionType(BillingActionType.UPLOAD)
                     .build());
+
+            // 업로드된 월 목록 수집 (중복 제거)
+            String billingMonths = rows.stream()
+                    .map(UploadRow::getBillingMonth)
+                    .filter(m -> m != null && !m.isBlank())
+                    .distinct()
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("해당 월");
+
+            // 알림 발송 (V5)
+            notificationPublisher.publishToAll(
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.BILLING_UPLOAD,
+                    "관리비 고지서 등록",
+                    billingMonths + " 관리비 고지서가 등록되었습니다.",
+                    "/billing"
+            );
+            notificationPublisher.publishToAll(
+                    NotificationTargetRole.ADMIN,
+                    NotificationType.BILLING_UPLOAD_DONE,
+                    "고지서 업로드 완료",
+                    billingMonths + " 고지서 업로드가 완료되었습니다. " +
+                            "(신규 " + insertCount + "건 / 수정 " + updateCount + "건)",
+                    "/admin/billing"
+            );
         }
 
         return new UploadConfirmResult(insertCount, updateCount);
@@ -180,6 +210,8 @@ public class BillingUploadService {
         String ho   = parts[1] + "호";
         return householdRepository.findByPostNumAndDongAndHo(postNum, dong, ho);
     }
+
+
 
     // ─────────────────────────────────────────────
     // 데이터 클래스

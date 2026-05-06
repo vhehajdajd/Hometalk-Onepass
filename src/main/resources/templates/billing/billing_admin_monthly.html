@@ -22,8 +22,8 @@
   <div th:replace="~{fragments/sidebar :: sidebar(currentPage='billing')}"></div>
 
   <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
-
-    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'billing'} })}"></div>
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='billing')}"></div>
+    <div th:replace="~{fragments/headerCategoryMenu :: billingAdmin}"></div>
 
     <header class="category-menu-bar">
       <nav class="admin-tab-nav">

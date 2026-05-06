@@ -1,6 +1,5 @@
 package com.hometalk.onepass.notification.service;
 
-import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.notification.dto.NotificationResponse;
 import com.hometalk.onepass.notification.entity.Notification;
 import com.hometalk.onepass.notification.entity.NotificationRead;
@@ -20,7 +19,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.management.relation.Role;
 import java.time.LocalDateTime;
 import java.util.List;
 
