@@ -2,13 +2,13 @@ package com.hometalk.onepass.inquiry.controller;
 
 import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.inquiry.dto.InquiryDto;
-import com.hometalk.onepass.inquiry.entity.Inquiry;
 import com.hometalk.onepass.inquiry.service.InquiryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,17 +25,20 @@ public class InquiryPageController {
 
     private final InquiryService inquiryService;
 
-    // 1. 문의 목록 페이지
     @GetMapping("/list")
     public String listPage(Model model,
                            @AuthenticationPrincipal CustomUserDetails user,
                            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Long userId = (user != null) ? user.getUserId() : null;
+        Long userId = null;
+        boolean isAdmin = false;
 
-        boolean isAdmin = user != null &&
-                user.getAuthorities().stream()
-                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        // 객체 자체가 null인지 먼저 확실히 체크한 후 메서드 호출
+        if (user != null) {
+            userId = user.getUserId();
+            isAdmin = user.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        }
 
         Page<InquiryDto> inquiries = inquiryService.findAll(userId, isAdmin, pageable);
 
@@ -58,7 +61,7 @@ public class InquiryPageController {
             @ModelAttribute InquiryDto inquiryDto,
             @RequestParam(value = "files", required = false) List<MultipartFile> files,
             @AuthenticationPrincipal CustomUserDetails userDetails
-            ) throws IOException {
+    ) throws IOException {
 
         if (userDetails == null) {
             throw new RuntimeException("로그인 필요");
@@ -68,13 +71,17 @@ public class InquiryPageController {
         return "redirect:/inquiries/list";
     }
 
-    // 4. 문의 상세 페이지 이동
+
     @GetMapping("/detail/{id}")
     public String detailPage(@PathVariable Long id,
                              Model model,
-                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+                             Authentication authentication) {
 
-        InquiryDto inquiryDto = inquiryService.getInquiryDetail(id, userDetails);
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/auth";
+        }
+
+        InquiryDto inquiryDto = inquiryService.getInquiryDetail(id, authentication);
 
         model.addAttribute("inquiry", inquiryDto);
         return "inquiry/inquiryDetail";

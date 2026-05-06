@@ -1,7 +1,9 @@
 package com.hometalk.onepass.complaint.service;
 
 import com.hometalk.onepass.auth.config.CustomUserDetails;
+import com.hometalk.onepass.auth.entity.LocalAccount;
 import com.hometalk.onepass.auth.entity.User;
+import com.hometalk.onepass.auth.repository.LocalAccountRepository;
 import com.hometalk.onepass.auth.repository.UserRepository;
 import com.hometalk.onepass.complaint.config.FileProperties;
 import com.hometalk.onepass.complaint.dto.ComplaintDto;
@@ -9,14 +11,11 @@ import com.hometalk.onepass.complaint.entity.Complaint;
 import com.hometalk.onepass.complaint.entity.ComplaintAttachment;
 import com.hometalk.onepass.complaint.repository.ComplaintAttachmentRepository;
 import com.hometalk.onepass.complaint.repository.ComplaintRepository;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,18 +33,20 @@ public class ComplaintService {
 
     private final ComplaintRepository complaintRepository;
     private final UserRepository userRepository;
+    private final LocalAccountRepository localAccountRepository;
     private final ComplaintAttachmentRepository attachmentRepository;
     private final FileProperties fileProperties;
 
-    /*
-     * 민원 등록 (중복 방지 포함)
-     */
     @Transactional
-    public Long saveWithFiles(ComplaintDto dto, List<MultipartFile> files, CustomUserDetails userDetails) throws IOException {
-        User user = userRepository.findById(userDetails.getUserId())
+    public Long saveWithFiles(ComplaintDto dto,
+                              List<MultipartFile> files,
+                              Authentication authentication) throws IOException {
+
+        Long userId = getLoginUserId(authentication);
+
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저 정보가 없습니다."));
 
-        // 1. 중복 제출 방지 (1분 이내 동일 제목/카테고리)
         if (isDuplicate(dto, user.getId())) {
             throw new IllegalStateException("이미 동일한 민원이 접수되었습니다. 잠시 후 다시 시도해주세요.");
         }
@@ -54,51 +55,49 @@ public class ComplaintService {
         complaint.assignUser(user);
         complaintRepository.save(complaint);
 
-        // 파일 저장 로직 (기존 유지)
         handleFileUpload(files, complaint);
 
         return complaint.getId();
     }
 
-    /*
-     * 전체 목록 (비밀글 로직 복구)
-     */
     public Page<ComplaintDto> findAll(Long userId, boolean isAdmin, Pageable pageable) {
         return complaintRepository.findAll(pageable)
                 .map(c -> {
                     ComplaintDto dto = ComplaintDto.fromEntity(c);
 
-                    // 2. 권한 판별 로직
-                    boolean isOwner = (userId != null && c.getUser() != null && c.getUser().getId().equals(userId));
+                    boolean isOwner = userId != null
+                            && c.getUser() != null
+                            && c.getUser().getId().equals(userId);
+
                     boolean canView = isOwner || isAdmin;
 
                     dto.setCanView(canView);
                     dto.setCanEdit(canView);
                     dto.setIsAdmin(isAdmin);
 
-                    // 3. [비밀글 로직] 권한이 없는 경우 제목과 내용을 마스킹합니다.
                     if (Boolean.TRUE.equals(dto.getSecret()) && !canView) {
                         dto.setTitle("🔒 비밀글입니다. (작성자와 관리자만 확인 가능)");
                         dto.setContent(null);
                         dto.setUserName("비공개");
                     }
+
                     return dto;
                 });
     }
 
-    /*
-     * 상세 조회 (ResponseStatusException 적용)
-     */
-    public ComplaintDto getComplaintDetail(Long id, CustomUserDetails userDetails) {
+    public ComplaintDto getComplaintDetail(Long id, Authentication authentication) {
+
+        Long userId = getLoginUserId(authentication);
+        boolean isAdmin = isAdmin(authentication);
+
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 민원을 찾을 수 없습니다."));
 
-        boolean isOwner = complaint.getUser() != null && complaint.getUser().getId().equals(userDetails.getUserId());
-        boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isOwner = complaint.getUser() != null
+                && complaint.getUser().getId().equals(userId);
 
-        // 권한 체크
-        if (!isOwner && !isAdmin) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "접근 권한이 없습니다.");
+        if (Boolean.TRUE.equals(complaint.getSecret()) && !isOwner && !isAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "비밀글 접근 권한이 없습니다.");
         }
 
         ComplaintDto dto = ComplaintDto.fromEntity(complaint);
@@ -109,16 +108,17 @@ public class ComplaintService {
         return dto;
     }
 
-    /*
-     * 삭제
-     */
     @Transactional
-    public void delete(Long id, CustomUserDetails userDetails) {
+    public void delete(Long id, Authentication authentication) {
+
+        Long userId = getLoginUserId(authentication);
+        boolean isAdmin = isAdmin(authentication);
+
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "삭제할 민원을 찾을 수 없습니다."));
 
-        boolean isOwner = complaint.getUser() != null && complaint.getUser().getId().equals(userDetails.getUserId());
-        boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isOwner = complaint.getUser() != null
+                && complaint.getUser().getId().equals(userId);
 
         if (!isOwner && !isAdmin) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "삭제 권한이 없습니다.");
@@ -127,9 +127,66 @@ public class ComplaintService {
         complaintRepository.deleteById(id);
     }
 
-    /**
-     * 중복 제출 방지 로직 (1분 기준)
-     */
+    public Complaint findOne(Long id) {
+        return complaintRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 민원을 찾을 수 없습니다."));
+    }
+
+    @Transactional
+    public void respond(Long id, String response, Authentication authentication) {
+
+        if (!isAdmin(authentication)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "답변 권한이 없습니다. 관리자만 가능합니다.");
+        }
+
+        if (response == null || response.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "답변 내용을 입력해주세요.");
+        }
+
+        Complaint complaint = findOne(id);
+        complaint.addResponse(response);
+    }
+
+    public Page<ComplaintDto> findByUserId(Long userId, Pageable pageable) {
+        return complaintRepository.findByUserId(userId, pageable)
+                .map(c -> {
+                    ComplaintDto dto = ComplaintDto.fromEntity(c);
+                    dto.setCanView(true);
+                    dto.setCanEdit(true);
+                    dto.setIsAdmin(false);
+                    return dto;
+                });
+    }
+
+    public Long getLoginUserId(Authentication authentication) {
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof CustomUserDetails customUserDetails) {
+            return customUserDetails.getUserId();
+        }
+
+        String loginId = authentication.getName();
+
+        LocalAccount account = localAccountRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다."));
+
+        return account.getUser().getId();
+    }
+
+    public boolean isAdmin(Authentication authentication) {
+        return authentication != null
+                && authentication.getAuthorities().stream()
+                .anyMatch(a ->
+                        a.getAuthority().equals("ROLE_ADMIN")
+                                || a.getAuthority().equals("ADMIN")
+                );
+    }
+
     private boolean isDuplicate(ComplaintDto dto, Long userId) {
         return complaintRepository.findFirstByUserIdOrderByIdDesc(userId)
                 .map(lastComplaint -> {
@@ -145,19 +202,21 @@ public class ComplaintService {
                 }).orElse(false);
     }
 
-    /**
-     * 파일 업로드 처리 로직 (분리)
-     */
     private void handleFileUpload(List<MultipartFile> files, Complaint complaint) throws IOException {
-        String uploadPath = fileProperties.getUploadPath();
+        String uploadPath = fileProperties.getPath();
+
         if (files != null && !files.isEmpty()) {
             File folder = new File(uploadPath);
-            if (!folder.exists()) folder.mkdirs();
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
 
             for (MultipartFile file : files) {
                 if (file.isEmpty()) continue;
+
                 String uuid = UUID.randomUUID().toString();
                 String savedName = uuid + "_" + file.getOriginalFilename();
+
                 file.transferTo(new File(uploadPath, savedName));
 
                 attachmentRepository.save(ComplaintAttachment.builder()
@@ -169,37 +228,4 @@ public class ComplaintService {
             }
         }
     }
-
-    /*
-     * 단건 조회 (공통 메서드)
-     */
-    public Complaint findOne(Long id) {
-        return complaintRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 민원을 찾을 수 없습니다."));
-    }
-
-    /*
-     * 관리자 답변 등록
-     */
-    @Transactional
-    public void respond(Long id, String response, CustomUserDetails userDetails) {
-        // 1. 관리자 권한 확인
-        boolean isAdmin = userDetails.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (!isAdmin) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "답변 권한이 없습니다. 관리자만 가능합니다.");
-        }
-
-        // 2. 답변 내용 유효성 검사
-        if (response == null || response.trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "답변 내용을 입력해주세요.");
-        }
-
-        // 3. 민원 조회 및 답변 추가
-        Complaint complaint = findOne(id);
-        complaint.addResponse(response);
-    }
 }
-
-
