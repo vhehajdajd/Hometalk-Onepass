@@ -35,13 +35,28 @@ public class ReservationViewController {
      * [입주민] 내 예약 목록
      * 파일 트리 확인 결과: templates/reservation/my-list.html (있다고 가정)
      */
-// ReservationViewController.java (예시)
+    // ReservationViewController.java (예시)
     @GetMapping("/my")
     public String myReservations(Model model) {
         Long currentUserId = 1L; // 👈 현재는 강제로 1번 세팅, 나중에 로그인 연동 시 수정
         List<ReservationResponseDto> myRes = reservationService.findByUserId(currentUserId);
         model.addAttribute("reservations", myRes); // 여기서 보낸 이름이 HTML의 reservations와 일치해야 함
         return "reservation/my-list";
+    }
+
+    /*
+     * 예약 취소 처리
+     */
+    @PostMapping("/cancel/{id}")
+    public String cancelReservation(@PathVariable Long id, @RequestHeader(value = "Referer", required = false) String referer) {
+        reservationService.cancel(id);
+
+        // 이전 페이지로 돌아가기 (내 예약 목록 혹은 관리자 현황 페이지)
+        // Referer가 없으면 기본적으로 내 예약 목록으로 보냄
+        if (referer != null) {
+            return "redirect:" + referer;
+        }
+        return "redirect:/reservation/my";
     }
 
     /*

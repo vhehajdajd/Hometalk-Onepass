@@ -13,11 +13,31 @@ import java.util.List;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
-    // 본인 중복 예약 체크
-    boolean existsByFacilityIdAndUserId(Long facilityId, Long userId);
+    // 예약 중복 체크
+    // 특정 날짜, 특정 시설의 모든 예약(대기 포함) 조회
+    @Query("""
+        SELECT r FROM Reservation r 
+        WHERE r.facility.id = :facilityId 
+        AND r.reservationTime.startTime >= :start 
+        AND r.reservationTime.startTime <= :end
+        """)
+    List<Reservation> findAllByFacilityAndDate(@Param("facilityId") Long facilityId,
+                                               @Param("start") LocalDateTime start,
+                                               @Param("end") LocalDateTime end);
 
-    // 시간대 중복 예약 체크
-    boolean existsByFacilityIdAndReservationTime(Long facilityId, ReservationTime reservationTime);
+    // 한 사람이 같은 날짜의 다른 시간대 예약 불가
+    @Query("""
+        SELECT COUNT(r) > 0 FROM Reservation r 
+        WHERE r.user.id = :userId 
+        AND r.facility.id = :facilityId
+        AND r.reservationTime.startTime >= :start 
+        AND r.reservationTime.startTime <= :end
+        """)
+    boolean existsByUserIdAndFacilityIdAndDate(@Param("userId") Long userId,
+                                               @Param("facilityId") Long facilityId,
+                                               @Param("start") LocalDateTime start,
+                                               @Param("end") LocalDateTime end);
+
 
     // 서비스의 findAllWithDetails에서 사용할 메서드
     List<Reservation> findAllByOrderByIdDesc(); // 또는 createdAt 기준

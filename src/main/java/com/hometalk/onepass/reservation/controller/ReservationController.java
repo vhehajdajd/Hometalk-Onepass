@@ -1,6 +1,5 @@
 package com.hometalk.onepass.reservation.controller;
 
-import com.hometalk.onepass.facility.dto.FacilityRequestDto;
 import com.hometalk.onepass.facility.service.FacilityService;
 import com.hometalk.onepass.reservation.dto.ReservationCalendarDto;
 import com.hometalk.onepass.reservation.dto.ReservationRequestDto;
@@ -8,7 +7,6 @@ import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -18,7 +16,6 @@ import java.util.List;
 public class ReservationController {
 
     private final ReservationService reservationService;
-    private final FacilityService facilityService;
 
     /*
        시설 예약 등록
@@ -33,7 +30,6 @@ public class ReservationController {
      */
     @GetMapping("/{id}")
     public ReservationResponseDto findOne(@PathVariable Long id) {
-        // 서비스에서 엔티티를 가져온 뒤 DTO로 변환해서 반환
         return ReservationResponseDto.fromEntity(reservationService.findOne(id));
     }
 

@@ -71,7 +71,7 @@
               </div>
               <div class="time-grid mt-lg">
                 <th:block th:each="hour : ${#numbers.sequence(9, 21)}">
-                  <label class="time-chip-label">
+                  <label class="time-chip-label time-chip-wrapper">
                     <input type="radio" name="startTime" class="time-radio"
                            th:value="${#numbers.formatInteger(hour, 2) + ':00'}"
                            onchange="updateTimeDisplay(this.value)">

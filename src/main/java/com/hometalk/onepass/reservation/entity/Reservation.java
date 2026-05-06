@@ -40,6 +40,9 @@ public class Reservation {
 
     // 예약 취소 로직
     public void cancel() {
+        if (this.status == ReservationStatus.COMPLETED) { // 이미 완료된 건 취소 불가 정책 등
+            throw new RuntimeException("이미 완료된 예약은 취소할 수 없습니다.");
+        }
         this.status = ReservationStatus.CANCELED;
     }
 }

@@ -49,7 +49,7 @@
                                 <td>
                                     <button th:if="${res.status.name() != 'CANCELED' and res.status.name() != 'CANCEL'}"
                                             class="btn btn-point"
-                                            th:onclick="|requestCancel('${res.id}')|">
+                                            th:onclick="|confirmCancel('${res.id}')|">
                                         취소요청
                                     </button>
                                 </td>
@@ -68,5 +68,6 @@
         </div>
     </div>
 </div>
+<script th:src="@{/js/reservation/reservation.js}"></script>
 </body>
 </html>
