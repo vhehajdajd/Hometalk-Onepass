@@ -17,5 +17,6 @@ public class ScheduleCalResponseDto {
     private LocalDateTime endAt;
     private Long noticeId;   // 연결된 공지 ID (없으면 null)
     private String badge;    // 공지 배지 우선, 없으면 독립 일정 배지
+    private Long repeatGroupId;
 
 }

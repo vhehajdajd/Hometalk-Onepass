@@ -1,6 +1,8 @@
 package com.hometalk.onepass.auth.service;
 
+import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.auth.entity.LocalAccount;
+import com.hometalk.onepass.auth.repository.HouseholdRepository;
 import com.hometalk.onepass.auth.repository.LocalAccountRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,8 @@ public class UserDetailServiceImpl implements UserDetailsService {
         if (account.getUser().isDeleted()) {
             throw new UsernameNotFoundException("탈퇴한 계정입니다: " + loginId);
         }
+
+
 
         // username = loginId로 설정
         return User.builder()

@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public class VehicleApprovalResponse {
 
     private Long approvalId;
+    private Long vehicleId;
     private String vehicleNumber;
     private String model;
     private String vehicleType;
@@ -22,6 +23,7 @@ public class VehicleApprovalResponse {
 
     public VehicleApprovalResponse(VehicleApproval approval) {
         this.approvalId = approval.getApprovalId();
+        this.vehicleId = approval.getVehicle().getVehicleId();
         this.vehicleNumber = approval.getVehicle().getVehicleNumber();
         this.model = approval.getVehicle().getModel();
         this.vehicleType = approval.getVehicle().getVehicleType();

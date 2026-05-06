@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/community/adminpage.css}">
+</head>
+
+<body>
+<div class="main-layout" style="display: flex; min-height: 100vh;">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
+    <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+        <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">
+            <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community', '관리'} })}"></div>
+
+            <div th:replace="~{community/fragments/adminNav :: adminNav('posts')}"></div>
+
+            <div class="admin-content-area">
+                <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <p style="font-size: 14px; color: #666;">* 숨김 또는 삭제 처리된 게시글만 표시됩니다.</p>
+                    <button type="button" class="btn-hard-delete" onclick="deleteSelectedPosts()"
+                            style="padding: 8px 15px; background-color: #ff4d4f; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        선택한 게시글 일괄 영구 삭제
+                    </button>
+                </div>
+
+                <div class="alert-container">
+                    <!-- 성공 메시지 (message) -->
+                    <div th:if="${message}" class="alert-banner alert-success">
+                        <span th:text="${message}">성공 메시지 영역</span>
+                        <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                    <!-- 에러 메시지 (errorMessage) -->
+                    <div th:if="${errorMessage}" class="alert-banner alert-error">
+                        <span th:text="${errorMessage}">에러 메시지 영역</span>
+                        <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                </div>
+
+                <table class="admin-table admin-management-table">
+                    <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
+                        <th>ID</th>
+                        <th>게시판</th>
+                        <th>제목</th>
+                        <th>상태</th>
+                        <th>최종 수정일</th>
+                        <th>관리</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="post : ${posts}">
+                        <td><input type="checkbox" name="postCheck" th:value="${post.id}"></td>
+                        <td th:text="${post.id}">1</td>
+                        <td th:text="${post.boardName}">자유게시판</td>
+                        <td class="text-left">
+                            <span th:text="${post.title}">제목</span>
+                        </td>
+                        <td>
+                            <span th:if="${post.postStatus == 'DELETED'}" class="badge status-deleted">삭제됨</span>
+                            <span th:if="${post.postStatus == 'HIDDEN'}" class="badge status-hidden">숨김</span>
+                        </td>
+                        <td th:text="${#temporals.format(post.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-04-30</td>
+                        <td>
+                            <form th:action="@{/community/admin/posts/hard-delete/{id}(id=${post.id})}"
+                                  method="post"
+                                  onsubmit="return confirm('이 작업은 되돌릴 수 없습니다. 해당 게시글과 모든 댓글이 DB에서 영구 삭제됩니다. 진행하시겠습니까?');">
+                                <button type="submit" class="btn-hard-delete">영구 삭제</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(posts)}">
+                        <td colspan="6" class="empty-msg">정리할 숨김/삭제 게시글이 없습니다.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+
+<script th:src="@{/js/community/adminpage.js}"></script>
+<script th:inline="javascript">
+    // 1. 전체 선택/해제 기능
+    function toggleAll(selectAll) {
+        const checkboxes = document.getElementsByName('postCheck');
+        checkboxes.forEach((checkbox) => {
+            checkbox.checked = selectAll.checked;
+        });
+    }
+
+    // 2. 선택 삭제 로직
+    function deleteSelectedPosts() {
+        const selectedIds = [];
+        const checkboxes = document.getElementsByName('postCheck');
+
+        checkboxes.forEach((cb) => {
+            if (cb.checked) {
+                selectedIds.push(cb.value);
+            }
+        });
+
+        if (selectedIds.length === 0) {
+            alert("삭제할 게시글을 선택해주세요.");
+            return;
+        }
+
+        if (confirm(`선택한 ${selectedIds.length}개의 게시글을 DB에서 완전히 영구 삭제하시겠습니까?`)) {
+            // JSON 형태로 전송하거나 폼을 동적으로 생성해 전송
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/hometop/community/admin/posts/hard-delete/batch'; // 일괄 삭제용 매핑 주소
+
+            // CSRF 토큰
+            const csrfToken = /*[[${_csrf.token}]]*/ '';
+            const csrfHeader = /*[[${_csrf.parameterName}]]*/ '_csrf';
+
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = csrfHeader;
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+            }
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'postIds';
+            input.value = selectedIds.join(','); // 1,2,3 형태로 전송
+
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
+</body>
+</html>

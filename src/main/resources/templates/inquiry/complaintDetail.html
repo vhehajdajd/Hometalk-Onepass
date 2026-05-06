@@ -1,47 +1,143 @@
+
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>민원 상세 정보</title>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='민원 내용')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
 </head>
 <body>
-<h2 th:text="${complaint.title}">제목</h2>
-<p>분류: <span th:text="${complaint.category}">분류</span></p>
-<p>작성일: <span th:text="${#temporals.format(complaint.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span></p>
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='inquiry')}"></div>
+    <div class="main-wrapper">
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'inquiry'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"></div>
+        <!-- 메인 콘텐츠 -->
+        <div class="dashboard-content">
 
-<p>상태:
-    <span th:if="${complaint.status == '처리완료'}" style="color: blue;" th:text="${complaint.status}"></span>
+            <main class="container">
+                <div class="post-header">
+                    <div class="flex-between">
+                        <span class="badge category-badge" th:text="${complaint.category}">카테고리</span>
+                        <span class="badge"
+                              th:classappend="${complaint.status == '처리완료' ? 'status-complete' : 'status-waiting'}"
+                              th:text="${complaint.status}">상태</span>
+                    </div>
 
-    <span th:unless="${complaint.status == '처리완료'}" style="color: red;" th:text="${complaint.status}"></span>
-</p>
-<hr>
+                    <h1 class="title mt-sm" th:text="${complaint.title}">민원 제목</h1>
 
-<div th:text="${complaint.content}">내용이 출력됩니다.</div>
+                    <div class="post-info text-muted mt-sm">
+                        <span th:text="${complaint.isSecret and !complaint.canView ? '비공개' : complaint.userName}"></span>작성자</span>
+                        <span class="divider">|</span>
+                        <span th:text="${complaint.createdAt != null ? #temporals.format(complaint.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">작성일</span>
+                    </div>
+                </div>
 
-<div th:if="${not #lists.isEmpty(complaint.attachments)}">
-    <h3>첨부파일</h3>
-    <ul>
-        <li th:each="file : ${complaint.attachments}">
-            <img th:src="@{/api/complaints/display(fileName=${file.storedFileName})}" width="300"><br>
-            <a th:href="@{/api/complaints/download/{id}(id=${file.id})}" th:text="${file.originFileName}">파일명</a>
-        </li>
-    </ul>
+                <div class="post-content">
+                    <div class="content-body"
+                         th:text="${complaint.isSecret and !complaint.canView ? '🔒 비밀글입니다.' : complaint.content}"
+                         style="min-height: 200px; white-space: pre-wrap;">
+                    </div>
+
+                    <!-- 첨부파일 (이미지 미리보기 및 다운로드) -->
+                    <div th:if="${not #lists.isEmpty(complaint.attachments) and (not complaint.isSecret or complaint.canView)}"
+                         class="attachments mt-lg">
+                        <p class="sub-title">📎 첨부파일</p>
+                        <div class="attachment-list mt-sm">
+                            <div th:each="file : ${complaint.attachments}" class="attachment-item">
+                                <img th:src="@{/api/complaints/display(fileName=${file.storedFileName})}" class="img-preview mb-xs">
+                                <a th:href="@{/api/complaints/download(fileName=${file.storedFileName}, originName=${file.originFileName})}"
+                                   th:text="${file.originFileName}" class="text-small" style="word-break: break-all; color: var(--color-sub);">
+                                    파일명
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${complaint.answer != null and (not complaint.isSecret or complaint.canView)}"
+                     class="admin-answer-section">
+                    <h4 class="sub-title">✉️ 관리자 답변</h4>
+                    <div class="answer-box mt-sm" th:text="${complaint.answer}">답변 내용</div>
+                </div>
+
+                <!-- 관리자 전용 답변 등록 폼 -->
+                <div th:if="${complaint.isAdmin}" class="admin-answer-form mt-xl pt-lg">
+                    <h3 class="sub-title" style="margin-top: 20px;">관리자 답변 등록</h3>
+                    <form th:action="@{/api/complaints/{id}/respond(id=${complaint.id})}" method="post" class="mt-sm">
+                        <textarea id="adminResponse" name="response" rows="5" class="input-field" placeholder="여기에 답변을 입력하세요..."></textarea>
+                        <div class="flex-end mt-sm">
+                            <button type="button" class="btn btn-primary" th:onclick="submitResponse([[${complaint.id}]])">답변 저장하기</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="post-footer flex-between mt-xl">
+                    <a th:href="@{/complaints/list}" class="btn btn-outline">목록으로</a>
+                    <div th:if="${complaint.canEdit}">
+                        <button type="button"
+                                class="btn btn-danger-outline"
+                                th:onclick="|confirmDelete(${complaint.id})|">
+                            삭제
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
 </div>
+<script th:inline="javascript">
+    async function confirmDelete(id) {
+        if (!confirm("정말로 삭제하시겠습니까?")) return;
 
-<div th:if="${complaint.answer != null}" style="background-color: #f9f9f9; padding: 15px; margin-top: 20px;">
-    <hr>
-    <h3>관리자 답변</h3>
-    <p th:text="${complaint.answer}">답변 내용</p>
-</div>
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
 
-<div class="admin-only" style="margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;">
-    <h3>관리자 답변 등록</h3>
-    <form th:action="@{/api/complaints/{id}/respond(id=${complaint.id})}" method="post">
-        <textarea name="response" rows="5" style="width: 100%;" placeholder="여기에 답변을 입력하세요..."></textarea><br>
-        <button type="submit" style="margin-top: 10px;">답변 저장하기</button>
-    </form>
-</div>
+        const response = await fetch(`/hometop/api/complaints/${id}`, {
+            method: 'DELETE',
+            headers: {
+                [csrfHeader]: csrfToken
+            }
+        });
 
-<hr>
-<a th:href="@{/complaints/list}">목록보기</a> <a th:href="@{/complaints/edit/{id}(id=${complaint.id})}">수정하기</a>
+        if (response.ok) {
+            alert("삭제되었습니다.");
+            location.href = "/hometop/complaints/list";
+        } else {
+            alert("삭제 실패");
+        }
+    }
+
+    async function submitResponse(id) {
+        const answerText = document.getElementById('adminResponse').value;
+        if(!answerText.trim()) {
+            alert("답변 내용을 입력해주세요.");
+            return;
+        }
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        try {
+            const response = await fetch(`/hometop/api/complaints/${id}/respond`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ "answer": answerText })
+            });
+
+            if (response.ok) {
+                alert("답변이 등록되었습니다.");
+                location.reload(); // 새로고침하여 답변 확인
+            } else {
+                alert("답변 등록에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+</script>
 </body>
 </html>

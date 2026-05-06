@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='시설 관리')}"></th:block>
+  <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
+</head>
+<body>
+<div class="main-layout">
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='reservation')}"></div>
+  <div class="main-wrapper">
+    <!-- 상단 메뉴 -->
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'reservation'} })}"></div>
+    <div th:replace="~{fragments/headerCategoryMenu :: reservation}"></div>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="dashboard-content">
+      <main class="container">
+        <div class="header-section" style="display: flex; justify-content: space-between; align-items: center;">
+          <h1 class="module-title">시설 설정 및 관리</h1>
+          <!-- 시설 등록 페이지로 이동 -->
+          <a th:href="@{/reservation/admin/facilities}" class="btn btn-primary">신규 시설 등록</a>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>시설명</th>
+              <th>위치</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="facility : ${facilities}">
+              <td th:text="${facility.id}">1</td>
+              <td th:text="${facility.name}">헬스장</td>
+              <td th:text="${facility.location}">101동 지하</td>
+              <td>
+                <!-- 수정 버튼 -->
+                <a th:href="@{/reservation/admin/edit/{id}(id=${facility.id})}" class="btn btn-primary">수정</a>
+
+                <!-- 삭제 버튼 -->
+                <form th:action="@{/reservation/admin/facilities/{id}/delete(id=${facility.id})}"
+                      method="post" style="display: inline;"
+                      th:onsubmit="deleteFacility()">
+                  <button type="submit" class="btn btn-danger-outline">삭제</button>
+                </form>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </main>
+    </div>
+  </div>
+</div>
+<script th:inline="javascript">
+  function deleteFacility(id) {
+    if(confirm("정말 삭제하시겠습니까?")) {
+      location.href = "/admin/facility/delete/" + id;
+    }
+  }
+</script>
+</body>
+</html>

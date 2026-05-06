@@ -22,7 +22,7 @@ import java.util.List;
         @Index(name = "idx_post_user",columnList = "user_id, created_at DESC"),
         @Index(name = "idx_post_category", columnList = "category_id, created_at DESC"),
 })
-@SQLDelete(sql = "UPDATE posts SET deleted_at = CURRENT_TIMESTAMP, status = 'DELETED' WHERE id = ?")        // delete() 호출 시 실행될 SQL 문
+@SQLDelete(sql = "UPDATE posts SET deleted_at = CURRENT_TIMESTAMP, post_status = 'DELETED' WHERE id = ?")        // delete() 호출 시 실행될 SQL 문
 @SQLRestriction("deleted_at IS NULL")
 public class Post extends BaseSoftDeleteEntity {
     @Id
@@ -46,12 +46,14 @@ public class Post extends BaseSoftDeleteEntity {
     @Builder.Default
     private Integer commentCount = 0;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean hasImage = false;
+
     // Post가 1인 관계
+    @Builder.Default
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PostTag> postTags = new ArrayList<>();
-
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<PostImage> postImages = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
@@ -72,15 +74,16 @@ public class Post extends BaseSoftDeleteEntity {
     @Enumerated(EnumType.STRING)
     private PostStatus postStatus = PostStatus.ACTIVE;
 
-    @Builder.Default
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     @Enumerated(EnumType.STRING)
-    private MarketStatus marketStatus = MarketStatus.SHARED;
+    private MarketStatus marketStatus;
 
     // 변경 method
-    public void update(PostRequestDTO dto) {
-        this.title = dto.getTitle();
-        this.content = dto.getContent();
+    public void update(String title, String content, Category category, PostStatus status) {
+        this.title = title;
+        this.content = content;
+        this.category = category;
+        this.postStatus = status;
     }
 
     public void togglePinned() {

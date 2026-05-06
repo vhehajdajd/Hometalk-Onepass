@@ -2,72 +2,10 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
 <div th:fragment="pagination(page, boardCode, categoryCode)">
-    <style>
-        .pagination-container {
-            display: grid;
-            /* 1fr(왼쪽비움) : auto(페이지네이션) : 1fr(오른쪽버튼자리) */
-            grid-template-columns: 1fr auto 1fr;
-            align-items: center;
-            width: 100% !important;
-            margin-top: 2rem;
-            position: relative;
-        }
+    <div class="pagination-container">
+        <div class="left-wing"></div>
 
-        /* nav 태그를 2번째 칸으로 지정 */
-        .pagination-nav {
-            grid-column: 2;
-            display: flex;
-            justify-content: center;
-        }
-
-        .pagination {
-            display: flex;
-            list-style: none;
-            gap: 8px;
-            padding: 0;
-            margin: 0;
-        }
-
-        .pagination li a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 35px;
-            height: 35px;
-            background-color: transparent;
-            border: 1px solid transparent;
-            color: #94a3b8;
-            font-size: 14px;
-            text-decoration: none; /* 밑줄 방지 */
-            transition: all 0.2s ease;
-        }
-
-        /* 활성화 상태 */
-        .pagination li.active a {
-            color: #E67E73;
-            font-weight: 800;
-            border-radius: 0;
-        }
-
-        /* 비활성화 상태 (처음/끝 페이지일 때) */
-        .pagination li.disabled a {
-            opacity: 0.3;
-            pointer-events: none;
-        }
-
-        /* 글 작성 버튼이나 여백을 위한 설정 */
-        .action-wrapper {
-            grid-column: 3;
-            display: flex;
-            justify-content: flex-end;
-        }
-    </style>
-
-
-    <div th:if="${!page.isEmpty()}" class="pagination-container">
-        <div class="left-wing" style="grid-column: 1;"></div>
-
-        <nav aria-label="Page navigation" class="pagination-nav">
+        <nav aria-label="Page navigation" class="pagination-nav" th:if="${!page.isEmpty()}">
             <ul class="pagination">
 
                 <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
@@ -85,7 +23,8 @@
                     th:classappend="${pageNumber == page.number + 1} ? 'active'">
                     <a class="page-link"
                        th:href="@{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${pageNumber})}"
-                       th:text="${pageNumber}">1</a>
+                       th:text="${pageNumber}">
+                    </a>
                 </li>
 
                 <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
@@ -100,10 +39,10 @@
 
             </ul>
         </nav>
-
         <div class="action-wrapper">
-            <a th:href="@{/community/{code}/write(code=${board.code})}" class="btn add-post-btn">글 작성</a>
+            <a th:href="@{/community/{code}/write(code=${board.code})}" class="btn btn-primary">글 작성</a>
         </div>
     </div>
+
 </div>
 </html>

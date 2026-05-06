@@ -25,7 +25,7 @@ public class TicketController {
     // ─── 입주자 티켓 조회 페이지 ─────────────────────────────────
     @GetMapping("/ticket")
     public String ticketPage(Model model) {
-        Long householdId = 1L; // TODO: JWT 연동 후 추출
+        Long householdId = 1L;
         List<TicketResponse> tickets = ticketService.getCurrentMonthTickets(householdId);
         model.addAttribute("tickets", tickets);
         return "parking/ticket-register";
@@ -35,19 +35,19 @@ public class TicketController {
     @GetMapping("/ticket/current")
     @ResponseBody
     public ResponseEntity<List<TicketResponse>> getCurrentMonthTickets() {
-        Long householdId = 1L; // TODO: JWT 연동 후 추출
+        Long householdId = 1L;
         return ResponseEntity.ok(ticketService.getCurrentMonthTickets(householdId));
     }
 
     // ─── 차량 조회 (주차 시간 + 티켓 현황) ──────────────────────
     @GetMapping("/ticket/search")
     @ResponseBody
-    public ResponseEntity<ParkingSearchResponse> searchParkedVehicle(
+    public ResponseEntity<List<ParkingSearchResponse>> searchParkedVehicle(
             @RequestParam String keyword) {
 
-        Long householdId = 1L; // TODO: JWT 연동 후 추출
-        ParkingSearchResponse response =
-                ticketRegisterService.searchParkedVehicle(keyword, householdId);
+        Long householdId = 1L;
+        List<ParkingSearchResponse> response =
+                ticketRegisterService.searchParkedVehicleList(keyword, householdId);
         return ResponseEntity.ok(response);
     }
 
@@ -55,7 +55,7 @@ public class TicketController {
     @PostMapping("/ticket/apply")
     @ResponseBody
     public ResponseEntity<Void> applyTicket(@RequestBody TicketApplyRequest request) {
-        Long householdId = 1L; // TODO: JWT 연동 후 추출
+        Long householdId = 1L;
         ticketRegisterService.applyTicket(request, householdId);
         return ResponseEntity.ok().build();
     }
@@ -64,7 +64,7 @@ public class TicketController {
     @PostMapping("/ticket/cancel")
     @ResponseBody
     public ResponseEntity<Void> cancelTicket(@RequestBody TicketCancelRequest request) {
-        Long householdId = 1L; // TODO: JWT 연동 후 추출
+        Long householdId = 1L;
         ticketRegisterService.cancelTicket(request, householdId);
         return ResponseEntity.ok().build();
     }

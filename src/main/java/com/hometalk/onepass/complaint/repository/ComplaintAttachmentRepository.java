@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ComplaintAttachmentRepository extends JpaRepository<ComplaintAttachment, Long> {
-    // 여기에 save 메서드를 따로 적지 않아도 JpaRepository가 이미 가지고 있어요!
+
 }

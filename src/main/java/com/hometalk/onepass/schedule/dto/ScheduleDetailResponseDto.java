@@ -10,14 +10,17 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ScheduleDetailResponseDto {
-
     private Long id;
-    private Long noticeId;      // 연결된 공지 (없으면 null)
+    private Long noticeId;
     private String title;
     private String info;
     private String location;
     private String referenceUrl;
     private LocalDateTime startAt;
     private LocalDateTime endAt;
-    private String badge;       // 실제 표시 배지 (공지 배지 우선)
+    private String badge;
+    private String repeatType;
+    private LocalDateTime repeatEndAt;
+    private Long repeatGroupId;
+    private LocalDateTime repeatGroupStartAt;
 }

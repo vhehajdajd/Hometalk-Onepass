@@ -15,7 +15,7 @@ public class ComplaintAttachmentDto {
     private String originFileName;
     private String storedFileName;
 
-    public static ComplaintAttachmentDto fromEntity(ComplaintAttachment attachment) {
+    public static ComplaintAttachmentDto from(ComplaintAttachment attachment) {
         return ComplaintAttachmentDto.builder()
                 .id(attachment.getId())
                 .originFileName(attachment.getOriginFileName())

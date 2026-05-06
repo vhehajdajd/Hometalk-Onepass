@@ -1,34 +1,89 @@
-<div class="container">
-    <h1 class="module-title">전체 예약 현황 관리</h1>
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='예약 현황 관리')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
+</head>
+<body>
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='reservation')}"></div>
+    <div class="main-wrapper">
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'reservation'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: reservation}"></div>
 
-    <div class="summary-card" style="padding: 0; overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-            </thead>
-            <tbody>
-            <tr th:each="res : ${reservations}" style="border-bottom: 1px solid var(--border-color);">
-                <td th:text="${res.facilityName}">시설명</td>
-                <td th:text="${res.userName}">예약자</td>
-                <td th:text="${#temporals.format(res.startTime, 'MM/dd HH:mm') + ' ~ ' + #temporals.format(res.endTime, 'HH:mm')}">시간</td>
-                <td>
-                       <span class="status-badge"
-                             th:classappend="${res.status.name() == 'CANCEL' ? 'status-canceled' : 'status-active'}"
-                             th:text="${res.status.name() == 'CANCEL' ? '취소됨' : '예약완료'}">상태</span>
-                </td>
-                <td>
-                    <button th:if="${res.status.name() != 'CANCEL'}"
-                            type="button"
-                            class="btn btn-point"
-                            th:onclick="'confirmAdminCancel(' + ${res.id} + ')'"
-                            style="padding: 5px 10px; font-size: 12px;">예약 취소</button>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(reservations)}">
-                <td colspan="5" style="padding: 40px; text-align: center; color: #999;">현재 등록된 예약 내역이 없습니다.</td>
-            </tr>
-            </tbody>
-        </table>
+        <!-- 메인 콘텐츠 -->
+        <div class="dashboard-content">
+            <main class="container">
+                <div class="header-with-action flex-between mb-lg">
+                    <!-- 왼쪽: 타이틀 -->
+                    <div class="title-group">
+                        <h1 class="module-title title">전체 예약 현황 관리</h1>
+                    </div>
+
+                    <!-- 오른쪽: 캘린더 보기 및 예약 신청 버튼 -->
+                    <div class="action-wrapper flex gap-md">
+                        <!-- 캘린더 이동 버튼 추가 -->
+                        <a th:href="@{/reservation/calendar}" class="btn btn-outline">
+                            <span style="margin-right: 8px;"><i class="fas fa-calendar-alt"> </i></span> 캘린더 현황 보기
+                        </a>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>시설명</th>
+                                <th>예약자</th>
+                                <th>예약 시간</th>
+                                <th>상태</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="res : ${reservations}">
+                                <td th:text="${res.facilityName}">시설명</td>
+                                <td th:text="${res.userName}">예약자</td>
+                                <td th:text="${#temporals.format(res.startTime, 'MM/dd HH:mm') + ' ~ ' + #temporals.format(res.endTime, 'HH:mm')}">시간</td>
+                                <td>
+                                   <span class="status-badge"
+                                         th:classappend="${res.status.name() == 'CANCELED' ? 'status-canceled' :
+                                                     (res.status.name() == 'PENDING' ? 'status-pending' : 'status-active')}"
+                                         th:text="${res.status.name() == 'CANCELED' ? '취소됨' :
+                                               (res.status.name() == 'PENDING' ? '승인대기' : '예약완료')}">상태</span>
+                                </td>
+                                <td>
+                                    <div class="flex-center gap-md">
+                                        <!-- 승인 버튼 (PENDING일 때만) -->
+                                        <button th:if="${res.status.name() == 'PENDING'}"
+                                                type="button"
+                                                class="btn btn-primary"
+                                                th:onclick="'approveReservation(' + ${res.id} + ')'">
+                                            승인
+                                        </button>
+
+                                        <!-- 강제취소 버튼 (CANCEL/CANCELED가 아닐 때만) -->
+                                        <button th:if="${res.status.name() != 'CANCELED' and res.status.name() != 'CANCEL'}"
+                                                type="button"
+                                                class="btn btn-point"
+                                                th:onclick="'confirmAdminCancel(' + ${res.id} + ')'">
+                                            강제취소
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(reservations)}">
+                                <td colspan="5" class="text-muted" style="padding: 60px 0;">현재 등록된 예약 내역이 없습니다.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
     </div>
 </div>
 
 <script th:src="@{/js/reservation/reservation.js}"></script>
+</body>
+</html>

@@ -16,21 +16,19 @@
 
 <div class="main-layout" style="display:flex; min-height:100vh;">
 
-    <!-- 사이드바 -->
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='notice')}"></div>
 
     <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
 
-        <!-- 헤더 -->
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=#{'notice'})}"></div>
 
         <div class="container">
 
-            <!-- 공지 정보 -->
+            <!-- ── 공지 메타 정보 ──────────────────────────────────────────── -->
             <table class="notice-table">
                 <tr>
-                    <td th:class="'badge-' + ${notice.badge.name().toLowerCase()}">
-                        <span th:text="${notice.badge.label}"></span>
+                    <td th:class="${notice.badge != null ? 'badge-' + notice.badge.name().toLowerCase() : ''}">
+                        <span th:text="${notice.badge != null ? notice.badge.label : '-'}"></span>
                     </td>
                     <td th:text="${notice.title}">공지 제목</td>
                     <td th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd HH:mm')}">작성일시</td>
@@ -39,12 +37,12 @@
                 </tr>
             </table>
 
-            <!-- 본문 -->
+            <!-- ── 본문 ───────────────────────────────────────────────────── -->
             <div class="notice-box">
                 <div th:utext="${notice.content}"></div>
             </div>
 
-            <!-- 첨부파일 다운로드 -->
+            <!-- ── 첨부파일 ───────────────────────────────────────────────── -->
             <div class="attachment-box" th:if="${attachments != null && !attachments.isEmpty()}">
                 <div class="attachment-title">📎 첨부파일</div>
                 <div th:each="attachment : ${attachments}">
@@ -55,13 +53,15 @@
                 </div>
             </div>
 
-            <!-- 이전글 / 다음글 -->
+            <!-- ── 이전글 / 다음글 ────────────────────────────────────────── -->
             <table class="notice-nav-table">
-                <tr th:if="${preNotice != null}"
-                    style="cursor:pointer;"
-                    th:onclick="|location.href='@{/notice/{id}(id=${preNotice.id})}'|">
+                <tr th:if="${preNotice != null}">
                     <td>이전글</td>
-                    <td th:text="${preNotice.title}"></td>
+                    <td>
+                        <a th:href="@{/notice/{id}(id=${preNotice.id})}"
+                           th:text="${preNotice.title}"
+                           class="nav-title"></a>
+                    </td>
                     <td th:text="${#temporals.format(preNotice.createdAt, 'yyyy-MM-dd')}"></td>
                     <td th:text="${preNotice.updatedAt != null ? #temporals.format(preNotice.updatedAt, 'yyyy-MM-dd') : '-'}"></td>
                     <td th:text="${preNotice.viewCount}"></td>
@@ -70,11 +70,13 @@
                     <td>이전글</td>
                     <td colspan="4"></td>
                 </tr>
-                <tr th:if="${nextNotice != null}"
-                    style="cursor:pointer;"
-                    th:onclick="|location.href='@{/notice/{id}(id=${nextNotice.id})}'|">
+                <tr th:if="${nextNotice != null}">
                     <td>다음글</td>
-                    <td th:text="${nextNotice.title}"></td>
+                    <td>
+                        <a th:href="@{/notice/{id}(id=${nextNotice.id})}"
+                           th:text="${nextNotice.title}"
+                           class="nav-title"></a>
+                    </td>
                     <td th:text="${#temporals.format(nextNotice.createdAt, 'yyyy-MM-dd')}"></td>
                     <td th:text="${nextNotice.updatedAt != null ? #temporals.format(nextNotice.updatedAt, 'yyyy-MM-dd') : '-'}"></td>
                     <td th:text="${nextNotice.viewCount}"></td>
@@ -85,7 +87,7 @@
                 </tr>
             </table>
 
-            <!-- 하단 버튼 -->
+            <!-- ── 하단 버튼 ──────────────────────────────────────────────── -->
             <div class="admin-buttons">
                 <a th:href="@{/notice}" class="btn-back">← 뒤로가기</a>
                 <div sec:authorize="hasRole('ADMIN')" style="display:flex; gap:8px;">
@@ -99,28 +101,29 @@
 
         </div>
 
+        <!-- ── 이미지 확대 모달 ───────────────────────────────────────────── -->
         <div class="img-modal-overlay" id="imgModalOverlay">
             <img id="imgModalTarget" src="" alt="">
         </div>
 
-        <!-- 푸터 -->
         <footer th:replace="~{fragments/footer :: footer}"></footer>
 
     </div>
 </div>
 
 <script>
+    // ── 이미지 클릭 확대 ──────────────────────────────────────────────────────
     document.querySelectorAll('.notice-box img').forEach(function(img) {
-    img.style.cursor = 'pointer';
-    img.addEventListener('click', function() {
-        document.getElementById('imgModalTarget').src = this.src;
-        document.getElementById('imgModalOverlay').classList.add('open');
+        img.style.cursor = 'pointer';
+        img.addEventListener('click', function() {
+            document.getElementById('imgModalTarget').src = this.src;
+            document.getElementById('imgModalOverlay').classList.add('open');
+        });
     });
-});
 
-document.getElementById('imgModalOverlay').addEventListener('click', function() {
-    this.classList.remove('open');
-});
+    document.getElementById('imgModalOverlay').addEventListener('click', function() {
+        this.classList.remove('open');
+    });
 </script>
 
 </body>

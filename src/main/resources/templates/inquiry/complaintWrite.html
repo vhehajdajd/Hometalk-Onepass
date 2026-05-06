@@ -1,99 +1,136 @@
+
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HomeTOP - 글쓰기</title>
-    <link rel="stylesheet" href="/css/style.css" th:href="@{/css/style.css}">
-    <style>
-        .write-container { max-width: 800px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; }
-        .form-group input[type="text"], .form-group textarea, .form-group select {
-            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;
-        }
-        .form-group textarea { height: 300px; resize: none; }
-        .btn-area { text-align: center; margin-top: 30px; }
-        .btn-submit { background-color: #333; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; }
-        .btn-cancel { background-color: #eee; color: #333; padding: 12px 30px; border: none; border-radius: 5px; text-decoration: none; margin-right: 10px; }
-    </style>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='민원 작성')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
 </head>
 <body>
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='inquiry')}"></div>
+    <div class="main-wrapper">
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'inquiry'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"></div>
+        <!-- 메인 콘텐츠 -->
+        <div class="dashboard-content">
 
-<div class="write-container">
-    <h2>민원/문의 등록</h2>
-    <hr>
-    <form id="writeForm" enctype="multipart/form-data">
-        <div class="form-group">
-            <label for="category">분류</label>
-            <select name="category" id="category">
-                <option value="시설/기술">시설/기술</option>
-                <option value="환경/위생">환경/위생</option>
-                <option value="보안/안전">보안/안전</option>
-                <option value="기타문의">기타문의</option>
-            </select>
-        </div>
+            <main class="container">
+                <h2 class="title">민원 등록</h2>
 
-        <div class="form-group">
-            <label for="title">제목</label>
-            <input type="text" id="title" name="title" placeholder="제목을 입력하세요" required>
-        </div>
+                <div class="form-group mb-md">
+                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="isSecret" name="isSecret" style="width: 18px; height: 18px;">
+                        <span>비밀글 설정</span>
+                    </label>
+                    <p class="text-muted" style="font-size: 13px; margin-left: 26px;">* 비밀글은 작성자와 관리자만 볼 수 있습니다.</p>
+                </div>
 
-        <div class="form-group">
-            <label for="content">내용</label>
-            <textarea id="content" name="content" placeholder="내용을 상세히 입력해주세요" required></textarea>
-        </div>
+                <form id="writeForm" enctype="multipart/form-data" class="write-form">
+                    <div class="flex gap-md mb-md">
+                        <!-- 분류 (너비를 작게 고정) -->
+                        <div class="form-group" style="flex: 0 0 150px;">
+                            <label for="category" class="form-label">분류</label>
+                            <select name="category" id="category" class="input-field select-field">
+                                <option value="시설/기술">시설/기술</option>
+                                <option value="환경/위생">환경/위생</option>
+                                <option value="보안/안전">보안/안전</option>
+                                <option value="기타문의">기타문의</option>
+                            </select>
+                        </div>
 
-        <div class="form-group">
-            <label for="files">첨부파일</label>
-            <input type="file" id="files" name="files" multiple>
-            <p style="font-size: 12px; color: #888;">* 이미지는 최대 3개까지 업로드 가능합니다.</p>
-        </div>
+                        <!-- 제목 (나머지 공간을 모두 차지) -->
+                        <div class="form-group" style="flex: 1;">
+                            <label for="title" class="form-label">제목</label>
+                            <input type="text" id="title" name="title" class="input-field" placeholder="제목을 입력하세요" required>
+                        </div>
+                    </div>
 
-        <div class="btn-area">
-            <a href="/hometop/complaints/list" class="btn-cancel">취소</a>
-            <button type="button" class="btn-submit" onclick="submitForm()">등록하기</button>
+                    <div class="form-group mb-md">
+                        <label for="content" class="form-label">내용</label>
+                        <textarea id="content" name="content" class="input-field textarea-field" placeholder="내용을 상세히 입력해주세요" required></textarea>
+                    </div>
+
+                    <div class="form-group mb-xl">
+                        <label for="files" class="form-label">첨부파일</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="files" name="files" class="file-input" multiple>
+                            <p class="file-hint mt-xs">* 이미지는 최대 3개까지 업로드 가능합니다.</p>
+                        </div>
+                    </div>
+
+                    <div class="btn-area flex-center gap-md">
+                        <a th:href="@{/complaints/list}" class="btn btn-outline">취소</a>
+                        <button type="button" class="btn btn-primary" onclick="submitForm()">등록</button>
+                    </div>
+                </form>
+            </main>
         </div>
-    </form>
+    </div>
 </div>
 
-<script>
-    async function submitForm() {
-        const form = document.getElementById('writeForm');
+<script th:inline="javascript">
+        async function submitForm() {
+        // 1. 값 추출 및 기본 유효성 검사
+        const title = document.getElementById('title').value;
+        const content = document.getElementById('content').value;
+        const category = document.getElementById('category').value;
+        const isSecret = document.getElementById('isSecret').checked;
+        const fileInput = document.getElementById('files');
+
+        if(!title || !content) {
+            alert("제목과 내용을 입력해주세요.");
+            return;
+        }
+        if (fileInput.files.length > 3) {
+            alert("파일은 최대 3개까지만 첨부할 수 있습니다.");
+            return;
+        }
+
         const formData = new FormData();
 
-
+        // 2. DTO 생성 및 Blob 추가
         const complaintDto = {
-            userId: 1, // 테스트용 ID (나중에 세션에서 가져오도록 수정)
-            title: document.getElementById('title').value,
-            content: document.getElementById('content').value,
-            category: document.getElementById('category').value
+            title: title,
+            content: content,
+            category: category,
+            isSecret: isSecret
         };
-
-        // JSON 데이터를 Blob 형태로 추가 (ComplaintController의 @RequestPart 대응)
         formData.append("dto", new Blob([JSON.stringify(complaintDto)], { type: "application/json" }));
 
-        // 파일 추가
-        const fileInput = document.getElementById('files');
+        // 3. 파일 추가
         for (let i = 0; i < fileInput.files.length; i++) {
             formData.append("files", fileInput.files[i]);
         }
 
+        // 4. [중요] CSRF 토큰 추출
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
         try {
             const response = await fetch('/hometop/api/complaints', {
-                method: 'POST',
-                body: formData
-            });
+            method: 'POST',
+            headers: {
+            // 헤더 이름과 값을 동적으로 매핑
+            [csrfHeader]: csrfToken
+            },
+            body: formData
+        });
 
-            if (response.ok) {
-                alert("성공적으로 등록되었습니다!");
-                location.href = "/hometop/complaints/list";
+        if (response.ok) {
+            alert("성공적으로 등록되었습니다!");
+            location.href = "/hometop/complaints/list";
+        } else {
+            const status = response.status;
+            if(status === 403) {
+            alert("권한이 없거나 보안 세션이 만료되었습니다. (403)");
             } else {
-                alert("등록에 실패했습니다.");
+                alert("등록에 실패했습니다. (Error: " + status + ")");
             }
+        }
         } catch (error) {
             console.error("Error:", error);
-            alert("에러가 발생했습니다.");
+            alert("서버 연결 중 에러가 발생했습니다.");
         }
     }
 </script>

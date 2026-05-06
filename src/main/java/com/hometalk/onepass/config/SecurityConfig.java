@@ -8,6 +8,7 @@ import com.hometalk.onepass.auth.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -16,6 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     // OAuth2 로그인 과정에서 각각 사용자 조회, 성공 후 분기, 로그아웃 후처리 역할을 맡는다.
@@ -45,7 +47,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/auth")            // 1. 사용자 정의 로그인 페이지 경로
                         .loginProcessingUrl("/auth/login") // 2. 로그인 처리 URL
-                        .defaultSuccessUrl("/index", true)   // 3. 로그인 성공 시 이동할 경로
+                        .defaultSuccessUrl("/dashboard", true)   // 3. 로그인 성공 시 이동할 경로
                         .failureUrl("/auth?error=true")   // 4. 로그인 실패 시 이동할 경로
                         .permitAll()                  // 5. 로그인 페이지는 누구나 접근 가능해야 함
                         .usernameParameter("loginId") // username이 아닌 login_id으로 name 설정

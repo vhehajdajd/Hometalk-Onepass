@@ -1,14 +1,20 @@
 package com.hometalk.onepass.billing.controller;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
+import com.hometalk.onepass.billing.dto.AdminDashboardResponse;
 import com.hometalk.onepass.billing.dto.BillingDetailResponse;
 import com.hometalk.onepass.billing.dto.BillingSummaryResponse;
+import com.hometalk.onepass.billing.dto.ResidentDashboardResponse;
 import com.hometalk.onepass.billing.service.BillingService;
 import com.hometalk.onepass.billing.service.BillingService.AdminBillingStats;
 import com.hometalk.onepass.billing.service.BillingService.AdminDashboardStats;
 import com.hometalk.onepass.billing.service.BillingUploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +31,37 @@ public class BillingApiController {
 
     private final BillingService       billingService;
     private final BillingUploadService billingUploadService;
+
+    // ─────────────────────────────────────────────
+    // 대시보드 - 입주민용: /hometop/api/billing/resident/summary
+    // ─────────────────────────────────────────────
+    @GetMapping("/resident/summary")
+    public ResponseEntity<ResidentDashboardResponse> getResidentSummary(
+            @AuthenticationPrincipal CustomUserDetails user) { // 시큐리티 연동 시
+
+        // 1. 로그인 체크 (Security 연동 시)
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // 2. 서비스 호출 (사용자의 세대 ID 전달)
+        ResidentDashboardResponse response = billingService.getResidentDashboardSummary(user.getHouseholdId());
+        return ResponseEntity.ok(response);
+    }
+
+    // ─────────────────────────────────────────────
+    // 대시보드 - 관리자용: /hometop/api/billing/admin/summary
+    // ─────────────────────────────────────────────
+    @GetMapping("/admin/summary")
+    @PreAuthorize("hasRole('ADMIN')") // 관리자 권한 체크
+    public ResponseEntity<AdminDashboardResponse> getAdminSummary() {
+        // 1번의 리턴 타입을 DTO로 지정한 방식을 사용하세요.
+        return ResponseEntity.ok(billingService.getAdminDashboardSummary());
+    }
+
+
+
+
 
     // ─────────────────────────────────────────────
     // 관리자: 고지서 전체 목록 (업로드 화면 DB 모드)
@@ -146,13 +183,13 @@ public class BillingApiController {
     //   → { insertCount, updateCount }
     // ─────────────────────────────────────────────
 
-    @PostMapping("/admin/upload/confirm")
+ /*   @PostMapping("/admin/upload/confirm")
     public ResponseEntity<BillingUploadService.UploadConfirmResult> confirmUpload(
             @RequestBody  List<BillingUploadService.UploadRow> rows,
             @RequestParam(defaultValue = "1") Long adminId   // TODO: CustomUserDetails로 교체
     ) {
         return ResponseEntity.ok(billingUploadService.confirmUpload(rows, adminId));
-    }
+    }*/
     // ─────────────────────────────────────────────
     // 관리자: 월별 전체 삭제 (실수 업로드 복구용)
     //   DELETE /api/billing/admin/month/2026-03?adminId=1

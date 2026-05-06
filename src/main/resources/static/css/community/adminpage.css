@@ -1,47 +1,481 @@
-/* 1. 컨텐츠 전체 영역: 부모로부터 너비를 확실히 받기 */
-.admin-content-area {
-    padding: 40px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-}
-
-/* 2. 제목과 버튼 정렬: 핵심 수정 부분 */
-.admin-header {
-    display: flex !important; /* 다른 설정 무시하고 무조건 플렉스 */
-    justify-content: space-between !important; /* 양 끝으로 밀기 */
-    align-items: center;
-    width: 100%;
+/* 관리자 가이드 섹션 */
+.admin-guide {
+    background-color: #F8FAFC; /* 연한 블루 그레이 */
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--color-btn); /* 포인트 라인 */
+    padding: 20px 25px;
+    border-radius: 8px;
     margin-bottom: 30px;
 }
 
+.admin-guide h3 {
+    font-size: 16px;
+    color: var(--color-main);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-guide p {
+    font-size: 14px;
+    color: #444;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.admin-guide ul {
+    list-style: none; /* 기본 점 제거 */
+    padding-left: 0;
+}
+
+.admin-guide li {
+    font-size: 13.5px;
+    color: #666;
+    margin-bottom: 6px;
+    position: relative;
+    padding-left: 18px;
+}
+
+/* 커스텀 불렛 포인트 */
+.admin-guide li::before {
+    content: "•";
+    position: absolute;
+    left: 5px;
+    color: var(--color-btn);
+    font-weight: bold;
+}
+
+/* 1. 레이아웃 및 게시판 목록 테이블 */
+/* 게시판 관리 섹션 전체 */
+.admin-content-area {
+    width: 100%;
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 30px;
+    background-color: var(--bg-gray);
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.admin-content-area,
+.detail-container,
+.alert-container {
+    margin-top: 20px !important;
+}
+
+/* 관리자 헤더 영역 */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
 .admin-header h2 {
-    color: #0526ad;
-    font-weight: 700;
-    margin: 0;
+    color: var(--main-navy);
     font-size: 1.5rem;
-    flex-shrink: 0; /* 제목이 쪼그라들지 않게 */
+    font-weight: 700;
 }
 
-/* 3. 버튼: 겹침 방지 */
-.btn-create-main {
-    background-color: #2ea5ef;
-    color: white;
+.admin-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.admin-management-table {
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+.admin-management-table th {
+    background-color: #F8F9FA;
+    color: var(--color-main);
+    padding: 14px 16px;
+    font-size: var(--font-small);
+    font-weight: 700;
+    border-bottom: 2px solid var(--border-color);
+    text-align: center;
+    white-space: nowrap;
+}
+
+.admin-management-table td {
+    padding: 20px 15px;
+    border-bottom: 1px solid var(--color-modal-line);
+    text-align: center;
+    font-size: var(--font-small);
+    color: #444;
+    vertical-align: middle;
+}
+
+.admin-management-table tbody tr:hover {
+    background-color: #FBFCFD;
+}
+
+.admin-management-table td:first-child,
+.admin-management-table th:first-child {
+    width: 50px;
+}
+
+/* 1) 커뮤니티 설정 테이블 전용 (칸이 3개인 경우) */
+.admin-board-list-table th:nth-child(1) { width: 30%; } /* 게시판 명 */
+.admin-board-list-table th:nth-child(2) { width: 40%; } /* 카테고리 수 */
+.admin-board-list-table th:nth-child(3) { width: 30%; } /* 관리 버튼 */
+/* 2) 숨김/삭제 게시글 관리 테이블 전용 (칸이 7개인 경우) */
+.admin-table th:nth-child(1) { width: 50px; } /* 체크박스 */
+.admin-table th:nth-child(2) { width: 60px; } /* ID */
+.admin-table th:nth-child(3) { width: 120px; } /* 게시판 이름 */
+.admin-table th:nth-child(5) { width: 100px; } /* 상태 뱃지 */
+.admin-table th:nth-child(6) { width: 150px; } /* 날짜 */
+.admin-table th:nth-child(7) { width: 150px; } /* 관리 버튼 */
+
+/* 2. 알림 메시지 (성공/에러 배너) */
+.alert-container {
+    max-width: 800px;
+    margin: 0 auto 15px;
+}
+
+.alert-banner {
+    padding: 10px 15px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+.alert-success {
+    background-color: #f0fff9;
+    color: #003366;
+    border-left: 4px solid var(--soft-mint);
+}
+.alert-error {
+    background-color: #fff5f2;
+    color: #d45d31;
+    border-left: 4px solid var(--point-coral);
+}
+
+/* 3. 모달 (새 게시판/카테고리 등록) */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal-overlay.show { display: flex; }
+
+.modal-content {
+    background: #fff;
+    padding: 25px;
+    border-radius: 15px;
+    width: 480px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    max-height: 90vh; /* 화면 높이의 90%만 차지 */
+    overflow-y: auto;
+}
+.btn-close-x {
+    background: none;
     border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
+    font-size: 24px; /* 크기를 시원하게 키움 */
+    line-height: 1;
+    color: #999;
     cursor: pointer;
-    font-weight: 600;
-    white-space: nowrap; /* 글자 절대 줄바꿈 안되게 */
-    flex-shrink: 0; /* 버튼도 쪼그라들지 않게 */
+    padding: 0;
+    transition: color 0.2s;
 }
 
-/* 4. 준비 중인 리스트 박스 가로 넓히기 */
-.admin-list-container {
+.btn-close-x:hover {
+    color: var(--main-navy);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
     width: 100%;
 }
 
-.admin-list-container div {
-    width: 100%; /* 내부 프래그먼트 내용물도 꽉 차게 */
+/* 가로 정렬 및 입력창 스타일 */
+.form-row { display: flex; gap: 15px; margin-bottom: 15px; }
+.form-group { flex: 1; margin-bottom: 15px; }
+.modal-content input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+/* 4. 카테고리 프리셋 (반반 원형 도트) */
+.preset-label input { display: none; }
+
+.preset-dot {
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+    transition: all 0.2s;
+}
+.preset-dot:hover {
+    transform: scale(1.1);
+}
+
+.preset-label input:checked + .preset-dot {
+    border: 2px solid var(--main-navy);
+    transform: scale(1.15);
+    box-shadow: 0 0 8px rgba(0, 51, 102, 0.3);
+}
+
+.color-preset-section .d-flex.flex-wrap.gap-2 {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    flex-direction: row !important; /* 세로가 아닌 가로로 정렬 */
+    gap: 10px;
+    max-width: 100%; /* 부모 너비를 넘지 않게 */
+}
+
+.category-item-wrapper .d-flex {
+    display: flex !important;
+    gap: 8px;
+    align-items: center;
+}
+.category-item-wrapper input[name="categoryNames"],
+.category-item-wrapper input[name="categoryCodes"],
+.edit-mode input[type="text"],
+.add-category-area input[type="text"] {
+    flex: 1; /* 부모 너비를 나눠 갖기 */
+    min-width: 0; /* flex 박스 안에서 찌그러짐 방지 */
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+/* 상세 페이지의 카테고리 수정 모드(edit-mode) 정렬 */
+.edit-mode {
+    display: none; /* JS로 제어 */
+    gap: 8px;
+    align-items: center;
+    width: 100%; /* 부모 너비 꽉 채우기 */
+}
+
+.btn-remove {
+    flex: none;
+    width: 38px;
+}
+
+/* 5. 공통 버튼 스타일 */
+.btn-create-main {
+    background-color: var(--point-coral);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+.btn-create-main:hover {
+    background-color: #d65a45;
+    transform: translateY(-2px);
+}
+.btn-manage {
+    background-color: white;
+    color: var(--main-navy);
+    border: 1px solid var(--main-navy);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-manage:hover {
+    background-color: var(--main-navy);
+    color: white;
+}
+
+/* 1. 저장하기 버튼 */
+.btn-save {
+    background-color: var(--point-coral) !important;
+    color: white !important;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-save:hover {
+    background-color: #d65a45;
+}
+
+/* 2. 취소 버튼  */
+.btn-close {
+    background-color: #6c757d !important;
+    color: white !important;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* 3. 카테고리 추가 버튼 */
+.btn-add-sub {
+    color: var(--main-navy);
+    border: 1px solid var(--main-navy);
+    margin-top: 10px;
+    display: inline-block;
+}
+
+.btn-add-sub:hover {
+    background-color: #f0f4f8;
+}
+
+
+/* 삭제됨 (코랄 톤) */
+.status-deleted {
+    background-color: #fff1f0;
+    color: #f5222d;
+    border: 1px solid #ffa39e;
+}
+
+/* 숨김 (오렌지 톤) */
+.status-hidden {
+    background-color: #fff7e6;
+    color: #fa8c16;
+    border: 1px solid #ffd591;
+}
+
+/* 임시/대기 (딥블루 톤) */
+.status-temp {
+    background-color: #f0f5ff;
+    color: #1d39c4;
+    border: 1px solid #adc6ff;
+}
+
+/* 카테고리 개수 뱃지 */
+.badge-count {
+    background-color: var(--soft-mint);
+    color: #2d5a52;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* 유효성 검사 에러 스타일 */
+input.error {
+    border: 1px solid #ff7f50 !important; /* 코랄색 */
+    outline: none;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+
+.btn-hard-delete {
+    background-color: var(--color-btn-point);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 13px;
+    transition: 0.2s;
+}
+.btn-hard-delete:hover { background-color: var(--color-btn-point-hover); }
+
+.close-btn {
+    font-size: 16px;
+    line-height: 1;
+    padding-left: 10px;
+    color: inherit;
+    opacity: 0.5;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 상세 페이지 전용 스타일 --- */
+.detail-container {
+    padding: 30px;
+    max-width: 1000px; /* 조금 더 여유 있게 조정 */
+    margin: 20px auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.board-header {
+    border-bottom: 2px solid var(--main-navy);
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.category-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 30px;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+}
+
+.category-item:hover {
+    background-color: #fcfcfc;
+}
+
+.category-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 추가 영역 박스 */
+.add-category-area {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px dashed #cbd5e1;
+}
+
+.add-category-area form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
 }

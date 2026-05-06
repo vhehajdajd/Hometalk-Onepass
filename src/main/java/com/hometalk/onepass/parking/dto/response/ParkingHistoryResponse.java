@@ -42,10 +42,13 @@ public class ParkingHistoryResponse {
             int total = log.getTotalMinutes();
             int applied = log.getAppliedMinutes() != null ? log.getAppliedMinutes() : 0;
             int charged = Math.max(0, total - applied);
-            if (charged == 0) {
-                this.settlement = "무료";
-            } else {
+
+            if (charged > 0 && log.getEntryType() != ParkingLog.EntryType.NORMAL) {
                 this.settlement = "초과 " + formatMinutes(charged);
+            } else if (applied > 0) {
+                this.settlement = "티켓 사용";
+            } else {
+                this.settlement = "무료";
             }
         }
     }

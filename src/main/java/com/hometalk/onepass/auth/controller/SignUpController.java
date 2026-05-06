@@ -99,7 +99,7 @@ public class SignUpController {
         // 서비스 메서드 호출
         socialSignUpService.socialSignUp(dto);
 
-        return "redirect:/index";
+        return "redirect:/dashboard";
     }
 
 
