@@ -11,73 +11,93 @@
 </head>
 <body>
 
-<div class="container">
-  <h2 class="page-title">관리자 티켓 발급</h2>
+<div class="main-layout">
 
-  <!-- 전체 세대 월별 자동 발급 -->
-  <div class="section" style="margin-bottom: 32px;">
-    <h3 style="font-size: 18px; font-weight: 700; color: var(--color-main); margin: 0 0 8px 0;">전체 세대 월별 티켓 발급</h3>
-    <p class="hint" style="margin-bottom: 16px;">*매달 1일 자동 발급되며, 수동으로 즉시 발급할 수 있습니다.</p>
-    <button type="button" class="pk-btn pk-btn-primary" id="monthlyIssueBtn" onclick="issueMonthly(this)">
-      전체 세대 티켓 발급
-    </button>
-    <span id="monthlyResult" style="margin-left: 12px; font-size: 13px;"></span>
-  </div>
+  <!-- 1. 사이드바 -->
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
-  <hr style="border: none; border-top: 2px solid #f1f5f9; margin-bottom: 32px;">
+  <!-- 2. 오른쪽 영역 -->
+  <div class="main-wrapper">
 
-  <!-- 특정 세대 수동 발급 -->
-  <div class="section">
-    <h3 style="font-size: 18px; font-weight: 700; color: var(--color-main); margin: 0 0 24px 0;">특정 세대 수동 발급</h3>
+    <!-- 상단 헤더 -->
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='parking')}"></div>
 
-    <!-- 세대 선택 -->
-    <div class="form-group">
-      <label for="householdSelect">세대 선택</label>
-      <select id="householdSelect"
-              style="padding: 8px 12px; border: 1px solid var(--color-border);
-                     border-radius: var(--radius-sm); font-size: 14px;
-                     color: var(--color-text); background-color: #ffffff;
-                     cursor: pointer; outline: none; min-width: 200px;">
-        <option value="">세대를 선택해주세요</option>
-        <option th:each="household : ${households}"
-                th:value="${household.id}"
-                th:text="${household.dong} + ' ' + ${household.ho}">
-        </option>
-      </select>
-      <span class="error-msg" id="householdError"></span>
-    </div>
+    <!-- 상단 메뉴 -->
+    <div th:replace="~{fragments/headerCategoryMenu :: parkingAdmin}"></div>
 
-    <!-- 티켓 종류 -->
-    <div class="form-group">
-      <label>티켓 종류</label>
-      <div style="display: flex; gap: 16px; align-items: center;">
-        <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; width: auto;">
-          <input type="radio" name="ticketType" value="HOUR"
-                 style="cursor: pointer; accent-color: var(--color-main);"> 1시간권
-        </label>
-        <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; width: auto;">
-          <input type="radio" name="ticketType" value="DAY"
-                 style="cursor: pointer; accent-color: var(--color-main);"> 1일권
-        </label>
-      </div>
-      <span class="error-msg" id="typeError"></span>
-    </div>
+    <!-- 본문 -->
+    <main class="content">
+      <div class="container">
+        <h2 class="page-title">관리자 티켓 발급</h2>
 
-    <!-- 수량 + 발급 버튼 -->
-    <div class="form-group">
-      <label>수량</label>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div class="ticket-apply-group" style="margin-top: 0;">
-          <button type="button" onclick="decreaseCount()">-</button>
-          <span id="countDisplay">1</span>
-          <button type="button" onclick="increaseCount()">+</button>
+        <!-- 전체 세대 월별 자동 발급 -->
+        <div class="section" style="margin-bottom: 32px;">
+          <h3 style="font-size: 18px; font-weight: 700; color: var(--color-main); margin: 0 0 8px 0;">전체 세대 월별 티켓 발급</h3>
+          <p class="hint" style="margin-bottom: 16px;">*매달 1일 자동 발급되며, 수동으로 즉시 발급할 수 있습니다.</p>
+          <button type="button" class="pk-btn pk-btn-primary" id="monthlyIssueBtn" onclick="issueMonthly(this)">
+            전체 세대 티켓 발급
+          </button>
+          <span id="monthlyResult" style="margin-left: 12px; font-size: 13px;"></span>
         </div>
-        <button type="button" class="pk-btn pk-btn-primary" id="issueBtn" onclick="issueTicket(this)">발급</button>
-      </div>
-      <input type="hidden" id="totalCount" value="1">
-    </div>
 
-    <span id="issueResult" style="font-size: 13px; display: block; margin-top: 8px;"></span>
+        <hr style="border: none; border-top: 2px solid #f1f5f9; margin-bottom: 32px;">
+
+        <!-- 특정 세대 수동 발급 -->
+        <div class="section">
+          <h3 style="font-size: 18px; font-weight: 700; color: var(--color-main); margin: 0 0 24px 0;">특정 세대 수동 발급</h3>
+
+          <div class="form-group">
+            <label for="householdSelect">세대 선택</label>
+            <select id="householdSelect"
+                    style="padding: 8px 12px; border: 1px solid var(--color-border);
+                           border-radius: var(--radius-sm); font-size: 14px;
+                           color: var(--color-text); background-color: #ffffff;
+                           cursor: pointer; outline: none; min-width: 200px;">
+              <option value="">세대를 선택해주세요</option>
+              <option th:each="household : ${households}"
+                      th:value="${household.id}"
+                      th:text="${household.dong} + ' ' + ${household.ho}">
+              </option>
+            </select>
+            <span class="error-msg" id="householdError"></span>
+          </div>
+
+          <div class="form-group">
+            <label>티켓 종류</label>
+            <div style="display: flex; gap: 16px; align-items: center;">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; width: auto;">
+                <input type="radio" name="ticketType" value="HOUR"
+                       style="cursor: pointer; accent-color: var(--color-main);"> 1시간권
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; width: auto;">
+                <input type="radio" name="ticketType" value="DAY"
+                       style="cursor: pointer; accent-color: var(--color-main);"> 1일권
+              </label>
+            </div>
+            <span class="error-msg" id="typeError"></span>
+          </div>
+
+          <div class="form-group">
+            <label>수량</label>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="ticket-apply-group" style="margin-top: 0;">
+                <button type="button" onclick="decreaseCount()">-</button>
+                <span id="countDisplay">1</span>
+                <button type="button" onclick="increaseCount()">+</button>
+              </div>
+              <button type="button" class="pk-btn pk-btn-primary" id="issueBtn" onclick="issueTicket(this)">발급</button>
+            </div>
+            <input type="hidden" id="totalCount" value="1">
+          </div>
+
+          <span id="issueResult" style="font-size: 13px; display: block; margin-top: 8px;"></span>
+        </div>
+
+      </div>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
   </div>
 </div>
 

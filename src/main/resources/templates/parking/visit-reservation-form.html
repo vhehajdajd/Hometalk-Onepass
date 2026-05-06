@@ -8,11 +8,11 @@
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
   <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
   <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+  <link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
 </head>
 <body>
 
 <div class="main-layout" style="display: flex; min-height: 100vh;">
-
   <!-- 1. 왼쪽 사이드바 -->
   <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
