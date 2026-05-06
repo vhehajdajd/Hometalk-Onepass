@@ -21,7 +21,7 @@
 
 <div class="auth-container">
     <h2>회원가입</h2>
-    <p>서비스 이용을 위해 정보를 입력해주세요.</p>
+    <p>서비스 이용을 위해 추가 정보를 입력해주세요.</p>
 
     <!-- *{} = 객체를 전달받은 경우 매핑    -->
     <form method="post" th:action="@{/auth/register/signup}" th:object="${signUpDTO}" onsubmit="return validateForm()">
@@ -37,7 +37,9 @@
                 <label for="loginId">아이디</label>
                 <input placeholder="아이디를 입력하세요" required th:field="*{loginId}" type="text">
                 <button type="button" onclick="checkIdDuplicate()" style="width: 30%; font-size: 12px;">중복 확인</button>
-                <p id="id-check-msg" style="font-size: 12px; margin-top: 5px;"></p>
+                <p id="id-check-msg" style="font-size: 12px; margin-top: 5px;"
+                   th:styleappend="${idError} ? 'color: red;' : ''"
+                   th:text="${idError}"></p>
                 <!-- 중복 확인 여부를 저장할 숨겨진 필드 (선택 사항: 가입 방지용) -->
                 <input type="hidden" id="isIdChecked" value="false">
             </div>
@@ -198,6 +200,7 @@
         const loginId = document.getElementById('loginId').value.trim();
         const msgElement = document.getElementById('id-check-msg');
         const isCheckedInput = document.getElementById('isIdChecked');
+        const checkIdUrl = /*[[@{/auth/api/check-id-duplication}]]*/ '/auth/api/check-id-duplication';
 
         if (!loginId) {
             alert("아이디를 입력해주세요.");
@@ -206,7 +209,7 @@
 
         try {
             // 타임리프의 @{}를 사용하여 서버 context-path 자동 반영
-            const response = await fetch(`[[@{/auth/api/check-id-duplication}]]?loginId=${encodeURIComponent(loginId)}`);
+            const response = await fetch(`${checkIdUrl}?loginId=${encodeURIComponent(loginId)}`);
 
             if (!response.ok) {
                 throw new Error("서버 응답 에러 (상태코드: " + response.status + ")");
@@ -225,7 +228,7 @@
             }
         } catch (error) {
             console.error("Error:", error);
-            alert("중복 확인 중 오류가 발생했습니다. 상세 내용은 콘솔을 확인하세요.");
+            alert("중복 확인 중 오류가 발생했습니다. ");
         }
     }
 

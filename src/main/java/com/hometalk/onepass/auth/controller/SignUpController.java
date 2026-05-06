@@ -39,6 +39,14 @@ public class SignUpController {
             Model model
     ) {
         if ("next".equals(action)) {
+            try {
+                signUpService.validateLoginIdAvailable(signUpDTO.getLoginId());
+            } catch (IllegalArgumentException e) {
+                model.addAttribute("step", 1);
+                model.addAttribute("idError", e.getMessage());
+                return "auth/register";
+            }
+
             model.addAttribute("step", currentStep + 1);
             return "auth/register"; // 본인의 html 파일명
         }
@@ -49,9 +57,15 @@ public class SignUpController {
         }
 
         if ("complete".equals(action)) {
-            // 최종 서비스 로직 호출 (회원가입 처리)
-            signUpService.signUp(signUpDTO);
-            return "redirect:/auth";
+            try {
+                // 최종 서비스 로직 호출 (회원가입 처리)
+                signUpService.signUp(signUpDTO);
+                return "redirect:/auth";
+            } catch (IllegalArgumentException e) {
+                model.addAttribute("step", 1);
+                model.addAttribute("idError", e.getMessage());
+                return "auth/register";
+            }
         }
 
         return "auth/register";

@@ -27,6 +27,8 @@ public class SignUpService {
     // 회원 가입 서비스
     @Transactional
     public void signUp(SignUpDTO dto) {
+        validateLoginIdAvailable(dto.getLoginId());
+
         // 1. Household (세대 정보) 생성 및 저장
         // 세대 정보는 여러 유저가 공유할 수 있으나, 가입 시점에 생성하는 로직으로 작성합니다.
         Household household = Household.builder()
@@ -57,5 +59,15 @@ public class SignUpService {
                 .build();
 
         localAccountRepository.save(localAccount);
+    }
+
+    public void validateLoginIdAvailable(String loginId) {
+        if (loginId == null || loginId.trim().isEmpty()) {
+            throw new IllegalArgumentException("아이디를 입력해 주세요.");
+        }
+
+        if (localAccountRepository.existsByLoginId(loginId.trim())) {
+            throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
+        }
     }
 }

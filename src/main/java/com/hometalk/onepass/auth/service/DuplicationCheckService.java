@@ -10,8 +10,12 @@ public class DuplicationCheckService {
     private final LocalAccountRepository localAccountRepository;
 
     public boolean isIdDuplicated(String loginId) {
+        if (loginId == null || loginId.trim().isEmpty()) {
+            return false;
+        }
+
         // 존재하면 true, 없으면 false
-        return localAccountRepository.findByLoginId(loginId).isPresent();
+        return localAccountRepository.existsByLoginId(loginId.trim());
     }
 
 }

@@ -47,6 +47,9 @@ public class User extends BaseSoftDeleteEntity {
     @Column(name = "role", nullable = false, length = 20)
     private UserRole role = UserRole.MEMBER;
 
+    @Column(name = "approval_notice_shown", nullable = false)
+    private boolean approvalNoticeShown = false;
+
     // 연관관계
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private LocalAccount localAccount;
@@ -87,8 +90,21 @@ public class User extends BaseSoftDeleteEntity {
         this.status = UserStatus.APPROVED;
     }
 
+    public void approveAs(UserRole role) {
+        if (role == null || role == UserRole.MEMBER || role == UserRole.ADMIN) {
+            throw new IllegalArgumentException("승인 가능한 역할이 아닙니다.");
+        }
+
+        this.status = UserStatus.APPROVED;
+        this.role = role;
+    }
+
     public void reject() {
         this.status = UserStatus.REJECTED;
+    }
+
+    public void markApprovalNoticeShown() {
+        this.approvalNoticeShown = true;
     }
 
     public void withdraw() {

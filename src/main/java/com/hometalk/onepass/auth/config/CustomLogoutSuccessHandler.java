@@ -50,16 +50,16 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
             }
         }
 
-        response.sendRedirect(request.getContextPath() + "/auth");
+        response.sendRedirect(request.getContextPath() + "/home");
     }
 
     private void redirectToKakaoLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // 우리 서비스 세션이 종료된 뒤,
         // 카카오 로그인 사용자인 경우 카카오 인증 서버 로그아웃까지 이어서 수행한다.
-        // 카카오 로그아웃 후에는 다시 우리 로그인 화면으로 복귀시킨다.
+        // 카카오 로그아웃 후에는 다시 홈 화면으로 복귀시킨다.
         String logoutRedirectUri = UriComponentsBuilder.fromUriString(getBaseUrl(request))
                 .path(request.getContextPath())
-                .path("/auth")
+                .path("/home")
                 .build()
                 .toUriString();
 
