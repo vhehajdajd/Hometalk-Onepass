@@ -5,7 +5,7 @@
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
 </head>
 <body>
-<div class="main-layout">
+<div class="main-layout" sec:authorize="hasRole('ADMIN')">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='reservation')}"></div>
     <div class="main-wrapper">
         <!-- 상단 메뉴 -->
@@ -55,21 +55,25 @@
                                 </td>
                                 <td>
                                     <div class="flex-center gap-md">
-                                        <!-- 승인 버튼 (PENDING일 때만) -->
+                                        <!-- 1. 승인 처리 영역 -->
                                         <button th:if="${res.status.name() == 'PENDING'}"
                                                 type="button"
                                                 class="btn btn-primary"
                                                 th:onclick="'approveReservation(' + ${res.id} + ')'">
                                             승인
                                         </button>
+                                        <!-- 이미 승인된 경우 표시 -->
+                                        <span th:if="${res.status.name() == 'CONFIRMED'}" class="txt-done">승인완료</span>
 
-                                        <!-- 강제취소 버튼 (CANCEL/CANCELED가 아닐 때만) -->
+                                        <!-- 2. 강제취소 버튼 -->
                                         <button th:if="${res.status.name() != 'CANCELED' and res.status.name() != 'CANCEL'}"
                                                 type="button"
                                                 class="btn btn-point"
                                                 th:onclick="'confirmAdminCancel(' + ${res.id} + ')'">
                                             강제취소
                                         </button>
+                                        <!-- 이미 취소된 경우 표시 -->
+                                        <span th:if="${res.status.name() == 'CANCELED' or res.status.name() == 'CANCEL'}" class="txt-cancel">취소됨</span>
                                     </div>
                                 </td>
                             </tr>
@@ -83,7 +87,11 @@
         </div>
     </div>
 </div>
-
+<div sec:authorize="!hasRole('ADMIN')" style="text-align: center; margin-top: 100px;">
+    <h2>권한이 없습니다.</h2>
+    <p>이 페이지는 관리자만 접근 가능합니다.</p>
+    <a th:href="@{/}">홈으로 돌아가기</a>
+</div>
 <script th:src="@{/js/reservation/reservation.js}"></script>
 </body>
 </html>

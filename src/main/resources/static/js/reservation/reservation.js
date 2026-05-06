@@ -13,7 +13,7 @@ function handleFacilityClick(element) {
     // data- 속성 값
     const name = element.getAttribute('data-name');
     const id = element.getAttribute('data-id');
-    const usageTime = 1; // 고정값이라면 직접 입력
+    const usageTime = 1; // 시설별로 다를 경우 data-usage-time 속성 활용
 
     document.getElementById('hidden-facility-id').value = id;
     document.getElementById('hidden-facility').value = name;
@@ -40,15 +40,13 @@ function selectDate(val) {
     const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')}월 ${String(date.getDate()).padStart(2, '0')}일 (${week[date.getDay()]})`;
     document.getElementById('hidden-date').value = val;
     document.getElementById('display-date-text').innerText = formattedDate;
-    // 오늘인 경우 지난 시간 숨기기 ---
+    // 오늘인 경우 지난 시간 숨기기
     filterAvailableTimes(val);
     nextStep(3);
 }
 function filterAvailableTimes(selectedDateStr) {
     const today = new Date();
-    const todayStr = today.getFullYear() + '-' +
-                     String(today.getMonth() + 1).padStart(2, '0') + '-' +
-                     String(today.getDate()).padStart(2, '0');
+    const todayStr = today.toISOString().split('T')[0];
     const currentHour = today.getHours();
     const timeChips = document.querySelectorAll('.time-chip-wrapper');
 
@@ -60,7 +58,7 @@ function filterAvailableTimes(selectedDateStr) {
         const chipHour = parseInt(timeText.split(':')[0]);
 
         if (selectedDateStr === todayStr) {
-            // 선택한 날짜가 오늘이면: 현재 시간보다 작거나 같으면 숨김
+            // 오늘 날짜인 경우 현재 시간 이전은 선택 불가 처리
             if (chipHour <= currentHour) {
                 chip.style.display = 'none';
             } else {
@@ -118,42 +116,32 @@ function prevStep(step) {
     document.getElementById('step' + step).classList.add('active');
 }
 
-// 5. [관리자] 강제 취소 컨펌
-function confirmAdminCancel(id) {
-    if (confirm("해당 예약을 강제로 취소하시겠습니까?")) {
-        fetch(`/hometop/api/reservations/${id}/cancel`, {
-            method: 'POST',
+// 5. 예약 취소 [공통]
+async function confirmCancel(id, isAdmin = false) {
+    const msg = isAdmin ? "해당 예약을 강제로 취소하시겠습니까?" : "예약을 취소하시겠습니까?";
+    if (!confirm(msg)) return;
+
+    try {
+        const response = await fetch(`/api/reservations/${id}/cancel`, {
+            method: 'PATCH',
             headers: getCsrfHeaders()
-        })
-            .then(res => {
-            if (res.ok) {
-                alert("취소되었습니다.");
-                location.reload();
-            }
         });
+
+        if (response.ok) {
+            alert(isAdmin ? "취소되었습니다." : "예약이 취소되었습니다.");
+            location.reload();
+        } else {
+            const errorMsg = await response.text();
+            alert("실패: " + (errorMsg || response.status));
+        }
+    } catch (error) {
+        alert("서버 통신 중 오류가 발생했습니다.");
     }
 }
 
-// 5-1. 사용자 예약 취소
-function confirmCancel(id) {
-    if (confirm("예약을 취소하시겠습니까?")) {
-        fetch(`/hometop/api/reservations/${id}/cancel`, {
-            method: 'PATCH',
-            headers: getCsrfHeaders()
-        })
-            .then(res => {
-            if (res.ok) {
-                alert("예약이 취소되었습니다.");
-                location.reload();
-            } else {
-                alert("취소에 실패했습니다. (Error: " + res.status + ")");
-            }
-        })
-            .catch(error => {
-            console.error("Error:", error);
-            alert("서버 통신 중 오류가 발생했습니다.");
-        });
-    }
+// [관리자]
+function confirmAdminCancel(id) {
+    confirmCancel(id, true);
 }
 
 // 6. 예약 제출
@@ -174,15 +162,11 @@ async function submitReservation() {
     const endDateTime = `${resDate}T${String(endHour).padStart(2, '0')}:00:00`;
 
     const data = {
-        // DTO의 필드명과 일치시켜야 함
+        // DTO의 필드명과 일치
         facilityId: parseInt(facilityId),
-        userId: 1,  // 테스트용 유저 ID
         startTime: startDateTime,
         endTime: endDateTime
     };
-
-    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
 
     try {
         const response = await fetch('/hometop/api/reservations', {
@@ -204,15 +188,12 @@ async function submitReservation() {
 }
 
 // 예약 승인
-function approveReservation(reservationId) {
+function approveReservation(id) {
     if (!confirm("이 예약을 승인하시겠습니까?")) return;
 
-    fetch(`/hometop/api/admin/reservations/${reservationId}/approve`, {
+    fetch(`/hometop/api/reservations/${id}/approve`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(CSRF_HEADER && CSRF_TOKEN ? { [CSRF_HEADER]: CSRF_TOKEN } : {})
-        }
+        headers: getCsrfHeaders()
     })
         .then(res => {
             if (res.ok) {
