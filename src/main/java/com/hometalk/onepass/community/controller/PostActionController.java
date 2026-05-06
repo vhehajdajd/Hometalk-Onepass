@@ -1,6 +1,7 @@
 package com.hometalk.onepass.community.controller;
 
 import com.hometalk.onepass.auth.config.CustomUserDetails;
+import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
@@ -62,15 +63,19 @@ public class PostActionController {
     private CustomUserDetails getLoginCustomUser(Authentication authentication) {
 
         User user = getLoginUser(authentication);
+        Household household = user.getHousehold();
 
         return new CustomUserDetails(
                 user.getId(),
-                null,
-                null,
+                household != null ? household.getId() : null,
+                household != null ? household.getPostNum() : null,
                 user.getName(),
                 user.getRole(),
+                user.getStatus(),
+                user.isApprovalNoticeShown(),
                 getLoginId(authentication),
-                ""
+                "",
+                user.getNickname()
         );
     }
 
