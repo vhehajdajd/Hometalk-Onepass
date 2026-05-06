@@ -50,9 +50,7 @@ public class ReservationViewController {
     @PostMapping("/cancel/{id}")
     public String cancelReservation(@PathVariable Long id, @RequestHeader(value = "Referer", required = false) String referer) {
         reservationService.cancel(id);
-
-        // 이전 페이지로 돌아가기 (내 예약 목록 혹은 관리자 현황 페이지)
-        // Referer가 없으면 기본적으로 내 예약 목록으로 보냄
+        // 이전 페이지로
         if (referer != null) {
             return "redirect:" + referer;
         }

@@ -38,6 +38,14 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 
+    // 예약 승인
+    public void approve() {
+        if (this.status == ReservationStatus.CANCELED) {
+            throw new RuntimeException("취소된 예약은 승인할 수 없습니다.");
+        }
+        this.status = ReservationStatus.CONFIRMED;
+    }
+
     // 예약 취소 로직
     public void cancel() {
         if (this.status == ReservationStatus.COMPLETED) { // 이미 완료된 건 취소 불가 정책 등

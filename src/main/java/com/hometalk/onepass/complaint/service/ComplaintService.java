@@ -87,6 +87,17 @@ public class ComplaintService {
     }
 
     /*
+     * 내 민원 목록
+     */
+    public Page<ComplaintDto> findByUserId(Long userId, Pageable pageable) {
+        Page<Complaint> complaints = complaintRepository.findByUser_Id(userId, pageable);
+        if (complaints == null) {
+            return Page.empty(pageable);
+        }
+        return complaints.map(ComplaintDto::fromEntity);
+    }
+
+    /*
      * 상세 조회 (ResponseStatusException 적용)
      */
     public ComplaintDto getComplaintDetail(Long id, CustomUserDetails userDetails) {

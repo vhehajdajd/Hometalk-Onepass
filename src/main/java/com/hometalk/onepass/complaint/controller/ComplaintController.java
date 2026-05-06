@@ -157,14 +157,15 @@ public class ComplaintController {
     @PostMapping("/{id}/respond")
     public ResponseEntity<String> respond(
             @PathVariable Long id,
-            @RequestBody Map<String, String> body) {
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal CustomUserDetails user) {
 
         String answer = body.get("answer");
         if (answer == null || answer.trim().isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
 
-        complaintService.respond(id, answer);
+        complaintService.respond(id, answer, user);
         return ResponseEntity.ok("답변 등록 완료");
     }
 }

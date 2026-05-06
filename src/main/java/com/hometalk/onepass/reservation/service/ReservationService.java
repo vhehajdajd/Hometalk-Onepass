@@ -114,6 +114,30 @@ public class ReservationService {
     }
 
     /*
+     * 예약 승인 (관리자용)
+     */
+    @Transactional
+    public void approve(Long id) {
+        // 1. 해당 예약이 존재하는지 확인
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 예약을 찾을 수 없습니다."));
+
+        // 2. 이미 승인되었거나 취소된 건지 확인 (방어 로직)
+        if (reservation.getStatus() == ReservationStatus.CONFIRMED) {
+            throw new RuntimeException("이미 승인된 예약입니다.");
+        }
+        if (reservation.getStatus() == ReservationStatus.CANCELED) {
+            throw new RuntimeException("취소된 예약은 승인할 수 없습니다.");
+        }
+
+        // 3. 상태 변경 (CONFIRMED로 변경)
+        reservation.approve();
+
+        // 4. 저장
+        reservationRepository.save(reservation);
+    }
+
+    /*
      * 예약 취소
      */
     @Transactional
@@ -134,8 +158,8 @@ public class ReservationService {
         reservationRepository.save(reservation);
     }
 
-    /* * 관리자용: 모든 예약 내역을 최신순으로 조회
-     * 에러 해결 부분
+    /*
+        관리자용: 모든 예약 내역을 최신순으로 조회
      */
     public List<ReservationResponseDto> findAllWithDetails() {
         return reservationRepository.findAllByOrderByIdDesc().stream()

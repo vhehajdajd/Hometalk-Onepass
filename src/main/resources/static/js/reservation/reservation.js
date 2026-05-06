@@ -181,9 +181,6 @@ async function submitReservation() {
         endTime: endDateTime
     };
 
-    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
-
     try {
         const response = await fetch('/hometop/api/reservations', {
             method: 'POST',
@@ -204,15 +201,12 @@ async function submitReservation() {
 }
 
 // 예약 승인
-function approveReservation(reservationId) {
+function approveReservation(id) {
     if (!confirm("이 예약을 승인하시겠습니까?")) return;
 
-    fetch(`/hometop/api/admin/reservations/${reservationId}/approve`, {
+    fetch(`/hometop/api/reservations/${id}/approve`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(CSRF_HEADER && CSRF_TOKEN ? { [CSRF_HEADER]: CSRF_TOKEN } : {})
-        }
+        headers: getCsrfHeaders()
     })
         .then(res => {
             if (res.ok) {

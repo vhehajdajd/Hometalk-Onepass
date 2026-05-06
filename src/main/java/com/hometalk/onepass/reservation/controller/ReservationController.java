@@ -6,6 +6,7 @@ import com.hometalk.onepass.reservation.dto.ReservationRequestDto;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,6 +40,15 @@ public class ReservationController {
     @GetMapping
     public List<ReservationResponseDto> list() {
         return reservationService.findAll();
+    }
+
+    /*
+        예약 승인 [관리자]
+     */
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<Void> approveReservation(@PathVariable Long id) {
+        reservationService.approve(id); // 서비스의 approve 메서드 호출
+        return ResponseEntity.ok().build();
     }
 
     /*
