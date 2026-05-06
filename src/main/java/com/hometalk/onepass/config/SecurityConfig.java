@@ -36,10 +36,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // csrf 설정 추가
+                // ★ 여기에 추가
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**")
+                        .ignoringRequestMatchers("/admin/**")
+                        .ignoringRequestMatchers("/community/**")
                 )
+
                 .authorizeHttpRequests(auth -> auth
                         // 1. "/" 경로와 정적 리소스(css, js 등)는 모두에게 허용
                         .requestMatchers(
@@ -55,6 +58,11 @@ public class SecurityConfig {
                                 "/js/**",
                                 "/images/**"
                         ).permitAll()
+
+                        // ✅ 3줄 -- 알림 테스트용
+                        .requestMatchers("/api/test/**").permitAll()          // 테스트 엔드포인트
+                        .requestMatchers("/api/notification/**").permitAll()  // SSE + 알림 API
+                        .requestMatchers("/admin/**").permitAll()
 
                         // 2. 그 외의 모든 요청은 인증(로그인)이 필요함
                         .anyRequest().authenticated()

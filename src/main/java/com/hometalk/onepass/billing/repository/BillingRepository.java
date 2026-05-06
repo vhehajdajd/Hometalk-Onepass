@@ -1,5 +1,7 @@
 package com.hometalk.onepass.billing.repository;
 
+import com.hometalk.onepass.billing.dto.BillingMonthlyStats;
+import com.hometalk.onepass.billing.dto.UserOldestUnpaidProjection;
 import com.hometalk.onepass.billing.entity.Billing;
 import com.hometalk.onepass.billing.entity.BillingStatus;
 import org.springframework.data.domain.Page;
@@ -9,6 +11,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -183,5 +186,60 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
 
     // BillingRepository.java
     List<Billing> findAllByHouseholdIdOrderByStatusDescBillingMonthAsc(Long householdId);
-    
+
+    // ─────────────────────────────────────────────────────────
+    // BillingScheduler용: 유저별 가장 오래된 미납 billing
+    // ─────────────────────────────────────────────────────────
+
+    /**
+     * 현재 미납 상태(UNPAID)이고 dueDate가 오늘 이전인 billing 중
+     * RESIDENT 유저별로 가장 오래된 1건씩 조회한다.
+     *
+     * 반환 필드
+     *   userId        — 알림 발송 대상 user.id
+     *   billingId     — notification의 referenceId로 사용 (중복 방지 키)
+     *   oldestDueDate — 미납/체납 경과 개월 수 계산 기준
+     */
+    @Query(value = """
+        SELECT
+            u.id            AS userId,
+            MIN(b.id)       AS billingId,
+            MIN(b.due_date) AS oldestDueDate
+        FROM billing b
+        JOIN household h ON b.household_id = h.id
+        JOIN users u     ON u.household_id = h.id
+        WHERE b.status   = 'UNPAID'
+          AND b.due_date < :today
+          AND u.role     = 'RESIDENT'
+        GROUP BY u.id
+        """, nativeQuery = true)
+    List<UserOldestUnpaidProjection> findOldestUnpaidByUser(
+            @Param("today") LocalDate today
+    );
+
+    // ─────────────────────────────────────────────────────────
+    // BillingScheduler용: 특정 월 정산 통계
+    // ─────────────────────────────────────────────────────────
+
+    /**
+     * 특정 billingMonth의 정산 통계를 집계한다.
+     * 매월 1일 09:00 BILLING_MONTHLY_SUMMARY 알림 메시지 내용 구성에 사용.
+     *
+     * @param billingMonth "yyyy-MM" 형식 (예: "2026-04")
+     */
+    @Query(value = """
+        SELECT
+            COUNT(*)                                                              AS totalCount,
+            SUM(CASE WHEN b.status = 'PAID'   THEN 1             ELSE 0   END)  AS paidCount,
+            SUM(CASE WHEN b.status = 'UNPAID' THEN 1             ELSE 0   END)  AS unpaidCount,
+            SUM(b.total_amount)                                                   AS totalAmount,
+            SUM(CASE WHEN b.status = 'PAID'   THEN b.total_amount ELSE 0  END)  AS paidAmount,
+            SUM(CASE WHEN b.status = 'UNPAID' THEN b.total_amount ELSE 0  END)  AS unpaidAmount
+        FROM billing b
+        WHERE b.billing_month = :billingMonth
+        """, nativeQuery = true)
+    BillingMonthlyStats getMonthlyStats(
+            @Param("billingMonth") String billingMonth
+    );
+
 }

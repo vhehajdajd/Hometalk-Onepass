@@ -23,11 +23,18 @@
 
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='billing')}"></div>
 
-    <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
+        <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+            <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='billing')}"></div>
+            <div th:replace="~{fragments/headerCategoryMenu :: billingAdmin}"></div>
 
-        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'billing'} })}"></div>
 
-        <header class="category-menu-bar">&nbsp;</header>
+        <header class="category-menu-bar">
+            <nav class="admin-tab-nav">
+                <a th:href="@{/billing/admin/unpaid}"  class="admin-tab-btn" th:classappend="${currentUri != null and currentUri.contains('unpaid')}  ? ' active'">미납 세대 관리</a>
+                <a th:href="@{/billing/admin/monthly}" class="admin-tab-btn" th:classappend="${currentUri != null and currentUri.contains('monthly')} ? ' active'">월별 DB 관리</a>
+                <a th:href="@{/billing/admin/upload}"  class="admin-tab-btn" th:classappend="${currentUri != null and currentUri.contains('upload')}  ? ' active'">고지서 업로드</a>
+            </nav>
+        </header>
 
         <div class="container">
 
@@ -47,6 +54,10 @@
                 <div class="stat-card">
                     <div class="stat-label">미납 세대</div>
                     <div class="stat-value warn" id="statUnpaid">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">당월 미납 총액</div>
+                    <div class="stat-value-amount" id="statUnpaidAmount">—</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">납부율</div>
@@ -126,6 +137,16 @@
             <div class="table-section">
                 <div class="table-wrap">
                     <table class="data-table">
+                        <colgroup>
+                            <col style="width: 40px;">   <!-- 체크박스 -->
+                            <col style="width: 50px;">   <!-- NUM -->
+                            <col style="width: 120px;">  <!-- 동/호 -->
+                            <col style="width: 100px;">  <!-- 부과월 -->
+                            <col style="width: 130px;">  <!-- 청구금액 -->
+                            <col style="width: 120px;">  <!-- 납기일 -->
+                            <col style="width: 100px;">  <!-- status -->
+                            <col style="width: 120px;">  <!-- 처리 -->
+                        </colgroup>
                         <thead>
                         <tr>
                             <th style="width:40px;">
@@ -133,24 +154,23 @@
                             </th>
                             <th>NUM</th>
                             <th class="sortable" onclick="sortBy('unit')">동/호 <span class="sort-icon">▼</span></th>
-                            <th>입주민</th>
                             <th class="sortable" onclick="sortBy('billingMonth')">부과월 <span class="sort-icon">▼</span></th>
                             <th class="sortable" onclick="sortBy('totalAmount')">청구금액 <span class="sort-icon">▼</span></th>
-                            <th class="sortable" onclick="sortBy('dueDate')">납기일 <span class="sort-icon">▼</span></th>
+                            <th class="sortable" onclick="sortBy('dueDate')">납부기한 <span class="sort-icon">▼</span></th>
                             <th class="sortable" onclick="sortBy('status')">status <span class="sort-icon">▼</span></th>
-                            <th>처리</th>
+                            <th>납부완료</th>
                         </tr>
                         </thead>
                         <tbody id="billingTableBody">
                         <tr>
-                            <td colspan="9" class="empty-state">불러오는 중...</td>
+                            <td colspan="8" class="empty-state">불러오는 중...</td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
 
                 <!-- 페이지네이션 -->
-                <div class="pagination" id="paginationWrap"></div>
+                <div class="pagination-billing" id="paginationWrap"></div>
             </div>
 
         </div>
@@ -186,6 +206,7 @@
         </div>
     </div>
 </div>
+
 
 <script th:inline="javascript">
     /*<![CDATA[*/

@@ -15,7 +15,7 @@
 /* ── 통계 카드 ── */
 .stat-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 12px;
     margin-bottom: 24px;
 }
@@ -27,6 +27,7 @@
 }
 .stat-label { font-size: 12px; color: var(--color-text-muted); margin-bottom: 8px; }
 .stat-value { font-size: 26px; font-weight: 600; color: var(--color-text); line-height: 1; }
+.stat-value-amount {font-size: 16px; font-weight: 300; color: var(--color-text);}
 .stat-value.warn   { color: var(--color-btn-point); }
 .stat-value.accent { color: var(--color-sub); }
 
@@ -72,11 +73,11 @@
     overflow: hidden;
 }
 .table-wrap { overflow-x: auto; }
-.data-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 15px;}
 
 .data-table thead th {
     padding: 18px 16px;
-    text-align: left;
+    text-align: center;
     font-size: 15px;
     font-weight: 600;
     color: var(--color-text-muted);
@@ -93,9 +94,19 @@
 .data-table tbody tr:last-child td { border-bottom: none; }
 .data-table tbody tr:hover td      { background: var(--color-surface-2); }
 .data-table tbody tr.done td       { opacity: .55; }
-.data-table thead th.sortable      { cursor: pointer; user-select: none; }
+.data-table thead th.sortable      { cursor: pointer; user-select: none; text-align: center;}
 .data-table thead th.sortable:hover { color: var(--color-sub); }
 .sort-icon { font-size: 10px; opacity: .4; }
+
+/* ── thead th 정렬 ── */
+.data-table thead th:nth-child(1) { text-align: center; } /* 체크박스 */
+.data-table thead th:nth-child(2) { text-align: center; } /* NUM */
+.data-table thead th:nth-child(3) { text-align: center; } /* 동/호 */
+.data-table thead th:nth-child(4) { text-align: center;  } /* 부과월 */
+.data-table thead th:nth-child(5) { text-align: center;  } /* 청구금액 */
+.data-table thead th:nth-child(6) { text-align: center;  } /* 납기일 */
+.data-table thead th:nth-child(7) { text-align: center; } /* status */
+.data-table thead th:nth-child(8) { text-align: center; } /* 처리 */
 
 /* ── 처리 버튼 ── */
 .btn-process {
@@ -115,7 +126,7 @@
 .btn-process.done-txt { background: none; color: #aaa; cursor: default; font-size: 12px; }
 
 /* ── 페이지네이션 ── */
-.pagination {
+.pagination-billing {
     display: flex;
     justify-content: center;
     align-items: center;

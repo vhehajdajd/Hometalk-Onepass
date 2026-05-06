@@ -22,18 +22,19 @@
   <div th:replace="~{fragments/sidebar :: sidebar(currentPage='billing')}"></div>
 
   <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
-
-    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'billing'} })}"></div>
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='billing')}"></div>
+    <div th:replace="~{fragments/headerCategoryMenu :: billingAdmin}"></div>
 
     <header class="category-menu-bar">
       <nav class="admin-tab-nav">
-        <a th:href="@{/billing/admin/upload}"  class="admin-tab-btn">고지서 업로드</a>
-        <a th:href="@{/billing/admin/monthly}" class="admin-tab-btn active">월별 관리</a>
+        <a th:href="@{/billing/admin/unpaid}"  class="admin-tab-btn" th:classappend="${currentUri != null and currentUri.contains('unpaid')}  ? ' active'">미납 세대 관리</a>
+        <a th:href="@{/billing/admin/monthly}" class="admin-tab-btn" th:classappend="${currentUri != null and currentUri.contains('monthly')} ? ' active'">월별 DB 관리</a>
+        <a th:href="@{/billing/admin/upload}"  class="admin-tab-btn" th:classappend="${currentUri != null and currentUri.contains('upload')}  ? ' active'">고지서 업로드</a>
       </nav>
     </header>
 
     <div class="container">
-      <div class="page-title">디지털고지서 DB 월별 관리</div>
+      <div class="page-title">디지털고지서 월별 DB 관리</div>
 
       <!-- 필터 -->
       <div class="filter-row" id="filterBar">
