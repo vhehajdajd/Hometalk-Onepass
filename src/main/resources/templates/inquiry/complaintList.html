@@ -23,8 +23,8 @@
                         <col style="width: 120px"> <!-- 카테고리 -->
                         <col style="width: auto">
                         <col style="width: 120px"> <!-- 작성자 -->
-                        <col style="width: 100px"> <!-- 상태 -->
-                        <col style="width: 130px"> <!-- 작성일 -->
+                        <col style="width: 120px"> <!-- 상태 -->
+                        <col style="width: 140px"> <!-- 작성일 -->
                     </colgroup>
                     <thead>
                         <tr>
@@ -37,29 +37,35 @@
                     </thead>
 
                     <tbody th:if="${paging != null}">
-                        <tr th:each="list : ${paging.content}">
-                            <td>
-                                <span class="badge category-badge" th:text="${list.category}">시설/기술</span>
-                            </td>
-                            <td class="title-cell">
-                                <span th:if="${list.isSecret}" style="margin-right: 4px;">🔒</span>
-                                <a th:if="${!list.isSecret}"
-                                   th:href="@{/complaints/detail/{id}(id=${list.id})}"
-                                   th:text="${list.title}"></a>
-                                <span th:if="${list.isSecret}">
-                                    🔒 비밀글입니다
-                                </span>
-                            </td>
-                            <td th:text="${list.userName}"></td>
-                            <td>
-                                <span class="badge"
-                                      th:classappend="${list.status == '처리완료' ? 'status-complete' : 'status-waiting'}"
-                                      th:text="${list.status}">접수중</span>
-                            </td>
-                            <td class="text-muted" th:text="${#temporals.format(list.createdAt, 'yyyy-MM-dd')}"></td>
+                    <!-- 'list'라는 변수명 하나로 통일해서 루프를 돕니다 -->
+                    <tr th:each="list : ${paging.content}">
+                        <td>
+                            <span class="badge category-badge" th:text="${list.category}">시설/기술</span>
+                        </td>
+                        <td class="title-cell">
+                            <span th:if="${list.secret}" style="margin-right: 4px;">🔒</span>
+                            <a th:if="${!list.secret}"
+                               th:href="@{/complaints/detail/{id}(id=${list.id})}"
+                               th:text="${list.title}"></a>
+                            <span th:if="${list.secret}">비밀글입니다</span>
+                        </td>
+                        <td th:text="${list.userName}"></td>
+
+                        <td>
+                            <span th:if="${list.status != null}"
+                                  class="badge"
+                                  th:classappend="${list.status.cssClass}"
+                                  th:text="${list.status.description}">
+                                상태
+                            </span>
+                            <span th:if="${list.status == null}" class="badge">데이터 오류</span>
+                        </td>
+
+                        <td class="text-muted" th:text="${#temporals.format(list.createdAt, 'yyyy-MM-dd')}"></td>
                         </tr>
 
-                        <tr th:if="${paging == null or paging.isEmpty()}">
+                    <!-- 데이터가 없을 경우 -->
+                        <tr th:if="${paging.isEmpty()}">
                             <td colspan="5" class="text-muted" style="padding: 100px 0; text-align: center;">등록된 민원 내역이 없습니다.</td>
                         </tr>
                     </tbody>

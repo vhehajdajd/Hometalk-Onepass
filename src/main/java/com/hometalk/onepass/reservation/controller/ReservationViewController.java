@@ -8,6 +8,7 @@ import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -37,9 +38,22 @@ public class ReservationViewController {
        [입주민] 내 예약 목록
      */
     @GetMapping("/my")
-    public String myReservations(Model model,
-                                 @AuthenticationPrincipal CustomUserDetails user) {
-        List<ReservationResponseDto> myRes = reservationService.findByUserId(user.getUserId());
+    public String myReservations(Model model, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/auth";
+        }
+        Object principal = authentication.getPrincipal();
+        Long userId;
+        if (principal instanceof CustomUserDetails) {
+            CustomUserDetails userDetails = (CustomUserDetails) principal;
+            userId = userDetails.getUserId();
+        } else if (principal instanceof org.springframework.security.core.userdetails.User) {
+            return "redirect:/auth/logout";
+        } else {
+            return "redirect:/auth";
+        }
+
+        List<ReservationResponseDto> myRes = reservationService.findByUserId(userId);
         model.addAttribute("reservations", myRes);
         return "reservation/my-list";
     }
@@ -50,9 +64,10 @@ public class ReservationViewController {
     @PostMapping("/cancel/{id}")
     public String cancelReservation(@PathVariable Long id,
                                     @RequestHeader(value = "Referer", required = false) String referer,
-                                    @AuthenticationPrincipal CustomUserDetails user) {
-        reservationService.cancel(id, user.getUserId(), user.getRole());
-        // 이전 페이지로
+                                    Authentication authentication) {
+        if (authentication == null) return "redirect:/auth";
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        reservationService.cancel(id, userDetails.getUserId(), userDetails.getRole());
         if (referer != null) {
             return "redirect:" + referer;
         }
@@ -69,6 +84,21 @@ public class ReservationViewController {
         model.addAttribute("facilities", facilityService.findAll());
         return "reservation/admin/facilityList";
     }
+
+    /*
+     [스태프] 전체 예약 현황 관리 화면
+    */
+    @GetMapping("/admin/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String manageStatus(Model model, Authentication authentication) {
+        if (authentication == null) return "redirect:/auth";
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        model.addAttribute("adminName", userDetails.getName());
+        model.addAttribute("reservations", reservationService.findAllWithDetails());
+        return "reservation/admin/reservation-status";
+    }
+
+
 
     // 시설 등록 폼
     @GetMapping("/admin/facilities")
@@ -117,22 +147,6 @@ public class ReservationViewController {
         facilityService.delete(id);
         // 2. 삭제 후 다시 관리 목록 페이지
         return "redirect:/reservation/admin/list";
-    }
-
-    /*
-         [스태프] 전체 예약 현황 관리 화면
-     */
-    @GetMapping("/admin/status")
-    @PreAuthorize("hasRole('ADMIN')")
-    public String manageStatus(Model model,
-                               @AuthenticationPrincipal CustomUserDetails user) {
-        if (user == null) {
-            return "redirect:/login";
-        }
-        model.addAttribute("adminName", user.getName());
-        Long adminId = user.getUserId();
-        model.addAttribute("reservations", reservationService.findAllWithDetails());
-        return "reservation/admin/reservation-status";
     }
 
 

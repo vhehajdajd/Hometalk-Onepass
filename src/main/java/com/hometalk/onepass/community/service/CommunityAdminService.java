@@ -164,8 +164,9 @@ public class CommunityAdminService {
     @Transactional
     public void hardDeletePost(Long postId) {
         // DB에서 실제 레코드를 삭제 (FK 제약 조건을 풀기 위한 작업)
-        postRepository.hardDeleteCommentsByPostId(postId);
-        postRepository.hardDeletePostById(postId);
+        postRepository.hardDeletePostTagsByPostId(postId);  // 태그 관계 삭제
+        postRepository.hardDeleteCommentsByPostId(postId);  // 댓글 삭제
+        postRepository.hardDeletePostById(postId);          // 게시글 삭제
         log.info("관리자 권한으로 게시글 영구 삭제 완료: ID {}", postId);
     }
     // 일괄 처리

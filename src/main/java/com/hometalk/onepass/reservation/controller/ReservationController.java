@@ -8,7 +8,7 @@ import com.hometalk.onepass.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,9 +25,12 @@ public class ReservationController {
      */
     @PostMapping
     public Long register(@RequestBody ReservationRequestDto dto,
-                         @AuthenticationPrincipal CustomUserDetails user) {
-        dto.setUserId(user.getUserId());
-        return reservationService.register(dto);
+                         Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("로그인 정보가 유효하지 않습니다. 다시 로그인해주세요.");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return reservationService.register(dto, userDetails.getUserId());
     }
 
     /*
@@ -35,8 +38,12 @@ public class ReservationController {
      */
     @GetMapping("/{id}")
     public ReservationResponseDto findOne(@PathVariable Long id,
-                                          @AuthenticationPrincipal CustomUserDetails user) {
-        return reservationService.findOne(id, user.getUserId(), user.getRole());
+                                          Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("인증 정보가 없습니다.");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return reservationService.findOne(id, userDetails.getUserId(), userDetails.getRole());
     }
 
     /*
@@ -62,8 +69,12 @@ public class ReservationController {
      */
     @PatchMapping("/{id}/cancel")
     public void cancel(@PathVariable("id") Long id,
-                       @AuthenticationPrincipal CustomUserDetails user) {
-        reservationService.cancel(id, user.getUserId(), user.getRole());
+                       Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("인증 정보가 없습니다.");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        reservationService.cancel(id, userDetails.getUserId(), userDetails.getRole());
     }
 
 

@@ -1,6 +1,7 @@
 package com.hometalk.onepass.complaint.dto;
 
 import com.hometalk.onepass.complaint.entity.Complaint;
+import com.hometalk.onepass.complaint.entity.ComplaintStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -22,7 +23,7 @@ public class ComplaintDto {
     private String content;
     private Boolean secret;       // 비밀글 여부
     private Integer viewCount;
-    private String status;
+    private ComplaintStatus status;
     private String answer;
 
     private Boolean canView;   // 작성자 or ADMIN
@@ -64,9 +65,9 @@ public class ComplaintDto {
                 .title(this.title)
                 .content(this.content)
                 .category(this.category)
-                .secret(Boolean.TRUE.equals(this.secret))
+                .secret(this.secret != null ? this.secret : false)
                 .viewCount(this.viewCount != null ? this.viewCount : 0)
-                .status(this.status != null ? this.status : "접수완료") // 기본값 세팅
+                .status(this.getStatus())
                 .build();
     }
 }

@@ -33,11 +33,11 @@ public class ReservationService {
        시설 예약 등록
      */
     @Transactional
-    public Long register(ReservationRequestDto dto) {
+    public Long register(ReservationRequestDto dto, Long loginUserId) {
         // 1. 시설 및 유저 확인
         Facility facility = facilityRepository.findById(dto.getFacilityId())
                 .orElseThrow(() -> new RuntimeException("해당 시설을 찾을 수 없습니다."));
-        User user = userRepository.findById(dto.getUserId())
+        User user = userRepository.findById(loginUserId)
                 .orElseThrow(() -> new RuntimeException("해당 회원을 찾을 수 없습니다."));
 
         LocalDateTime start = dto.getStartTime();

@@ -19,15 +19,21 @@
                 <div class="post-header">
                     <div class="flex-between">
                         <span class="badge category-badge" th:text="${complaint.category}">카테고리</span>
-                        <span class="badge"
-                              th:classappend="${complaint.status == '처리완료' ? 'status-complete' : 'status-waiting'}"
-                              th:text="${complaint.status}">상태</span>
+                        <div class="flex-between">
+                            <div th:if="${complaint != null and complaint.status != null}">
+                                <span class="badge"
+                                      th:classappend="${complaint.status.cssClass}"
+                                      th:text="${complaint.status.description}">
+                                    상태
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     <h1 class="title mt-sm" th:text="${complaint.title}">민원 제목</h1>
 
                     <div class="post-info text-muted mt-sm">
-                        <span th:text="${complaint.isSecret and !complaint.canView ? '비공개' : complaint.userName}"></span>작성자</span>
+                        <span th:text="${complaint.secret and !complaint.canView ? '비공개' : complaint.userName}"></span>작성자</span>
                         <span class="divider">|</span>
                         <span th:text="${complaint.createdAt != null ? #temporals.format(complaint.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">작성일</span>
                     </div>
@@ -35,18 +41,18 @@
 
                 <div class="post-content">
                     <div class="content-body"
-                         th:text="${complaint.isSecret and !complaint.canView ? '🔒 비밀글입니다.' : complaint.content}"
+                         th:text="${complaint.secret and !complaint.canView ? '🔒 비밀글입니다.' : complaint.content}"
                          style="min-height: 200px; white-space: pre-wrap;">
                     </div>
 
                     <!-- 첨부파일 (이미지 미리보기 및 다운로드) -->
-                    <div th:if="${not #lists.isEmpty(complaint.attachments) and (not complaint.isSecret or complaint.canView)}"
+                    <div th:if="${not #lists.isEmpty(complaint.attachments) and (not complaint.secret or complaint.canView)}"
                          class="attachments mt-lg">
                         <p class="sub-title">📎 첨부파일</p>
                         <div class="attachment-list mt-sm">
                             <div th:each="file : ${complaint.attachments}" class="attachment-item">
-                                <img th:src="@{/api/complaints/display(fileName=${file.storedFileName})}" class="img-preview mb-xs">
-                                <a th:href="@{/api/complaints/download(fileName=${file.storedFileName}, originName=${file.originFileName})}"
+                                <img th:src="@{/api/complaints/file/display(fileName=${file.storedFileName})}" class="img-preview mb-xs">
+                                <a th:href="@{/api/complaints/file/download(fileName=${file.storedFileName}, originName=${file.originFileName})}"
                                    th:text="${file.originFileName}" class="text-small" style="word-break: break-all; color: var(--color-sub);">
                                     파일명
                                 </a>
@@ -55,7 +61,7 @@
                     </div>
                 </div>
 
-                <div th:if="${complaint.answer != null and (not complaint.isSecret or complaint.canView)}"
+                <div th:if="${complaint.answer != null and (not complaint.secret or complaint.canView)}"
                      class="admin-answer-section">
                     <h4 class="sub-title">✉️ 관리자 답변</h4>
                     <div class="answer-box mt-sm" th:text="${complaint.answer}">답변 내용</div>
@@ -70,6 +76,12 @@
                             <button type="button" class="btn btn-primary" th:onclick="submitResponse([[${complaint.id}]])">답변 저장하기</button>
                         </div>
                     </form>
+
+                    <div th:if="${complaint.isAdmin and complaint.status != '완료'}" class="flex-end mt-md">
+                        <button type="button" class="btn btn-success" th:onclick="completeComplaint([[${complaint.id}]])">
+                            민원 해결 완료
+                        </button>
+                    </div>
                 </div>
 
                 <div class="post-footer flex-between mt-xl">
@@ -136,6 +148,25 @@
             }
         } catch (error) {
             console.error("Error:", error);
+        }
+    }
+
+    async function completeComplaint(id) {
+        if (!confirm("이 민원을 해결 완료 처리하시겠습니까?")) return;
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        const response = await fetch(`/hometop/api/complaints/${id}/complete`, {
+            method: 'POST',
+            headers: { [csrfHeader]: csrfToken }
+        });
+
+        if (response.ok) {
+            alert("민원이 완료 처리되었습니다.");
+            location.reload();
+        } else {
+            alert("처리에 실패했습니다.");
         }
     }
 </script>
