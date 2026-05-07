@@ -25,7 +25,7 @@
                     <strong th:text="${comment.nickname}">작성자</strong>
                     <small th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</small>
                 </div>
-                <div class="comment-actions">
+                <div class="comment-actions" th:if="${comment.writerId == #authentication.principal.userId}">
                     <button type="button" class="btn-edit" th:onclick="|toggleEditForm(${comment.id})|">수정</button>
                     <form th:action="@{/community/{bCode}/{cCode}/{postId}/comments/{id}/delete
                                      (bCode=${boardCode}, cCode=${categoryCode}, postId=${postId}, id=${comment.id})}"

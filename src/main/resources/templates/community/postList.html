@@ -14,7 +14,7 @@
     <div class="main-wrapper">
         <!-- 상단 메뉴 -->
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community'} })}"></div>
-        <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: ${#authorization.expression('hasRole(''ADMIN'')')} ? 'communityAdmin' : 'community'}"></div>
         <!-- 메인 콘텐츠 -->
         <div class="dashboard-content">
             <main class="container">
