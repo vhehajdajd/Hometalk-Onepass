@@ -64,20 +64,20 @@ public class SseEmitterManager {
         emitters.forEach(emitter -> sendEvent(emitter, "notification", data));
     }
 
-        public void sendToAll(NotificationTargetRole role, Object data) {
-            emitterMap.forEach((userId, list) -> {
-                userRepository.findById(userId).ifPresent(user -> {
-                    boolean match = switch (role) {
-                        case ADMIN    -> user.getRole() == User.UserRole.ADMIN;
-                        case RESIDENT -> user.getRole() == User.UserRole.RESIDENT;
-                        default       -> false;
-                    };
-                    if (match) {
-                        list.forEach(emitter -> sendEvent(emitter, "notification", data));
-                    }
-                });
+    public void sendToAll(NotificationTargetRole role, Object data) {
+        emitterMap.forEach((userId, list) -> {
+            userRepository.findById(userId).ifPresent(user -> {
+                boolean match = switch (role) {
+                    case ADMIN    -> user.getRole() == User.UserRole.ADMIN;
+                    case RESIDENT -> user.getRole() == User.UserRole.RESIDENT;
+                    default       -> false;
+                };
+                if (match) {
+                    list.forEach(emitter -> sendEvent(emitter, "notification", data));
+                }
             });
-        }
+        });
+    }
 
     private void sendEvent(SseEmitter emitter, String eventName, Object data) {
         try {
@@ -105,15 +105,17 @@ public class SseEmitterManager {
     // SseEmitterManager 내부 @Scheduled: 30초마다 빈 comment 전송
     @Scheduled(fixedRate = 30000)
     public void sendHeartbeat() {
-        emitterMap.values().forEach(list ->
-                list.forEach(emitter -> {
-                    try {
-                        emitter.send(SseEmitter.event().comment("heartbeat"));
-                    } catch (IOException e) {
-                        emitter.completeWithError(e);
-                    }
-                })
-        );
+        emitterMap.entrySet().forEach(entry -> {
+            Long userId = entry.getKey();
+            entry.getValue().forEach(emitter -> {
+                try {
+                    emitter.send(SseEmitter.event().comment("heartbeat"));
+                } catch (IOException e) {
+                    emitter.completeWithError(e);
+                    removeEmitter(userId, emitter); // ✅ 끊긴 emitter 즉시 제거
+                }
+            });
+        });
     }
 
     // ─────────────────── 제거 ───────────────────
