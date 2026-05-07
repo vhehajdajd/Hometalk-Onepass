@@ -66,6 +66,20 @@
         </div>
         <a class="s-logout" th:href="@{/auth/logout}">로그아웃</a>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var currentPath = window.location.pathname;
+            document.querySelectorAll('.category-item').forEach(function(item) {
+                var href = item.getAttribute('href');
+                if (href && href !== '#') {
+                    if (currentPath === href) {
+                        item.classList.add('active');
+                    }
+                }
+            });
+        });
+    </script>
 </aside>
 
 </body>

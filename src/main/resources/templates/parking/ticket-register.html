@@ -1,15 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>차량 티켓 등록</title>
-  <meta name="_csrf" th:content="${_csrf.token}">
-  <meta name="_csrf_header" th:content="${_csrf.headerName}">
-  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
-  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
-  <link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
-</head>
+<head th:replace="~{fragments/head :: head('차량 티켓 등록')}"></head>
+<link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+<link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
 <body>
 
 <div class="main-layout">
@@ -266,7 +259,7 @@
       })
       .catch(err => {
         console.error(err);
-        searchError.textContent = err.message || '조회 중 오류가 발생했습니다.';
+        searchError.textContent = err.message || '조회된 차량이 없습니다.';
         document.getElementById('searchResult').style.display = 'none';
       });
   }

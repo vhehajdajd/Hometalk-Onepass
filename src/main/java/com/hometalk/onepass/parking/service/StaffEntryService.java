@@ -1,6 +1,7 @@
 package com.hometalk.onepass.parking.service;
 
 import com.hometalk.onepass.auth.entity.Household;
+import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.HouseholdRepository;
 import com.hometalk.onepass.notification.entity.NotificationTargetRole;
 import com.hometalk.onepass.notification.entity.NotificationType;
@@ -76,19 +77,18 @@ public class StaffEntryService {
                         ParkingLog.EntryType.RESERVATION);
                 parkingLogRepository.save(log);
 
-/*                // ─── 알림: 입차 → 입주자에게 ───
-                if (reservation.getHousehold() != null
-                        && reservation.getHousehold().getUser() != null) {
-                    notificationPublisher.publish(
-                            reservation.getHousehold().getUser().getId(),
-                            NotificationTargetRole.RESIDENT,
-                            NotificationType.VEHICLE_ENTRY,
-                            "방문 차량 입차",
-                            vehicleNumber + " 차량이 입차되었습니다.",
-                            "/parking/logs",
-                            log.getParkingId()
-                    );
-                }*/
+                // ✅ 알림 — ④ 예약 방문객 입차 (입주자에게 알림)
+                reservation.getHousehold().getUsers().stream()
+                        .filter(u -> u.getRole() == User.UserRole.RESIDENT)
+                        .forEach(u -> notificationPublisher.publish(
+                                u.getId(),
+                                NotificationTargetRole.RESIDENT,
+                                NotificationType.VEHICLE_VISITOR_ENTRY,
+                                "방문 차량 입차",
+                                "예약하신 방문 차량(" + reservation.getVehicleNumber() + ")이 도착하여 입차했습니다.",
+                                "/parking",
+                                reservation.getReservationId()
+                        ));
             }
 
             case RESIDENT -> {
@@ -109,16 +109,29 @@ public class StaffEntryService {
                         vehicle.getHousehold(), null, null,
                         ParkingLog.EntryType.NORMAL);
                 parkingLogRepository.save(log);
+
+                // ✅ 알림 — ③ 입주자 차량 입차
+                notificationPublisher.publish(
+                        vehicle.getUser().getId(),
+                        NotificationTargetRole.RESIDENT,
+                        NotificationType.VEHICLE_ENTRY,
+                        "입주자 입차",
+                        "입주자 차량(" + vehicle.getVehicleNumber() + ")이 입차했습니다.",
+                        "/parking",
+                        vehicle.getVehicleId()
+                );
             }
         }
     }
 
     @Transactional
-    public void processManualEntry(ManualEntryRequest request) {
+    public void processManualEntry(ManualEntryRequest request, String postNum) {
         Household household = null;
 
         if (hasText(request.getDong()) && hasText(request.getHo())) {
-            // TODO: Security 연동 후 householdRepository.findByPostNumAndDongAndHo 활성화
+            household = householdRepository.findByPostNumAndDongAndHo(
+                            postNum, request.getDong(), request.getHo())
+                    .orElse(null);
         }
 
         String vehicleNumber = request.getVehicleNumber().replace(" ", "");

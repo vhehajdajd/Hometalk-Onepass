@@ -12,6 +12,7 @@ public class CommentRsDTO {
     private Long id;
     private String content;
 
+    private Long writerId;
     private String nickname;
     private LocalDateTime createdAt;
 
@@ -19,6 +20,7 @@ public class CommentRsDTO {
         return CommentRsDTO.builder()
                 .id(comment.getId())
                 .content(comment.getContent())
+                .writerId(comment.getWriter().getId())
                 .nickname(comment.getWriter().getNickname())
                 .createdAt(comment.getCreatedAt())
                 .build();
