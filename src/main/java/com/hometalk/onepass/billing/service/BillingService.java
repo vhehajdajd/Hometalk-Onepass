@@ -66,14 +66,25 @@ public class BillingService {
     // ─────────────────────────────────────────────
     // 대시보드 - 입주민용 관리비 요약 (미납 우선 노출 로직)
     // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// 대시보드 - 입주민용 관리비 요약 (미납 우선 노출 로직)
+// ─────────────────────────────────────────────
     public ResidentDashboardResponse getResidentDashboardSummary(Long householdId) {
-        String currentMonth = YearMonth.now().toString();  // 현재 월
+        String currentMonth  = YearMonth.now().toString();
+        String overdueBefore = YearMonth.now().minusMonths(3).toString();
 
-        // 당월 먼저 조회
+        // 1. 3개월 이상 미납 먼저 조회 (가장 오래된 것)
         Optional<Billing> target = billingRepository
-                .findByHousehold_IdAndBillingMonth(householdId, currentMonth);
+                .findTopByHousehold_IdAndStatusAndBillingMonthLessThanEqualOrderByBillingMonthAsc(
+                        householdId, BillingStatus.UNPAID, overdueBefore);
 
-        // 없으면 가장 최근 고지서
+        // 2. 없으면 당월 조회
+        if (target.isEmpty()) {
+            target = billingRepository
+                    .findByHousehold_IdAndBillingMonth(householdId, currentMonth);
+        }
+
+        // 3. 없으면 가장 최근 고지서
         if (target.isEmpty()) {
             target = billingRepository
                     .findTopByHousehold_IdOrderByBillingMonthDesc(householdId);
@@ -82,15 +93,18 @@ public class BillingService {
         if (target.isEmpty()) return null;
 
         Billing b = target.get();
-        String displayMonth = Integer.parseInt(b.getBillingMonth().substring(5, 7)) + "월";
+        String displayMonth   = Integer.parseInt(b.getBillingMonth().substring(5, 7)) + "월";
         String formattedDueDate = b.getDueDate()
                 .format(DateTimeFormatter.ofPattern("yyyy년 M월 d일"));
+        boolean isOverdue = b.getStatus() == BillingStatus.UNPAID
+                && b.getBillingMonth().compareTo(overdueBefore) <= 0;
 
         return ResidentDashboardResponse.builder()
                 .billingMonth(displayMonth)
                 .status(b.getStatus().name())
                 .totalAmount(b.getTotalAmount())
                 .dueDate(formattedDueDate)
+                .overdue(isOverdue)
                 .build();
     }
     // ─────────────────────────────────────────────
