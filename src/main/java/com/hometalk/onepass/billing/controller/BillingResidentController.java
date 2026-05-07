@@ -27,7 +27,7 @@ public class BillingResidentController {
 
     // ─────────────────────────────────────────────
     // TODO: Security 완성 후 CustomUserDetails로 교체
-    private static final Long TEMP_HOUSEHOLD_ID = 7L;
+    private static final Long TEMP_HOUSEHOLD_ID = 2L;
     // ─────────────────────────────────────────────
 
 
@@ -42,10 +42,15 @@ public class BillingResidentController {
 
         ResidentBillingResponse response = billingService.getResidentBillingPage(householdId);
 
+        LocalDate today = LocalDate.now();
+
         List<BillingSummaryResponse> unpaidList = billingService
                 .getBillingList(householdId, null, null, BillingStatus.UNPAID,
                         PageRequest.of(0, 12, Sort.by(Sort.Direction.DESC, "billingMonth")))
-                .getContent();
+                .getContent()
+                .stream()
+                .filter(b -> b.getDueDate() != null && b.getDueDate().isBefore(today))
+                .toList();
 
         model.addAttribute("currentUri",        request.getRequestURI());
         model.addAttribute("contextPath",        "/hometop");
@@ -59,11 +64,9 @@ public class BillingResidentController {
         model.addAttribute("latestPaidDate",     response.getLastPaidDate() != null
                 ? response.getLastPaidDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
                 : null);
-        model.addAttribute("latestPaidMonth",    response.getLastPaidDate() != null
-                ? response.getLastPaidDate().format(DateTimeFormatter.ofPattern("M월"))
-                : null);
+        model.addAttribute("latestPaidMonth", response.getLastPaidBillingMonth());
         model.addAttribute("billings",           response.getBillings());
-        model.addAttribute("hasMore",            false);
+        model.addAttribute("hasMore", response.getBillings().size() == 12);
         model.addAttribute("householdId",        householdId);
         model.addAttribute("unitInfo",           "");
         model.addAttribute("menu",               "billing");
