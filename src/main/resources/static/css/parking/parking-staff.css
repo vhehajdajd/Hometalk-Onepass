@@ -77,3 +77,53 @@
     border-color: var(--color-sub);
     box-shadow: 0 0 0 3px rgba(60, 106, 188, 0.1);
 }
+
+/* ---------- 로그아웃 버튼 ---------- */
+.logout-btn {
+    background: var(--color-btn-point) !important;
+    color: #ffffff !important;
+    border-radius: var(--radius-sm);
+    padding: 6px 16px !important;
+    margin-left: auto;
+    transition: background var(--transition);
+}
+
+.logout-btn:hover {
+    background: var(--color-btn-point-hover) !important;
+    color: #ffffff !important;
+}
+
+/* ---------- 경비 상단 네브바 ---------- */
+body {
+    padding-top: 56px;
+}
+
+.staff-navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 clamp(20px, 5vw, 60px);
+    height: 56px;
+    background: white;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.staff-logo { text-decoration: none; }
+
+.staff-logout-btn {
+    color: #ffffff;
+    background: var(--color-btn-point);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+}
+
+.staff-logout-btn:hover {
+    background: var(--color-btn-point-hover);
+}

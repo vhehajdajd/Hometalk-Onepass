@@ -1,10 +1,12 @@
 package com.hometalk.onepass.parking.controller;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.parking.dto.request.VehicleRegisterRequest;
 import com.hometalk.onepass.parking.dto.response.VehicleResponse;
 import com.hometalk.onepass.parking.service.VehicleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +23,9 @@ public class VehicleController {
 
     // 세대 차량 목록 조회 페이지
     @GetMapping("/vehicle")
-    public String vehicleList(Model model) {
-        Long householdId = null; // TODO: JWT 연동 후 추출
+    public String vehicleList(@AuthenticationPrincipal CustomUserDetails userDetails,
+                              Model model) {
+        Long householdId = userDetails.getHouseholdId();
         List<VehicleResponse> vehicles = vehicleService.getHouseholdVehicles(householdId);
         model.addAttribute("vehicles", vehicles);
         return "parking/vehicle-status";
@@ -31,8 +34,9 @@ public class VehicleController {
     // 세대 차량 목록 조회 (JSON - 대시보드용)
     @GetMapping("/vehicle/list")
     @ResponseBody
-    public ResponseEntity<List<VehicleResponse>> getVehicleList() {
-        Long householdId = 1L; // TODO: JWT 연동 후 추출
+    public ResponseEntity<List<VehicleResponse>> getVehicleList(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long householdId = userDetails.getHouseholdId();
         return ResponseEntity.ok(vehicleService.getHouseholdVehicles(householdId));
     }
 
@@ -45,11 +49,12 @@ public class VehicleController {
     // 차량 등록 처리
     @PostMapping("/vehicle/register")
     public String vehicleRegister(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @ModelAttribute VehicleRegisterRequest request,
             @RequestParam(value = "documents") List<MultipartFile> documents,
             Model model) {
         try {
-            Long userId = null; // TODO: JWT 연동 후 추출
+            Long userId = userDetails.getUserId();
             vehicleService.register(userId, request, documents);
             return "redirect:/parking/vehicle";
         } catch (IllegalArgumentException e) {

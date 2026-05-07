@@ -1,6 +1,9 @@
 package com.hometalk.onepass.parking.service;
 
 import com.hometalk.onepass.auth.entity.Household;
+import com.hometalk.onepass.auth.entity.User;
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+import com.hometalk.onepass.notification.entity.NotificationType;
 import com.hometalk.onepass.notification.publisher.NotificationPublisher;
 import com.hometalk.onepass.parking.dto.response.ParkingLogResponse;
 import com.hometalk.onepass.parking.entity.ParkingLog;
@@ -76,18 +79,17 @@ public class StaffExitService {
         // 입주자 차량은 티켓 체크 없이 바로 출차
         if (parkingLog.getEntryType() == ParkingLog.EntryType.NORMAL) {
             parkingLog.exit(totalMinutes, totalMinutes);
-            // TODO: Security 연동 후 주석 해제
-            // if (parkingLog.getHousehold().getUser() != null) {
-            //     notificationPublisher.publish(
-            //             parkingLog.getHousehold().getUser().getId(),
-            //             NotificationTargetRole.RESIDENT,
-            //             NotificationType.VEHICLE_EXIT,
-            //             "차량 출차 완료",
-            //             parkingLog.getVehicleNumber() + " 차량이 출차되었습니다.",
-            //             "/parking/logs",
-            //             parkingLog.getParkingId()
-            //     );
-            // }
+
+            // ✅ 알림 — ⑤ 입주자 출차
+            notificationPublisher.publish(
+                    parkingLog.getVehicle().getUser().getId(),
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.VEHICLE_EXIT,
+                    "출차 완료",
+                    "차량(" + parkingLog.getVehicleNumber() + ")이 정산 완료되어 출차하였습니다.",
+                    "/parking",
+                    parkingLog.getParkingId()
+            );
             return;
         }
 
@@ -96,34 +98,35 @@ public class StaffExitService {
                 ? parkingLog.getAppliedMinutes() : 0;
 
         if (applied < totalMinutes) {
-            // TODO: Security 연동 후 주석 해제
-            // if (parkingLog.getHousehold().getUser() != null) {
-            //     notificationPublisher.publish(
-            //             parkingLog.getHousehold().getUser().getId(),
-            //             NotificationTargetRole.RESIDENT,
-            //             NotificationType.VEHICLE_EXIT,
-            //             "출차 불가 - 티켓 부족",
-            //             parkingLog.getVehicleNumber() + " 차량의 티켓이 부족합니다. 티켓을 등록해주세요.",
-            //             "/parking/ticket",
-            //             parkingLog.getParkingId()
-            //     );
-            // }
+            // ✅ 알림 — ⑦ 티켓 부족 출차 불가
+            parkingLog.getHousehold().getUsers().stream()
+                    .filter(u -> u.getRole() == User.UserRole.RESIDENT)
+                    .forEach(u -> notificationPublisher.publish(
+                            u.getId(),
+                            NotificationTargetRole.RESIDENT,
+                            NotificationType.VEHICLE_TICKET_SHORTAGE,
+                            "티켓 부족",
+                            "티켓이 부족하여 출차할 수 없습니다. 티켓을 적용해 주세요.",
+                            "/parking",
+                            parkingLog.getParkingId()
+                    ));
             throw new ParkingException("티켓이 부족합니다. 티켓을 먼저 등록해주세요.");
         }
 
         parkingLog.exit(totalMinutes, Math.min(applied, totalMinutes));
-        // TODO: Security 연동 후 주석 해제
-        // if (parkingLog.getHousehold().getUser() != null) {
-        //     notificationPublisher.publish(
-        //             parkingLog.getHousehold().getUser().getId(),
-        //             NotificationTargetRole.RESIDENT,
-        //             NotificationType.VEHICLE_EXIT,
-        //             "차량 출차 완료",
-        //             parkingLog.getVehicleNumber() + " 차량이 출차되었습니다.",
-        //             "/parking/logs",
-        //             parkingLog.getParkingId()
-        //     );
-        // }
+
+        // ✅ 알림 — ⑥ 예약 방문객 출차
+        parkingLog.getHousehold().getUsers().stream()
+                .filter(u -> u.getRole() == User.UserRole.RESIDENT)
+                .forEach(u -> notificationPublisher.publish(
+                        u.getId(),
+                        NotificationTargetRole.RESIDENT,
+                        NotificationType.VEHICLE_VISITOR_EXIT,
+                        "방문 차량 출차",
+                        "방문 차량(" + parkingLog.getVehicleNumber() + ")이 출차하였습니다.",
+                        "/parking",
+                        parkingLog.getParkingId()
+                ));
     }
 
     @Transactional
