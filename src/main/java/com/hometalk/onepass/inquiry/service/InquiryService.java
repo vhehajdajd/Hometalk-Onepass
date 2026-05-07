@@ -40,16 +40,16 @@ public class InquiryService {
     @Transactional
     public Long register(InquiryDto dto,
                          List<MultipartFile> files,
-                         CustomUserDetails userDetails) throws IOException {
-
-        validateUser(userDetails);
-
+                         Authentication authentication) throws IOException {
+        Long userId = getLoginUserId(authentication);
         if (dto.getTitle() == null || dto.getTitle().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "제목을 입력해주세요.");
         }
-
-        User user = userRepository.findById(userDetails.getUserId())
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."));
+        if (isDuplicate(dto, user.getId())) {
+            throw new IllegalStateException("이미 동일한 문의가 접수되었습니다. 잠시 후 다시 시도해주세요.");
+        }
 
         Inquiry inquiry = Inquiry.builder()
                 .user(user)
@@ -115,21 +115,15 @@ public class InquiryService {
     }
 
     @Transactional
-    public void deleteInquiry(Long id, CustomUserDetails userDetails) {
-
-        validateUser(userDetails);
+    public void deleteInquiry(Long id, Authentication authentication) {
+        Long userId = getLoginUserId(authentication);
+        boolean isAdmin = isAdmin(authentication);
 
         Inquiry inquiry = inquiryRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "삭제할 문의글이 없습니다."));
 
         boolean isOwner = inquiry.getUser() != null
-                && inquiry.getUser().getId().equals(userDetails.getUserId());
-
-        boolean isAdmin = userDetails.getAuthorities().stream()
-                .anyMatch(a ->
-                        a.getAuthority().equals("ROLE_ADMIN")
-                                || a.getAuthority().equals("ADMIN")
-                );
+                && inquiry.getUser().getId().equals(userId);
 
         if (!isOwner && !isAdmin) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "삭제 권한이 없습니다.");
@@ -139,17 +133,9 @@ public class InquiryService {
     }
 
     @Transactional
-    public void answer(Long id, String answer, CustomUserDetails userDetails) {
+    public void answer(Long id, String answer, Authentication authentication) {
 
-        validateUser(userDetails);
-
-        boolean isAdmin = userDetails.getAuthorities().stream()
-                .anyMatch(a ->
-                        a.getAuthority().equals("ROLE_ADMIN")
-                                || a.getAuthority().equals("ADMIN")
-                );
-
-        if (!isAdmin) {
+        if (!isAdmin(authentication)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "관리자만 답변을 등록할 수 있습니다.");
         }
 
@@ -186,12 +172,6 @@ public class InquiryService {
     public Page<InquiryDto> findByUserId(Long userId, Pageable pageable) {
         return inquiryRepository.findByUserId(userId, pageable)
                 .map(InquiryDto::fromEntity);
-    }
-
-    private void validateUser(CustomUserDetails userDetails) {
-        if (userDetails == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
     }
 
     private Long getLoginUserId(Authentication authentication) {

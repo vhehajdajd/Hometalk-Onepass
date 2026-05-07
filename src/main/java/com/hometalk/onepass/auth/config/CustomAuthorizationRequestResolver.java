@@ -26,6 +26,7 @@ public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRe
 
     @Override
     public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
+        saveRememberMeRequest(request);
         // "/oauth2/authorization/{registrationId}" 같은 일반 진입 경로는
         // 기본 resolver 로 표준 OAuth2 요청을 만든 뒤 후처리만 추가함
         OAuth2AuthorizationRequest authorizationRequest = defaultResolver.resolve(request);
@@ -34,6 +35,7 @@ public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRe
 
     @Override
     public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
+        saveRememberMeRequest(request);
         // registrationId 가 이미 분리되어 넘어오는 경로도 있으므로
         // 두 오버로드 모두 같은 후처리 로직을 타도록 맞춘다.
         OAuth2AuthorizationRequest authorizationRequest = defaultResolver.resolve(request, clientRegistrationId);
@@ -65,5 +67,12 @@ public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRe
         return OAuth2AuthorizationRequest.from(authorizationRequest)
                 .additionalParameters(additionalParameters)
                 .build();
+    }
+
+    private void saveRememberMeRequest(HttpServletRequest request) {
+        String rememberMe = request.getParameter(RememberMeConfig.REMEMBER_ME_PARAMETER);
+        if ("on".equalsIgnoreCase(rememberMe) || "true".equalsIgnoreCase(rememberMe)) {
+            request.getSession().setAttribute(RememberMeConfig.OAUTH2_REMEMBER_ME_SESSION_KEY, true);
+        }
     }
 }

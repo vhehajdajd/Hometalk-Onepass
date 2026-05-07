@@ -81,7 +81,7 @@ public class NotificationApiController {
     // ─────────────────── 임시 사용자 정보 (Security 연동 전) ───────────────────
     // TODO: Security 연동 완료되면 이 두 메서드 삭제
     private Long getCurrentUserId() {
-        return 1L; // 임시 하드코딩
+        return 2L; // 임시 하드코딩
     }
 
     private NotificationTargetRole getCurrentUserRole() {

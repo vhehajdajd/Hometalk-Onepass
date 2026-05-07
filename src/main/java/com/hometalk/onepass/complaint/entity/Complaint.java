@@ -20,8 +20,6 @@ public class Complaint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Setter 대신 비즈니스 의미가 담긴 메서드를 선언하는 게 좋지만, 
-    // 서비스에서 유저를 주입하기 위해 열어두겠습니다.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
@@ -38,9 +36,14 @@ public class Complaint {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    private Boolean secret;
+    @Builder.Default
+    @Column(name = "is_secret", nullable = false)
+    private Boolean secret = false;
     private int viewCount;
-    private String status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ComplaintStatus status = ComplaintStatus.WAITING;
     private String answer;
 
     private LocalDateTime createdAt;
@@ -52,7 +55,7 @@ public class Complaint {
         this.updatedAt = LocalDateTime.now();
         this.viewCount = 0;
         if (this.status == null) {
-            this.status = "접수완료";
+            this.status = ComplaintStatus.WAITING;
         }
     }
 
@@ -61,10 +64,19 @@ public class Complaint {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // 관리자 답변 등록 로직 (이미 잘 짜셨어요!)
-    public void addResponse(String response) {
-        this.answer = response;
-        this.status = "처리완료";
+    // 관리자 답변 등록 로직
+    public void markAsRead() {      // 최초 1회 (관리자가 상세 내용 조회 시)
+        if (this.status == ComplaintStatus.WAITING) {
+            this.status = ComplaintStatus.CHECK;
+        }
+    }
+
+    public void addResponse() {
+        this.status = ComplaintStatus.PROCESSING;
+    }
+
+    public void completeComplaint() {       // 최종 해결 완료 후 관리자 클릭
+        this.status = ComplaintStatus.COMPLETED;
     }
 
     // 파일 업로드 연관관계 설정
@@ -75,4 +87,10 @@ public class Complaint {
     public boolean isSecret() {
         return Boolean.TRUE.equals(this.secret);
     }
+
+    @Builder.Default
+    @OneToMany(mappedBy = "complaint",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private List<ComplaintAnswer> answers = new ArrayList<>();
 }

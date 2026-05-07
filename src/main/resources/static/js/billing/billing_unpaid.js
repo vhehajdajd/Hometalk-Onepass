@@ -173,7 +173,6 @@ function renderTableBody(items) {
             <td>${checkbox}</td>
             <td>${num}</td>
             <td>${item.unit || '—'}</td>
-            <td>${item.residentName || '—'}</td>
             <td>${item.billingMonth || '—'}</td>
             <td>${Number(item.totalAmount).toLocaleString()}원</td>
             <td>${item.dueDate ? item.dueDate.replace(/-/g,'.') : '—'}</td>
@@ -351,6 +350,10 @@ async function refreshStats() {
         if (el('statUnpaid'))  el('statUnpaid').textContent  = data.unpaidCount     ?? '—';
         if (el('statRate'))    el('statRate').textContent    =
             data.paidRate != null ? data.paidRate.toFixed(1) + '%' : '—';
+        if (el('statUnpaidAmount')) el('statUnpaidAmount').textContent =
+            data.unpaidAmount != null
+                ? Number(data.unpaidAmount).toLocaleString() + '원'
+                : '—';
 
         // 필터 라벨 갱신
         const labelParts = [];

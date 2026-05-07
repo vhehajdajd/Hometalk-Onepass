@@ -27,17 +27,19 @@ public class InquiryPageController {
 
     @GetMapping("/list")
     public String listPage(Model model,
-                           @AuthenticationPrincipal CustomUserDetails user,
+                           Authentication authentication,
                            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Long userId = null;
         boolean isAdmin = false;
 
-        // 객체 자체가 null인지 먼저 확실히 체크한 후 메서드 호출
-        if (user != null) {
-            userId = user.getUserId();
-            isAdmin = user.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (authentication != null && authentication.isAuthenticated()) {
+            try {
+                isAdmin = authentication.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
+            } catch (Exception e) {
+
+            }
         }
 
         Page<InquiryDto> inquiries = inquiryService.findAll(userId, isAdmin, pageable);
@@ -60,14 +62,8 @@ public class InquiryPageController {
     public String registerInquiry(
             @ModelAttribute InquiryDto inquiryDto,
             @RequestParam(value = "files", required = false) List<MultipartFile> files,
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) throws IOException {
-
-        if (userDetails == null) {
-            throw new RuntimeException("로그인 필요");
-        }
-        inquiryService.register(inquiryDto, files, userDetails);
-
+            Authentication authentication) throws IOException {
+        inquiryService.register(inquiryDto, files, authentication);
         return "redirect:/inquiries/list";
     }
 
@@ -80,9 +76,7 @@ public class InquiryPageController {
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/auth";
         }
-
         InquiryDto inquiryDto = inquiryService.getInquiryDetail(id, authentication);
-
         model.addAttribute("inquiry", inquiryDto);
         return "inquiry/inquiryDetail";
     }

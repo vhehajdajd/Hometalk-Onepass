@@ -3,8 +3,8 @@
 <body>
 
 <div th:fragment="path(paths)" class="header">
-    <span th:text="${paths != null and !#strings.toString(paths).isEmpty() ?
-        (#strings.toString(paths).contains('notice') ? '공지사항' :
+    <!-- ── 현재 페이지명 ── -->
+    <span th:text="${#strings.toString(paths).contains('notice') ? '공지사항' :
         #strings.toString(paths).contains('schedule') ? '일정' :
         #strings.toString(paths).contains('inquiry') ? '문의' :
         #strings.toString(paths).contains('reservation') ? '예약' :
@@ -12,9 +12,12 @@
         #strings.toString(paths).contains('billing') ? '관리비' :
         #strings.toString(paths).contains('community') ? '커뮤니티' :
         #strings.toString(paths).contains('myPage') ? '마이페이지' :
-        #strings.toString(paths).contains('home') ? '대시보드' : '홈') : '홈'}">홈</span>
+        #strings.toString(paths).contains('home') ? '대시보드' :
+        #strings.toString(paths).contains('notification') ? '알림' : '홈'}">홈</span>
 
+    <!-- ── 우측 아이콘 ── -->
     <div style="display:flex; align-items:center; gap:20px; margin-left:auto;">
+        <!-- 알림 벨 (notification 담당 완료 후 연동 예정) -->
         <a th:href="@{/notification}" style="display:flex; align-items:center; color:var(--color-main); text-decoration:none;">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -22,6 +25,7 @@
                 <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
             </svg>
         </a>
+        <!-- 마이페이지 -->
         <a th:href="@{/myPage}" style="display:flex; align-items:center; gap:6px; color:var(--color-main); text-decoration:none; font-size:14px; font-weight:600;">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

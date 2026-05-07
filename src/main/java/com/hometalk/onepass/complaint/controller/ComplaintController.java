@@ -38,17 +38,21 @@ public class ComplaintController {
     private final ComplaintService complaintService;
     private final FileProperties fileProperties;
 
+    // 등록
+    @PreAuthorize("isAuthenticated()")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Long register(
             @ModelAttribute ComplaintDto complaintDto,
             @RequestParam(value = "files", required = false) List<MultipartFile> files,
             Authentication authentication) throws IOException {
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
-
         return complaintService.saveWithFiles(complaintDto, files, authentication);
+    }
+
+    // 상세 조회
+    @GetMapping("/{id}")
+    public ComplaintDto read(@PathVariable Long id, Authentication authentication) {
+        return complaintService.getComplaintDetail(id, authentication);
     }
 
     @GetMapping
@@ -67,102 +71,67 @@ public class ComplaintController {
         return complaintService.findAll(userId, isAdmin, pageable);
     }
 
-    @GetMapping("/my")
-    public Page<ComplaintDto> myLimitList(
-            Authentication authentication,
-            Pageable pageable) {
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AccessDeniedException("로그인 필요");
-        }
-
-        Long userId = complaintService.getLoginUserId(authentication);
-
-        return complaintService.findByUserId(userId, pageable);
-    }
-
+    // 삭제
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id,
-                       Authentication authentication) {
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
-
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id, Authentication authentication) {
         complaintService.delete(id, authentication);
     }
 
-    @GetMapping("/download")
-    public ResponseEntity<Resource> downloadFile(
+    // 파일
+    @GetMapping("/file/{type}") // type: download or display
+    public ResponseEntity<Resource> handleFile(
+            @PathVariable String type,
             @RequestParam String fileName,
-            @RequestParam String originName) throws IOException {
+            @RequestParam(required = false) String originName) throws IOException {
 
-        Path basePath = Paths.get(fileProperties.getPath()).toAbsolutePath().normalize();
-        Path path = basePath.resolve(fileName).normalize();
-
-        if (!path.startsWith(basePath)) {
-            throw new IllegalArgumentException("잘못된 파일 경로");
-        }
-
-        if (!Files.exists(path)) {
-            throw new IllegalArgumentException("파일 없음");
-        }
-
-        Resource resource = new InputStreamResource(Files.newInputStream(path));
-        String encodedName = UriUtils.encode(originName, StandardCharsets.UTF_8);
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + encodedName + "\"")
-                .body(resource);
-    }
-
-    @GetMapping("/display")
-    public ResponseEntity<Resource> display(@RequestParam String fileName) throws IOException {
-
-        Path basePath = Paths.get(fileProperties.getPath()).toAbsolutePath().normalize();
-        Path path = basePath.resolve(fileName).normalize();
-
-        if (!path.startsWith(basePath)) {
-            throw new IllegalArgumentException("잘못된 파일 경로");
-        }
-
-        if (!Files.exists(path)) {
-            throw new IllegalArgumentException("파일 없음");
-        }
-
+        Path path = validateAndGetPath(fileName);
         Resource resource = new InputStreamResource(Files.newInputStream(path));
 
-        String contentType = Files.probeContentType(path);
-        if (contentType == null) {
-            contentType = "application/octet-stream";
+        HttpHeaders headers = new HttpHeaders();
+        if ("download".equals(type)) {
+            String encodedName = UriUtils.encode(originName, StandardCharsets.UTF_8);
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedName + "\"");
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        } else {
+            String contentType = Files.probeContentType(path);
+            headers.setContentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"));
         }
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .body(resource);
+        return ResponseEntity.ok().headers(headers).body(resource);
     }
 
+    // 경로 조작 공격(Path Traversal) 방지 공통 로직
+    private Path validateAndGetPath(String fileName) {
+        Path basePath = Paths.get(fileProperties.getPath()).toAbsolutePath().normalize();
+        Path path = basePath.resolve(fileName).normalize();
+        if (!path.startsWith(basePath) || !Files.exists(path)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 파일 접근입니다.");
+        }
+        return path;
+    }
+
+
+    // 관리자
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/respond")
-    public ResponseEntity<String> respond(
-            @PathVariable Long id,
-            @RequestBody Map<String, String> body,
-            Authentication authentication) {
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
+    public void respond( // ResponseEntity 대신 void 혹은 업데이트된 DTO 반환
+                         @PathVariable Long id,
+                         @RequestBody Map<String, String> body,
+                         Authentication authentication) {
 
         String answer = body.get("answer");
-
         if (answer == null || answer.trim().isEmpty()) {
-            return ResponseEntity.badRequest().build();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "답변 내용을 입력해주세요.");
         }
 
         complaintService.respond(id, answer, authentication);
+    }
 
-        return ResponseEntity.ok("답변 등록 완료");
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/complete")
+    public void complete(@PathVariable Long id, Authentication authentication) {
+        complaintService.complete(id, authentication);
     }
 }

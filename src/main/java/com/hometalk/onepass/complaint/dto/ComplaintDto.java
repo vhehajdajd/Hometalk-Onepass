@@ -1,6 +1,7 @@
 package com.hometalk.onepass.complaint.dto;
 
 import com.hometalk.onepass.complaint.entity.Complaint;
+import com.hometalk.onepass.complaint.entity.ComplaintStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -22,7 +23,7 @@ public class ComplaintDto {
     private String content;
     private Boolean secret;       // 비밀글 여부
     private Integer viewCount;
-    private String status;
+    private ComplaintStatus status;
     private String answer;
 
     private Boolean canView;   // 작성자 or ADMIN
@@ -34,6 +35,8 @@ public class ComplaintDto {
 
     // 상세 조회 시 파일 목록을 화면에 뿌려주기 위한 필드 추가
     private List<ComplaintAttachmentDto> attachments;
+
+    private List<ComplaintAnswerDto> answers;
 
     public static ComplaintDto fromEntity(Complaint complaint) {
 
@@ -52,8 +55,12 @@ public class ComplaintDto {
                 .updatedAt(complaint.getUpdatedAt())
                 .attachments(complaint.getAttachments() != null ?
                         complaint.getAttachments().stream()
-                        .map(ComplaintAttachmentDto::from)
-                        .collect(Collectors.toList()) : null)
+                                .map(ComplaintAttachmentDto::from)
+                                .collect(Collectors.toList()) : null)
+                .answers(complaint.getAnswers() != null ?
+                        complaint.getAnswers().stream()
+                                .map(ComplaintAnswerDto::from)
+                                .collect(Collectors.toList()) : null)
                 .build();
 
         return dto;
@@ -64,9 +71,9 @@ public class ComplaintDto {
                 .title(this.title)
                 .content(this.content)
                 .category(this.category)
-                .secret(Boolean.TRUE.equals(this.secret))
+                .secret(this.secret != null ? this.secret : false)
                 .viewCount(this.viewCount != null ? this.viewCount : 0)
-                .status(this.status != null ? this.status : "접수완료") // 기본값 세팅
+                .status(this.getStatus())
                 .build();
     }
 }

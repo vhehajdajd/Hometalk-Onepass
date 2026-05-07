@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -35,6 +36,20 @@ public class ComplaintPageController {
 
         model.addAttribute("paging", paging != null ? paging : Page.empty(pageable));
         return "inquiry/complaintList";
+    }
+
+    // 내 민원 목록
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/my")
+    public String getMyComplaints(
+            Model model,
+            Authentication authentication,
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Long userId = complaintService.getLoginUserId(authentication);
+        Page<ComplaintDto> paging = complaintService.findByUserId(userId, pageable);
+        model.addAttribute("paging", paging);
+        return "inquiry/MyComplaintList";
     }
 
     @GetMapping("/write")

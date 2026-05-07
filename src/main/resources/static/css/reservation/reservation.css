@@ -198,8 +198,8 @@
 
 /* 2. 승인대기 (PENDING) - 파스텔 핑크/살구 */
 .status-waiting, .status-pending, .badge-pending {
-    background-color: #FFD1DC !important;
-    color: #444444 !important;
+    background-color: #FFE5E5 !important;
+    color: #FF6B6B !important;
 }
 
 /* 3. 취소됨 (CANCELED) - 라이트 그레이 */
@@ -207,6 +207,10 @@
     background-color: #E5E4E2 !important;
     color: #64748b !important;
 }
+
+.status-check { background-color: #FFF4E0; color: #FFAD06; }        /* 확인 */
+.status-processing { background-color: #E3F2FD; color: #2196F3; }   /* 처리중 */
+.status-finished { background-color: #E8F5E9; color: #4CAF50;}      /* 처리완료 */
 
 /* 시설/카테고리용 기본 배지 */
 .category-badge {

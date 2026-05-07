@@ -1,0 +1,376 @@
+/* =============================================
+   parking-resident.css
+   입주자 전용 스타일
+   ============================================= */
+
+/* ---------- 차량 등록 ---------- */
+.vehicle-type-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.type-btn {
+    padding: 8px 20px;
+    background-color: #ffffff;
+    color: var(--color-text);
+    border: 1.5px solid var(--color-border);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.type-btn:hover  { border-color: var(--color-sub); color: var(--color-sub); }
+.type-btn.active { background-color: var(--color-btn); color: #ffffff; border-color: var(--color-btn); font-weight: 600; }
+
+.form-group:has(.file-upload-box) {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    margin-bottom: 0;
+    margin-top: 20px;
+    gap: 8px;
+}
+
+.form-group:has(.file-upload-box) .hint    { margin: 5px 5px 20px 5px; }
+.form-group:has(.file-upload-box) .error-msg { min-height: 0; display: none; }
+
+.form-group:has(.vehicle-type-group) {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    gap: 2px;
+}
+
+.form-group:has(.vehicle-type-group) .hint      { margin: 10px 5px 20px 5px; }
+.form-group:has(.vehicle-type-group) .error-msg { min-height: 0; line-height: 0; }
+
+/* ---------- 파일 업로드 ---------- */
+.file-upload-box {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 0;
+}
+
+#fileTable { width: 100%; border-collapse: collapse; }
+
+#fileTable thead tr { background-color: #f5f7fa; border-bottom: 1px solid var(--color-border); }
+
+#fileTable thead th {
+    padding: 10px 14px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-main);
+    text-align: left;
+}
+
+#fileTable thead th:first-child { width: 40px; text-align: center; }
+
+#fileTable tbody tr { border-bottom: 1px solid var(--color-border); transition: background 0.15s; }
+#fileTable tbody tr:last-child { border-bottom: none; }
+#fileTable tbody tr:hover { background: #f9fafb; }
+
+#fileTable tbody td { padding: 10px 14px; font-size: 15px; color: var(--color-text); vertical-align: middle; }
+#fileTable tbody td:first-child { text-align: center; }
+
+.file-actions {
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px;
+    background-color: #fafafa;
+    border-top: 1px solid var(--color-border);
+}
+
+.file-actions button {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: opacity var(--transition);
+}
+
+#addFileBtn    { background-color: var(--color-btn); color: #ffffff; border: none; }
+#removeFileBtn { background-color: #ffffff; color: #666; border: 1px solid var(--color-border); }
+#removeAllFileBtn { background-color: #ffffff; color: var(--color-btn-point); border: 1px solid var(--color-btn-point); }
+.file-actions button:hover { opacity: 0.82; }
+
+/* ---------- 반려 사유 ---------- */
+.reject-reason-box {
+    background-color: #fff5f4;
+    border: 1px solid #fcd5ce;
+    border-left: 4px solid var(--color-btn-point);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 28px;
+}
+
+.reject-reason-box h3 { margin: 0 0 8px 0; font-size: 13px; font-weight: 700; color: var(--color-btn-point); }
+.reject-reason-box p  { text-align: left; font-size: 14px; color: var(--color-text); line-height: 1.7; }
+
+/* ---------- 방문 예약 ---------- */
+.page-header {
+    position: relative;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+}
+
+.page-header::after {
+    content: '';
+    display: block;
+    width: 100%;
+    border-bottom: 2px solid #f1f5f9;
+    margin-top: 16px;
+}
+
+.page-header { margin: 0; padding: 0; border-bottom: none; }
+
+.page-header button {
+    padding: 10px 20px;
+    background-color: var(--color-btn);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity var(--transition);
+    text-align: right;
+    margin-left: auto;
+    display: block;
+}
+
+.page-header button:hover { opacity: 0.88; }
+
+#reservationTable { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+
+#reservationTable thead th {
+    padding: 10px 16px;
+    border-bottom: 2px solid var(--color-main);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    text-align: center;
+    background: #ffffff;
+}
+
+#reservationTable tbody tr { border-bottom: 1px solid var(--color-border); transition: background 0.15s; text-align: center; }
+#reservationTable tbody tr:last-child { border-bottom: none; }
+#reservationTable tbody tr:hover { background: #f5f8ff; }
+
+#reservationTable tbody td { padding: 14px 16px; font-size: 15px; color: var(--color-text); vertical-align: middle; }
+#reservationTable tbody td:nth-child(1) { font-size: 16px; font-weight: 600; }
+#reservationTable tbody td:nth-child(3),
+#reservationTable tbody td:nth-child(4) { color: #aaa; font-size: 15px; }
+#reservationTable tbody td[colspan]     { text-align: center; padding: 48px 16px; color: #aaa; font-size: 15px; }
+
+#reservationTable tbody td:last-child { display: table-cell; text-align: center; vertical-align: middle; }
+
+#reservationTable tbody td button {
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: opacity var(--transition);
+}
+
+#reservationTable tbody td button:first-child { background-color: var(--color-main); color: #ffffff; border: none; }
+#reservationTable tbody td button.cancel-btn  { background-color: #ffffff; color: var(--color-btn-point); border: 1px solid var(--color-btn-point); }
+#reservationTable tbody td button:hover { opacity: 0.82; }
+
+.status { display: inline-block; min-width: 70px; padding: 4px 10px; border-radius: 20px; font-size: 14px; font-weight: 600; text-align: center; }
+.status.reserved  { background-color: #e8f0fe; color: var(--color-sub); }
+.status.entered   { background-color: #e6f4f5; color: #2a9da4; }
+.status.cancelled { background-color: #f1f1f1; color: #999; }
+
+/* ---------- 방문 예약 등록/수정 ---------- */
+.datetime-group { display: flex; gap: 8px; align-items: center; }
+
+.datetime-group select {
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    color: var(--color-text);
+    background-color: #ffffff;
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--transition);
+}
+
+.datetime-group select:focus { border-color: var(--color-sub); box-shadow: 0 0 0 3px rgba(60, 106, 188, 0.1); }
+
+#submitBtn {
+    padding: 10px 20px;
+    background-color: var(--color-main);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+#submitBtn:hover    { opacity: 0.88; }
+#submitBtn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+/* ---------- 티켓 등록 ---------- */
+.vehicle-info-box {
+    background-color: #f8f9fb;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+}
+
+.vehicle-info-box p             { margin: 0 0 8px 0; font-size: 15px; color: var(--color-text); display: flex; gap: 16px; }
+.vehicle-info-box p:last-child  { margin-bottom: 0; }
+.vehicle-info-box .label        { font-weight: 600; color: var(--color-main); width: 70px; flex-shrink: 0; }
+
+.warning { font-size: 13px; color: var(--color-btn-point); font-weight: 600; }
+
+#unregisteredBox { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+
+#unregisteredBox button {
+    padding: 5px 12px;
+    background-color: #ffffff;
+    color: var(--color-btn-point);
+    border: 1px solid var(--color-btn-point);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+#unregisteredBox button:hover { background-color: var(--color-btn-point); color: #ffffff; }
+
+.time-calc-box {
+    display: flex;
+    gap: 16px;
+    background-color: #f0f5ff;
+    border: 1px solid #d0dff8;
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+}
+
+.time-item { display: flex; flex-direction: column; gap: 4px; flex: 1; text-align: center; }
+.time-label { font-size: 15px; color: #888; font-weight: 600; }
+.time-value { font-size: 16px; font-weight: 700; color: var(--color-main); }
+
+.ticket-section { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 20px; }
+.ticket-section > label { font-size: 15px; font-weight: 700; color: var(--color-main); display: block; margin-bottom: 4px; }
+
+.ticket-list { display: flex; flex-direction: column; gap: 12px; margin: 12px 0; }
+
+.ticket-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: #fafafa;
+}
+
+.ticket-item label  { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--color-text); cursor: pointer; width: 80px; }
+.ticket-item span   { font-size: 12px; color: #888; flex: 1; }
+
+.ticket-item button {
+    padding: 4px 10px;
+    background-color: #ffffff;
+    color: var(--color-btn-point);
+    border: 1px solid var(--color-btn-point);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.ticket-item button:hover { background-color: var(--color-btn-point); color: #ffffff; }
+
+.ticket-apply-group { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+
+.ticket-apply-group button {
+    padding: 6px 12px;
+    background-color: #ffffff;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.ticket-apply-group button:hover { background-color: #f0f0f0; }
+.ticket-apply-group span { font-size: 16px; font-weight: 700; color: var(--color-main); min-width: 24px; text-align: center; }
+
+#applyBtn {
+    padding: 8px 20px;
+    background-color: var(--color-btn);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: opacity var(--transition);
+}
+
+#applyBtn:hover    { opacity: 0.88; }
+#applyBtn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+/* ---------- 방문 차량 관리 ---------- */
+#searchResult { margin: 8px 0 16px 0; }
+
+#vehicleList { list-style: none; padding: 0; margin: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
+#vehicleList li { padding: 12px 16px; border-bottom: 1px solid var(--color-border); transition: background 0.15s; }
+#vehicleList li:last-child { border-bottom: none; }
+#vehicleList li:hover { background: #f5f8ff; }
+#vehicleList li label { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--color-text); cursor: pointer; width: auto; }
+#vehicleList li input[type="radio"] { cursor: pointer; accent-color: var(--color-main); }
+
+#registerBtn {
+    padding: 10px 20px;
+    background-color: var(--color-main);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+#registerBtn:hover    { background-color: var(--color-sub); }
+#registerBtn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+/* ---------- 주차 이용 안내 ---------- */
+.guide-section {
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.guide-section h3 { font-size: 18px; font-weight: 700; color: var(--color-main); margin: 40px 0 10px 0; padding-bottom: 12px; border-bottom: 1px solid var(--color-border); }
+
+.guide-content h4       { font-size: 14px; font-weight: 700; color: var(--color-sub); margin: 35px 0 10px 0; }
+.guide-content h4:first-child { margin-top: 0; }
+.guide-content ol,
+.guide-content ul       { margin: 0 0 12px 0; padding-left: 20px; }
+.guide-content li       { font-size: 14px; color: var(--color-text); line-height: 1.8; }
+.guide-content strong   { color: var(--color-main); font-weight: 700; }

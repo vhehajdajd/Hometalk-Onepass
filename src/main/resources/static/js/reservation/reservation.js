@@ -122,7 +122,7 @@ async function confirmCancel(id, isAdmin = false) {
     if (!confirm(msg)) return;
 
     try {
-        const response = await fetch(`/api/reservations/${id}/cancel`, {
+        const response = await fetch(`/hometop/api/reservations/${id}/cancel`, {
             method: 'PATCH',
             headers: getCsrfHeaders()
         });

@@ -19,6 +19,7 @@
     border-radius: 4px;
     background: var(--color-unpaid-bg);
     color: var(--color-unpaid-text);
+    text-align: center;
 }
 .badge-paid {
     display: inline-block;
@@ -27,4 +28,5 @@
     border-radius: 4px;
     background: var(--color-paid-bg);
     color: var(--color-paid-text);
+    text-align: center;
 }

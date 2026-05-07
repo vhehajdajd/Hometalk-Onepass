@@ -39,6 +39,22 @@
             width: 100%;
         }
 
+        .remember-row {
+            width: 250px;
+            margin: 2px auto 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #334155;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .remember-row input {
+            width: auto;
+            padding: 0;
+        }
+
         input {
             width: 250px;
             padding: 10px;
@@ -114,6 +130,10 @@
         <div class="input-group">
             <input type="password" name="password" placeholder="🔒️ 비밀번호를 입력하세요.">
         </div>
+        <label class="remember-row">
+            <input type="checkbox" name="remember-me" id="remember-me">
+            <span>자동 로그인</span>
+        </label>
         <button type="submit">로그인</button>
     </form>
 
@@ -126,17 +146,17 @@
         <p>소셜 로그인</p>
         <div class="social-login-list">
             <div class="kakao-btn-container">
-                <a th:href="@{/oauth2/authorization/kakao}">
+                <a th:href="@{/oauth2/authorization/kakao}" class="social-login-link">
                     <img th:src="@{/auth/loginimage/kakao_login.png}" alt="카카오 로그인">
                 </a>
             </div>
             <div class="naver-btn-container">
-                <a th:href="@{/oauth2/authorization/naver}">
+                <a th:href="@{/oauth2/authorization/naver}" class="social-login-link">
                     <img th:src="@{/auth/loginimage/naver_login.png}" alt="네이버 로그인">
                 </a>
             </div>
             <div class="google-btn-container">
-                <a th:href="@{/oauth2/authorization/google}">
+                <a th:href="@{/oauth2/authorization/google}" class="social-login-link">
                     <img th:src="@{/auth/loginimage/google_login.png}" alt="구글 로그인">
                 </a>
             </div>
@@ -148,6 +168,21 @@
         // 안내 후 현재 path 로 다시 이동해 URL 을 정리한다.
         alert("아이디 또는 비밀번호가 일치하지 않습니다.");
         window.location.href = window.location.pathname;
+    </script>
+    <script>
+        document.querySelectorAll('.social-login-link').forEach(function (link) {
+            link.addEventListener('click', function (event) {
+                const rememberMe = document.getElementById('remember-me');
+                if (!rememberMe || !rememberMe.checked) {
+                    return;
+                }
+
+                event.preventDefault();
+                const url = new URL(link.href, window.location.origin);
+                url.searchParams.set('remember-me', 'on');
+                window.location.href = url.toString();
+            });
+        });
     </script>
 </div>
 

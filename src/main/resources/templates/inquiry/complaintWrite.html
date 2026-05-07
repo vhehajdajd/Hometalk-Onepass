@@ -19,7 +19,7 @@
                     <!-- 비밀글 설정 -->
                     <div class="form-group mb-md">
                         <label>
-                            <input type="checkbox" name="secret" value="true">
+                            <input type="checkbox" id="secretCheckbox" name="secret" value="true">
                             비밀글 설정
                         </label>
                         <p class="text-muted">* 비밀글은 작성자와 관리자만 볼 수 있습니다.</p>
@@ -131,8 +131,11 @@
         const form = document.getElementById("writeForm");
         const formData = new FormData(form);
 
-        formData.delete("files");
+        formData.delete("secret");
+        const secretCheckbox = document.getElementById('secretCheckbox');
+        formData.append('secret', secretCheckbox.checked);
 
+        formData.delete("files");
         selectedFiles.forEach(file => {
             formData.append("files", file);
         });
