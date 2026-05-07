@@ -71,8 +71,7 @@ public class Complaint {
         }
     }
 
-    public void addResponse(String response) {      // 답변 등록 시
-        this.answer = response;
+    public void addResponse() {
         this.status = ComplaintStatus.PROCESSING;
     }
 
@@ -88,4 +87,10 @@ public class Complaint {
     public boolean isSecret() {
         return Boolean.TRUE.equals(this.secret);
     }
+
+    @Builder.Default
+    @OneToMany(mappedBy = "complaint",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private List<ComplaintAnswer> answers = new ArrayList<>();
 }
