@@ -209,6 +209,10 @@
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 
+<script th:inline="javascript">
+    window.IS_LOGGED_IN = [[${#authorization.expression('isAuthenticated()')}]];
+    window.IS_ADMIN = [[${#authorization.expression('hasRole(''ADMIN'')')}]];
+</script>
 <script th:src="@{/js/home/home.js}"></script>
 </body>
 </html>

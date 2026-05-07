@@ -76,6 +76,12 @@ public class StaffExitService {
         int totalMinutes = (int) Duration.between(
                 parkingLog.getEntryTime(), LocalDateTime.now()).toMinutes();
 
+        // 10분 이내는 무료 출차
+        if (totalMinutes <= 10) {
+            parkingLog.exit(totalMinutes, totalMinutes);
+            return;
+        }
+
         // 입주자 차량은 티켓 체크 없이 바로 출차
         if (parkingLog.getEntryType() == ParkingLog.EntryType.NORMAL) {
             parkingLog.exit(totalMinutes, totalMinutes);

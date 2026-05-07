@@ -259,7 +259,7 @@
       })
       .catch(err => {
         console.error(err);
-        searchError.textContent = err.message || '조회 중 오류가 발생했습니다.';
+        searchError.textContent = err.message || '조회된 차량이 없습니다.';
         document.getElementById('searchResult').style.display = 'none';
       });
   }

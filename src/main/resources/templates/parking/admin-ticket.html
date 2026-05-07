@@ -82,7 +82,11 @@
             <div style="display: flex; align-items: center; gap: 12px;">
               <div class="ticket-apply-group" style="margin-top: 0;">
                 <button type="button" onclick="decreaseCount()">-</button>
-                <span id="countDisplay">1</span>
+                <input type="number" id="countDisplay" value="1" min="1" max="1000"
+                       style="width: 50px; text-align: center; font-size: 16px; font-weight: 700;
+                              color: var(--color-main); border: 1px solid var(--color-border);
+                              border-radius: var(--radius-sm); padding: 4px 8px;"
+                       oninput="handleCountInput(this)">
                 <button type="button" onclick="increaseCount()">+</button>
               </div>
               <button type="button" class="pk-btn pk-btn-primary" id="issueBtn" onclick="issueTicket(this)">발급</button>
@@ -112,7 +116,7 @@
   function increaseCount() {
       if (count < MAX_COUNT) {
           count++;
-          document.getElementById('countDisplay').textContent = count;
+          document.getElementById('countDisplay').value = count;
           document.getElementById('totalCount').value = count;
       }
   }
@@ -120,9 +124,18 @@
   function decreaseCount() {
       if (count > 1) {
           count--;
-          document.getElementById('countDisplay').textContent = count;
+          document.getElementById('countDisplay').value = count;
           document.getElementById('totalCount').value = count;
       }
+  }
+
+  function handleCountInput(input) {
+      let val = parseInt(input.value);
+      if (isNaN(val) || val < 1) val = 1;
+      if (val > MAX_COUNT) val = MAX_COUNT;
+      input.value = val;
+      count = val;
+      document.getElementById('totalCount').value = count;
   }
 
   function issueMonthly(btn) {
@@ -193,7 +206,7 @@
               document.getElementById('householdSelect').value = '';
               document.querySelectorAll('input[name="ticketType"]').forEach(r => r.checked = false);
               count = 1;
-              document.getElementById('countDisplay').textContent = 1;
+              document.getElementById('countDisplay').value = 1;
               document.getElementById('totalCount').value = 1;
           })
           .catch(err => {

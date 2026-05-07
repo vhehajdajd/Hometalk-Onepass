@@ -1,15 +1,13 @@
 const CTX = '';
 
-window.IS_LOGGED_IN = false;
-
 const SERVICE_URLS = {
   notice:    CTX + '/hometop/notice',
   schedule:  CTX + '/hometop/schedule',
   billing:   CTX + '/hometop/billing',
   parking:   CTX + '/hometop/parking/visit',
   community: CTX + '/hometop/community/square/all',
-  civil:     CTX + '/hometop/civil',
-  facility:  CTX + '/hometop/reservation'
+  civil:     CTX + '/hometop/inquiries/list',
+  facility:  window.IS_ADMIN ? CTX + '/hometop/reservation/admin/status' : CTX + '/hometop/reservation/apply'
 };
 
 const API_ENDPOINTS = {
@@ -102,13 +100,14 @@ function renderNotices(list) {
   }
   const BADGE_LABEL = { safety: '안전', facility: '시설', urgent: '긴급', normal: '일반', notice: '공지' };
   el.innerHTML = list.map(function (n) {
-    const pin      = n.isPinned ? '📌 ' : '';
+    const pin      = '';
     const badgeKey = String(n.badge || 'notice').toLowerCase();
     const badgeTxt = BADGE_LABEL[badgeKey] || '공지';
+    const title = n.title.length > 10 ? n.title.slice(0, 10) + '.....' : n.title;
     return (
       '<li class="notice-item" onclick="goService(\'notice\')">' +
         '<span class="badge badge-' + badgeKey + '">' + badgeTxt + '</span>' +
-        '<span class="notice-title">' + pin + escHtml(n.title) + '</span>' +
+        '<span class="notice-title">' + pin + escHtml(title) + '</span>' +
         '<span class="notice-date">' + formatDate(n.createdAt) + '</span>' +
       '</li>'
     );
@@ -157,10 +156,11 @@ function renderCommunity(list) {
   el.innerHTML = list.map(function (c) {
     const boardCode = escHtml(String(c.boardCode || 'square'));
     const category  = escHtml(c.categoryName || '일반');
+    const title = c.title.length > 15 ? c.title.slice(0, 15) + '.....' : c.title;
     return (
       '<li class="community-item" onclick="goCommunity(\'' + boardCode + '\')">' +
         '<span class="community-cat">[' + category + ']</span>' +
-        '<span class="community-title">' + escHtml(c.title) + '</span>' +
+        '<span class="community-title">' + escHtml(title) + '</span>' +
       '</li>'
     );
   }).join('');
