@@ -1,15 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>수동 입차</title>
-  <meta name="_csrf" th:content="${_csrf.token}">
-  <meta name="_csrf_header" th:content="${_csrf.headerName}">
-  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
-  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
-  <link rel="stylesheet" th:href="@{/css/parking/parking-staff.css}">
-</head>
+<head th:replace="~{fragments/head :: head('수동 입차')}"></head>
+<link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+<link rel="stylesheet" th:href="@{/css/parking/parking-staff.css}">
 <body>
 <!-- ════════ 상단 네브바 ════════ -->
 <nav class="staff-navbar">
