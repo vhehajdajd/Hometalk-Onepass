@@ -59,6 +59,7 @@ public class SecurityConfig {
                                 "/images/**"
                         ).permitAll()
 
+
                         // 2. 그 외의 모든 요청은 인증(로그인)이 필요함
                         .anyRequest().authenticated()
                 )

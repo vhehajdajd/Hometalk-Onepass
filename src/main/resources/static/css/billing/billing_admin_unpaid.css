@@ -1,16 +1,8 @@
 /* ═══════════════════════════════════════
    미납 세대 관리 페이지 전용 스타일
-   파일 위치: static/billing/css/billing_admin_unpaid.css
-   공통: common.css 함께 로드
+   파일 위치: static/css/billing/billing_admin_unpaid.css
+   공통: billing_common.css 함께 로드
 ═══════════════════════════════════════ */
-
-/* ── 페이지 타이틀 ── */
-.page-title {
-    font-size: 30px;
-    font-weight: 600;
-    color: var(--color-main);
-    margin-bottom: 20px;
-}
 
 /* ── 통계 카드 ── */
 .stat-grid {
@@ -22,11 +14,11 @@
 .stat-card {
     background: #f1f5f9;
     border: none;
-    border-radius: 0;
+    border-radius: 4px;
     padding: 16px 18px;
 }
-.stat-label { font-size: 12px; color: var(--color-text-muted); margin-bottom: 8px; }
-.stat-value { font-size: 26px; font-weight: 600; color: var(--color-text); line-height: 1; }
+.stat-label        { font-size: 12px; color: var(--color-text-muted); margin-bottom: 8px; }
+.stat-value        { font-size: 26px; font-weight: 600; color: var(--color-text); line-height: 1; }
 .stat-value-amount { font-size: 20px; font-weight: 600; color: var(--color-btn-point); }
 .stat-value.warn   { color: var(--color-btn-point); }
 .stat-value.accent { color: var(--color-sub); }
@@ -40,7 +32,7 @@
 }
 .stat-section-label:first-of-type { margin-top: 0; }
 
-/* ── 토글 라벨 ── */
+/* ── 전체 누적 토글 라벨 ── */
 .stat-toggle-label {
     cursor: pointer;
     user-select: none;
@@ -51,22 +43,15 @@
 .stat-toggle-label:hover { color: var(--color-sub); }
 .stat-toggle-icon { font-size: 10px; color: var(--color-text-muted); }
 
-/* ── 아랫줄 카드 ── */
-.stat-grid-global { grid-template-columns: repeat(3, 1fr); }
+/* ── 전체 누적 카드 (아랫줄) ── */
+.stat-grid-global      { grid-template-columns: repeat(3, 1fr); }
 .stat-grid-global-wrap { margin-bottom: 16px; }
-.stat-card-sm { padding: 10px 14px; }
-.stat-label-sm { font-size: 11px; color: var(--color-text-muted); margin-bottom: 4px; }
-.stat-value-sm { font-size: 18px; font-weight: 600; color: var(--color-text); }
-.stat-value-sm.warn { color: var(--color-btn-point); }
+.stat-card-sm          { padding: 10px 14px; }
+.stat-label-sm         { font-size: 11px; color: var(--color-text-muted); margin-bottom: 4px; }
+.stat-value-sm         { font-size: 18px; font-weight: 600; color: var(--color-text); }
+.stat-value-sm.warn    { color: var(--color-btn-point); }
 
-/* ── 필터 위 구분선 ── */
-.filter-row {
-    border-top: 1px solid var(--color-border-light);
-    padding-top: 16px;
-}
-
-
-/* ── 처리 버튼 ── */
+/* ── 납부완료 처리 버튼 ── */
 .btn-process {
     padding: 6px 10px;
     font-size: 12px;
@@ -108,7 +93,7 @@
 .page-btn.active   { background: var(--color-btn-point); color: #fff; border-color: var(--color-btn-point); }
 .page-btn.disabled { opacity: .35; cursor: not-allowed; }
 
-/* ── 팝업 내용 ── */
+/* ── 납부완료 팝업 내용 ── */
 .confirm-unit  { font-size: 16px; font-weight: 600; color: var(--color-main); margin-bottom: 6px; }
 .confirm-month { font-size: 13px; color: var(--color-text-muted); margin-bottom: 4px; }
 
@@ -131,7 +116,7 @@
 }
 .bulk-actions { display: flex; gap: 8px; }
 
-/* ── 2단계 팝업 ── */
+/* ── 삭제 danger 버튼 ── */
 .confirm-title-danger { color: #d83c2d; }
 .btn-danger {
     padding: 6px 10px;
