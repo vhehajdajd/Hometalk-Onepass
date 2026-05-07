@@ -158,6 +158,13 @@ public class NotificationService {
      */
     @Transactional
     public void deleteByTypeAndUser(NotificationType type, Long userId) {
+        // 1. notification_read 먼저 삭제 (FK 제약 해제)
+        List<Long> notificationIds = notificationRepository
+                .findIdsByTypeAndUserId(type, userId);
+        if (!notificationIds.isEmpty()) {
+            notificationReadRepository.deleteByNotificationIdIn(notificationIds);
+        }
+        // 2. notification 삭제
         notificationRepository.deleteByTypeAndUserId(type, userId);
     }
 

@@ -57,6 +57,9 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
     // 이번 달 청구서 단건
     Optional<Billing> findByHousehold_IdAndBillingMonth(Long householdId, String billingMonth);
 
+    // 가장 최근 고지서 1건 조회 (billingMonth 내림차순)
+    Optional<Billing> findTopByHousehold_IdOrderByBillingMonthDesc(Long householdId);
+
     // 미납 건수
     int countByHousehold_IdAndStatus(Long householdId, BillingStatus status);
 
@@ -183,6 +186,15 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             @Param("yearTo")   String yearTo,
             @Param("month")    String month
     );
+
+    // 통계 - 연도만 선택 시 해당 연도 전체 합산
+    @Query("SELECT SUM(b.totalAmount) FROM Billing b " +
+            "WHERE b.billingMonth >= :from AND b.billingMonth <= :to " +
+            "AND b.status = :status")
+    Long sumTotalAmountByYearAndStatus(
+            @Param("from") String from,
+            @Param("to") String to,
+            @Param("status") BillingStatus status);
 
     // BillingRepository.java
     List<Billing> findAllByHouseholdIdOrderByStatusDescBillingMonthAsc(Long householdId);

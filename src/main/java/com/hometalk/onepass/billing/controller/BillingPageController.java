@@ -37,7 +37,7 @@ public class BillingPageController {
     @GetMapping("/api/billing/admin/dashboard-summary")
     @ResponseBody
     public ResponseEntity<AdminDashboardResponse> getDashboardSummary() {
-        AdminDashboardResponse summary = billingService.getAdminDashboardSummary();
+        AdminDashboardResponse summary = billingService.getAdminUnpaidSummary();
         return ResponseEntity.ok(summary);
     }
 

@@ -412,13 +412,15 @@ function openPreview(hid, month) {
     const row = validRows.find(r => r.household_id === hid && r.billing_month === month);
     if (!row || row.valid !== '정상') return;
 
+    // 익월 10일
     const [y, m] = month.split('-').map(Number);
-    const last   = new Date(y, m, 0).getDate();
+    const nextMonth = m === 12 ? 1 : m + 1;
+    const nextYear  = m === 12 ? y + 1 : y;
 
     document.getElementById('modalHeaderTitle').textContent =
         `고지서 미리보기 — ${row.unit} (${month})`;
     document.getElementById('modalPeriod').textContent =
-        `부과월: ${month} · 납부기한: ${month.replace('-','.')}.${String(last).padStart(2,'0')}`;
+        `부과월: ${month} · 납부기한: ${nextYear}.${String(nextMonth).padStart(2,'0')}.10`;
     document.getElementById('modalRows').innerHTML = row.details.length
         ? row.details.map(d =>
             `<div class="bill-row">
