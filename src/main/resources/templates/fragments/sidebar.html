@@ -24,7 +24,7 @@
            th:classappend="${currentPage == 'notice'} ? ' active' : ''">공지사항</a>
         <a class="sidebar-item" th:href="@{/schedule}"
            th:classappend="${currentPage == 'schedule'} ? ' active' : ''">일정</a>
-        <a class="sidebar-item" th:href="@{/hometop/inquiries/list}"
+        <a class="sidebar-item" th:href="@{/inquiries/list}"
            th:classappend="${currentPage == 'inquiry'} ? ' active' : ''">문의</a>
         <a class="sidebar-item" th:href="@{/reservation/apply}"
            th:classappend="${currentPage == 'reservation'} ? ' active' : ''">시설 예약</a>
@@ -42,7 +42,7 @@
            th:classappend="${currentPage == 'notice'} ? ' active' : ''">공지사항</a>
         <a class="sidebar-item" th:href="@{/schedule}"
            th:classappend="${currentPage == 'schedule'} ? ' active' : ''">일정</a>
-        <a class="sidebar-item" th:href="@{/hometop/inquiries/list}"
+        <a class="sidebar-item" th:href="@{/inquiries/list}"
            th:classappend="${currentPage == 'inquiry'} ? ' active' : ''">문의</a>
         <a class="sidebar-item" th:href="@{/reservation/admin/status}"
            th:classappend="${currentPage == 'reservation'} ? ' active' : ''">시설 예약</a>
@@ -66,6 +66,20 @@
         </div>
         <a class="s-logout" th:href="@{/auth/logout}">로그아웃</a>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var currentPath = window.location.pathname;
+            document.querySelectorAll('.category-item').forEach(function(item) {
+                var href = item.getAttribute('href');
+                if (href && href !== '#') {
+                    if (currentPath === href) {
+                        item.classList.add('active');
+                    }
+                }
+            });
+        });
+    </script>
 </aside>
 
 </body>

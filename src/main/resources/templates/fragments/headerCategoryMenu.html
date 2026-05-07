@@ -12,7 +12,7 @@
     <a class="category-item" th:href="@{/parking/vehicle}">차량 목록</a>
     <a class="category-item" th:href="@{/parking/vehicle/register}">차량 등록</a>
     <a class="category-item" th:href="@{/parking/visit}">방문 차량 예약</a>
-    <a class="category-item" th:href="@{/parking/logs}">방문자 관리</a>
+    <a class="category-item" th:href="@{/parking/unregistered}">방문자 관리</a>
     <a class="category-item" th:href="@{/parking/ticket}">티켓 등록</a>
     <a class="category-item" th:href="@{/parking/logs}">월별 주차 조회</a>
     <a class="category-item" th:href="@{/parking/guide}">주차이용안내</a>
@@ -25,6 +25,13 @@
     <a class="category-item" th:href="@{/admin/parking/logs}">전체 주차 조회</a>
 </div>
 
+<!-- ── 경비 주차 ── -->
+<div th:fragment="staffParking" class="category-bar">
+    <a class="category-item" th:href="@{/staff/entry}">입차</a>
+    <a class="category-item" th:href="@{/staff/manual-entry}">수동입차</a>
+    <a class="category-item" th:href="@{/staff/exit}">출차</a>
+</div>
+
 <!-- ── 관리비 - 입주민 ── -->
 <div th:fragment="billing" class="category-bar">
     <a class="category-item" th:href="@{/billing}">관리비 조회</a>
@@ -32,9 +39,9 @@
 
 <!-- ── 관리비 - 관리자 ── -->
 <div th:fragment="billingAdmin" class="category-bar">
-    <a class="category-item" th:href="@{/billing/admin/upload}">고지서 업로드</a>
-    <a class="category-item" th:href="@{/billing/admin/monthly}">월별 관리</a>
     <a class="category-item" th:href="@{/billing/admin/unpaid}">미납 세대 관리</a>
+    <a class="category-item" th:href="@{/billing/admin/monthly}">월별 관리</a>
+    <a class="category-item" th:href="@{/billing/admin/upload}">고지서 업로드</a>
 </div>
 
 <!-- ── 커뮤니티 - 입주민 (동적 구조, 항목 비워둠) ── -->
@@ -54,7 +61,6 @@
 
 <!-- ── 일정 ── -->
 <div th:fragment="schedule" class="category-bar">
-    <a class="category-item" th:href="@{/schedule}"></a>
 </div>
 
 <!-- ── 예약 - 입주민 ── -->
