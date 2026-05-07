@@ -35,12 +35,27 @@
         }
 
         body {
-          padding-top: 56px;
+          padding-top: 50px;
           font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
           background: var(--bg);
           color: var(--text-main);
           min-height: 100vh;
         }
+        /* ── 네브바 버튼 ── */
+.nav-btn {
+    color: #032154;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 16px;
+    transition: all 0.25s ease;
+    border: none;
+    border-radius: 6px;
+}
+.nav-btn:hover {
+    color: #4073C9;
+    text-shadow: 0 0 12px rgba(64, 115, 201, 0.5), 0 0 24px rgba(64, 115, 201, 0.3);
+}
 
         /* ── BANNER ── */
         .banner {
@@ -447,8 +462,8 @@
     border-bottom: 1px solid #E2E8F0;
 ">
     <!-- 로고 -->
-    <a href="/" style="text-decoration: none;">
-        <svg width="72" height="52" viewBox="0 0 90 64">
+    <a href="/" style="text-decoration: none; padding-top: 8px;">
+        <svg width="80" height="58" viewBox="0 0 90 64">
             <circle cx="22" cy="8" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
             <circle cx="45" cy="4" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
             <circle cx="68" cy="8" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
@@ -461,15 +476,9 @@
     </a>
 
     <!-- 버튼 -->
-    <div style="display: flex; align-items: center; gap: 20px;">
-        <a href="#"
-           style="color: #032154; text-decoration: none; font-size: 14px; font-weight: 600;">
-            로그인
-        </a>
-        <a href="#"
-           style="color: #032154; text-decoration: none; font-size: 14px; font-weight: 600;">
-            회원가입
-        </a>
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <a href="/hometop/auth" class="nav-btn">로그인</a>
+        <a href="/hometop/auth/register" class="nav-btn">회원가입</a>
     </div>
 </nav>
 
@@ -675,13 +684,11 @@
       } else {
         showToast('로그인이 필요한 서비스입니다.\n로그인 페이지로 이동합니다.');
         setTimeout(function () {
-          location.href = CTX + '/hometop/login?redirectURL=' + encodeURIComponent(destination);
+          location.href = CTX + '/hometop/auth?redirectURL=' + encodeURIComponent(destination);
         }, 1200);
       }
     }
 
-    // Fix: community URL을 SERVICE_URLS에 동적으로 추가하지 않고
-    //      boardCode를 직접 받는 전용 함수로 분리 → SERVICE_URLS 오염 방지
     function goCommunity(boardCode) {
       const destination = CTX + '/hometop/community/' + encodeURIComponent(boardCode) + '/all';
       if (window.IS_LOGGED_IN) {
@@ -689,7 +696,7 @@
       } else {
         showToast('로그인이 필요한 서비스입니다.\n로그인 페이지로 이동합니다.');
         setTimeout(function () {
-          location.href = CTX + '/hometop/login?redirectURL=' + encodeURIComponent(destination);
+          location.href = CTX + '/hometop/auth?redirectURL=' + encodeURIComponent(destination);
         }, 1200);
       }
     }
