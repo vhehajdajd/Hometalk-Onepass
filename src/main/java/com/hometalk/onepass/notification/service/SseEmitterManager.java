@@ -1,5 +1,6 @@
 package com.hometalk.onepass.notification.service;
 
+import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.notification.entity.NotificationTargetRole;
 
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import com.hometalk.onepass.auth.repository.UserRepository;
 
 import java.io.IOException;
 import java.util.List;
@@ -21,9 +23,11 @@ public class SseEmitterManager {
 
     // 동시성 제어: ConcurrentHashMap + CopyOnWriteArrayList
     private final Map<Long, List<SseEmitter>> emitterMap = new ConcurrentHashMap<>();
+    private final UserRepository userRepository;
 
     private static final long TIMEOUT_MS    = 30 * 60 * 1000L; // 30분
     private static final long HEARTBEAT_MS  = 30 * 1000L;      // 30초
+
 
     // ─────────────────── 연결 등록 ───────────────────
 
@@ -60,13 +64,20 @@ public class SseEmitterManager {
         emitters.forEach(emitter -> sendEvent(emitter, "notification", data));
     }
 
-    public void sendToAll(NotificationTargetRole role, Object data) {
-        // 현재 접속 중인 모든 emitter에 전체 발송
-        // Security 연동 후 role 필터링 추가 예정
-        emitterMap.values().forEach(list ->
-                list.forEach(emitter -> sendEvent(emitter, "notification", data))
-        );
-    }
+        public void sendToAll(NotificationTargetRole role, Object data) {
+            emitterMap.forEach((userId, list) -> {
+                userRepository.findById(userId).ifPresent(user -> {
+                    boolean match = switch (role) {
+                        case ADMIN    -> user.getRole() == User.UserRole.ADMIN;
+                        case RESIDENT -> user.getRole() == User.UserRole.RESIDENT;
+                        default       -> false;
+                    };
+                    if (match) {
+                        list.forEach(emitter -> sendEvent(emitter, "notification", data));
+                    }
+                });
+            });
+        }
 
     private void sendEvent(SseEmitter emitter, String eventName, Object data) {
         try {
