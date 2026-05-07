@@ -4,6 +4,7 @@ import com.hometalk.onepass.parking.entity.VehicleApproval;
 import lombok.Getter;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Getter
 public class VehicleApprovalResponse {
@@ -19,7 +20,7 @@ public class VehicleApprovalResponse {
     private String status;
     private String rejectReason;
     private LocalDateTime processedAt;
-    private LocalDateTime createdAt;
+    private String createdAt;
 
     public VehicleApprovalResponse(VehicleApproval approval) {
         this.approvalId = approval.getApprovalId();
@@ -36,6 +37,8 @@ public class VehicleApprovalResponse {
         this.status = approval.getStatus().name();
         this.rejectReason = approval.getRejectReason();
         this.processedAt = approval.getProcessedAt();
-        this.createdAt = approval.getCreatedAt();
+        this.createdAt = approval.getCreatedAt() != null
+                ? approval.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"))
+                : "-";
     }
 }

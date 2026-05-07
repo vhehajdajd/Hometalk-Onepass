@@ -11,6 +11,25 @@
   <link rel="stylesheet" th:href="@{/css/parking/parking-staff.css}">
 </head>
 <body>
+<!-- ════════ 상단 네브바 ════════ -->
+<nav class="staff-navbar">
+  <a th:href="@{/staff/entry}" class="staff-logo">
+    <svg width="72" height="52" viewBox="0 0 90 64">
+      <circle cx="22" cy="8" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
+      <circle cx="45" cy="4" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
+      <circle cx="68" cy="8" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
+      <path d="M22,10 Q30,19 36,16 Q40,14 45,6 Q50,14 54,16 Q60,19 68,10 L68,19 M22,10 L22,19"
+            fill="none" stroke="#3a5fcd" stroke-width="1.2" stroke-linecap="round"/>
+      <text x="45" y="38" text-anchor="middle" fill="#032154" font-size="14" letter-spacing="4" font-weight="300">FOREST</text>
+      <line x1="10" y1="45" x2="80" y2="45" stroke="#E2E8F0" stroke-width="0.5"/>
+      <text x="45" y="60" text-anchor="middle" fill="#032154" font-size="15" letter-spacing="3" font-weight="700">LIUM</text>
+    </svg>
+  </a>
+  <a th:href="@{/auth/logout}" class="staff-logout-btn">로그아웃</a>
+</nav>
+
+<div class="main-layout">
+  <div class="main-wrapper">
 
 <div class="main-layout">
   <!-- 2. 오른쪽 영역 -->
