@@ -1,3 +1,4 @@
+/*
 package com.hometalk.onepass.admin.controller;
 
 import com.hometalk.onepass.inquiry.dto.InquiryDto;
@@ -20,4 +21,4 @@ public class AdminInquiryApiController {
     public ResponseEntity<List<InquiryDto>> recent(Authentication authentication) {
         return ResponseEntity.ok(inquiryService.findAdminRecent(authentication));
     }
-}
+}*/
