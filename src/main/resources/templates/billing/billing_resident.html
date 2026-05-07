@@ -12,15 +12,11 @@
 </head>
 <body>
 
-<div class="main-layout" style="display:flex; min-height:100vh;">
-
+<div class="main-layout">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='billing')}"></div>
-
-    <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
-
-            <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='billing')}"></div>
-
-        <header class="category-menu-bar">&nbsp;</header>
+    <div class="main-wrapper">
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='billing')}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: billing}"></div>
 
         <div class="container">
 
@@ -35,7 +31,7 @@
                             <th:block th:text="${b.billingMonth}"></th:block>
                             <th:block th:if="!${stat.last}">, </th:block>
                         </span>
-                        관리비가 미납 상태입니다. 관리사무소로 연락 바랍니다. ☎️02-888-9999
+                        관리비가 미납 상태입니다. 관리사무소로 연락 바랍니다. ☎️02-1111-2222
                     </div>
                 </div>
             </div>

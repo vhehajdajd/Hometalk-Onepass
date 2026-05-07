@@ -27,7 +27,7 @@ public class BillingResidentController {
 
     // ─────────────────────────────────────────────
     // TODO: Security 완성 후 CustomUserDetails로 교체
-    private static final Long TEMP_HOUSEHOLD_ID = 7L;
+    private static final Long TEMP_HOUSEHOLD_ID = 2L;
     // ─────────────────────────────────────────────
 
 
