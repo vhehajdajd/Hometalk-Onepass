@@ -308,7 +308,6 @@ ul, li { list-style: none; }
     border-right: none;
 }
 
-/* ★ 헤더: 파란계열 하단 보더, f1f5f9 배경 */
 .data-table thead tr {
     border-bottom: 2px solid var(--color-main);
 }
@@ -318,7 +317,7 @@ ul, li { list-style: none; }
     font-size: 14px;
     font-weight: 600;
     color: var(--color-main);
-    background: var(--color-surface-2);
+    background: var(--color-surface);
     border-left: none;
     border-right: none;
     white-space: nowrap;
