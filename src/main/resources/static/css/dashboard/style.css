@@ -158,7 +158,7 @@ body {
     transition: color 0.2s;
 }
 
-.category-item:hover { color: var(--color-main); }
+.category-item:hover { color: var(--color-main); font-weight: 700;}
 .category-item.active { color: var(--color-main); font-weight: 700; border-bottom: 2px solid var(--color-main); }
 
 /* ── 콘텐츠 ── */
@@ -294,10 +294,10 @@ body {
 
 .dashboard-content .cal-dots { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
 .dashboard-content .cal-dot { width: 4px; height: 4px; border-radius: 50%; }
-.dashboard-content .cal-dot.FACILITY { background: var(--badge-facility-font); }
-.dashboard-content .cal-dot.SAFETY   { background: var(--badge-safety-font); }
-.dashboard-content .cal-dot.NORMAL   { background: var(--badge-normal-font); }
-.dashboard-content .cal-dot.DEFAULT  { background: var(--badge-default-font); }
+.dashboard-content .cal-dot.FACILITY { background: #46d64b; }
+.dashboard-content .cal-dot.SAFETY   { background:  #f8d058; }
+.dashboard-content .cal-dot.NORMAL   { background:  #46d8eb; }
+.dashboard-content .cal-dot.DEFAULT  {background: #8c8c8c; }
 
 /* ── 오늘의 일정 ── */
 .today-schedule-item {
@@ -346,6 +346,7 @@ body {
     display: flex;
     gap: 10px;
     margin-top: 4px;
+    flex: 1;
 }
 
 .parking-stat-box {
@@ -386,9 +387,9 @@ body {
 }
 
 .parking-status { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
-.parking-status.approved { background: var(--badge-facility); color: var(--badge-facility-font); }
-.parking-status.pending  { background: var(--badge-safety);   color: var(--badge-safety-font); }
-.parking-status.rejected { background: #fde8e8; color: #c0392b; }
+.parking-status.badge-approved { background: #e6f4f5; color: #2a9da4; }
+.parking-status.badge-pending  { background: #fff8e1; color: #b8860b; }
+.parking-status.badge-rejected { background: #fdecea; color: var(--color-btn-point); }
 
 .ticket-row {
     display: flex;
