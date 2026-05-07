@@ -15,7 +15,6 @@ import java.util.List;
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
     // 예약 중복 체크
-    // 특정 날짜, 특정 시설의 모든 예약(대기 포함) 조회
     @Query("""
         SELECT r FROM Reservation r 
         WHERE r.facility.id = :facilityId 
@@ -27,7 +26,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                                                   @Param("start") LocalDateTime start,
                                                   @Param("end") LocalDateTime end);
 
-    // 동일 유저의 동일 시설 중복 예약 여부 확인
     @Query("""
         SELECT COUNT(r) > 0 FROM Reservation r 
         WHERE r.user.id = :userId 
@@ -41,16 +39,13 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                                          @Param("start") LocalDateTime start,
                                          @Param("end") LocalDateTime end);
 
-    // [관리자] 전체 예약 목록 조회
     @Override
     @EntityGraph(attributePaths = {"user", "facility"})
     List<Reservation> findAll();
 
-    // [마이페이지] 특정 유저 예약 내역
     @EntityGraph(attributePaths = {"facility"})
     List<Reservation> findByUserIdOrderByIdDesc(Long userId);
 
-    // 캘린더용
     @Query("""
             SELECT r FROM Reservation r
             WHERE r.reservationTime.startTime 
@@ -59,4 +54,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             """)
     List<Reservation> findByMonthRange(@Param("start") LocalDateTime start,
                                        @Param("end") LocalDateTime end);
+
+    // 7일 지난 예약 자동 삭제용
+    void deleteByReservationTime_EndTimeBefore(LocalDateTime cutoffDateTime);
 }

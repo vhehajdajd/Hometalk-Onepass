@@ -43,12 +43,21 @@
                             <span class="badge category-badge" th:text="${list.category}">시설/기술</span>
                         </td>
                         <td class="title-cell">
+
                             <span th:if="${list.secret}" style="margin-right: 4px;">🔒</span>
-                            <a th:if="${!list.secret}"
-                               th:href="@{/complaints/detail/{id}(id=${list.id})}"
-                               th:text="${list.title}"></a>
-                            <span th:if="${list.secret}">비밀글입니다</span>
-                        </td>
+
+                                <!-- 열람 가능 -->
+                                <a th:if="${list.canView}"
+                                   th:href="@{/complaints/detail/{id}(id=${list.id})}"
+                                   th:text="${list.title}">
+                                </a>
+
+                                <!-- 열람 불가 -->
+                                <span th:unless="${list.canView}">
+                                비밀글입니다
+                            </span>
+
+                            </td>
                         <td th:text="${list.userName}"></td>
 
                         <td>

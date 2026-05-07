@@ -36,6 +36,8 @@ public class ComplaintDto {
     // 상세 조회 시 파일 목록을 화면에 뿌려주기 위한 필드 추가
     private List<ComplaintAttachmentDto> attachments;
 
+    private List<ComplaintAnswerDto> answers;
+
     public static ComplaintDto fromEntity(Complaint complaint) {
 
         ComplaintDto dto = ComplaintDto.builder()
@@ -53,8 +55,12 @@ public class ComplaintDto {
                 .updatedAt(complaint.getUpdatedAt())
                 .attachments(complaint.getAttachments() != null ?
                         complaint.getAttachments().stream()
-                        .map(ComplaintAttachmentDto::from)
-                        .collect(Collectors.toList()) : null)
+                                .map(ComplaintAttachmentDto::from)
+                                .collect(Collectors.toList()) : null)
+                .answers(complaint.getAnswers() != null ?
+                        complaint.getAnswers().stream()
+                                .map(ComplaintAnswerDto::from)
+                                .collect(Collectors.toList()) : null)
                 .build();
 
         return dto;
