@@ -19,6 +19,13 @@ public class InquiryController {
 
     private final InquiryService inquiryService;
 
+
+    @GetMapping("/my-recent")
+    public ResponseEntity<List<InquiryDto>> myRecent(Authentication authentication) {
+        return ResponseEntity.ok(inquiryService.findMyRecent(authentication));
+    }
+
+
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<?> registerInquiry(
             @ModelAttribute InquiryDto inquiryDto,

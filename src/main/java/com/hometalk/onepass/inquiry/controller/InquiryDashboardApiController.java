@@ -1,4 +1,3 @@
-/*
 package com.hometalk.onepass.admin.controller;
 
 import com.hometalk.onepass.inquiry.dto.InquiryDto;
@@ -13,7 +12,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/inquiry")
-public class AdminInquiryApiController {
+public class InquiryDashboardApiController {
 
     private final InquiryService inquiryService;
 
@@ -21,4 +20,4 @@ public class AdminInquiryApiController {
     public ResponseEntity<List<InquiryDto>> recent(Authentication authentication) {
         return ResponseEntity.ok(inquiryService.findAdminRecent(authentication));
     }
-}*/
+}

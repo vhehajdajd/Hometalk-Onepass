@@ -1,7 +1,6 @@
 package com.hometalk.onepass.reservation.repository;
 
 import com.hometalk.onepass.reservation.entity.Reservation;
-import com.hometalk.onepass.reservation.entity.ReservationTime;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +13,6 @@ import java.util.List;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
-    // 예약 중복 체크
     @Query("""
         SELECT r FROM Reservation r 
         WHERE r.facility.id = :facilityId 
@@ -47,14 +45,30 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findByUserIdOrderByIdDesc(Long userId);
 
     @Query("""
-            SELECT r FROM Reservation r
-            WHERE r.reservationTime.startTime 
-            BETWEEN :start AND :end
-            AND r.status != com.hometalk.onepass.reservation.entity.ReservationStatus.CANCELED
-            """)
+        SELECT r FROM Reservation r
+        WHERE r.reservationTime.startTime 
+        BETWEEN :start AND :end
+        AND r.status != com.hometalk.onepass.reservation.entity.ReservationStatus.CANCELED
+        """)
     List<Reservation> findByMonthRange(@Param("start") LocalDateTime start,
                                        @Param("end") LocalDateTime end);
 
-    // 7일 지난 예약 자동 삭제용
+    @EntityGraph(attributePaths = {"facility"})
+    List<Reservation> findTop5ByUser_IdOrderByIdDesc(Long userId);
+
+    @EntityGraph(attributePaths = {"user", "facility"})
+    List<Reservation> findTop10ByOrderByIdDesc();
+
+    @EntityGraph(attributePaths = {"user", "facility"})
+    @Query("""
+        SELECT r FROM Reservation r
+        WHERE r.status = com.hometalk.onepass.reservation.entity.ReservationStatus.CONFIRMED
+        AND r.reservationTime.startTime BETWEEN :from AND :to
+        """)
+    List<Reservation> findConfirmedReservationsStartingBetween(
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
+
     void deleteByReservationTime_EndTimeBefore(LocalDateTime cutoffDateTime);
 }

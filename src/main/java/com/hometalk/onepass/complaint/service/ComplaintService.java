@@ -14,6 +14,9 @@ import com.hometalk.onepass.complaint.entity.ComplaintAttachment;
 import com.hometalk.onepass.complaint.repository.ComplaintAnswerRepository;
 import com.hometalk.onepass.complaint.repository.ComplaintAttachmentRepository;
 import com.hometalk.onepass.complaint.repository.ComplaintRepository;
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+import com.hometalk.onepass.notification.entity.NotificationType;
+import com.hometalk.onepass.notification.publisher.NotificationPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +43,7 @@ public class ComplaintService {
     private final LocalAccountRepository localAccountRepository;
     private final ComplaintAttachmentRepository attachmentRepository;
     private final FileProperties fileProperties;
+    private final NotificationPublisher notificationPublisher;
 
     @Transactional
     public Long saveWithFiles(ComplaintDto dto,
@@ -63,6 +67,14 @@ public class ComplaintService {
 
         handleFileUpload(files, complaint);
 
+        notificationPublisher.publishToAll(
+                NotificationTargetRole.ADMIN,
+                NotificationType.COMPLAINT_RECEIVED,
+                "새로운 민원 접수",
+                "새로운 민원이 접수되었습니다.",
+                "/complaints/detail/" + complaint.getId()
+        );
+
         return complaint.getId();
     }
 
@@ -79,13 +91,15 @@ public class ComplaintService {
                                     && c.getUser() != null
                                     && c.getUser().getId().equals(userId);
 
-                    boolean canView = isOwner || isAdmin;
+                    boolean isSecret = Boolean.TRUE.equals(c.getSecret());
+
+                    boolean canView = !isSecret || isOwner || isAdmin;
 
                     dto.setCanView(canView);
-                    dto.setCanEdit(canView);
+                    dto.setCanEdit(isOwner || isAdmin);
                     dto.setIsAdmin(isAdmin);
 
-                    if (Boolean.TRUE.equals(dto.getSecret()) && !canView) {
+                    if (isSecret && !canView) {
                         dto.setTitle("🔒 비밀글입니다. (작성자와 관리자만 확인 가능)");
                         dto.setContent(null);
                         dto.setUserName("비공개");
@@ -133,7 +147,6 @@ public class ComplaintService {
                         .toList();
 
         dto.setAnswers(answers);
-
         dto.setCanView(true);
         dto.setCanEdit(isOwner || isAdmin);
         dto.setIsAdmin(isAdmin);
@@ -154,7 +167,7 @@ public class ComplaintService {
     public Page<ComplaintDto> findByUserId(Long userId,
                                            Pageable pageable) {
 
-        return complaintRepository.findByUserId(userId, pageable)
+        return complaintRepository.findByUser_Id(userId, pageable)
                 .map(c -> {
                     ComplaintDto dto = ComplaintDto.fromEntity(c);
 
@@ -220,6 +233,18 @@ public class ComplaintService {
         complaintAnswerRepository.save(answer);
 
         complaint.addResponse();
+
+        if (complaint.getUser() != null) {
+            notificationPublisher.publish(
+                    complaint.getUser().getId(),
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.COMPLAINT_STATUS,
+                    "민원 답변 등록",
+                    "민원에 답변이 등록되었습니다.",
+                    "/complaints/detail/" + complaint.getId(),
+                    complaint.getId()
+            );
+        }
     }
 
     @Transactional
@@ -298,7 +323,7 @@ public class ComplaintService {
     private boolean isDuplicate(ComplaintDto dto,
                                 Long userId) {
 
-        return complaintRepository.findFirstByUserIdOrderByIdDesc(userId)
+        return complaintRepository.findFirstByUser_IdOrderByIdDesc(userId)
                 .map(lastComplaint -> {
                     boolean isSameContent =
                             lastComplaint.getCategory().equals(dto.getCategory())
@@ -312,6 +337,26 @@ public class ComplaintService {
 
                     return isSameContent && diffInSeconds < 60;
                 }).orElse(false);
+    }
+
+    public List<ComplaintDto> findMyRecent(Authentication authentication) {
+        Long userId = getLoginUserId(authentication);
+
+        return complaintRepository.findTop5ByUser_IdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(ComplaintDto::fromEntity)
+                .toList();
+    }
+
+    public List<ComplaintDto> findAdminRecent(Authentication authentication) {
+        if (!isAdmin(authentication)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "관리자만 접근할 수 있습니다.");
+        }
+
+        return complaintRepository.findTop10ByOrderByCreatedAtDesc()
+                .stream()
+                .map(ComplaintDto::fromEntity)
+                .toList();
     }
 
     private void handleFileUpload(List<MultipartFile> files,
