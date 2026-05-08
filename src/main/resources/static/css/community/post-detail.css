@@ -34,25 +34,56 @@
 }
 
 /* 3. 본문 내용 영역 */
-.page-content {
-    padding: 24px 0;
+.post-content {
+    padding: 40px 0 60px 15px;
     min-height: 400px;
-    line-height: 1.5;
+    line-height: 1.6;
     color: #334155;
     font-size: 14px;
-    white-space: normal;
+    white-space: pre-wrap;
     word-wrap: break-word;
 }
-.post-content div {
-    margin-top: 24px;
+.post-content > div {
+    min-height: auto;
+    padding-bottom: 0;
 }
-.post-content p {
-    margin: 0;
+
+.post-content > *:last-child {
+    margin-bottom: 0;
 }
 
 .post-content img {
     max-width: 100%;
     height: auto;
+}
+
+.post-content + hr {
+    border: 0;
+    margin-bottom: 0;
+}
+
+.tag-filter-wrapper {
+    margin-top: 20px !important;
+    padding-bottom: 20px;
+}
+
+/* 본문 바로 다음에 '태그'가 올 경우 */
+.post-content + .tag-filter-wrapper {
+    margin-top: 20px !important; /* 본문 하단 30px + 마진 20px = 총 50px */
+}
+
+/* 본문 다음에 바로 'hr(구분선)'이 올 경우 (태그가 없을 때) */
+.post-content + hr {
+    margin-top: 30px !important;
+    margin-bottom: 30px;
+    border: 0;
+    border-top: 1px solid #eee;
+}
+
+/* 태그 다음에 'hr'이 올 경우 */
+.tag-filter-wrapper + hr {
+    margin-top: 20px;
+    margin-bottom: 30px;
 }
 
 /* 목록 버튼 (왼쪽 정렬) */
@@ -136,4 +167,59 @@
 .admin-tools button:hover:not(.active) {
     border-color: var(--main-navy);
     color: var(--main-navy);
+}
+
+/* 작성자 전용 도구 */
+/*.writer-only-tools {
+    display: inline-flex;    *//* 내부 요소들을 가로로 정렬 *//*
+    align-items: center;     *//* 세로 중앙 정렬 *//*
+    vertical-align: middle;  *//* 주변 텍스트(조회수 등)와 높이 맞춤 *//*
+    margin-left: 8px;       *//* 왼쪽 '조회수' 텍스트와의 간격 *//*
+    padding-left: 8px;      *//* 구분선과 내부 요소 사이 간격 *//*
+    border-left: 1px solid #e5e7eb; *//* 조회수와 구분하기 위한 얇은 세로선 *//*
+    height: 1.2em;           *//* 주변 텍스트 높이에 맞춤 *//*
+}*/
+
+/* 상태 변경 셀렉트 박스 */
+.status-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    padding: 4px 28px 4px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    background-color: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+
+    /* 커스텀 화살표 아이콘 (SVG) */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 14px;
+}
+
+/* 호버 효과 */
+.status-select:hover {
+    border-color: #9ca3af;
+    background-color: #f9fafb;
+}
+
+/* 포커스 효과 */
+.status-select:focus {
+    border-color: #4A69BD; /* 프로젝트 메인 컬러로 변경 가능 */
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
+}
+
+/* 상태별 색상 강조 */
+.status-select option[value="COMPLETED"] {
+    color: #999;
+}
+.status-select option[value="RESERVED"] {
+    color: #E67E22;
 }

@@ -34,7 +34,7 @@ public class CommunityAdminService {
     public List<AdminBoardRsDTO> getAdminBoardList() {
         return boardRepository.findAll().stream()
                 .map(board -> {
-                    // 각 게시판에 속한 카테고리들을 DTO로 변환
+                    // 각 게시판 카테고리 목록
                     List<AdminBoardRsDTO.CategoryDto> categories = board.getCategories().stream()
                             .filter(cat -> !cat.getCode().equals("all"))
                             .map(cat -> {
@@ -44,8 +44,13 @@ public class CommunityAdminService {
                             })
                             .collect(Collectors.toList());
 
+                    // 게시판별 노출 게시글 수
+                    long visibleCount = postRepository.countByBoardAndPostStatus(board, PostStatus.ACTIVE);
+                    // 게시판별 숨김/삭제 게시글 수
+                    long hiddenCount = postRepository.countByBoardAndPostStatusIn(board, List.of(PostStatus.HIDDEN, PostStatus.DELETED));
+
                     // 게시판 정보와 카테고리 리스트를 합쳐서 반환
-                    return AdminBoardRsDTO.from(board, categories);
+                    return AdminBoardRsDTO.from(board, categories, visibleCount, hiddenCount);
                 })
                 .collect(Collectors.toList());
     }
@@ -226,8 +231,12 @@ public class CommunityAdminService {
                     return AdminBoardRsDTO.CategoryDto.from(cat, postCount);
                 })
                 .collect(Collectors.toList());
+        // 노출 게시글 수
+        long visibleCount = postRepository.countByBoardAndPostStatus(board, PostStatus.ACTIVE);
+        // 숨김/삭제 게시글 수
+        long hiddenCount = postRepository.countByBoardAndPostStatusIn(board, List.of(PostStatus.HIDDEN, PostStatus.DELETED));
 
-        return AdminBoardRsDTO.from(board, categories);
+        return AdminBoardRsDTO.from(board, categories, visibleCount, hiddenCount);
     }
 
     @Transactional

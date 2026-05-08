@@ -118,3 +118,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// 관리 버튼 드롭다운
+function toggleDropdown(btn) {
+    document.querySelectorAll('.drop-content').forEach(el => {
+        if (el !== btn.nextElementSibling) el.classList.remove('show-menu');
+    });
+    btn.nextElementSibling.classList.toggle('show-menu');
+}
+
+// 바깥 영역 클릭 시 메뉴 닫기
+window.addEventListener('click', function(e) {
+    if (!e.target.closest('.custom-dropdown')) {
+        document.querySelectorAll('.drop-content').forEach(el => {
+            el.classList.remove('show-menu');
+        });
+    }
+});

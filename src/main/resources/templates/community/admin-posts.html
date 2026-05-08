@@ -46,55 +46,65 @@
                     </button>
                 </div>
 
-                <div class="alert-container">
-                    <!-- 성공 메시지 (message) -->
-                    <div th:if="${message}" class="alert-banner alert-success">
-                        <span th:text="${message}">성공 메시지 영역</span>
-                        <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
-                    </div>
-                    <!-- 에러 메시지 (errorMessage) -->
-                    <div th:if="${errorMessage}" class="alert-banner alert-error">
-                        <span th:text="${errorMessage}">에러 메시지 영역</span>
-                        <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
-                    </div>
-                </div>
-
-                <table class="admin-table admin-management-table">
+                <table class="admin-management-table post-table" style="max-width: 1400px;">
                     <thead>
-                    <tr>
-                        <th><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
-                        <th>ID</th>
-                        <th>게시판</th>
-                        <th>제목</th>
-                        <th>상태</th>
-                        <th>최종 수정일</th>
-                        <th>관리</th>
-                    </tr>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
+                            <th>ID</th>
+                            <th>게시판</th>
+                            <th>제목</th>
+                            <th>상태</th>
+                            <th>최종 수정일</th>
+                            <th>관리</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="post : ${posts}">
-                        <td><input type="checkbox" name="postCheck" th:value="${post.id}"></td>
-                        <td th:text="${post.id}">1</td>
-                        <td th:text="${post.boardName}">자유게시판</td>
-                        <td class="text-left">
-                            <span th:text="${post.title}">제목</span>
-                        </td>
-                        <td>
-                            <span th:if="${post.postStatus == 'DELETED'}" class="badge status-deleted">삭제됨</span>
-                            <span th:if="${post.postStatus == 'HIDDEN'}" class="badge status-hidden">숨김</span>
-                        </td>
-                        <td th:text="${#temporals.format(post.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-04-30</td>
-                        <td>
-                            <form th:action="@{/community/admin/posts/hard-delete/{id}(id=${post.id})}"
-                                  method="post"
-                                  onsubmit="return confirm('이 작업은 되돌릴 수 없습니다. \n해당 게시글과 모든 댓글이 DB에서 영구 삭제됩니다. 진행하시겠습니까?');">
-                                <button type="submit" class="btn-hard-delete">영구 삭제</button>
-                            </form>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(posts)}">
-                        <td colspan="6" class="empty-msg">정리할 숨김/삭제 게시글이 없습니다.</td>
-                    </tr>
+                        <tr th:each="post : ${posts}">
+                            <td><input type="checkbox" name="postCheck" th:value="${post.id}"></td>
+                            <td th:text="${post.id}">1</td>
+                            <td th:text="${post.boardName}">자유게시판</td>
+                            <td class="text-left">
+                                <span th:text="${post.title}">제목</span>
+                            </td>
+                            <td>
+                                <span th:if="${post.postStatus == 'DELETED'}" class="badge status-deleted">삭제됨</span>
+                                <span th:if="${post.postStatus == 'HIDDEN'}" class="badge status-hidden">숨김</span>
+                            </td>
+                            <td th:text="${#temporals.format(post.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-04-30</td>
+                            <td class="action-cell">
+                                <div class="custom-dropdown">
+                                    <button type="button"
+                                            class="drop-btn"
+                                            onclick="toggleDropdown(this)">
+                                        ⋮
+                                    </button>
+
+                                    <div class="drop-content">
+                                        <!-- 숨김 해제 -->
+                                        <button th:if="${post.postStatus != null && #strings.toString(post.postStatus) == 'HIDDEN'}"
+                                                type="button"
+                                                class="menu-item"
+                                                th:data-id="${post.id}"
+                                                onclick="unhidePost(this.getAttribute('data-id'))">
+                                            숨김 해제
+                                        </button>
+                                        <!-- 영구 삭제 -->
+                                        <form th:action="@{/community/admin/posts/hard-delete/{id}(id=${post.id})}"
+                                              method="post"
+                                              style="margin:0;"
+                                              onsubmit="return confirm('이 작업은 되돌릴 수 없습니다. \n해당 게시글과 모든 댓글이 영구 삭제됩니다. 진행하시겠습니까?');">
+                                            <button type="submit"
+                                                    class="delete-btn">
+                                                영구 삭제
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(posts)}">
+                            <td colspan="6" class="empty-msg">정리할 숨김/삭제 게시글이 없습니다.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -157,6 +167,34 @@
             document.body.appendChild(form);
             form.submit();
         }
+    }
+
+    function unhidePost(postId) {
+        if (!confirm("선택한 게시글의 숨김을 해제하시겠습니까?")) return;
+
+        // CSRF 토큰 (Meta 태그 기준)
+        const token = document.querySelector('meta[name="_csrf"]').content;
+        const header = document.querySelector('meta[name="_csrf_header"]').content;
+
+        fetch(`/hometop/api/posts/${postId}/unhide`, {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+                [header]: token
+            }
+        })
+            .then(response => {
+            if (response.ok) {
+                alert("정상적으로 해제되었습니다.");
+                location.reload(); // 목록 새로고침
+            } else {
+                alert("해제 처리 중 오류가 발생했습니다.");
+            }
+        })
+            .catch(err => {
+            console.error("Error:", err);
+            alert("서버 통신 오류가 발생했습니다.");
+        });
     }
 </script>
 </body>

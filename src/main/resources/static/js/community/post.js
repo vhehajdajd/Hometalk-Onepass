@@ -356,6 +356,31 @@ function hidePost(postId) {
         .catch(err => console.error("Error:", err));
 }
 
+// 숨김 해제
+function unhidePost(postId) {
+    if (!confirm("이 게시글을 다시 노출하시겠습니까?")) return;
+
+    const token = document.querySelector('meta[name="_csrf"]').content;
+    const header = document.querySelector('meta[name="_csrf_header"]').content;
+
+    fetch(`/hometop/api/posts/${postId}/unhide`, {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+            [header]: token
+        }
+    })
+        .then(response => {
+        if (response.ok) {
+            alert("숨김이 해제되었습니다.");
+            location.reload();
+        } else {
+            alert("처리 중 오류가 발생했습니다.");
+        }
+    })
+        .catch(err => console.error("Error:", err));
+}
+
 /* ================================================
     [5] 목록 조회 & 페이징 기능
 =================================================== */

@@ -216,7 +216,7 @@ ul, li {
     text-align: left;
     font-size: var(--font-small);
     padding: 12px 10px;
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--color-main);
     color: var(--color-main);
 }
 
@@ -226,7 +226,7 @@ ul, li {
 }
 
 .table tr.pinned {
-    background-color: #F8FAFC;
+    background-color: #F2F2F2;
     font-weight: 600;
 }
 

@@ -14,7 +14,7 @@
     <div class="main-wrapper">
         <!-- 상단 메뉴 -->
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community'} })}"></div>
-        <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: ${#authorization.expression('hasRole(''ADMIN'')')} ? 'communityAdmin' : 'community'}"></div>
 
         <main class="dashboard-content">
             <div class="container">
@@ -49,8 +49,12 @@
                                         'background-color:' + ${post.categoryBgColor} + '; color:' + ${post.categoryTextColor} + ';' : ''">
                             카테고리
                         </span>
-                        <span th:if="${post.categoryCode == 'share' and post.marketStatus != null}"
-                              th:text="${post.marketStatusDescription}"></span>
+                        <th:block th:if="${post.categoryCode == 'share' and post.marketStatus != null and post.marketStatus != '' and !post.pinned}">
+                                            <span th:classappend="${'badge-' + post.marketStatus.toLowerCase()}"
+                                                  class="badge status-badge-inline"
+                                                  th:text="${post.marketStatusDescription}">
+                                            </span>
+                        </th:block>
 
                         <!-- 관리자 도구 -->
                         <div sec:authorize="hasRole('ADMIN')" class="admin-tools"
@@ -74,7 +78,7 @@
                             <span class="date" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span>
                             <span class="views">조회수 <span th:text="${post.viewCount}">0</span></span>
 
-                            <div th:if="${post.categoryCode == 'share' and post.editable and post.marketStatus != null}"
+                            <div th:if="${post.categoryCode == 'share' and post.editable and post.marketStatus != null and !post.pinned}"
                                  class="writer-only-tools" style="display: inline-block; margin-left: 5px;">
                                 <select th:onchange="|updateStatus(${post.id}, this.value)|" class="status-select">
                                     <option th:selected="${post.marketStatus == 'SHARED'}" value="SHARED">나눔중</option>
@@ -91,7 +95,9 @@
                         <div th:utext="${post.content}">게시글 내용</div>
                     </div>
 
-                    <div class="tag-filter-wrapper" style="margin-top: 30px;"
+                    <hr>
+
+                    <div class="tag-filter-wrapper"
                          th:if="${postTags != null and !postTags.isEmpty()}">
                         <div class="tag-filter-inner">
                             <span class="tag-icon"><i class="fa-solid fa-tags"></i></span>
@@ -106,7 +112,7 @@
 
                         <div class="edit-delete-group" th:if="${post.editable}">
                             <a th:href="@{/community/{code}/edit/{id}(code=${board.code}, id=${post.id})}"
-                               class="btn btn-primary" style="margin-right: 8px;">수정</a>
+                               class="btn btn-primary" style="margin-right: 4px;">수정</a>
 
                             <form th:action="@{/community/{code}/delete/{id}(code=${boardCode}, id=${post.id})}"
                                   method="post" style="display:inline;" id="deleteForm">

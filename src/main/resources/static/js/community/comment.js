@@ -41,3 +41,22 @@ function showAllComments() {
         if (moreBtn) { moreBtn.style.display = 'none'; }
     }
 }
+
+// 댓글 드롭다운
+function toggleCommentMenu(btn) {
+    // 모든 열려있는 댓글 메뉴 닫기 (하나만 열리게)
+    document.querySelectorAll('.drop-content').forEach(el => {
+        if (el !== btn.nextElementSibling) el.classList.remove('show-menu');
+    });
+    // 클릭한 메뉴 토글
+    btn.nextElementSibling.classList.toggle('show-menu');
+}
+
+// 바깥 영역 클릭 시 메뉴 닫기
+window.addEventListener('click', function(e) {
+    if (!e.target.closest('.custom-dropdown')) {
+        document.querySelectorAll('.drop-content').forEach(el => {
+            el.classList.remove('show-menu');
+        });
+    }
+});

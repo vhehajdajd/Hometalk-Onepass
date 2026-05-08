@@ -60,7 +60,22 @@ public class PostActionController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{postId}/unhide")
+    public ResponseEntity<Void> unhidePost(@PathVariable Long postId,
+                                           Authentication authentication) {
+        CustomUserDetails user = getLoginCustomUser(authentication);
+        postActionService.unhidePost(postId, user);
+        return ResponseEntity.ok().build();
+    }
+
     private CustomUserDetails getLoginCustomUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedAccessException("로그인이 필요합니다.");
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof CustomUserDetails customUserDetails) {
+            return customUserDetails;
+        }
 
         User user = getLoginUser(authentication);
         Household household = user.getHousehold();
