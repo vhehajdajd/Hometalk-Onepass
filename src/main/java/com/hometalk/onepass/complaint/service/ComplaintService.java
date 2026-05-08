@@ -14,6 +14,9 @@ import com.hometalk.onepass.complaint.entity.ComplaintAttachment;
 import com.hometalk.onepass.complaint.repository.ComplaintAnswerRepository;
 import com.hometalk.onepass.complaint.repository.ComplaintAttachmentRepository;
 import com.hometalk.onepass.complaint.repository.ComplaintRepository;
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+import com.hometalk.onepass.notification.entity.NotificationType;
+import com.hometalk.onepass.notification.publisher.NotificationPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +43,7 @@ public class ComplaintService {
     private final LocalAccountRepository localAccountRepository;
     private final ComplaintAttachmentRepository attachmentRepository;
     private final FileProperties fileProperties;
+    private final NotificationPublisher notificationPublisher;
 
     @Transactional
     public Long saveWithFiles(ComplaintDto dto,
@@ -62,6 +66,14 @@ public class ComplaintService {
         complaintRepository.save(complaint);
 
         handleFileUpload(files, complaint);
+
+        notificationPublisher.publishToAll(
+                NotificationTargetRole.ADMIN,
+                NotificationType.COMPLAINT_RECEIVED,
+                "새로운 민원 접수",
+                "새로운 민원이 접수되었습니다.",
+                "/complaints/detail/" + complaint.getId()
+        );
 
         return complaint.getId();
     }
@@ -221,6 +233,18 @@ public class ComplaintService {
         complaintAnswerRepository.save(answer);
 
         complaint.addResponse();
+
+        if (complaint.getUser() != null) {
+            notificationPublisher.publish(
+                    complaint.getUser().getId(),
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.COMPLAINT_STATUS,
+                    "민원 답변 등록",
+                    "민원에 답변이 등록되었습니다.",
+                    "/complaints/detail/" + complaint.getId(),
+                    complaint.getId()
+            );
+        }
     }
 
     @Transactional

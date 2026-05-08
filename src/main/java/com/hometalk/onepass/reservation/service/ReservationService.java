@@ -4,6 +4,9 @@ import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.UserRepository;
 import com.hometalk.onepass.facility.entity.Facility;
 import com.hometalk.onepass.facility.repository.FacilityRepository;
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+import com.hometalk.onepass.notification.entity.NotificationType;
+import com.hometalk.onepass.notification.publisher.NotificationPublisher;
 import com.hometalk.onepass.reservation.dto.ReservationCalendarDto;
 import com.hometalk.onepass.reservation.dto.ReservationRequestDto;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
@@ -28,6 +31,7 @@ public class ReservationService {
     private final FacilityRepository facilityRepository;
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
+    private final NotificationPublisher notificationPublisher;
 
     @Transactional
     public Long register(ReservationRequestDto dto, Long loginUserId) {
@@ -66,7 +70,7 @@ public class ReservationService {
         );
 
         if (!conflicting.isEmpty()) {
-            throw new RuntimeException("해당 시간대에 이미 예약(또는 승인대기)이 존재합니다.");
+            throw new RuntimeException("해당 시간대에 이미 예약 또는 승인대기 예약이 존재합니다.");
         }
 
         Reservation reservation = Reservation.builder()
@@ -113,6 +117,18 @@ public class ReservationService {
 
         reservation.approve();
         reservationRepository.save(reservation);
+
+        if (reservation.getUser() != null) {
+            notificationPublisher.publish(
+                    reservation.getUser().getId(),
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.RESERVATION_CONFIRMED,
+                    "시설 예약 확정",
+                    reservation.getFacility().getName() + " 예약이 확정되었습니다.",
+                    "/reservation/" + reservation.getId(),
+                    reservation.getId()
+            );
+        }
     }
 
     @Transactional
@@ -158,7 +174,6 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-    // 대시보드 - 내 최근 예약
     public List<ReservationResponseDto> findMyRecent(Long userId) {
         return reservationRepository.findTop5ByUser_IdOrderByIdDesc(userId)
                 .stream()
@@ -166,7 +181,6 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-    // 대시보드 - 관리자 최근 예약
     public List<ReservationResponseDto> findAdminRecent() {
         return reservationRepository.findTop10ByOrderByIdDesc()
                 .stream()
