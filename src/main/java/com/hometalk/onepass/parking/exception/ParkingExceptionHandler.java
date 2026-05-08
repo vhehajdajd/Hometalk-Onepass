@@ -36,4 +36,12 @@ public class ParkingExceptionHandler {
                 .status(404)
                 .body(Map.of("message", e.getMessage()));
     }
+
+    // 주차 차량 없을 때
+    @ExceptionHandler(ParkingException.class)
+    public ResponseEntity<Map<String, String>> handleParkingException(ParkingException e) {
+        return ResponseEntity
+                .badRequest()
+                .body(Map.of("message", e.getMessage()));
+    }
 }

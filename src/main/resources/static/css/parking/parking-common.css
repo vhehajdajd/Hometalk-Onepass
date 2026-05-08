@@ -213,7 +213,7 @@ body {
 
 /* pk-btn 계열 */
 .pk-btn {
-  padding: 5px 12px;
+  padding: 6px 14px;
   font-size: 12px;
   font-weight: 600;
   border-radius: var(--radius-sm);
@@ -281,7 +281,7 @@ body {
 }
 
 .form-actions .btn-cancel {
-  padding: 10px 12px;
+  padding: 6px 10px;
   background-color: #ffffff;
   color: #666;
   border: 1px solid var(--color-border);
@@ -291,7 +291,7 @@ body {
   transition: background var(--transition);
 }
 
-.form-actions .btn-cancel:hover { background-color: #f5f5f5; }
+.form-actions .btn-cancel:hover { background-color: #fff2f2; }
 
 .form-actions button[type="submit"] {
   padding: 10px 20px;
@@ -407,7 +407,7 @@ body {
   border: 1px solid var(--color-border);
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 100;
+  z-index: 200;
   min-width: 100%;
 }
 
@@ -493,6 +493,39 @@ body {
 
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
+
+/* ---------- 티켓 수량 조절 ---------- */
+.ticket-apply-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ticket-apply-group button:not(#applyBtn) {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition);
+}
+
+.ticket-apply-group button:not(#applyBtn):hover {
+  background: #f5f8ff;
+}
+
+.ticket-apply-group input[type="number"] {
+  height: 32px;
+  box-sizing: border-box;
+}
+
 /* ---------- number input 스핀 버튼 제거 ---------- */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
@@ -501,6 +534,125 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 input[type="number"] { -moz-appearance: textfield; }
+
+
+
+/* ---------- 검색 그룹 (필터용) ---------- */
+.pk-search-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.pk-search-input {
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--color-text);
+    background-color: #ffffff;
+    outline: none;
+    height: 36px;
+    box-sizing: border-box;
+}
+
+.pk-search-input:focus {
+    border-color: var(--color-sub);
+    box-shadow: 0 0 0 3px rgba(60, 106, 188, 0.1);
+}
+
+
+/* ---------- 서류 모달 액션 ---------- */
+.document-modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    position: relative;
+    left: 80%;
+}
+
+.document-modal-actions .nav-btns {
+    display: flex;
+    gap: 8px;
+    position: absolute;
+    left: -32.5%;
+    transform: translateX(-50%);
+}
+
+.document-modal-actions .btn-ghost:hover {
+    background-color: #4073C9;
+    color: #ffffff;
+    border-color: #4073C9;
+}
+
+/* ── 멀티셀렉트 드롭다운 ── */
+.multi-select-wrapper { position: relative; min-width: 200px; }
+
+.multi-select-trigger {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); background: #ffffff;
+  cursor: pointer; min-height: 38px; gap: 8px; font-size: 14px;
+  color: var(--color-text);
+}
+.multi-select-trigger:hover { border-color: var(--color-main); }
+.multi-select-trigger.open { border-color: var(--color-main); }
+
+.tags-area { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
+.ms-placeholder { color: #aaa; font-size: 14px; }
+
+.ms-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #e8eef7; color: var(--color-main);
+  font-size: 12px; padding: 2px 8px;
+  border-radius: 4px; white-space: nowrap;
+}
+.ms-tag-remove { cursor: pointer; font-size: 14px; line-height: 1; opacity: 0.6; }
+.ms-tag-remove:hover { opacity: 1; }
+
+.ms-chevron { font-size: 12px; color: #999; flex-shrink: 0; transition: transform 0.15s; }
+.ms-chevron.open { transform: rotate(180deg); }
+
+.ms-dropdown {
+  display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: #ffffff; border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); z-index: 200;
+  max-height: 240px; overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.ms-dropdown.open { display: block; }
+
+.ms-search {
+  padding: 8px 10px; border-bottom: 1px solid var(--color-border);
+  position: sticky; top: 0; background: #fff;
+}
+.ms-search input {
+  width: 100%; padding: 5px 8px; font-size: 13px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  outline: none; box-sizing: border-box;
+}
+.ms-search input:focus { border-color: var(--color-main); }
+
+.ms-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; font-size: 14px; cursor: pointer;
+  color: var(--color-text);
+}
+.ms-item:hover { background: #f5f8ff; }
+.ms-item input[type=checkbox] { accent-color: var(--color-main); width: 15px; height: 15px; cursor: pointer; }
+
+.ms-empty { padding: 10px 12px; font-size: 13px; color: #aaa; text-align: center; }
+
+
+.ms-select-all {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; font-size: 14px; cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text); font-weight: 600;
+}
+.ms-select-all:hover { background: #f5f8ff; }
+.ms-select-all input[type=checkbox] { accent-color: var(--color-main); width: 15px; height: 15px; cursor: pointer; }
 
 /* ---------- 반응형 ---------- */
 @media (max-width: 768px) {

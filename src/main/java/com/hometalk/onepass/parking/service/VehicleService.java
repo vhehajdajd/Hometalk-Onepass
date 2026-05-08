@@ -42,6 +42,8 @@ public interface VehicleService {
     // 관리자 차량 삭제
     void adminDelete(Long vehicleId);
 
+    boolean existsByVehicleNumber(String vehicleNumber);
+
     //페이지네이션
     Page<VehicleApprovalResponse> getApprovalList(Vehicle.VehicleStatus status, int page, int size);
 }

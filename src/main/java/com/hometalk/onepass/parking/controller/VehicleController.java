@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -57,7 +58,7 @@ public class VehicleController {
             Long userId = userDetails.getUserId();
             vehicleService.register(userId, request, documents);
             return "redirect:/parking/vehicle";
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             model.addAttribute("errorMessage", e.getMessage());
             return "parking/vehicle-register";
         }
@@ -90,7 +91,7 @@ public class VehicleController {
         try {
             vehicleService.reapply(vehicleId, documents);
             return "redirect:/parking/vehicle";
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             model.addAttribute("errorMessage", e.getMessage());
             return "parking/vehicle-reapply";
         }
@@ -103,8 +104,17 @@ public class VehicleController {
         try {
             vehicleService.delete(vehicleId);
             return ResponseEntity.ok().build();
-        } catch (IllegalStateException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+    // 차량 번호 중복 체크
+    @GetMapping("/vehicle/check")
+    @ResponseBody
+    public ResponseEntity<Map<String, Boolean>> checkVehicleNumber(
+            @RequestParam String vehicleNumber) {
+        String cleaned = vehicleNumber.replace(" ", "");
+        boolean exists = vehicleService.existsByVehicleNumber(cleaned);
+        return ResponseEntity.ok(Map.of("exists", exists));
     }
 }

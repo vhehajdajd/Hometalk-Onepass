@@ -60,25 +60,27 @@
       </div>
     </main>
 
-    <footer th:replace="~{fragments/footer :: footer}"></footer>
-
   </div>
 </div>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 
 <!-- 서류 모달 -->
 <div id="documentModal" style="display:none; position:fixed; inset:0; background:rgba(3,33,84,0.45); z-index:1000; align-items:center; justify-content:center;">
   <div class="modal-content">
-    <h3>증빙 서류</h3>
+    <h3>증빙 서류 <span id="documentIndex" style="font-size:13px; color:#888;"></span></h3>
     <img id="documentImage"
          src=""
          alt="서류 이미지"
          style="max-width: 100%; border-radius: 8px;"
          onerror="this.style.display='none'; document.getElementById('documentError').style.display='block'">
     <p id="documentError" style="display:none; color: var(--color-btn-point);">서류를 불러올 수 없습니다.</p>
-    <div class="modal-actions" style="margin-top: 16px;">
+    <div class="document-modal-actions">
+      <div class="nav-btns">
+        <button type="button" id="prevBtn" class="btn-ghost" onclick="prevDocument()">‹</button>
+        <button type="button" id="nextBtn" class="btn-ghost" onclick="nextDocument()">›</button>
+      </div>
       <button type="button" class="btn-ghost" onclick="closeDocumentModal()">닫기</button>
     </div>
-  </div>
 </div>
 
 <!-- 반려 모달 -->
@@ -98,15 +100,20 @@
   </div>
 </div>
 
+<!-- contextPath, csrf만 Thymeleaf로 처리 -->
 <script th:inline="javascript">
   const contextPath = /*[[@{/}]]*/ '/';
   const csrfToken  = document.querySelector('meta[name="_csrf"]').content;
   const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+</script>
 
+<script>
   let currentStatus = 'PENDING';
   let currentPage   = 0;
   const PAGE_SIZE   = 10;
   let selectedApprovalId = null;
+  let currentDocPaths = [];
+  let currentDocIndex = 0;
 
   function postFetch(url, body) {
     return fetch(url, {
@@ -127,7 +134,7 @@
     loadVehicleList();
   }
 
-function loadVehicleList() {
+  function loadVehicleList() {
     const tbody = document.getElementById('vehicleList');
     tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">로딩 중...</td></tr>`;
 
@@ -143,18 +150,25 @@ function loadVehicleList() {
         }
 
         data.content.forEach(v => {
-          const docPath = v.documentPath ? v.documentPath.replace(/\\/g, '/') : null;
+          const overQuota = v.approvedCount >= 1;
           const row = `
             <tr>
               <td>${v.vehicleNumber}</td>
               <td>${v.model ?? '-'}</td>
               <td>${v.vehicleType ?? '-'}</td>
               <td>${v.userName}</td>
-              <td>${v.household}</td>
+              <td>
+                ${v.household}
+                ${overQuota ? `<br><span style="font-size:11px; color:var(--color-btn-point); font-weight:600;">⚠ 무료 차량(1대) 초과</span>` : ''}
+              </td>
               <td>${v.createdAt}</td>
               <td>
-                ${docPath
-                  ? `<button class="pk-btn pk-btn-primary" onclick="viewDocument('${docPath}')">보기</button>`
+                ${v.documentPaths && v.documentPaths.length > 0
+                  ? `<button class="pk-btn pk-btn-primary"
+                             onclick="viewDocument(this)"
+                             data-paths='${JSON.stringify(v.documentPaths).replace(/'/g, "&apos;")}'>
+                       보기 (${v.documentPaths.length}장)
+                     </button>`
                   : '없음'}
               </td>
               <td>
@@ -228,19 +242,51 @@ function loadVehicleList() {
     pagination.appendChild(nextLi);
   }
 
-  function viewDocument(path) {
-    const img = document.getElementById('documentImage');
-    const err = document.getElementById('documentError');
-    img.style.display = 'block';
-    err.style.display = 'none';
-    img.src = encodeURI(path);
+  // 서류 모달 열기 (여러 장 지원)
+  function viewDocument(btn) {
+    currentDocPaths = JSON.parse(btn.dataset.paths);
+    currentDocIndex = 0;
+    showDocument();
     document.getElementById('documentModal').style.display = 'flex';
   }
 
+  // 현재 서류 표시
+  function showDocument() {
+    const img = document.getElementById('documentImage');
+    const err = document.getElementById('documentError');
+    const idx = document.getElementById('documentIndex');
+    img.style.display = 'block';
+    err.style.display = 'none';
+    img.src = encodeURI(currentDocPaths[currentDocIndex]);
+    idx.textContent = `(${currentDocIndex + 1} / ${currentDocPaths.length})`;
+
+    // 이전/다음 버튼 활성화 처리
+    document.getElementById('prevBtn').disabled = currentDocIndex === 0;
+    document.getElementById('nextBtn').disabled = currentDocIndex === currentDocPaths.length - 1;
+  }
+
+  // 이전 서류
+  function prevDocument() {
+    if (currentDocIndex > 0) {
+      currentDocIndex--;
+      showDocument();
+    }
+  }
+
+  // 다음 서류
+  function nextDocument() {
+    if (currentDocIndex < currentDocPaths.length - 1) {
+      currentDocIndex++;
+      showDocument();
+    }
+  }
+
+  // 서류 모달 닫기
   function closeDocumentModal() {
     document.getElementById('documentModal').style.display = 'none';
   }
 
+  // 차량 승인
   function approveVehicle(approvalId) {
     if (!confirm('승인하시겠습니까?')) return;
 
@@ -255,6 +301,7 @@ function loadVehicleList() {
       });
   }
 
+  // 반려 모달 열기
   function openRejectModal(approvalId) {
     selectedApprovalId = approvalId;
     document.getElementById('rejectReason').value = '';
@@ -262,10 +309,12 @@ function loadVehicleList() {
     document.getElementById('rejectModal').style.display = 'flex';
   }
 
+  // 반려 모달 닫기
   function closeRejectModal() {
     document.getElementById('rejectModal').style.display = 'none';
   }
 
+  // 반려 확인
   function confirmReject() {
     const reason = document.getElementById('rejectReason').value.trim();
 
@@ -289,6 +338,7 @@ function loadVehicleList() {
       });
   }
 
+  // 차량 삭제
   function adminDeleteVehicle(vehicleId) {
     if (!confirm('차량을 삭제하시겠습니까?')) return;
 

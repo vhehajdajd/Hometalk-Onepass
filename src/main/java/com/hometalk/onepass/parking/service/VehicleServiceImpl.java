@@ -122,7 +122,16 @@ public class VehicleServiceImpl implements VehicleService {
                 .map(vehicle -> vehicleApprovalRepository
                         .findTopByVehicleOrderByApprovalIdDesc(vehicle))
                 .filter(Optional::isPresent)
-                .map(opt -> new VehicleApprovalResponse(opt.get()))
+                .map(opt -> {
+                    VehicleApprovalResponse response = new VehicleApprovalResponse(opt.get());
+                    int count = (int) vehicleRepository
+                            .findByHousehold(opt.get().getVehicle().getHousehold())
+                            .stream()
+                            .filter(v -> v.getStatus() == Vehicle.VehicleStatus.APPROVED)
+                            .count();
+                    response.setApprovedCount(count);
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -134,7 +143,16 @@ public class VehicleServiceImpl implements VehicleService {
                 VehicleApproval.ApprovalStatus.valueOf(status.name());
         Pageable pageable = PageRequest.of(page, size, Sort.by("approvalId").descending());
         return vehicleApprovalRepository.findByStatus(approvalStatus, pageable)
-                .map(VehicleApprovalResponse::new);
+                .map(approval -> {
+                    VehicleApprovalResponse response = new VehicleApprovalResponse(approval);
+                    int count = (int) vehicleRepository
+                            .findByHousehold(approval.getVehicle().getHousehold())
+                            .stream()
+                            .filter(v -> v.getStatus() == Vehicle.VehicleStatus.APPROVED)
+                            .count();
+                    response.setApprovedCount(count);
+                    return response;
+                });
     }
 
     @Override
@@ -144,6 +162,16 @@ public class VehicleServiceImpl implements VehicleService {
 
         VehicleApproval approval = vehicleApprovalRepository.findById(approvalId)
                 .orElseThrow(() -> new ParkingException("승인 이력을 찾을 수 없습니다."));
+
+        // 중복 차량 번호 체크
+        String vehicleNumber = approval.getVehicle().getVehicleNumber();
+        vehicleRepository.findByVehicleNumber(vehicleNumber)
+                .ifPresent(v -> {
+                    if (!v.getVehicleId().equals(approval.getVehicle().getVehicleId())
+                            && v.getStatus() == Vehicle.VehicleStatus.APPROVED) {
+                        throw new ParkingException("이미 승인된 동일 차량 번호가 존재합니다.");
+                    }
+                });
 
         approval.approve(user);
         approval.getVehicle().approve();
@@ -204,5 +232,11 @@ public class VehicleServiceImpl implements VehicleService {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new ParkingException("차량을 찾을 수 없습니다."));
         vehicle.softDelete();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByVehicleNumber(String vehicleNumber) {
+        return vehicleRepository.existsByVehicleNumber(vehicleNumber);
     }
 }

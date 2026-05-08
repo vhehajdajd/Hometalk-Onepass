@@ -96,4 +96,13 @@ public class TicketServiceImpl implements TicketService {
                     household.getId(), type, issuedDate.getYear(), issuedDate.getMonthValue());
         }
     }
+
+    @Override
+    public void issueBulkTickets(List<Long> householdIds, ParkingTicket.TicketType type,
+                                 int totalCount, LocalDate issuedDate) {
+        for (Long householdId : householdIds) {
+            issueTicket(householdId, type, totalCount, issuedDate); // 기존 메서드 재사용
+        }
+        log.info("bulk 티켓 발급 완료 - {}개 세대, 타입: {}, 수량: {}", householdIds.size(), type, totalCount);
+    }
 }

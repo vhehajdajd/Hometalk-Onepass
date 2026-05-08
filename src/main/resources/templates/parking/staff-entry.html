@@ -232,29 +232,29 @@
   }
 
   function processEntry(id, type, btn) {
-    if (isProcessing) return;
-    isProcessing = true;
-    btn.disabled = true;
+      if (isProcessing) return;
+      isProcessing = true;
+      btn.disabled = true;
 
-    postFetch(`${contextPath}staff/vehicle/entry`, { id: id, type: type })
-            .then(async res => {
-              if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || '서버 오류');
-              }
-              alert('입차 처리가 완료되었습니다.');
-              document.getElementById('vehicleNumber').value = '';
-              document.getElementById('searchResult').innerHTML = '';
-              loadTodayList();
-            })
-            .catch(err => {
-              console.error(err);
-              alert('입차 처리 중 오류가 발생했습니다.');
-            })
-            .finally(() => {
-              isProcessing = false;
-              btn.disabled = false;
-            });
+      postFetch(`${contextPath}staff/vehicle/entry`, { id: id, type: type })
+              .then(async res => {
+                  if (!res.ok) {
+                      const data = await res.json();
+                      throw new Error(data.message || '서버 오류');
+                  }
+                  alert('입차 처리가 완료되었습니다.');
+                  document.getElementById('vehicleNumber').value = '';
+                  document.getElementById('searchResult').innerHTML = '';
+                  loadTodayList();
+              })
+              .catch(err => {
+                  console.error(err);
+                  alert(err.message || '입차 처리 중 오류가 발생했습니다.');
+              })
+              .finally(() => {
+                  isProcessing = false;
+                  btn.disabled = false;
+              });
   }
 
   function loadTodayList() {
