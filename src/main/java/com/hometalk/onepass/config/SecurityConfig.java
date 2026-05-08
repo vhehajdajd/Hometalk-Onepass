@@ -59,10 +59,6 @@ public class SecurityConfig {
                                 "/images/**"
                         ).permitAll()
 
-                        // ✅ 3줄 -- 알림 테스트용
-                        .requestMatchers("/api/test/**").permitAll()          // 테스트 엔드포인트
-                        .requestMatchers("/api/notification/**").permitAll()  // SSE + 알림 API
-                        .requestMatchers("/admin/**").permitAll()
 
                         // 2. 그 외의 모든 요청은 인증(로그인)이 필요함
                         .anyRequest().authenticated()

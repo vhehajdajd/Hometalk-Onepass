@@ -14,6 +14,13 @@
     <link rel="stylesheet" th:href="@{/css/billing/billing_common.css}" />
     <link rel="stylesheet" th:href="@{/css/billing/billing_admin_upload.css}" />
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!--✅ 알림 추가 -->
+    <meta name="ctx" th:content="@{/}">
+    <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
+    <script th:src="@{/js/notification/notification-sse.js}"></script>
+    <script th:src="@{/js/notification/notification-bell.js}"></script>
+
 </head>
 <body>
 

@@ -135,6 +135,14 @@ public class GlobalExceptionHandler {
      * 예상하지 못한 오류이므로 error 레벨로 전체를 기록한다.
      * 클라이언트에는 내부 구현이 드러나지 않도록 최소한의 메시지만 반환한다.
      */
+
+    // ✅ 추가 — SSE 연결 끊김 예외 무시 (handleException보다 위에 위치)
+    @ExceptionHandler(org.springframework.web.context.request.async.AsyncRequestNotUsableException.class)
+    public void handleAsyncRequestNotUsable(
+            org.springframework.web.context.request.async.AsyncRequestNotUsableException e) {
+        // SSE 연결 끊김은 정상 동작 — 무시
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
         log.error("[UnexpectedException]", e);

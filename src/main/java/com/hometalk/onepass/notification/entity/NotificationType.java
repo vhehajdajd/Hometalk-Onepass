@@ -19,14 +19,26 @@ public enum NotificationType {
     BILLING_MONTHLY_SUMMARY ("관리비", "📊", 7, 24), // 전체관리자, 월초. 전월 관리비 납부 현황 요약
 
     // ─── 공지 ───
-    NOTICE_NEW ("공지", "📢", 7, 1),
+    NOTICE_NEW("공지", "📢", 7, 1), // 전체 입주민, 새 공지 등록
+
+    // ─── 일정 ─── (신규 추가)
+    SCHEDULE_TOMORROW("일정", "📅", 1, 0), // 전체 입주민+관리자, 내일 일정 알림
+    SCHEDULE_TODAY   ("일정", "📅", 1, 0), // 전체 입주민+관리자, 당일 일정 알림
 
     // ─── 커뮤니티 ───
-    COMMUNITY_COMMENT ("커뮤니티", "💬", 1, 0), // 해당 입주민, 내 게시글에 새 댓글. 24시간 후 자동삭제
+    COMMUNITY_COMMENT("커뮤니티", "💬", 1, 0), // 해당 입주민, 새 댓글
 
     // ─── 민원 ───
-    COMPLAINT_RECEIVED ("민원", "📋", 7, 0),
-    COMPLAINT_STATUS   ("민원", "📋", 7, 0),
+    COMPLAINT_RECEIVED("민원", "📋", 2, 0), // 전체 관리자, 민원 접수됨
+    COMPLAINT_STATUS  ("민원", "📋", 7, 0), // 해당 입주민, 답변 등록됨
+
+    // ─── 문의 ───
+    INQUIRY_RECEIVED  ("문의", "📋", 2, 0), // 전체 관리자, 문의 접수됨
+    INQUIRY_STATUS    ("문의", "📋", 7, 0), // 해당 입주민, 답변 등록됨
+
+    // ─── 시설예약 ───
+    RESERVATION_CONFIRMED("예약", "📅", 1, 0), // 해당 입주민, 예약 확정. expireDays 3→1
+    RESERVATION_REMINDER ("예약", "📅", 1, 0), // 해당 입주민, 예약 1시간 전 알림
 
     // ─── 주차 ───
     VEHICLE_APPROVED        ("주차", "🚗", 7, 0), // 해당 입주민, 차량 등록 승인
@@ -35,10 +47,9 @@ public enum NotificationType {
     VEHICLE_VISITOR_ENTRY   ("주차", "🚗", 1, 0), // 해당 입주민, 예약 방문객 입차
     VEHICLE_EXIT            ("주차", "🚗", 1, 0), // 해당 입주민, 입주자 출차
     VEHICLE_VISITOR_EXIT    ("주차", "🚗", 1, 0), // 해당 입주민, 예약 방문객 출차
-    VEHICLE_TICKET_SHORTAGE ("주차", "🚗", 1, 0), // 해당 입주민, 티켓 부족 출차 불가
+    VEHICLE_TICKET_SHORTAGE ("주차", "🚗", 1, 0); // 해당 입주민, 티켓 부족 출차 불가
 
-    // ─── 시설예약 ───
-    RESERVATION_CONFIRMED ("예약", "📅", 3, 0);
+
 
     private final String category;
     private final String icon;

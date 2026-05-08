@@ -123,16 +123,15 @@ public class BillingApiController {
     }
 
     // ─────────────────────────────────────────────
-    // 관리자: 납부완료 처리
-    //   POST /api/billing/admin/{billingId}/pay?adminId=1
-    // ─────────────────────────────────────────────
-
+// 관리자: 납부완료 처리
+//   POST /api/billing/admin/{billingId}/pay
+// ─────────────────────────────────────────────
     @PostMapping("/admin/{billingId}/pay")
     public ResponseEntity<Void> markAsPaid(
             @PathVariable Long billingId,
-            @RequestParam(defaultValue = "1") Long adminId   // TODO: CustomUserDetails로 교체
+            @AuthenticationPrincipal CustomUserDetails user
     ) {
-        billingService.markAsPaid(billingId, adminId);
+        billingService.markAsPaid(billingId, user.getUserId());
         return ResponseEntity.ok().build();
     }
 

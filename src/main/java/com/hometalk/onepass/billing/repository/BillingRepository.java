@@ -83,6 +83,11 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             """)
     Optional<Billing> findLatestPaidByHouseholdId(@Param("householdId") Long householdId);
 
+    // 3개월 이상 미납 중 가장 오래된 건 조회 (입주민 대시보드 우선 노출용)
+    Optional<Billing> findTopByHousehold_IdAndStatusAndBillingMonthLessThanEqualOrderByBillingMonthAsc(
+            Long householdId, BillingStatus status, String billingMonth);
+
+
     // ─────────────────────────────────────────────────────────
     // 관리자 공통 목록 (필터 + 페이징)
     //   - 업로드 화면: status=null → 전체 조회

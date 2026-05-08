@@ -488,7 +488,6 @@ async function doConfirmUpload() {
     const confirmBtn = document.querySelector('#confirmOverlay .btn-point');
     if (confirmBtn) confirmBtn.disabled = true;
 
-    // ★ selDong 필터 적용
     const targetRows = selDong
         ? validRows.filter(r => r.dong === selDong)
         : validRows;
@@ -509,11 +508,12 @@ async function doConfirmUpload() {
 
     try {
         const res = await fetch(
-            `${CONTEXT_PATH}/api/billing/admin/upload/confirm?adminId=1`,
+            `${CONTEXT_PATH}/api/billing/admin/upload/confirm`,
             {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json', [CSRF_HEADER]: CSRF_TOKEN },
-                body:    JSON.stringify(uploadRows),
+                method:      'POST',
+                credentials: 'include',
+                headers:     { 'Content-Type': 'application/json', [CSRF_HEADER]: CSRF_TOKEN },
+                body:        JSON.stringify(uploadRows),
             }
         );
         if (!res.ok) throw new Error('업로드 실패');
