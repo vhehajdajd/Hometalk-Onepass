@@ -204,7 +204,7 @@ public class InquiryService {
     }
 
     private boolean isDuplicate(InquiryDto dto, Long userId) {
-        return inquiryRepository.findFirstByUserIdOrderByIdDesc(userId)
+        return inquiryRepository.findFirstByUser_IdOrderByIdDesc(userId)
                 .map(lastInquiry -> {
                     boolean isSameContent = lastInquiry.getCategory().equals(dto.getCategory())
                             && lastInquiry.getTitle().equals(dto.getTitle());
@@ -216,5 +216,25 @@ public class InquiryService {
 
                     return isSameContent && (diffInSeconds < 60);
                 }).orElse(false);
+    }
+
+    public List<InquiryDto> findMyRecent(Authentication authentication) {
+        Long userId = getLoginUserId(authentication);
+
+        return inquiryRepository.findTop5ByUser_IdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(InquiryDto::fromEntity)
+                .toList();
+    }
+
+    public List<InquiryDto> findAdminRecent(Authentication authentication) {
+        if (!isAdmin(authentication)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "관리자만 접근할 수 있습니다.");
+        }
+
+        return inquiryRepository.findTop10ByOrderByCreatedAtDesc()
+                .stream()
+                .map(InquiryDto::fromEntity)
+                .toList();
     }
 }

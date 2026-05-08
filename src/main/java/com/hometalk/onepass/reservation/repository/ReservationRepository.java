@@ -1,7 +1,6 @@
 package com.hometalk.onepass.reservation.repository;
 
 import com.hometalk.onepass.reservation.entity.Reservation;
-import com.hometalk.onepass.reservation.entity.ReservationTime;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -54,6 +53,13 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             """)
     List<Reservation> findByMonthRange(@Param("start") LocalDateTime start,
                                        @Param("end") LocalDateTime end);
+
+    // 최근 예약 조회용
+    @EntityGraph(attributePaths = {"facility"})
+    List<Reservation> findTop5ByUser_IdOrderByIdDesc(Long userId);
+
+    @EntityGraph(attributePaths = {"user", "facility"})
+    List<Reservation> findTop10ByOrderByIdDesc();
 
     // 7일 지난 예약 자동 삭제용
     void deleteByReservationTime_EndTimeBefore(LocalDateTime cutoffDateTime);

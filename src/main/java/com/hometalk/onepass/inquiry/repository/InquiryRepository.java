@@ -25,5 +25,7 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
 
     List<Inquiry> findTop10ByOrderByCreatedAtDesc();
 
-    Optional<Inquiry> findFirstByUserIdOrderByIdDesc(Long userId);
+    Optional<Inquiry> findFirstByUser_IdOrderByIdDesc(Long userId);
+
+    List<Inquiry> findTop5ByUser_IdOrderByCreatedAtDesc(Long userId);
 }

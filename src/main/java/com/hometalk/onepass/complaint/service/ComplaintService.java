@@ -79,13 +79,15 @@ public class ComplaintService {
                                     && c.getUser() != null
                                     && c.getUser().getId().equals(userId);
 
-                    boolean canView = isOwner || isAdmin;
+                    boolean isSecret = Boolean.TRUE.equals(c.getSecret());
+
+                    boolean canView = !isSecret || isOwner || isAdmin;
 
                     dto.setCanView(canView);
-                    dto.setCanEdit(canView);
+                    dto.setCanEdit(isOwner || isAdmin);
                     dto.setIsAdmin(isAdmin);
 
-                    if (Boolean.TRUE.equals(dto.getSecret()) && !canView) {
+                    if (isSecret && !canView) {
                         dto.setTitle("🔒 비밀글입니다. (작성자와 관리자만 확인 가능)");
                         dto.setContent(null);
                         dto.setUserName("비공개");
@@ -133,7 +135,6 @@ public class ComplaintService {
                         .toList();
 
         dto.setAnswers(answers);
-
         dto.setCanView(true);
         dto.setCanEdit(isOwner || isAdmin);
         dto.setIsAdmin(isAdmin);
@@ -154,7 +155,7 @@ public class ComplaintService {
     public Page<ComplaintDto> findByUserId(Long userId,
                                            Pageable pageable) {
 
-        return complaintRepository.findByUserId(userId, pageable)
+        return complaintRepository.findByUser_Id(userId, pageable)
                 .map(c -> {
                     ComplaintDto dto = ComplaintDto.fromEntity(c);
 
@@ -298,7 +299,7 @@ public class ComplaintService {
     private boolean isDuplicate(ComplaintDto dto,
                                 Long userId) {
 
-        return complaintRepository.findFirstByUserIdOrderByIdDesc(userId)
+        return complaintRepository.findFirstByUser_IdOrderByIdDesc(userId)
                 .map(lastComplaint -> {
                     boolean isSameContent =
                             lastComplaint.getCategory().equals(dto.getCategory())
@@ -312,6 +313,26 @@ public class ComplaintService {
 
                     return isSameContent && diffInSeconds < 60;
                 }).orElse(false);
+    }
+
+    public List<ComplaintDto> findMyRecent(Authentication authentication) {
+        Long userId = getLoginUserId(authentication);
+
+        return complaintRepository.findTop5ByUser_IdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(ComplaintDto::fromEntity)
+                .toList();
+    }
+
+    public List<ComplaintDto> findAdminRecent(Authentication authentication) {
+        if (!isAdmin(authentication)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "관리자만 접근할 수 있습니다.");
+        }
+
+        return complaintRepository.findTop10ByOrderByCreatedAtDesc()
+                .stream()
+                .map(ComplaintDto::fromEntity)
+                .toList();
     }
 
     private void handleFileUpload(List<MultipartFile> files,
