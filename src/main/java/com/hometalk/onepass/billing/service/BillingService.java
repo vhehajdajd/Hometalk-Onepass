@@ -43,9 +43,15 @@ public class BillingService {
 
     // ─────────────────────────────────────────────
     // 대시보드 - 관리자 특정 월의 '미납 총액' 합계
+    // /admin/summary 에서 호출 (대시보드용)
     // ─────────────────────────────────────────────
-    public AdminDashboardResponse getAdminDashboardSummary() {
-        String currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+    public AdminDashboardResponse getAdminUnpaidSummary() {
+        LocalDate today = LocalDate.now();
+        YearMonth refMonth = today.getDayOfMonth() > 10
+                ? YearMonth.now()
+                : YearMonth.now().minusMonths(1);
+        String currentMonth = refMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+
         long unpaidCount = billingRepository.countByBillingMonthAndStatus(currentMonth, BillingStatus.UNPAID);
         Long unpaidSum = billingRepository.sumTotalAmountByBillingMonthAndStatus(currentMonth, BillingStatus.UNPAID);
         long totalAmount = (unpaidSum != null) ? unpaidSum : 0L;
@@ -61,29 +67,32 @@ public class BillingService {
     // 대시보드 - 입주민용 관리비 요약 (미납 우선 노출 로직)
     // ─────────────────────────────────────────────
     public ResidentDashboardResponse getResidentDashboardSummary(Long householdId) {
-        List<Billing> billings = billingRepository.findAllByHouseholdIdOrderByStatusDescBillingMonthAsc(householdId);
+        String currentMonth = YearMonth.now().toString();  // 현재 월
 
-        if (billings == null || billings.isEmpty()) {
-            return null;
+        // 당월 먼저 조회
+        Optional<Billing> target = billingRepository
+                .findByHousehold_IdAndBillingMonth(householdId, currentMonth);
+
+        // 없으면 가장 최근 고지서
+        if (target.isEmpty()) {
+            target = billingRepository
+                    .findTopByHousehold_IdOrderByBillingMonthDesc(householdId);
         }
 
-        Billing target = billings.get(0);
+        if (target.isEmpty()) return null;
 
-        if (target.getStatus() == BillingStatus.PAID) {
-            target = billings.get(billings.size() - 1);
-        }
-
-        String displayMonth = Integer.parseInt(target.getBillingMonth().substring(5, 7)) + "월";
-        String formattedDueDate = target.getDueDate().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일"));
+        Billing b = target.get();
+        String displayMonth = Integer.parseInt(b.getBillingMonth().substring(5, 7)) + "월";
+        String formattedDueDate = b.getDueDate()
+                .format(DateTimeFormatter.ofPattern("yyyy년 M월 d일"));
 
         return ResidentDashboardResponse.builder()
                 .billingMonth(displayMonth)
-                .status(target.getStatus().name())
-                .totalAmount(target.getTotalAmount())
+                .status(b.getStatus().name())
+                .totalAmount(b.getTotalAmount())
                 .dueDate(formattedDueDate)
                 .build();
     }
-
     // ─────────────────────────────────────────────
     // AdminBillingStats 관리자 상태
     // ─────────────────────────────────────────────
@@ -117,22 +126,37 @@ public class BillingService {
             long   globalOverdueHouseholds
     ) {}
 
+    // /admin/stats/dashboard 에서 호출 (unpaid 페이지용)
     @Transactional(readOnly = true)
-    public AdminDashboardStats getDashboardStats(Integer year, String month, String dong) {
+    public AdminDashboardStats getAdminDashboardStats(Integer year, String month, String dong) {
         long totalHouseholds = householdRepository.count();
 
-        String yearFrom   = (year != null && month == null) ? year + "-01" : null;
-        String yearTo     = (year != null && month == null) ? year + "-12" : null;
-        String monthParam = month;
+        String yearFrom = (year != null && month == null) ? year + "-01" : null;
+        String yearTo   = (year != null && month == null) ? year + "-12" : null;
 
-        long paidCount   = billingRepository.countPaidWithFilter(dong, yearFrom, yearTo, monthParam);
-        long unpaidCount = billingRepository.countUnpaidWithFilter(dong, yearFrom, yearTo, monthParam);
+        long paidCount   = billingRepository.countPaidWithFilter(dong, yearFrom, yearTo, month);
+        long unpaidCount = billingRepository.countUnpaidWithFilter(dong, yearFrom, yearTo, month);
         double paidRate  = totalHouseholds > 0
                 ? Math.round((double) paidCount / totalHouseholds * 1000.0) / 10.0
                 : 0.0;
 
-        String currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-        Long unpaidSum = billingRepository.sumTotalAmountByBillingMonthAndStatus(currentMonth, BillingStatus.UNPAID);
+        // 납부기한(익월 10일) 기준: 오늘이 10일 이후면 당월, 이전이면 전월
+        LocalDate today = LocalDate.now();
+        YearMonth refMonth = today.getDayOfMonth() > 10
+                ? YearMonth.now()
+                : YearMonth.now().minusMonths(1);
+        String refMonthStr = refMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+
+        Long unpaidSum;
+        if (month != null) {
+            // 월 필터 선택 시 해당 월 기준
+            unpaidSum = billingRepository.sumTotalAmountByBillingMonthAndStatus(
+                    month, BillingStatus.UNPAID);
+        } else {
+            // 연도만 선택이거나 필터 없을 때 → 항상 기준월 고정
+            unpaidSum = billingRepository.sumTotalAmountByBillingMonthAndStatus(
+                    refMonthStr, BillingStatus.UNPAID);
+        }
         long unpaidAmount = unpaidSum != null ? unpaidSum : 0L;
 
         String overdueBefore = YearMonth.now().minusMonths(3).toString();
@@ -370,10 +394,20 @@ public class BillingService {
                 .map(log -> log.getCreatedAt().toLocalDate())
                 .orElse(null);
 
+        // 납부한 건 월 문구
+        String lastPaidBillingMonth = billingLogRepository
+                .findTopByBilling_Household_IdAndActionTypeOrderByCreatedAtDesc(
+                        householdId, BillingActionType.STATUS_CHANGE)
+                .map(log -> {
+                    String bm = log.getBilling().getBillingMonth(); // "2026-04"
+                    return Integer.parseInt(bm.split("-")[1]) + "월 ";
+                })
+                .orElse(null);
+
         List<BillingSummaryResponse> billings = billingRepository
                 .findByHouseholdIdWithFilter(
                         householdId, null, null, null, null,
-                        PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "billingMonth")))
+                        PageRequest.of(0, 12, Sort.by(Sort.Direction.DESC, "billingMonth")))
                 .map(BillingSummaryResponse::from)
                 .getContent();
 
@@ -383,6 +417,7 @@ public class BillingService {
                 .currentMonthAmount(current.map(Billing::getTotalAmount).orElse(null))
                 .unpaidCount(unpaidCount)
                 .lastPaidDate(lastPaidDate)
+                .lastPaidBillingMonth(lastPaidBillingMonth)
                 .billings(billings)
                 .build();
     }

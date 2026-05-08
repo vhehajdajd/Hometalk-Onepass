@@ -2,6 +2,7 @@ package com.hometalk.onepass.parking.service;
 
 import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.auth.entity.User;
+import com.hometalk.onepass.auth.repository.HouseholdRepository;
 import com.hometalk.onepass.auth.repository.UserRepository;
 import com.hometalk.onepass.notification.entity.NotificationTargetRole;
 import com.hometalk.onepass.notification.entity.NotificationType;
@@ -38,13 +39,14 @@ public class VehicleServiceImpl implements VehicleService {
     private final VehicleApprovalRepository vehicleApprovalRepository;
     private final FileStorageService fileStorageService;
     private final UserRepository userRepository;
+    private final HouseholdRepository householdRepository;
     private final ParkingLogRepository parkingLogRepository;
     private final NotificationPublisher notificationPublisher;
 
     @Override
     public VehicleResponse register(Long userId, VehicleRegisterRequest request,
                                     List<MultipartFile> documents) {
-        User user = userRepository.findById(1L) // TODO: Security 연동 후 userId로 변경
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ParkingException("사용자를 찾을 수 없습니다."));
         Household household = user.getHousehold();
 
@@ -71,9 +73,8 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     @Transactional(readOnly = true)
     public List<VehicleResponse> getHouseholdVehicles(Long householdId) {
-        User user = userRepository.findById(1L) // TODO: Security 연동 후 변경
-                .orElseThrow(() -> new ParkingException("사용자를 찾을 수 없습니다."));
-        Household household = user.getHousehold();
+        Household household = householdRepository.findById(householdId)
+                .orElseThrow(() -> new ParkingException("세대를 찾을 수 없습니다."));
 
         return vehicleRepository.findByHousehold(household)
                 .stream()
@@ -138,7 +139,8 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public void approve(Long userId, Long approvalId) {
-        User user = null; // TODO: Security 연동 후 추출
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ParkingException("사용자를 찾을 수 없습니다."));
 
         VehicleApproval approval = vehicleApprovalRepository.findById(approvalId)
                 .orElseThrow(() -> new ParkingException("승인 이력을 찾을 수 없습니다."));
@@ -146,22 +148,21 @@ public class VehicleServiceImpl implements VehicleService {
         approval.approve(user);
         approval.getVehicle().approve();
 
-        // ─── 알림: 차량 승인 → 입주자에게 ───
-        Long ownerId = approval.getVehicle().getUser().getId();
         notificationPublisher.publish(
-                ownerId,
+                approval.getVehicle().getUser().getId(),
                 NotificationTargetRole.RESIDENT,
                 NotificationType.VEHICLE_APPROVED,
-                "차량 승인 완료",
-                approval.getVehicle().getVehicleNumber() + " 차량이 승인되었습니다.",
-                "/parking/vehicle",
+                "차량 등록 완료",
+                "차량등록이 완료되었습니다.",
+                "/parking",
                 approval.getVehicle().getVehicleId()
         );
     }
 
     @Override
     public void reject(Long userId, Long approvalId, String rejectReason) {
-        User user = null; // TODO: Security 연동 후 추출
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ParkingException("사용자를 찾을 수 없습니다."));
 
         VehicleApproval approval = vehicleApprovalRepository.findById(approvalId)
                 .orElseThrow(() -> new ParkingException("승인 이력을 찾을 수 없습니다."));
@@ -169,15 +170,13 @@ public class VehicleServiceImpl implements VehicleService {
         approval.reject(user, rejectReason);
         approval.getVehicle().reject();
 
-        // ─── 알림: 차량 반려 → 입주자에게 ───
-        Long ownerId = approval.getVehicle().getUser().getId();
         notificationPublisher.publish(
-                ownerId,
+                approval.getVehicle().getUser().getId(),
                 NotificationTargetRole.RESIDENT,
                 NotificationType.VEHICLE_REJECTED,
-                "차량 반려",
-                approval.getVehicle().getVehicleNumber() + " 차량이 반려되었습니다. 사유: " + rejectReason,
-                "/parking/vehicle",
+                "차량 등록 반려",
+                "차량 등록이 반려되었습니다. 사유를 확인 후 다시 등록해 주세요.",
+                "/parking",
                 approval.getVehicle().getVehicleId()
         );
     }

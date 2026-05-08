@@ -371,8 +371,13 @@ public class ScheduleService {
         LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1).minusSeconds(1);
 
-        return scheduleRepository.findByStartAtBetween(startOfDay, endOfDay)
-                .stream()
+        // endAt 있는 연속일정 + startAt이 오늘인 당일 일정 합산
+        List<Schedule> result = new java.util.ArrayList<>();
+        result.addAll(scheduleRepository.findByStartAtLessThanEqualAndEndAtGreaterThanEqual(endOfDay, startOfDay));
+        result.addAll(scheduleRepository.findByStartAtBetweenAndEndAtIsNull(startOfDay, endOfDay));
+
+        return result.stream()
+                .distinct()
                 .map(schedule -> new ScheduleCalResponseDto(
                         schedule.getId(),
                         schedule.getTitle(),

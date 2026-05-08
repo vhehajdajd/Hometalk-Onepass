@@ -112,6 +112,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     boolean existsByTypeAndUserId(NotificationType type, Long userId);
 
+    // 관리비 납부완료 처리 시 삭제 대상 알림 ID 목록 조회 (notification_read 선삭제용)
+    @Query("SELECT n.id FROM Notification n WHERE n.type = :type AND n.userId = :userId")
+    List<Long> findIdsByTypeAndUserId(@Param("type") NotificationType type,
+                                      @Param("userId") Long userId);
+
     // ─────────────── 삭제 ───────────────
 
     @Modifying

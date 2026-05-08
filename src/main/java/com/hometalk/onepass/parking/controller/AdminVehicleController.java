@@ -1,5 +1,6 @@
 package com.hometalk.onepass.parking.controller;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.parking.dto.request.VehicleApprovalRequest;
 import com.hometalk.onepass.parking.dto.response.VehicleApprovalResponse;
 import com.hometalk.onepass.parking.entity.Vehicle;
@@ -7,6 +8,7 @@ import com.hometalk.onepass.parking.service.VehicleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,8 +38,10 @@ public class AdminVehicleController {
     // 관리자 차량 승인 처리
     @PostMapping("/vehicle/approval/approve")
     @ResponseBody
-    public ResponseEntity<Void> approve(@RequestBody VehicleApprovalRequest request) {
-        Long userId = null;
+    public ResponseEntity<Void> approve(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody VehicleApprovalRequest request) {
+        Long userId = userDetails.getUserId();
         vehicleService.approve(userId, request.getApprovalId());
         return ResponseEntity.ok().build();
     }
@@ -45,8 +49,10 @@ public class AdminVehicleController {
     // 관리자 차량 반려 처리
     @PostMapping("/vehicle/approval/reject")
     @ResponseBody
-    public ResponseEntity<Void> reject(@RequestBody VehicleApprovalRequest request) {
-        Long userId = null;
+    public ResponseEntity<Void> reject(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody VehicleApprovalRequest request) {
+        Long userId = userDetails.getUserId();
         vehicleService.reject(userId, request.getApprovalId(), request.getRejectReason());
         return ResponseEntity.ok().build();
     }
