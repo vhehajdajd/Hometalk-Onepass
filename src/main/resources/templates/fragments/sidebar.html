@@ -68,17 +68,18 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        function setActiveCategory() {
             var currentPath = window.location.pathname;
             document.querySelectorAll('.category-item').forEach(function(item) {
                 var href = item.getAttribute('href');
-                if (href && href !== '#') {
-                    if (currentPath === href) {
-                        item.classList.add('active');
-                    }
+                if (href && href !== '#' && currentPath === href) {
+                    item.classList.add('active');
                 }
             });
-        });
+        }
+
+        document.addEventListener('DOMContentLoaded', setActiveCategory);
+        window.addEventListener('load', setActiveCategory);
     </script>
 </aside>
 

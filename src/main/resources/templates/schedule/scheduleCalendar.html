@@ -432,10 +432,13 @@
             }
         });
 
-        // 시작날짜 기준 오래된 순으로 정렬 (슬롯 0 먼저 차지)
         var sortedGroupKeys = Object.keys(groups).sort(function(a, b) {
-            var aStart = new Date(groups[a].sort(function(x, y) { return new Date(x.startAt) - new Date(y.startAt); })[0].startAt);
-            var bStart = new Date(groups[b].sort(function(x, y) { return new Date(x.startAt) - new Date(y.startAt); })[0].startAt);
+            // 반복일정은 뒤로
+            var aIsRepeat = a.indexOf('single_') === -1 ? 1 : 0;
+            var bIsRepeat = b.indexOf('single_') === -1 ? 1 : 0;
+            if (aIsRepeat !== bIsRepeat) return aIsRepeat - bIsRepeat;
+            var aStart = new Date(groups[a][0].startAt);
+            var bStart = new Date(groups[b][0].startAt);
             return aStart - bStart;
         });
 
@@ -497,9 +500,13 @@
             cells.push({ day: k, otherMonth: true });
         }
 
-        var multiDaySchedules = scheduleData.filter(isMultiDay);
+        // 연속일정 (반복 아닌 것), 단일일정, 반복일정 순서로 정렬
+        var multiDaySchedules = scheduleData.filter(function(s) { return isMultiDay(s) && !s.repeatGroupId; });
+        var repeatSchedules = scheduleData.filter(function(s) { return s.repeatGroupId; });
         var singleDaySchedules = scheduleData.filter(function(s) { return !isMultiDay(s); });
-        var slotResult = assignMultiDaySlots(multiDaySchedules, cells);
+        // 연속일정 먼저 슬롯 배정, 반복일정 나중에
+        var allMultiDay = multiDaySchedules.concat(repeatSchedules);
+        var slotResult = assignMultiDaySlots(multiDaySchedules.concat(repeatSchedules), cells);;
         var scheduleSlotMap = slotResult.scheduleSlotMap;
 
         var cellDivs = [];
@@ -544,15 +551,13 @@
             body.appendChild(div);
         });
 
-        // 멀티데이 배지 렌더링
+        // 연속일정 배지 렌더링 (반복 아닌 것)
         multiDaySchedules.forEach(function(s) {
             var sd = new Date(s.startAt);
             var ed = s.endAt ? new Date(s.endAt) : sd;
             sd.setHours(0, 0, 0, 0);
             ed.setHours(0, 0, 0, 0);
-
             var slot = scheduleSlotMap[s.id] !== undefined ? scheduleSlotMap[s.id] : 0;
-
             cellDivs.forEach(function(item) {
                 if (item.cell.otherMonth) return;
                 var cellDate = new Date(currentYear, currentMonth - 1, item.cell.day);
@@ -573,18 +578,25 @@
                        sd.getMonth() + 1 === currentMonth &&
                        sd.getDate() === item.cell.day;
             });
-
-            // 단일 일정 배지 렌더링
             daySingles.forEach(function(s) {
-                var slot = 0;
-                while (slot < item.slotContainer.children.length &&
-                       !item.slotContainer.children[slot].classList.contains('cal-badge-placeholder')) {
-                    slot++;
-                }
                 var badge = createBadge(s);
-                if (slot < item.slotContainer.children.length) {
-                    ensureSlot(item.slotContainer, slot, badge);
-                } else {
+                item.slotContainer.appendChild(badge);
+            });
+        });
+
+        // 반복일정 배지 렌더링 (최하단)
+        repeatSchedules.forEach(function(s) {
+            var sd = new Date(s.startAt);
+            var ed = s.endAt ? new Date(s.endAt) : sd;
+            sd.setHours(0, 0, 0, 0);
+            ed.setHours(0, 0, 0, 0);
+            var slot = scheduleSlotMap[s.id] !== undefined ? scheduleSlotMap[s.id] : 0;
+            cellDivs.forEach(function(item) {
+                if (item.cell.otherMonth) return;
+                var cellDate = new Date(currentYear, currentMonth - 1, item.cell.day);
+                cellDate.setHours(0, 0, 0, 0);
+                if (cellDate >= sd && cellDate <= ed) {
+                    var badge = createMultiDayBadge(s, cellDate, sd, ed, slot);
                     item.slotContainer.appendChild(badge);
                 }
             });
