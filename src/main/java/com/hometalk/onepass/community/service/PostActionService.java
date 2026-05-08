@@ -73,6 +73,17 @@ public class PostActionService {
         post.updateStatus(PostStatus.HIDDEN);
     }
 
+    // 관리자 숨김 '해제' 처리
+    @Transactional
+    public void unhidePost(Long postId, CustomUserDetails user) {
+        if (user == null || user.getRole() != User.UserRole.ADMIN) {
+            throw new UnauthorizedAccessException("관리자 권한이 필요합니다.");
+        }
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
+        post.updateStatus(PostStatus.ACTIVE);
+    }
+
     // 조회수 증가
     @Transactional
     public void increaseViewCount(Long postId, Long currentUserId, List<Long> viewedPosts) {

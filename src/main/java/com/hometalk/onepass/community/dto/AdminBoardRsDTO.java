@@ -16,14 +16,20 @@ public class AdminBoardRsDTO {
     // 카테고리 리스트 포함
     private List<CategoryDto> categories;
 
+    private Long visiblePostCount;
+    private Long hiddenPostCount;
+
     private boolean system;
 
-    public static AdminBoardRsDTO from(Board board, List<CategoryDto> categories) {
+    public static AdminBoardRsDTO from(Board board, List<CategoryDto> categories,
+                                       Long visiblePostCount, Long hiddenPostCount) {
         return AdminBoardRsDTO.builder()
                 .id(board.getId())
                 .name(board.getName())
                 .code(board.getCode())
                 .categories(categories)
+                .visiblePostCount(visiblePostCount)
+                .hiddenPostCount(hiddenPostCount)
                 .system(board.isSystem())
                 .build();
     }

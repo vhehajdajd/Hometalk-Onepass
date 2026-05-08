@@ -11,6 +11,9 @@ import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
 import com.hometalk.onepass.community.repository.CommentRepository;
 import com.hometalk.onepass.community.repository.PostRepository;
 import com.hometalk.onepass.community.validator.CommentValidator;
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+import com.hometalk.onepass.notification.entity.NotificationType;
+import com.hometalk.onepass.notification.publisher.NotificationPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +27,7 @@ public class CommentService {
     private final PostRepository postRepository;        // 게시글 확인용
     private final UserRepository userRepository;        // 작성자 확인용`
     private final CommentValidator validator;
+    private final NotificationPublisher notificationPublisher;
 
     // 댓글 목록 (R)
     @Transactional(readOnly = true)
@@ -54,6 +58,20 @@ public class CommentService {
                 .content(dto.getContent())
                 .build();
         commentRepository.save(comment);
+
+        // 댓글 알림
+        User postWriter = post.getWriter();
+        if (!postWriter.getId().equals(userId)) {
+            notificationPublisher.publish(
+                    postWriter.getId(),
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.COMMUNITY_COMMENT,
+                    "새로운 댓글",
+                    "새로운 댓글이 있습니다.",
+                    "/community",   // ← 단순화
+                    comment.getId()
+            );
+        }
     }
 
     // 댓글 수정 (U)

@@ -1,26 +1,19 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/community/adminpage.css}">
 </head>
 
 <body>
-<div class="main-layout" style="display: flex; min-height: 100vh;">
+<div class="main-layout">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
     <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
-        <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">
-            <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community'} })}"></div>
-            <div th:replace="~{fragments/headerCategoryMenu :: communityAdmin}"></div>
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: communityAdmin}"></div>
+        <main class="dashboard-content">
 
             <div class="admin-content-area">
-                <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <p style="font-size: 14px; color: #666;">* 숨김 또는 삭제 처리된 게시글만 표시됩니다.</p>
-                    <button type="button" class="btn-hard-delete" onclick="deleteSelectedPosts()"
-                            style="padding: 8px 15px; background-color: #ff4d4f; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                        선택한 게시글 일괄 영구 삭제
-                    </button>
-                </div>
 
                 <div class="alert-container">
                     <!-- 성공 메시지 (message) -->
@@ -35,42 +28,83 @@
                     </div>
                 </div>
 
-                <table class="admin-table admin-management-table">
+                <div class="admin-guide warning">
+                    <h3><i class="fas fa-thumbtack"></i> 게시글 관리 안내</h3>
+                    <p>숨김 또는 삭제 처리된 게시글을 확인하고 관리할 수 있습니다.</p>
+                    <ul>
+                        <li><strong>영구 삭제</strong> 처리된 데이터는 복구가 불가능하니 신중하게 결정해 주세요.</li>
+                        <li><strong>숨김 처리</strong>된 게시글은 입주민 커뮤니티 목록에서 노출되지 않습니다.</li>
+                        <li>일괄 선택 기능을 통해 여러 게시글을 한 번에 영구 삭제할 수 있으니 주의해 주세요.</li>
+                    </ul>
+                </div>
+
+                <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <p style="font-size: 14px; color: #666;">* 숨김 또는 삭제 처리된 게시글만 표시됩니다.</p>
+                    <button type="button" class="btn-hard-delete" onclick="deleteSelectedPosts()"
+                            style="padding: 8px 15px; background-color: #ff4d4f; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        선택한 게시글 일괄 영구 삭제
+                    </button>
+                </div>
+
+                <table class="admin-management-table post-table" style="max-width: 1400px;">
                     <thead>
-                    <tr>
-                        <th><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
-                        <th>ID</th>
-                        <th>게시판</th>
-                        <th>제목</th>
-                        <th>상태</th>
-                        <th>최종 수정일</th>
-                        <th>관리</th>
-                    </tr>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
+                            <th>ID</th>
+                            <th>게시판</th>
+                            <th>제목</th>
+                            <th>상태</th>
+                            <th>최종 수정일</th>
+                            <th>관리</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="post : ${posts}">
-                        <td><input type="checkbox" name="postCheck" th:value="${post.id}"></td>
-                        <td th:text="${post.id}">1</td>
-                        <td th:text="${post.boardName}">자유게시판</td>
-                        <td class="text-left">
-                            <span th:text="${post.title}">제목</span>
-                        </td>
-                        <td>
-                            <span th:if="${post.postStatus == 'DELETED'}" class="badge status-deleted">삭제됨</span>
-                            <span th:if="${post.postStatus == 'HIDDEN'}" class="badge status-hidden">숨김</span>
-                        </td>
-                        <td th:text="${#temporals.format(post.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-04-30</td>
-                        <td>
-                            <form th:action="@{/community/admin/posts/hard-delete/{id}(id=${post.id})}"
-                                  method="post"
-                                  onsubmit="return confirm('이 작업은 되돌릴 수 없습니다. 해당 게시글과 모든 댓글이 DB에서 영구 삭제됩니다. 진행하시겠습니까?');">
-                                <button type="submit" class="btn-hard-delete">영구 삭제</button>
-                            </form>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(posts)}">
-                        <td colspan="6" class="empty-msg">정리할 숨김/삭제 게시글이 없습니다.</td>
-                    </tr>
+                        <tr th:each="post : ${posts}">
+                            <td><input type="checkbox" name="postCheck" th:value="${post.id}"></td>
+                            <td th:text="${post.id}">1</td>
+                            <td th:text="${post.boardName}">자유게시판</td>
+                            <td class="text-left">
+                                <span th:text="${post.title}">제목</span>
+                            </td>
+                            <td>
+                                <span th:if="${post.postStatus == 'DELETED'}" class="badge status-deleted">삭제됨</span>
+                                <span th:if="${post.postStatus == 'HIDDEN'}" class="badge status-hidden">숨김</span>
+                            </td>
+                            <td th:text="${#temporals.format(post.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-04-30</td>
+                            <td class="action-cell">
+                                <div class="custom-dropdown">
+                                    <button type="button"
+                                            class="drop-btn"
+                                            onclick="toggleDropdown(this)">
+                                        ⋮
+                                    </button>
+
+                                    <div class="drop-content">
+                                        <!-- 숨김 해제 -->
+                                        <button th:if="${post.postStatus != null && #strings.toString(post.postStatus) == 'HIDDEN'}"
+                                                type="button"
+                                                class="menu-item"
+                                                th:data-id="${post.id}"
+                                                onclick="unhidePost(this.getAttribute('data-id'))">
+                                            숨김 해제
+                                        </button>
+                                        <!-- 영구 삭제 -->
+                                        <form th:action="@{/community/admin/posts/hard-delete/{id}(id=${post.id})}"
+                                              method="post"
+                                              style="margin:0;"
+                                              onsubmit="return confirm('이 작업은 되돌릴 수 없습니다. \n해당 게시글과 모든 댓글이 영구 삭제됩니다. 진행하시겠습니까?');">
+                                            <button type="submit"
+                                                    class="delete-btn">
+                                                영구 삭제
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(posts)}">
+                            <td colspan="6" class="empty-msg">정리할 숨김/삭제 게시글이 없습니다.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -133,6 +167,34 @@
             document.body.appendChild(form);
             form.submit();
         }
+    }
+
+    function unhidePost(postId) {
+        if (!confirm("선택한 게시글의 숨김을 해제하시겠습니까?")) return;
+
+        // CSRF 토큰 (Meta 태그 기준)
+        const token = document.querySelector('meta[name="_csrf"]').content;
+        const header = document.querySelector('meta[name="_csrf_header"]').content;
+
+        fetch(`/hometop/api/posts/${postId}/unhide`, {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+                [header]: token
+            }
+        })
+            .then(response => {
+            if (response.ok) {
+                alert("정상적으로 해제되었습니다.");
+                location.reload(); // 목록 새로고침
+            } else {
+                alert("해제 처리 중 오류가 발생했습니다.");
+            }
+        })
+            .catch(err => {
+            console.error("Error:", err);
+            alert("서버 통신 오류가 발생했습니다.");
+        });
     }
 </script>
 </body>

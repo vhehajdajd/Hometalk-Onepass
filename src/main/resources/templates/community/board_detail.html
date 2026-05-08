@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/community/adminpage.css}">
@@ -7,12 +7,11 @@
 <body>
 <div class="main-layout" style="display: flex; min-height: 100vh;">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
+    <div class="main-wrapper">
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: communityAdmin}"></div>
 
-    <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
-        <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">
-            <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community', '관리'} })}"></div>
-            <div th:replace="~{community/fragments/adminNav :: adminNav('management')}"></div>
-
+        <main class="dashboard-content">
             <div class="detail-container">
                 <div class="alert-container">
                     <div th:if="${message}" class="alert-banner alert-success">
@@ -47,7 +46,7 @@
 
                 <ul class="category-list">
                     <li th:each="cat : ${board.categories}"
-                        class="category-item"
+                        class="category-list-item"
                         th:id="'item-' + ${cat.id}">
 
                         <div class="category-info">
@@ -64,9 +63,9 @@
                                 <input type="text"
                                        th:id="'input-' + ${cat.id}"
                                        th:value="${cat.name}"
-                                       style="padding: 2px 5px;">
+                                       class="form-control">
 
-                                <button class="btn-save"
+                                <button class="btn btn-save"
                                         type="button"
                                         th:data-id="${cat.id}"
                                         th:data-board-id="${board.id}"
@@ -74,7 +73,7 @@
                                     저장
                                 </button>
 
-                                <button class="btn-close"
+                                <button class="btn btn-close"
                                         type="button"
                                         th:data-id="${cat.id}"
                                         onclick="toggleEdit(this.dataset.id, false)">
@@ -91,14 +90,14 @@
                         <div class="btn-group view-mode"
                              th:id="'btn-group-' + ${cat.id}">
                             <th:block th:if="${!cat.isSystem}">
-                                <button class="btn-sm btn-edit"
+                                <button class="btn btn-primary"
                                         type="button"
                                         th:data-id="${cat.id}"
                                         onclick="toggleEdit(this.dataset.id, true)">
                                     수정
                                 </button>
 
-                                <button class="btn-sm btn-delete"
+                                <button class="btn btn-danger-outline"
                                         type="button"
                                         th:data-id="${cat.id}"
                                         th:data-count="${cat.postCount}"

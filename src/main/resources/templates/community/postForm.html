@@ -11,7 +11,7 @@
     <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
         <!-- 상단 메뉴 -->
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community'} })}"></div>
-        <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: ${#authorization.expression('hasRole(''ADMIN'')')} ? 'communityAdmin' : 'community'}"></div>
 
         <!-- 메인 -->
         <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">

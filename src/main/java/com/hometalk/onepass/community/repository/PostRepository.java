@@ -125,7 +125,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     // -- API --
     // 최신순 상위 3개
-    List<Post> findTop3ByPostStatusOrderByCreatedAtDesc(PostStatus status);
+    List<Post> findTop5ByPostStatusOrderByCreatedAtDesc(PostStatus status);
 
     // 조회수 정렬
     List<Post> findTop5ByPostStatusOrderByViewCountDesc(PostStatus status);
@@ -135,8 +135,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findAllByPostStatusInOrderByUpdatedAtDesc(List<PostStatus> targetStatuses);
 
     // --- [기타/스케줄러] ---
-    // 스케줄러용: @SQLRestriction 때문에 Native Query 권장
     @Query(value = "SELECT * FROM posts WHERE post_status = :status AND updated_at < :dateTime", nativeQuery = true)
     List<Post> findOldDeletedPosts(@Param("status") String status, @Param("dateTime") LocalDateTime dateTime);
 
+    // 게시글 수
+    long countByBoardAndPostStatus(Board board, PostStatus status);
+    long countByBoardAndPostStatusIn(Board board, List<PostStatus> statuses);
 }

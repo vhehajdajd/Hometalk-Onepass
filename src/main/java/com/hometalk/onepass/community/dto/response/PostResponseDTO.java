@@ -17,13 +17,16 @@ public class PostResponseDTO {
     private Long authorId;      // 본인 확인 ID
     private String title;
     private String content;
+
     private String boardName;
     private Long categoryId;
     private String categoryName;
     private String categoryCode;
+
     private List<String> tags;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
     private int viewCount;
     private int commentCount;
 

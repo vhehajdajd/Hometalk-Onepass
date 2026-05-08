@@ -21,18 +21,29 @@
 }
 
 /* 3. 알림 메시지 (Flash Message) */
-.success-message {
-    background-color: var(--color-main);
-    color: white;
-    padding: 12px 20px;
-    border-radius: var(--radius);
-    margin: var(--spacing-md) auto;
-    max-width: 1200px;
-    border-left: 5px solid var(--color-btn-point);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    animation: fadeOut 3.5s forwards;
-    position: relative;
-    z-index: 9999;
+.alert-container {
+    max-width: 800px;
+    margin: 0 auto 15px;
+}
+
+.alert-banner {
+    padding: 10px 15px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+.alert-success {
+    background-color: #f0fff9;
+    color: #003366;
+    border-left: 4px solid var(--soft-mint);
+}
+.alert-error {
+    background-color: #fff5f2;
+    color: #d45d31;
+    border-left: 4px solid var(--point-coral);
 }
 
 /* 4. 버튼 시스템 통합 */
@@ -154,4 +165,160 @@
     10% { opacity: 1; transform: translateY(0); }
     85% { opacity: 1; }
     100% { opacity: 0; pointer-events: none; }
+}
+
+/* =========================
+   상태 뱃지 확장
+========================= */
+.status-badge-inline {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 12px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+/* 예약중 - 코랄 포인트 */
+.badge-reserved {
+    background-color: #FFF5F5;
+    color: #F687B3;
+    border: 1px solid #FED7E2;
+}
+
+/* 나눔중 - 민트 포인트 */
+.badge-shared {
+    background-color: #E6FFFA;
+    color: #38B2AC;
+    border: 1px solid #B2F5EA;
+}
+
+.badge-completed {
+    background-color: #EDF2F7;
+    color: #718096;
+    border: 1px solid #E2E8F0;
+}
+
+
+/* 드롭다운 전체 */
+.custom-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* 점 3개 버튼 */
+.drop-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    color: #4b5563;
+    font-size: 20px;
+
+    line-height: 1;
+    transform: rotate(90deg);
+
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.drop-btn:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+/* 드롭다운 메뉴 */
+.drop-content {
+    display: none;
+
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+
+    min-width: 110px;
+
+    background-color: #fff;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,0.08),
+    0 2px 6px rgba(0,0,0,0.04);
+
+    padding: 6px;
+
+    z-index: 100;
+}
+
+/* 메뉴 버튼 공통 */
+.drop-content button,
+.drop-content a {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+
+    padding: 10px 12px;
+
+    border: none;
+    border-radius: 6px;
+
+    background: transparent;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    color: #374151;
+    text-align: left;
+
+    cursor: pointer;
+
+    transition: background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+/* hover */
+.drop-content button:hover,
+.drop-content a:hover {
+    background-color: #f3f4f6;
+}
+
+/* 삭제 버튼 */
+.drop-content .delete-btn {
+    color: #dc2626;
+}
+
+.drop-content .delete-btn:hover {
+    background-color: #fef2f2;
+    color: #b91c1c;
+}
+
+/* 메뉴 열림 */
+.show-menu {
+    display: block !important;
+
+    animation: fadeInDropdown 0.15s ease;
+}
+
+/* 애니메이션 */
+@keyframes fadeInDropdown {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

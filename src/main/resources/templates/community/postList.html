@@ -33,8 +33,8 @@
                     <div class="list-top-area flex-between mt-md">
                         <div class="search-info-box">
                             <div th:if="${not #strings.isEmpty(keyword)}" class="search-status text-muted">
-                                '<span th:text="${keyword}" class="sub-title"></span>' 검색 결과
-                                <span th:text="${page.totalElements}" class="badge-point badge">0</span>건
+                                '<span th:text="${keyword}" class="search-keyword"></span>' 검색 결과
+                                <span th:text="${page.totalElements}" class="search-count-pill">0</span>건
                             </div>
                         </div>
 
@@ -98,7 +98,11 @@
                                               class="text-small comment-count-inline"></span>
                                         <span th:if="${post.hasImage}" class="img-icon-grey"><i class="fa-regular fa-image"></i>️</span>
                                     </td>
-                                    <td th:text="${post.viewCount}" class="text-muted text-center"></td>
+                                    <td class="text-center">
+                                        <div class="view-container">
+                                            <i class="fa-regular fa-eye"></i><span th:text="${post.viewCount}" style="margin-left: 6px;">123</span>
+                                        </div>
+                                    </td>
                                     <td th:text="${post.writer}" class="text-center">작성자</td>
                                     <td th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}" class="text-small date-cell"></td>
                                 </tr>

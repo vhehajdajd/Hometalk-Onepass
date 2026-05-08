@@ -26,12 +26,23 @@
                     <small th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</small>
                 </div>
                 <div class="comment-actions" th:if="${comment.writerId == #authentication.principal.userId}">
-                    <button type="button" class="btn-edit" th:onclick="|toggleEditForm(${comment.id})|">수정</button>
-                    <form th:action="@{/community/{bCode}/{cCode}/{postId}/comments/{id}/delete
-                                     (bCode=${boardCode}, cCode=${categoryCode}, postId=${postId}, id=${comment.id})}"
-                          th:method="post" style="display: inline;" onsubmit="return confirm('댓글을 삭제하시겠습니까?');">
-                        <button type="submit" class="btn-delete">삭제</button>
-                    </form>
+                    <div class="custom-dropdown">
+                        <button type="button" class="drop-btn" onclick="toggleCommentMenu(this)">⋮</button>
+
+                        <div class="drop-content">
+                            <button type="button"
+                                    class="menu-item"
+                                    th:onclick="|toggleEditForm(${comment.id})|">
+                                수정
+                            </button>
+
+                            <form th:action="@{/community/{bCode}/{cCode}/{postId}/comments/{id}/delete
+                                         (bCode=${boardCode}, cCode=${categoryCode}, postId=${postId}, id=${comment.id})}"
+                                  th:method="post" onsubmit="return confirm('댓글을 삭제하시겠습니까?');">
+                                <button type="submit" class="delete-btn">삭제</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="comment-content" th:id="|body-${comment.id}|"><p th:text="${comment.content}">댓글 내용</p></div>
@@ -61,7 +72,6 @@
         </div>
     </div>
 </div>
-
 </html>
 
 <!--

@@ -209,7 +209,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<CommunityPostResponseDTO> getRecentPosts() {
         List<Post> posts = postRepository
-                .findTop3ByPostStatusOrderByCreatedAtDesc(PostStatus.ACTIVE);
+                .findTop5ByPostStatusOrderByCreatedAtDesc(PostStatus.ACTIVE);
 
         return posts.stream()
                 .map(post -> new CommunityPostResponseDTO(

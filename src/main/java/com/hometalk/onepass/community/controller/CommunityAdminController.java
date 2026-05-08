@@ -122,7 +122,7 @@ public class CommunityAdminController {
     public String hardDeletePost(@PathVariable Long id, RedirectAttributes rttr) {
         try {
             communityAdminService.hardDeletePost(id);
-            rttr.addFlashAttribute("message", "게시글이 DB에서 영구 삭제되었습니다.");
+            rttr.addFlashAttribute("message", "성공적으로 삭제되었습니다.");
         } catch (Exception e) {
             rttr.addFlashAttribute("errorMessage", "삭제 중 오류 발생: " + e.getMessage());
         }
