@@ -46,11 +46,6 @@ async function initHome() {
     loadSection(API_ENDPOINTS.schedule,  renderSchedule,  'schedule-list',  '일정'),
     loadSection(API_ENDPOINTS.community, renderCommunity, 'community-list', '커뮤니티')
   ]);
-
-  if (!window.IS_LOGGED_IN) {
-    const prompt = document.getElementById('login-prompt');
-    if (prompt) prompt.style.display = '';
-  }
 }
 
 async function loadSection(url, renderFn, elId, label) {
@@ -156,7 +151,7 @@ function renderCommunity(list) {
   el.innerHTML = list.map(function (c) {
     const boardCode = escHtml(String(c.boardCode || 'square'));
     const category  = escHtml(c.categoryName || '일반');
-    const title = c.title.length > 15 ? c.title.slice(0, 15) + '.....' : c.title;
+    const title = c.title.length > 10 ? c.title.slice(0, 10) + '.....' : c.title;
     return (
       '<li class="community-item" onclick="goCommunity(\'' + boardCode + '\')">' +
         '<span class="community-cat">[' + category + ']</span>' +

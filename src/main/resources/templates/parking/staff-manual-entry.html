@@ -88,6 +88,7 @@
   const typeBtns = document.querySelectorAll('.type-btn');
   const purposeTypeInput = document.getElementById('purposeType');
 
+  // 방문 종류 선택
   typeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       typeBtns.forEach(b => b.classList.remove('active'));
@@ -101,6 +102,7 @@
   document.getElementById('dong').addEventListener('input', checkSubmitBtn);
   document.getElementById('ho').addEventListener('input', checkSubmitBtn);
 
+  // 차량 번호 실시간 검증
   document.getElementById('vehicleNumber').addEventListener('input', () => {
     const value = document.getElementById('vehicleNumber').value
             .replace(/\s/g, '')
@@ -116,6 +118,7 @@
     checkSubmitBtn();
   });
 
+  // 제출 버튼 활성화 체크
   function checkSubmitBtn() {
     const purposeType = purposeTypeInput.value;
     const vehicleNumber = document.getElementById('vehicleNumber').value.replace(/\s/g, '');
@@ -125,10 +128,12 @@
             !(purposeType && isValidNumber);
   }
 
+  // 취소 버튼
   function goBack() {
     location.href = `${contextPath}staff/entry`;
   }
 
+  // 수동 입차 처리
   function processManualEntry() {
     const btn = document.getElementById('submitBtn');
     const purposeType = purposeTypeInput.value;
@@ -162,21 +167,21 @@
         vehicleNumber: vehicleNumber
       })
     })
-            .then(async res => {
-              if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || '서버 오류');
-              }
-              alert('수동 입차 처리가 완료되었습니다.');
-              location.href = `${contextPath}staff/entry`;
-            })
-            .catch(err => {
-              console.error(err);
-              alert('입차 처리 중 오류가 발생했습니다.');
-            })
-            .finally(() => {
-              btn.disabled = false;
-            });
+      .then(async res => {
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.message || '서버 오류');
+        }
+        alert('수동 입차 처리가 완료되었습니다.');
+        location.href = `${contextPath}staff/entry`;
+      })
+      .catch(err => {
+        console.error(err);
+        alert(err.message || '입차 처리 중 오류가 발생했습니다.');
+      })
+      .finally(() => {
+        btn.disabled = false;
+      });
   }
 </script>
 
