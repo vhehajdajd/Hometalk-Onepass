@@ -23,6 +23,9 @@ public class NotificationSseController {
             @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
+        // ✅ null 체크
+        if (user == null) return new SseEmitter(0L);
+
         return sseEmitterManager.connect(user.getUserId(), lastEventId);
     }
 }

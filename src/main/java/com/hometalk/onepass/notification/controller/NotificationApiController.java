@@ -28,6 +28,9 @@ public class NotificationApiController {
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
+        // ✅ null 체크
+        if (user == null) return ResponseEntity.ok(Page.empty());
+
         Long userId = user.getUserId();
         NotificationTargetRole role = resolveRole(user);
 
@@ -40,6 +43,9 @@ public class NotificationApiController {
     public ResponseEntity<Map<String, Long>> getUnreadCount(
             @AuthenticationPrincipal CustomUserDetails user
     ) {
+        // ✅ null 체크
+        if (user == null) return ResponseEntity.ok(Map.of("count", 0L));
+
         Long userId = user.getUserId();
         NotificationTargetRole role = resolveRole(user);
 
@@ -53,6 +59,9 @@ public class NotificationApiController {
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
+        // ✅ null 체크
+        if (user == null) return ResponseEntity.ok().build();
+
         notificationService.markAsRead(id, user.getUserId());
         return ResponseEntity.ok().build();
     }
@@ -62,6 +71,9 @@ public class NotificationApiController {
     public ResponseEntity<Void> markAllAsRead(
             @AuthenticationPrincipal CustomUserDetails user
     ) {
+        // ✅ null 체크
+        if (user == null) return ResponseEntity.ok().build();
+
         Long userId = user.getUserId();
         NotificationTargetRole role = resolveRole(user);
 

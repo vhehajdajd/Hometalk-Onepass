@@ -2,7 +2,7 @@
  * HomeTalk OnePass — Bell Icon + Dropdown + Toast (All-in-one)
  * path: /static/notification/js/notification-bell.js
  *
- * 헤더 fragment에 다음 마크업 필요:
+ * 헤더 fragment(headerCurrentMenuView)에 다음 마크업 필요:
  *   <div class="noti-bell-wrap" style="position:relative">
  *       <a class="noti-bell" id="noti-bell-trigger">
  *           <span class="noti-bell__badge" id="noti-bell-badge"></span>
@@ -270,6 +270,10 @@
         // 1) 페이지 로드 시 미읽음 수 갱신
         renderBadge(await fetchUnreadCount());
 
+        // ✅ 더보기 버튼 초기 숨김
+        const loadMoreBtn = document.getElementById('noti-load-more');
+        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+
         // 2) 벨 클릭 → 드롭다운 토글
         document.getElementById('noti-bell-trigger')?.addEventListener('click', (e) => {
             e.preventDefault();
@@ -325,5 +329,7 @@
         window.addEventListener('focus', async () => {
             renderBadge(await fetchUnreadCount());
         });
+
+
     });
 })();

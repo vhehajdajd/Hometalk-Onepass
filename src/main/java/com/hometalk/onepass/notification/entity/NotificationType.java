@@ -29,12 +29,17 @@ public enum NotificationType {
     COMMUNITY_COMMENT("커뮤니티", "💬", 1, 0), // 해당 입주민, 새 댓글
 
     // ─── 민원 ───
-    COMPLAINT_RECEIVED("민원", "📋", 7, 0), // 기존 유지
-    COMPLAINT_STATUS  ("민원", "📋", 1, 0), // 해당 입주민, 답변 등록. expireDays 7→1
+    COMPLAINT_RECEIVED("민원", "📋", 2, 0), // 전체 관리자, 민원 접수됨
+    COMPLAINT_STATUS  ("민원", "📋", 7, 0), // 해당 입주민, 답변 등록됨
 
-    // ─── 예약 ───
+    // ─── 문의 ───
+    INQUIRY_RECEIVED  ("문의", "📋", 2, 0), // 전체 관리자, 문의 접수됨
+    INQUIRY_STATUS    ("문의", "📋", 7, 0), // 해당 입주민, 답변 등록됨
+
+    // ─── 시설예약 ───
     RESERVATION_CONFIRMED("예약", "📅", 1, 0), // 해당 입주민, 예약 확정. expireDays 3→1
     RESERVATION_REMINDER ("예약", "📅", 1, 0), // 해당 입주민, 예약 1시간 전 알림
+
     // ─── 주차 ───
     VEHICLE_APPROVED        ("주차", "🚗", 7, 0), // 해당 입주민, 차량 등록 승인
     VEHICLE_REJECTED        ("주차", "🚗", 7, 0), // 해당 입주민, 차량 등록 반려
