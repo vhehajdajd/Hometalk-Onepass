@@ -1,14 +1,20 @@
 const CTX = '';
 
-const SERVICE_URLS = {
-  notice:    CTX + '/hometop/notice',
-  schedule:  CTX + '/hometop/schedule',
-  billing:   CTX + '/hometop/billing',
-  parking:   CTX + '/hometop/parking/visit',
-  community: CTX + '/hometop/community/square/all',
-  civil:     CTX + '/hometop/inquiries/list',
-  facility:  window.IS_ADMIN ? CTX + '/hometop/reservation/admin/status' : CTX + '/hometop/reservation/apply'
-};
+function isAdmin() {
+  return window.USER_ROLE === 'ADMIN';
+}
+
+function getServiceUrls() {
+  return {
+    notice:    CTX + '/hometop/notice',
+    schedule:  CTX + '/hometop/schedule',
+    billing:   isAdmin() ? CTX + '/hometop/billing/admin/unpaid' : CTX + '/hometop/billing',
+    parking:   isAdmin() ? CTX + '/hometop/admin/vehicle/approval' : CTX + '/hometop/parking/visit',
+    community: CTX + '/hometop/community/square/all',
+    civil:     CTX + '/hometop/inquiries/list',
+    facility:  isAdmin() ? CTX + '/hometop/reservation/admin/status' : CTX + '/hometop/reservation/apply'
+  };
+}
 
 const API_ENDPOINTS = {
   notice:    CTX + '/hometop/notice/api/detail',
@@ -17,26 +23,31 @@ const API_ENDPOINTS = {
 };
 
 function goService(serviceKey) {
+  const SERVICE_URLS = getServiceUrls();
   const destination = SERVICE_URLS[serviceKey] || SERVICE_URLS['community'];
-  if (window.IS_LOGGED_IN) {
-    location.href = destination;
-  } else {
+  if (!window.IS_LOGGED_IN) {
     showToast('로그인이 필요한 서비스입니다.\n로그인 페이지로 이동합니다.');
     setTimeout(function () {
       location.href = CTX + '/hometop/auth?redirectURL=' + encodeURIComponent(destination);
     }, 1200);
+  } else if (window.USER_ROLE === 'MEMBER') {
+    showToast('승인이 필요한 회원입니다.');
+  } else {
+    location.href = destination;
   }
 }
 
 function goCommunity(boardCode) {
   const destination = CTX + '/hometop/community/' + encodeURIComponent(boardCode) + '/all';
-  if (window.IS_LOGGED_IN) {
-    location.href = destination;
-  } else {
+  if (!window.IS_LOGGED_IN) {
     showToast('로그인이 필요한 서비스입니다.\n로그인 페이지로 이동합니다.');
     setTimeout(function () {
       location.href = CTX + '/hometop/auth?redirectURL=' + encodeURIComponent(destination);
     }, 1200);
+  } else if (window.USER_ROLE === 'MEMBER') {
+    showToast('승인이 필요한 회원입니다.');
+  } else {
+    location.href = destination;
   }
 }
 

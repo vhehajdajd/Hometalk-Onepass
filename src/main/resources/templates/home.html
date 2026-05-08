@@ -23,7 +23,7 @@
 ">
     <!-- 로고 -->
     <a th:href="@{${#authorization.expression('isAuthenticated()')} ? '/hometop/dashboard' : '/hometop/home'}"
-       style="text-decoration: none; padding-top: 8px;">
+       style="text-decoration: none; padding-top: 10px; padding-bottom: 5px;">
         <svg width="80" height="58" viewBox="0 0 90 64">
             <circle cx="22" cy="8" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
             <circle cx="45" cy="4" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
@@ -46,15 +46,14 @@
                 </svg>
             </a>
             <a th:href="@{/myPage}" class="nav-btn">MyPage</a>
-            <a th:href="@{/logout}" class="nav-btn">로그아웃</a>
+            <a th:href="@{/auth/logout}" class="nav-btn">로그아웃</a>
         </th:block>
         <th:block th:unless="${#authorization.expression('isAuthenticated()')}">
-            <a th:href="@{/hometop/auth}" class="nav-btn">로그인</a>
-            <a th:href="@{/hometop/auth/register}" class="nav-btn">회원가입</a>
+            <a th:href="@{/auth}" class="nav-btn">로그인</a>
+            <a th:href="@{/auth/register}" class="nav-btn">회원가입</a>
         </th:block>
     </div>
 </nav>
-
 
 <!-- ════════ 배너 ════════ -->
 <section class="banner">
@@ -75,13 +74,13 @@
         <!-- 공지사항 -->
         <div class="card">
             <div class="card-header">
-        <span class="card-header-left">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-          공지사항
-        </span>
+                <span class="card-header-left">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    공지사항
+                </span>
                 <button class="more-btn" onclick="goService('notice')">
                     더보기
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -95,15 +94,15 @@
         <!-- 오늘의 일정 -->
         <div class="card">
             <div class="card-header">
-        <span class="card-header-left">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-          </svg>
-          오늘의 일정
-        </span>
+                <span class="card-header-left">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    오늘의 일정
+                </span>
             </div>
             <ul class="schedule-list" id="schedule-list">
                 <li><div class="skeleton-wrap"><div class="skeleton-line medium"></div><div class="skeleton-line short"></div></div></li>
@@ -113,12 +112,12 @@
         <!-- 커뮤니티 -->
         <div class="card">
             <div class="card-header">
-        <span class="card-header-left">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-          커뮤니티
-        </span>
+                <span class="card-header-left">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    커뮤니티
+                </span>
                 <button class="more-btn" onclick="goService('community')">
                     더보기
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -206,8 +205,8 @@
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 
 <script th:inline="javascript">
-    window.IS_LOGGED_IN = [[${#authorization.expression('isAuthenticated()')}]];
-    window.IS_ADMIN = [[${#authorization.expression('hasRole(''ADMIN'')')}]];
+    window.IS_LOGGED_IN = [[${isLoggedIn}]];
+    window.USER_ROLE = [[${userRole}]];
 </script>
 <script th:src="@{/js/home/home.js}"></script>
 </body>
