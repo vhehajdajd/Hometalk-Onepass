@@ -1,6 +1,19 @@
+.content {
+    flex: 1;
+}
+
+.container {
+    width: min(1400px, calc(100% - 48px));
+    margin: 20px auto;
+    background: #fff;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
 .approval-page {
-    max-width: 1180px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
 }
 
 .approval-head {
@@ -37,6 +50,7 @@
     border: 1px solid var(--border-color);
     border-radius: 12px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    padding: 40px;
 }
 
 .approval-empty {
@@ -128,4 +142,12 @@
 
 .approval-btn-reject {
     background: var(--color-btn-point);
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: calc(100% - 32px);
+        margin: 20px 16px;
+        padding: 24px 20px;
+    }
 }
