@@ -322,7 +322,19 @@
     function renderBilling(data) {
         var el = document.getElementById('billingContent');
         if (!data) { el.innerHTML = '<div class="loading">정보 없음</div>'; return; }
+
+        // 장기체납 처리
+        if (data.overdue) {
+            el.innerHTML =
+                '<div style="display:flex; align-items:center; gap:8px; padding:12px; background:#fdecea; border-radius:8px; color:#EB6E57;">' +
+                    '<span style="font-size:18px;">⚠️</span>' +
+                    '<span style="font-size:13px; font-weight:500;">관리비가 장기체납된 상태입니다.<br>관리사무소로 연락 바랍니다.</span>' +
+                '</div>';
+            return;
+        }
+
         var st      = data.status === 'UNPAID' ? '미납' : '납부완료';
+        // dueDate가 "2026년 6월 10일" 형식으로 오므로 그대로 사용
         var dateStr = data.dueDate ? data.dueDate : '-';
         el.innerHTML =
             '<div style="display:flex; justify-content:flex-end;">' +
@@ -460,40 +472,40 @@
 
     // ── API 호출 ─────────────────────────────────────────────────────────────
 
-    // 공지사항
+    // 공지사항 ✅
     fetch(contextPath + 'notice/api/detail')
         .then(function(res) { return res.json(); })
         .then(function(data) { renderNotice(data); })
         .catch(function() { document.getElementById('noticeList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 커뮤니티 인기글
+    // 커뮤니티 인기글 ✅
     fetch(contextPath + 'api/community/popular')
         .then(function(res) { return res.json(); })
         .then(function(data) { renderCommunity(data); })
         .catch(function() { document.getElementById('communityList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 오늘의 일정
+    // 오늘의 일정 ✅
     fetch(contextPath + 'schedule/api/calendar')
         .then(function(res) { return res.json(); })
         .then(function(data) { todayScheduleData = data; renderTodaySchedule(data); })
         .catch(function() { document.getElementById('todayScheduleList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 달력 일정 초기 로드
+    // 달력 일정 초기 로드 ✅
     loadCalendarSchedules();
 
-    // 관리비
+    // 관리비 ✅
     fetch(contextPath + 'api/billing/resident/summary')
         .then(function(res) { return res.json(); })
         .then(function(data) { renderBilling(data); })
         .catch(function() { document.getElementById('billingContent').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 내 차량 목록
+    // 내 차량 목록 ✅
     fetch(contextPath + 'parking/vehicle/list')
         .then(function(res) { return res.json(); })
         .then(function(data) { renderVehicle(Array.isArray(data) ? data : (data.content || [])); })
         .catch(function() { document.getElementById('vehicleList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 잔여 티켓
+    // 잔여 티켓 ✅
     fetch(contextPath + 'parking/ticket/current')
         .then(function(res) { return res.json(); })
         .then(function(data) { renderTicket(data); })
@@ -502,13 +514,13 @@
             document.getElementById('hourTicket').textContent = '-';
         });
 
-    // 예약 API 미구현 - 추후 연결
+    // 예약 ❌ API 미구현 - 추후 연결
     document.getElementById('reservationList').innerHTML = '<div class="loading">불러오기 실패</div>';
 
-    // 문의 API 미구현 - 추후 연결
+    // 문의 ❌ API 미구현 - 추후 연결
     document.getElementById('inquiryList').innerHTML = '<div class="loading">불러오기 실패</div>';
 
-    // 민원 API 미구현 - 추후 연결
+    // 민원 ❌ API 미구현 - 추후 연결
     document.getElementById('complaintList').innerHTML = '<div class="loading">불러오기 실패</div>';
 </script>
 </body>

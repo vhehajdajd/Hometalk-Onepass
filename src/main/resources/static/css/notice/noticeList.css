@@ -110,8 +110,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 60px;
-    padding-top: 25px;
+    margin-top: 50px;
+    padding-top: 0px;
     padding-bottom: 10px;
     position: relative;
 }
@@ -147,6 +147,7 @@
     gap: 10px;
     justify-content: flex-end;
     align-items: center;
+    margin-bottom: 30px;
 }
 
 .select-wrapper select.search-select {

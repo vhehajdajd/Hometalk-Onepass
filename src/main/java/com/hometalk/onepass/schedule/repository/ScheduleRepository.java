@@ -33,4 +33,5 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     List<Schedule> findByStartAtBetweenAndEndAtIsNull(
             LocalDateTime startOfDay, LocalDateTime endOfDay);
 
+
 }

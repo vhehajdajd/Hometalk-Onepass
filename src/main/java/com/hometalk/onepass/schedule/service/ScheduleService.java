@@ -389,4 +389,30 @@ public class ScheduleService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public List<ScheduleCalResponseDto> getTomorrowSchedules() {
+        LocalDateTime startOfTomorrow = LocalDateTime.now().toLocalDate()
+                .plusDays(1).atStartOfDay();
+        LocalDateTime endOfTomorrow = startOfTomorrow.plusDays(1).minusSeconds(1);
+        List<Schedule> result = new java.util.ArrayList<>();
+        result.addAll(scheduleRepository.findByStartAtLessThanEqualAndEndAtGreaterThanEqual(
+                endOfTomorrow, startOfTomorrow));
+        result.addAll(scheduleRepository.findByStartAtBetweenAndEndAtIsNull(
+                startOfTomorrow, endOfTomorrow));
+        return result.stream()
+                .distinct()
+                .map(schedule -> new ScheduleCalResponseDto(
+                        schedule.getId(),
+                        schedule.getTitle(),
+                        schedule.getStartAt(),
+                        schedule.getEndAt(),
+                        schedule.getNotice() != null ? schedule.getNotice().getId() : null,
+                        schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
+                        schedule.getRepeatGroupId()
+                ))
+                .collect(Collectors.toList());
+    }
+
+
 }
