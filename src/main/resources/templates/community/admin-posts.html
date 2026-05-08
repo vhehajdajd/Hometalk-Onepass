@@ -12,7 +12,32 @@
         <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community'} })}"></div>
         <div th:replace="~{fragments/headerCategoryMenu :: communityAdmin}"></div>
         <main class="dashboard-content">
+
             <div class="admin-content-area">
+
+                <div class="alert-container">
+                    <!-- 성공 메시지 (message) -->
+                    <div th:if="${message}" class="alert-banner alert-success">
+                        <span th:text="${message}">성공 메시지 영역</span>
+                        <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                    <!-- 에러 메시지 (errorMessage) -->
+                    <div th:if="${errorMessage}" class="alert-banner alert-error">
+                        <span th:text="${errorMessage}">에러 메시지 영역</span>
+                        <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                </div>
+
+                <div class="admin-guide warning">
+                    <h3><i class="fas fa-thumbtack"></i> 게시글 관리 안내</h3>
+                    <p>숨김 또는 삭제 처리된 게시글을 확인하고 관리할 수 있습니다.</p>
+                    <ul>
+                        <li><strong>영구 삭제</strong> 처리된 데이터는 복구가 불가능하니 신중하게 결정해 주세요.</li>
+                        <li><strong>숨김 처리</strong>된 게시글은 입주민 커뮤니티 목록에서 노출되지 않습니다.</li>
+                        <li>일괄 선택 기능을 통해 여러 게시글을 한 번에 영구 삭제할 수 있으니 주의해 주세요.</li>
+                    </ul>
+                </div>
+
                 <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                     <p style="font-size: 14px; color: #666;">* 숨김 또는 삭제 처리된 게시글만 표시됩니다.</p>
                     <button type="button" class="btn-hard-delete" onclick="deleteSelectedPosts()"
