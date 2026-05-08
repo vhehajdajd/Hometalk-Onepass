@@ -89,12 +89,23 @@ ul, li {
     color: var(--color-main);
 }
 
+.title-cell { text-align: left !important; white-space: nowrap; }
+
+.title-cell a {
+    max-width: 80%;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .sub-title {
     font-size: var(--font-sub-title);
     font-weight: 600;
 }
 
-.sub-title-link:hover {
+.sub-title-link:hover,
+.title-cell a:hover {
     color: var(--color-btn-point);
     text-decoration: underline;
     cursor: pointer;
@@ -220,7 +231,7 @@ ul, li {
 }
 
 /* =======================================
-   6. COMPONENTS (Card, Badge, Pagination)
+   6. COMPONENTS (Card, Badge)
 ======================================= */
 .card {
     border: 1px solid var(--border-color);
@@ -270,19 +281,6 @@ ul, li {
 .badge-ok {
     background: var(--color-paid-bg);
     color: var(--color-paid-text);
-}
-
-/* 페이지네이션 */
-.pagination {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    list-style: none;
-}
-
-.pagination-item.active {
-    color: var(--color-btn-point);
-    font-weight: bold;
 }
 
 /* =========================
@@ -498,3 +496,73 @@ ul, li {
 
 .flex         { display: flex; align-items: center; }
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
+
+/* =========================
+   6. PAGINATION (FIXED)
+========================= */
+.pagination-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    width: 100%;
+    margin-top: var(--spacing-lg);
+}
+
+/* 가운데 정렬 유지 */
+.pagination-nav {
+    grid-column: 2;
+    display: flex;
+    justify-content: center;
+}
+
+/* ul */
+.pagination {
+    display: flex;
+    gap: var(--spacing-sm);
+    list-style: none;
+    gap: 8px;
+    justify-content: center;
+}
+
+/* li */
+.page-item {
+    display: flex;
+}
+
+/* 기본 링크 */
+.page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    font-size: var(--font-small);
+    color: #94a3b8;
+    text-decoration: none;
+    transition: 0.2s ease;
+    border-radius: var(--radius);
+}
+
+/* hover */
+.page-link:hover {
+    color: var(--color-main);
+    background-color: var(--color-bg-white-btn);
+}
+
+/* active 상태 */
+.page-item.active .page-link {
+    color: var(--color-btn-point);
+    font-weight: 700;
+}
+
+/* disabled */
+.page-item.disabled .page-link {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* 오른쪽 버튼 */
+.action-wrapper {
+    grid-column: 3;
+    justify-self: end;
+}

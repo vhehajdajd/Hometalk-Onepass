@@ -136,32 +136,6 @@
 .admin-table th:nth-child(6) { width: 150px; } /* 날짜 */
 .admin-table th:nth-child(7) { width: 150px; } /* 관리 버튼 */
 
-/* 2. 알림 메시지 (성공/에러 배너) */
-.alert-container {
-    max-width: 800px;
-    margin: 0 auto 15px;
-}
-
-.alert-banner {
-    padding: 10px 15px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 13px;
-    margin-bottom: 15px;
-}
-.alert-success {
-    background-color: #f0fff9;
-    color: #003366;
-    border-left: 4px solid var(--soft-mint);
-}
-.alert-error {
-    background-color: #fff5f2;
-    color: #d45d31;
-    border-left: 4px solid var(--point-coral);
-}
-
 /* 3. 모달 (새 게시판/카테고리 등록) */
 .modal-overlay {
     display: none;
@@ -196,7 +170,7 @@
 }
 
 .btn-close-x:hover {
-    color: var(--main-navy);
+    color: var(--color-btn-point);
 }
 
 .modal-header {
@@ -309,7 +283,7 @@
 
 /* 1. 저장하기 버튼 */
 .btn-save {
-    background-color: var(--point-coral) !important;
+    background-color: var(--color-btn) !important;
     color: white !important;
     border: none;
     padding: 10px 25px;
@@ -320,7 +294,7 @@
 }
 
 .btn-save:hover {
-    background-color: #d65a45;
+    background-color: var(--color-btn-secondary);
 }
 
 /* 2. 취소 버튼  */
@@ -344,6 +318,26 @@
 
 .btn-add-sub:hover {
     background-color: #f0f4f8;
+}
+
+/* 새 게시판 생성 */
+.btn-submit {
+    padding: 8px 14px;
+    background-color: #7096D1;
+    color: #fff;
+}
+.btn-submit:hover {
+    background-color: #5D85C1;
+}
+
+/* 상세 조회 */
+.btn-detail {
+    font-size: 13px;
+    padding: 4px 10px;
+    background-color: #A4B0AF;
+}
+.btn-detail:hover {
+    background-color: #8E9B9A;
 }
 
 
@@ -383,14 +377,6 @@ input.error {
     border: 1px solid #ff7f50 !important; /* 코랄색 */
     outline: none;
 }
-
-.category-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-bottom: 10px;
-}
-
 
 .btn-hard-delete {
     background-color: var(--color-btn-point);
@@ -445,16 +431,18 @@ input.error {
     margin-bottom: 30px;
 }
 
-.category-item {
+.category-list-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 12px 15px;
     border-bottom: 1px solid #eee;
     transition: background 0.2s;
+    gap: 5px;
+    margin-bottom: 10px;
 }
 
-.category-item:hover {
+.category-list-item:hover {
     background-color: #fcfcfc;
 }
 

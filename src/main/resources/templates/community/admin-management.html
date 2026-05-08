@@ -1,18 +1,17 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/community/adminpage.css}">
 </head>
 
 <body>
-<div class="main-layout" style="display: flex; min-height: 100vh;">
+<div class="main-layout">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
     <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
-        <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">
-            <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community'} })}"></div>
-            <div th:replace="~{fragments/headerCategoryMenu :: communityAdmin}"></div>
-
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: communityAdmin}"></div>
+        <main class="dashboard-content">
             <section class="admin-content-area">
                 <div class="alert-container">
                     <!-- 성공 메시지 (message) -->
@@ -39,7 +38,7 @@
 
                 <div class="admin-header">
                     <h2>커뮤니티 설정</h2>
-                    <button type="button" class="btn btn-primary" onclick="openCreateModal()">
+                    <button type="button" class="btn btn-submit" onclick="openCreateModal()">
                         + 새 게시판
                     </button>
                 </div>
@@ -47,7 +46,7 @@
                 <div id="createModal" class="modal-overlay">
                     <div class="modal-content admin-form-card">
                         <div class="modal-header">
-                            <h3>새 게시판 등록</h3>
+                            <h3 class="modal-header-title">새 게시판 등록</h3>
                             <button type="button" class="btn-close-x" onclick="closeModal()">&times;</button>
                         </div>
 
@@ -69,11 +68,11 @@
                                     <!-- 첫 번째 카테고리는 기본으로 표시 -->
                                     <div th:replace="~{community/fragments/categoryItem :: categoryItem}"></div>
                                 </div>
-                                <button type="button" id="btn-add-category" class="btn-add-sub" onclick="addNewCategory()">+ 카테고리 추가</button>
+                                <button type="button" id="btn-add-category" class="btn btn-add-sub" onclick="addNewCategory()">+ 카테고리 추가</button>
                             </div>
 
                             <div class="form-actions">
-                                <button type="submit" class="btn btn-save" id="btn-submit">저장하기</button>
+                                <button type="submit" class="btn btn-save" id="btn-submit">저장</button>
                                 <button type="button" class="btn btn-close" onclick="closeModal()">취소</button>
                             </div>
                         </form>

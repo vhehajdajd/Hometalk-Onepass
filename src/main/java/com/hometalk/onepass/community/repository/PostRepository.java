@@ -125,7 +125,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     // -- API --
     // 최신순 상위 3개
-    List<Post> findTop3ByPostStatusOrderByCreatedAtDesc(PostStatus status);
+    List<Post> findTop5ByPostStatusOrderByCreatedAtDesc(PostStatus status);
 
     // 조회수 정렬
     List<Post> findTop5ByPostStatusOrderByViewCountDesc(PostStatus status);

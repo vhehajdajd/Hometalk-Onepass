@@ -21,18 +21,29 @@
 }
 
 /* 3. 알림 메시지 (Flash Message) */
-.success-message {
-    background-color: var(--color-main);
-    color: white;
-    padding: 12px 20px;
-    border-radius: var(--radius);
-    margin: var(--spacing-md) auto;
-    max-width: 1200px;
-    border-left: 5px solid var(--color-btn-point);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    animation: fadeOut 3.5s forwards;
-    position: relative;
-    z-index: 9999;
+.alert-container {
+    max-width: 800px;
+    margin: 0 auto 15px;
+}
+
+.alert-banner {
+    padding: 10px 15px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+.alert-success {
+    background-color: #f0fff9;
+    color: #003366;
+    border-left: 4px solid var(--soft-mint);
+}
+.alert-error {
+    background-color: #fff5f2;
+    color: #d45d31;
+    border-left: 4px solid var(--point-coral);
 }
 
 /* 4. 버튼 시스템 통합 */

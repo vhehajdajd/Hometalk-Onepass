@@ -23,9 +23,19 @@
 
             <br>
 
-                <div th:if="${successMessage}" class="success-message">
-                    <span th:text="${successMessage}"></span>
+                <div class="alert-container">
+                    <!-- 성공 메시지 (message) -->
+                    <div th:if="${message}" class="alert-banner alert-success">
+                        <span th:text="${message}">성공 메시지 영역</span>
+                        <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                    <!-- 에러 메시지 (errorMessage) -->
+                    <div th:if="${errorMessage}" class="alert-banner alert-error">
+                        <span th:text="${errorMessage}">에러 메시지 영역</span>
+                        <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
                 </div>
+
                 <div class="content-container">
 
                     <div class="post-header">
@@ -81,7 +91,8 @@
                         <div th:utext="${post.content}">게시글 내용</div>
                     </div>
 
-                    <div class="tag-filter-wrapper" th:if="${postTags != null and !postTags.isEmpty()}">
+                    <div class="tag-filter-wrapper" style="margin-top: 30px;"
+                         th:if="${postTags != null and !postTags.isEmpty()}">
                         <div class="tag-filter-inner">
                             <span class="tag-icon"><i class="fa-solid fa-tags"></i></span>
                             <div th:replace="~{community/fragments/postTag :: tagList(tags=${postTags}, boardCode=${currentBoardCode})}"></div>
