@@ -26,7 +26,10 @@
             </svg>
         </a>
         <!-- 마이페이지 -->
-        <a th:href="@{/myPage}" style="display:flex; align-items:center; gap:6px; color:var(--color-main); text-decoration:none; font-size:14px; font-weight:600;">
+        <a th:href="@{/myPage/popup}"
+           target="myPagePopup"
+           onclick="window.open(this.href, 'myPagePopup', 'width=520,height=760,scrollbars=yes,resizable=yes'); return false;"
+           style="display:flex; align-items:center; gap:6px; color:var(--color-main); text-decoration:none; font-size:14px; font-weight:600;">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="8" r="4"/>

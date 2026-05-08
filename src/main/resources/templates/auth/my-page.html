@@ -1,80 +1,96 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>마이페이지 | Home talk</title>
-    <link rel="stylesheet" th:href="@{/css/auth/my-page.css}">
-</head>
+<head th:replace="~{fragments/head :: head('마이페이지')}"></head>
 <body class="mp-page">
-<div class="mp-shell">
-    <article class="mp-card">
-        <header class="mp-head">
-            <div>
-                <p class="mp-auth" th:text="${myPage.authType}">일반 로그인</p>
-                <h1 class="mp-title">내 회원 정보</h1>
-            </div>
-        </header>
+<link rel="stylesheet" th:href="@{/css/auth/my-page.css}">
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='myPage')}"></div>
 
-        <main class="mp-content">
-            <section class="mp-section">
-                <h2 class="mp-section-title">기본 정보</h2>
-                <dl class="mp-list">
-                    <div class="mp-row">
-                        <dt>이름</dt>
-                        <dd th:text="${myPage.name ?: '-'}">-</dd>
-                    </div>
-                    <div class="mp-row">
-                        <dt>닉네임</dt>
-                        <dd th:text="${myPage.nickname ?: '-'}">-</dd>
-                    </div>
-                    <div class="mp-row">
-                        <dt>이메일</dt>
-                        <dd th:text="${myPage.email ?: '-'}">-</dd>
-                    </div>
-                    <div class="mp-row">
-                        <dt>전화번호</dt>
-                        <dd th:text="${myPage.phoneNumber ?: '-'}">-</dd>
-                    </div>
-                    <div class="mp-row">
-                        <dt>소셜 플랫폼</dt>
-                        <dd th:text="${myPage.socialPlatform ?: '-'}">-</dd>
-                    </div>
-                </dl>
-            </section>
+    <div class="main-wrapper">
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='myPage')}"></div>
 
-            <section class="mp-section">
-                <h2 class="mp-section-title">세대 정보</h2>
-                <dl class="mp-list">
-                    <div class="mp-row">
-                        <dt>주소</dt>
-                        <dd th:text="${myPage.buildingName ?: '-'}">-</dd>
+        <main class="dashboard-content">
+            <section class="mp-module">
+                <div class="mp-module-head">
+                    <div>
+                        <h1>마이페이지</h1>
+                        <p>내 계정 정보와 세대 정보를 확인합니다.</p>
                     </div>
-                    <div class="mp-row">
-                        <dt>동</dt>
-                        <dd th:text="${myPage.dong ?: '-'}">-</dd>
+                    <span class="mp-login-type" th:text="${myPage.authType}">일반 로그인</span>
+                </div>
+
+                <div class="mp-summary-grid">
+                    <article class="mp-summary-card">
+                        <span class="mp-summary-label">이름</span>
+                        <strong th:text="${myPage.name ?: '-'}">-</strong>
+                    </article>
+                    <article class="mp-summary-card">
+                        <span class="mp-summary-label">닉네임</span>
+                        <strong th:text="${myPage.nickname ?: '-'}">-</strong>
+                    </article>
+                    <article class="mp-summary-card">
+                        <span class="mp-summary-label">이메일</span>
+                        <strong th:text="${myPage.email ?: '-'}">-</strong>
+                    </article>
+                    <article class="mp-summary-card">
+                        <span class="mp-summary-label">전화번호</span>
+                        <strong th:text="${myPage.phoneNumber ?: '-'}">-</strong>
+                    </article>
+                </div>
+
+                <div class="mp-panel-grid">
+                    <section class="mp-panel">
+                        <h2>기본 정보</h2>
+                        <dl class="mp-info-list">
+                            <div>
+                                <dt>소셜 플랫폼</dt>
+                                <dd th:text="${myPage.socialPlatform ?: '-'}">-</dd>
+                            </div>
+                            <div>
+                                <dt>로그인 방식</dt>
+                                <dd th:text="${myPage.authType ?: '-'}">-</dd>
+                            </div>
+                        </dl>
+                    </section>
+
+                    <section class="mp-panel">
+                        <h2>세대 정보</h2>
+                        <dl class="mp-info-list">
+                            <div>
+                                <dt>주소</dt>
+                                <dd th:text="${myPage.buildingName ?: '-'}">-</dd>
+                            </div>
+                            <div>
+                                <dt>동 / 호</dt>
+                                <dd th:text="${(myPage.dong ?: '-') + '동 / ' + (myPage.ho ?: '-') + '호'}">-</dd>
+                            </div>
+                            <div>
+                                <dt>우편번호</dt>
+                                <dd th:text="${myPage.postNum ?: '-'}">-</dd>
+                            </div>
+                        </dl>
+                    </section>
+                </div>
+
+                <section class="mp-panel mp-account-panel">
+                    <div>
+                        <h2>계정 관리</h2>
+                        <p>로그아웃하거나 계정 탈퇴를 진행할 수 있습니다.</p>
                     </div>
-                    <div class="mp-row">
-                        <dt>호</dt>
-                        <dd th:text="${myPage.ho ?: '-'}">-</dd>
+                    <div class="mp-module-actions">
+                        <a th:href="@{/auth/logout}" class="mp-action-btn mp-action-logout">로그아웃</a>
+                        <form th:action="@{/auth/withdraw}" method="post"
+                              onsubmit="return confirm('회원 탈퇴를 진행하시겠습니까? 탈퇴 후 계정 복구가 어렵습니다.')">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit" class="mp-action-btn mp-action-danger">회원 탈퇴</button>
+                        </form>
                     </div>
-                    <div class="mp-row">
-                        <dt>우편번호</dt>
-                        <dd th:text="${myPage.postNum ?: '-'}">-</dd>
-                    </div>
-                </dl>
+                </section>
             </section>
         </main>
 
-        <div class="mp-actions">
-            <a th:href="@{/auth/logout}" class="mp-btn mp-btn-logout" onclick="return logoutFromPopup(this)">로그아웃</a>
-            <form th:action="@{/auth/withdraw}" method="post" class="mp-withdraw" onsubmit="return submitWithdrawalFromPopup(this)">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                <button type="submit" class="mp-btn mp-btn-danger">회원 탈퇴</button>
-            </form>
-        </div>
-    </article>
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
 </div>
-
 </body>
 </html>

@@ -24,10 +24,19 @@ public class MyPageController {
 
     @GetMapping("/myPage")
     public String myPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        // principal에 담긴 사용자 식별자를 기준으로 마이페이지 정보를 조회한다.
+        addMyPageModel(userDetails, model);
+        return "auth/my-page";
+    }
+
+    @GetMapping("/myPage/popup")
+    public String myPagePopup(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        addMyPageModel(userDetails, model);
+        return "auth/my-page-popup";
+    }
+
+    private void addMyPageModel(CustomUserDetails userDetails, Model model) {
         MyPageResponseDTO myPage = myPageService.getMyPage(userDetails);
         model.addAttribute("myPage", myPage);
-        return "auth/my-page";
     }
 
     @PostMapping("/auth/withdraw")

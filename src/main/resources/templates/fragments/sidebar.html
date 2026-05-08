@@ -34,6 +34,8 @@
            th:classappend="${currentPage == 'billing'} ? ' active' : ''">관리비</a>
         <a class="sidebar-item" th:href="@{/community/square/all}"
            th:classappend="${currentPage == 'community'} ? ' active' : ''">커뮤니티</a>
+        <a class="sidebar-item" th:href="@{/myPage}"
+           th:classappend="${currentPage == 'myPage'} ? ' active' : ''">마이페이지</a>
     </nav>
 
     <!-- ── 메뉴 (관리자) ── -->

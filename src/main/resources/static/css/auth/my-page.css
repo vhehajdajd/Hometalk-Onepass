@@ -11,18 +11,196 @@
 }
 
 .mp-page {
-    margin: 0;
     background: var(--mp-bg);
     color: var(--mp-text);
 }
 
+.mp-module {
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.mp-module-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.mp-module-head h1 {
+    margin: 0 0 4px;
+    color: var(--color-main);
+    font-size: 26px;
+    font-weight: 800;
+}
+
+.mp-module-head p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 14px;
+}
+
+.mp-login-type {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #e6f4f5;
+    color: #2a9da4;
+    font-weight: 700;
+}
+
+.mp-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.mp-summary-card,
+.mp-panel {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.mp-summary-card {
+    min-height: 106px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.mp-summary-label {
+    color: var(--color-text-muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.mp-summary-card strong {
+    color: var(--color-main);
+    font-size: 20px;
+    line-height: 1.35;
+    word-break: break-all;
+}
+
+.mp-panel-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.mp-panel {
+    padding: 20px;
+}
+
+.mp-panel h2 {
+    margin: 0 0 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--color-main);
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.mp-info-list {
+    margin: 0;
+}
+
+.mp-info-list div {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-modal-line);
+}
+
+.mp-info-list div:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.mp-info-list div:first-child {
+    padding-top: 0;
+}
+
+.mp-info-list dt {
+    color: var(--color-text-muted);
+    font-weight: 700;
+}
+
+.mp-info-list dd {
+    margin: 0;
+    color: var(--color-text);
+    font-weight: 700;
+    text-align: right;
+    word-break: break-all;
+}
+
+.mp-account-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.mp-account-panel h2 {
+    margin-bottom: 6px;
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.mp-account-panel p {
+    margin: 0;
+    color: var(--color-text-muted);
+}
+
+.mp-module-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mp-module-actions form {
+    margin: 0;
+}
+
+.mp-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 104px;
+    height: 38px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.mp-action-logout {
+    background: var(--color-btn);
+}
+
+.mp-action-danger {
+    background: var(--color-btn-point);
+}
+
 .mp-shell {
-    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
     padding: 20px;
 }
 
 .mp-card {
-    max-width: 460px;
+    width: min(100%, 460px);
     margin: 0 auto;
     overflow: hidden;
     color: #ffffff;
@@ -176,5 +354,34 @@
 
     .mp-title {
         font-size: 26px;
+    }
+}
+
+@media (max-width: 900px) {
+    .mp-summary-grid,
+    .mp-panel-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mp-account-panel {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 640px) {
+    .mp-module-head,
+    .mp-module-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .mp-summary-grid,
+    .mp-panel-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mp-action-btn {
+        width: 100%;
     }
 }

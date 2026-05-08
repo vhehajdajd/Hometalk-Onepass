@@ -27,7 +27,7 @@ public class CustomLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         }
 
         String redirectUrl = LoginRedirectUtils.consumeRedirectUrl(request)
-                .orElse("/home");
+                .orElse("/dashboard");
 
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
