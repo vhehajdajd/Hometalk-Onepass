@@ -336,6 +336,51 @@
             '</div>';
     }
 
+    function renderInquiry(data, elId, path) {
+        var el = document.getElementById(elId);
+        if (!data || !data.length) { el.innerHTML = '<div class="loading">내역이 없습니다.</div>'; return; }
+        var statusClass = { '미답변': 's-unanswered', '완료': 's-answered', '처리중': 's-processing', '확인중': 's-processing' };
+        el.innerHTML = data.slice(0, 3).map(function(d) {
+            return '<a class="community-item" href="' + contextPath + path + '/' + d.id + '">' +
+                '<span style="font-size:11px; color:var(--color-text-muted); flex:none; white-space:nowrap;">' + (d.category || '-') + '</span>' +
+                '<span class="community-title">' + d.title + '</span>' +
+                '<span class="dash-status-badge ' + (statusClass[d.status] || '') + '">' + (d.status || '-') + '</span>' +
+            '</a>';
+        }).join('');
+    }
+
+    function renderComplaint(data, elId, path) {
+        var el = document.getElementById(elId);
+        if (!data || !data.length) { el.innerHTML = '<div class="loading">내역이 없습니다.</div>'; return; }
+        var statusLabel = { 'WAITING': '접수', 'CHECK': '확인중', 'PROCESSING': '처리중', 'COMPLETED': '완료' };
+        var statusClass = { 'WAITING': 's-received', 'CHECK': 's-processing', 'PROCESSING': 's-processing', 'COMPLETED': 's-answered' };
+        var lockIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:2px; opacity:0.5;"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+        el.innerHTML = data.slice(0, 3).map(function(d) {
+            return '<a class="community-item" href="' + contextPath + path + '/' + d.id + '">' +
+                '<span style="font-size:11px; color:var(--color-text-muted); flex:none; white-space:nowrap;">' + (d.category || '-') + '</span>' +
+                '<span class="community-title">' + (d.secret ? lockIcon : '') + d.title + '</span>' +
+                '<span class="dash-status-badge ' + (statusClass[d.status] || '') + '">' + (statusLabel[d.status] || d.status) + '</span>' +
+            '</a>';
+        }).join('');
+    }
+
+    function renderReservation(data, elId) {
+        var el = document.getElementById(elId);
+        if (!data || !data.length) { el.innerHTML = '<div class="loading">내역이 없습니다.</div>'; return; }
+        var statusLabel = { 'CONFIRMED': '예약완료', 'CANCELED': '취소됨', 'PENDING': '승인대기' };
+        var statusClass = { 'CONFIRMED': 's-answered', 'CANCELED': 's-unanswered', 'PENDING': 's-pending' };
+        el.innerHTML = data.slice(0, 3).map(function(d) {
+            var date = d.startTime ? d.startTime.substring(5, 10).replace('-', '/') : '-';
+            var timeStr = d.startTime ? d.startTime.substring(11, 16) : '';
+            if (d.endTime) timeStr += ' ~ ' + d.endTime.substring(11, 16);
+            return '<a class="community-item" href="' + contextPath + 'reservation/admin/status">' +
+                '<span style="font-size:11px; color:var(--color-text-muted); flex:none; white-space:nowrap;">' + d.facilityName + '</span>' +
+                '<span class="community-title">' + date + ' · ' + timeStr + '</span>' +
+                '<span class="dash-status-badge ' + (statusClass[d.status] || '') + '">' + (statusLabel[d.status] || d.status) + '</span>' +
+            '</a>';
+        }).join('');
+    }
+
     function renderParking(parkedCount, pendingCount) {
         document.getElementById('parkedCount').textContent  = parkedCount != null ? parkedCount : '-';
         document.getElementById('pendingCount').textContent = pendingCount != null ? pendingCount : '-';
@@ -429,28 +474,28 @@
 
     // ── API 호출 ─────────────────────────────────────────────────────────────
 
-    // 공지사항
+    // 공지사항 ✅
     fetch(contextPath + 'notice/api/detail')
         .then(function(res) { return res.json(); })
         .then(function(data) { renderNotice(data); })
         .catch(function() { document.getElementById('noticeList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 커뮤니티 최신글
+    // 커뮤니티 최신글 ✅
     fetch(contextPath + 'api/community/recent')
         .then(function(res) { return res.json(); })
         .then(function(data) { renderCommunity(data); })
         .catch(function() { document.getElementById('communityList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 오늘의 일정
+    // 오늘의 일정 ✅
     fetch(contextPath + 'schedule/api/calendar')
         .then(function(res) { return res.json(); })
         .then(function(data) { todayScheduleData = data; renderTodaySchedule(data); })
         .catch(function() { document.getElementById('todayScheduleList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 달력 일정 초기 로드
+    // 달력 일정 초기 로드 ✅
     loadCalendarSchedules();
 
-    // 주차 현황
+    // 주차 현황 ✅
     Promise.all([
         fetch(contextPath + 'staff/exit/list/visit').then(function(res) { return res.json(); }),
         fetch(contextPath + 'staff/exit/list/resident').then(function(res) { return res.json(); }),
@@ -462,20 +507,29 @@
         renderParking(visitList.length + residentList.length, pendingList.length);
     }).catch(function() { renderParking('-', '-'); });
 
-    // 관리비
+    // 관리비 ✅
     fetch(contextPath + 'api/billing/admin/summary')
         .then(function(res) { return res.json(); })
         .then(function(data) { renderAdminBilling(data); })
         .catch(function() { document.getElementById('billingContent').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 예약 API 미구현 - 추후 연결
-    document.getElementById('reservationList').innerHTML = '<div class="loading">불러오기 실패</div>';
+    // 예약 ✅ GET /api/admin/reservation/recent
+    fetch(contextPath + 'api/admin/reservation/recent')
+        .then(function(res) { return res.json(); })
+        .then(function(data) { renderReservation(data, 'reservationList'); })
+        .catch(function() { document.getElementById('reservationList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 문의 API 미구현 - 추후 연결
-    document.getElementById('inquiryList').innerHTML = '<div class="loading">불러오기 실패</div>';
+    // 문의 ✅ GET /api/admin/inquiry/recent
+    fetch(contextPath + 'api/admin/inquiry/recent')
+        .then(function(res) { return res.json(); })
+        .then(function(data) { renderInquiry(data, 'inquiryList', 'inquiries/detail'); })
+        .catch(function() { document.getElementById('inquiryList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 민원 API 미구현 - 추후 연결
-    document.getElementById('complaintList').innerHTML = '<div class="loading">불러오기 실패</div>';
+    // 민원 ✅ GET /api/admin/complaint/recent
+    fetch(contextPath + 'api/admin/complaint/recent')
+        .then(function(res) { return res.json(); })
+        .then(function(data) { renderComplaint(data, 'complaintList', 'complaints/detail'); })
+        .catch(function() { document.getElementById('complaintList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 </script>
 </body>
 </html>
