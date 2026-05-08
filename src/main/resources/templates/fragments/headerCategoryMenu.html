@@ -83,6 +83,11 @@
     <a class="category-item" th:href="@{/complaints/write}">민원 작성</a>
 </div>
 
+<!-- ── 회원 승인 - 관리자 ── -->
+<div th:fragment="approvalAdmin" class="category-bar">
+    <a class="category-item" th:href="@{/admin/users/approvals}">승인 신청 목록</a>
+</div>
+
 <!-- ── 알림 ── -->
 <div th:fragment="notification" class="category-bar">
 </div>

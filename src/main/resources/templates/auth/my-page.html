@@ -1,21 +1,30 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('마이페이지')}"></head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지</title>
+    <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+    <link rel="stylesheet" th:href="@{/css/auth/my-page.css}">
+    <script th:src="@{/js/notification/notification-sse.js}"></script>
+    <script th:src="@{/js/notification/notification-bell.js}"></script>
+</head>
 <body class="mp-page">
-<link rel="stylesheet" th:href="@{/css/auth/my-page.css}">
 <div class="main-layout">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='myPage')}"></div>
 
     <div class="main-wrapper">
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='myPage')}"></div>
+        <div class="category-bar"></div>
 
-        <main class="dashboard-content">
-            <section class="mp-module">
+        <main class="content">
+            <div class="container">
+                <div class="page-title">마이페이지</div>
+                <section class="mp-module">
                 <div class="mp-module-head">
-                    <div>
-                        <h1>마이페이지</h1>
-                        <p>내 계정 정보와 세대 정보를 확인합니다.</p>
-                    </div>
+                    <p>내 계정 정보와 세대 정보를 확인합니다.</p>
                     <span class="mp-login-type" th:text="${myPage.authType}">일반 로그인</span>
                 </div>
 
@@ -86,7 +95,8 @@
                         </form>
                     </div>
                 </section>
-            </section>
+                </section>
+            </div>
         </main>
 
         <footer th:replace="~{fragments/footer :: footer}"></footer>
