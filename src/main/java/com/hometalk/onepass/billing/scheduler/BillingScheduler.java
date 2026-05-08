@@ -120,7 +120,7 @@ public class BillingScheduler {
                     NotificationType.BILLING_OVERDUE_ALERT,
                     "체납 세대 발생",
                     "체납 세대가 발생했습니다. 미납 관리 페이지를 확인해 주세요.",
-                    "/admin/billing/unpaid"
+                    "/billing/admin/unpaid"
             );
         }
 
@@ -164,7 +164,7 @@ public class BillingScheduler {
                 NotificationType.BILLING_MONTHLY_SUMMARY,
                 title,
                 message,
-                "/admin/billing"
+                "/billing/admin/unpaid"
         );
 
         log.info("[BillingScheduler] 정산 요약 발송 완료 - {}", message);

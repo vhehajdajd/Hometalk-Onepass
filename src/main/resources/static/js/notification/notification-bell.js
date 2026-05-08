@@ -32,11 +32,24 @@
 
     const state = {
         page: 0,
-        size: 10,
+        size: 3,
         last: false,
         loading: false,
         items: []
-    };
+    }
+    // 더보기 초기 숨김 (DOMContentLoaded 안에 추가)
+    const loadMoreBtn = document.getElementById('noti-load-more');
+    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+
+    // markAllRead 수정
+    async function markAllRead() {
+        await fetch(`${CTX}/api/notification/read-all`, {
+            method: 'POST', credentials: 'include'
+        });
+        await fetch(`${CTX}/api/notification/delete-all`, {
+            method: 'DELETE', credentials: 'include'
+        });
+    }
 
     // ─────────────────── API ───────────────────
 
@@ -67,9 +80,13 @@
         });
     }
 
+    // 전체삭제 버튼 → 읽음+삭제
     async function markAllRead() {
         await fetch(`${CTX}/api/notification/read-all`, {
             method: 'POST', credentials: 'include'
+        });
+        await fetch(`${CTX}/api/notification/delete-all`, {
+            method: 'DELETE', credentials: 'include'
         });
     }
 
@@ -110,37 +127,42 @@
 
     // ─────────────────── 목록 렌더링 ───────────────────
 
-    async function loadList(page, append) {
-        if (state.loading) return;
-        state.loading = true;
+async function loadList(page, append, size) {
+    if (state.loading) return;
+    state.loading = true;
 
-        const body   = document.getElementById('noti-dropdown-body');
-        const footer = document.getElementById('noti-load-more');
+    const body   = document.getElementById('noti-dropdown-body');
+    const footer = document.getElementById('noti-load-more');
 
-        if (!append && body) {
-            body.innerHTML = '<div class="noti-loading">불러오는 중...</div>';
-        }
-
-        try {
-            const data = await fetchList(page);
-            state.last = data.last;
-            state.page = page;
-
-            if (!append) state.items = [];
-            state.items = state.items.concat(data.content);
-
-            renderItems(append);
-
-            if (footer) {
-                footer.style.display = data.last ? 'none' : 'inline-block';
-            }
-        } catch (e) {
-            console.error('[Bell] list load failed:', e);
-            if (body) body.innerHTML = '<div class="noti-empty">불러오기 실패</div>';
-        } finally {
-            state.loading = false;
-        }
+    if (!append && body) {
+        body.innerHTML = '<div class="noti-loading">불러오는 중...</div>';
     }
+
+    try {
+        const actualSize = size || state.size;
+        const url = `${CTX}/api/notification/list?page=${page}&size=${actualSize}`;
+        const res = await fetch(url, { credentials: 'include' });
+        if (!res.ok) throw new Error('fetch failed');
+        const data = await res.json();
+
+        state.last = data.last;
+        state.page = page;
+
+        if (!append) state.items = [];
+        state.items = state.items.concat(data.content);
+
+        renderItems(append);
+
+        if (footer) {
+            footer.style.display = data.last ? 'none' : 'inline-block';
+        }
+    } catch (e) {
+        console.error('[Bell] list load failed:', e);
+        if (body) body.innerHTML = '<div class="noti-empty">불러오기 실패</div>';
+    } finally {
+        state.loading = false;
+    }
+}
 
     function renderItems(append) {
         const body = document.getElementById('noti-dropdown-body');
@@ -297,9 +319,9 @@
             e.stopPropagation();
         });
 
-        // 4) 더보기
+        // 4) 더보기 클릭 시 전체 로드
         document.getElementById('noti-load-more')?.addEventListener('click', () => {
-            loadList(state.page + 1, true);
+            loadList(0, false, 100); // size 100으로 전체 로드
         });
 
         // 5) 전체 읽음

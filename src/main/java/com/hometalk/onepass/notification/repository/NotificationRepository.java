@@ -21,22 +21,18 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     // ─────────────── 조회 (DTO Projection) ───────────────
 
     @Query("""
-        SELECT new com.hometalk.onepass.notification.dto.NotificationResponse(
-            n.id,
-            n.type,
-            n.title,
-            n.message,
-            n.link,
-            CASE WHEN nr.id IS NOT NULL THEN true ELSE false END,
-            n.createdAt
-        )
-        FROM Notification n
-        LEFT JOIN NotificationRead nr
-          ON nr.notification = n AND nr.userId = :userId
-        WHERE (n.userId = :userId OR (n.userId IS NULL AND n.targetRole = :role))
-        AND   (n.expiredAt IS NULL OR n.expiredAt > CURRENT_TIMESTAMP)
-        ORDER BY n.updatedAt DESC
-    """)
+    SELECT new com.hometalk.onepass.notification.dto.NotificationResponse(
+        n.id, n.type, n.title, n.message, n.link,
+        CASE WHEN nr.id IS NOT NULL THEN true ELSE false END,
+        n.createdAt
+    )
+    FROM Notification n
+    LEFT JOIN NotificationRead nr
+      ON nr.notification = n AND nr.userId = :userId
+    WHERE (n.userId = :userId OR (n.userId IS NULL AND n.targetRole = :role))
+    AND   (n.expiredAt IS NULL OR n.expiredAt > CURRENT_TIMESTAMP)
+    ORDER BY CASE WHEN nr.id IS NOT NULL THEN 1 ELSE 0 END ASC, n.updatedAt DESC
+""")
     Page<NotificationResponse> findAllMyNotificationsWithRead(
             @Param("userId") Long userId,
             @Param("role")   NotificationTargetRole role,
@@ -130,4 +126,21 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Modifying
     @Query("DELETE FROM Notification n WHERE n.expiredAt IS NOT NULL AND n.expiredAt < CURRENT_TIMESTAMP")
     int deleteExpiredNotifications();
+
+
+    // ─────────────── 전체삭제 ───────────────
+
+    @Query("""
+    SELECT n.id FROM Notification n
+    WHERE (n.userId = :userId OR (n.userId IS NULL AND n.targetRole = :role))
+    AND (n.expiredAt IS NULL OR n.expiredAt > CURRENT_TIMESTAMP)
+    """)
+    List<Long> findAllMyNotificationIds(
+            @Param("userId") Long userId,
+            @Param("role") NotificationTargetRole role
+    );
+
+    @Modifying
+    void deleteAllByIdIn(List<Long> ids);
+
 }

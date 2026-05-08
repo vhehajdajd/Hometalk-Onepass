@@ -81,6 +81,15 @@ public class NotificationApiController {
         return ResponseEntity.ok().build();
     }
 
+    // ─────────────────── 5. 전체 삭제 처리 ───────────────────
+    @DeleteMapping("/delete-all")
+    public ResponseEntity<Void> deleteAll(
+            @AuthenticationPrincipal CustomUserDetails user) {
+        if (user == null) return ResponseEntity.ok().build();
+        notificationService.deleteAll(user.getUserId(), resolveRole(user));
+        return ResponseEntity.ok().build();
+    }
+
     // ─────────────────── role 변환 유틸 ───────────────────
     private NotificationTargetRole resolveRole(CustomUserDetails user) {
         return switch (user.getRole()) {
