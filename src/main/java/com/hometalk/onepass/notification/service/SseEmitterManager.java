@@ -1,15 +1,13 @@
 package com.hometalk.onepass.notification.service;
 
-import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.notification.entity.NotificationTargetRole;
 
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import com.hometalk.onepass.auth.repository.UserRepository;
 
 import java.io.IOException;
 import java.util.List;
@@ -17,42 +15,46 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@Slf4j
 @Component
-@RequiredArgsConstructor
 public class SseEmitterManager {
 
-    // 동시성 제어: ConcurrentHashMap + CopyOnWriteArrayList
-    private final Map<Long, List<SseEmitter>> emitterMap = new ConcurrentHashMap<>();
-    private final UserRepository userRepository;
+    // ✅ userId → {role, emitters} 구조로 변경 (DB 조회 제거)
+    private final Map<Long, UserSession> sessionMap = new ConcurrentHashMap<>();
 
-    private static final long TIMEOUT_MS    = 30 * 60 * 1000L; // 30분
-    private static final long HEARTBEAT_MS  = 30 * 1000L;      // 30초
+    private static final long TIMEOUT_MS = 30 * 60 * 1000L;
 
+    // ─────────────────── 내부 세션 클래스 ───────────────────
+    private static class UserSession {
+        final NotificationTargetRole role;
+        final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
+
+        UserSession(NotificationTargetRole role) {
+            this.role = role;
+        }
+    }
 
     // ─────────────────── 연결 등록 ───────────────────
 
-    public SseEmitter connect(Long userId, String lastEventId) {
+    public SseEmitter connect(Long userId, NotificationTargetRole role, String lastEventId) {
         SseEmitter emitter = new SseEmitter(TIMEOUT_MS);
 
-        emitterMap.computeIfAbsent(userId, k -> new CopyOnWriteArrayList<>()).add(emitter);
+        // ✅ role과 함께 세션 등록
+        sessionMap.computeIfAbsent(userId, k -> new UserSession(role)).emitters.add(emitter);
 
-        // 생명 주기 콜백: 만료/오류 시 맵에서 즉시 제거
         Runnable removeEmitter = () -> removeEmitter(userId, emitter);
         emitter.onCompletion(removeEmitter);
         emitter.onTimeout(() -> {
-            sendReconnectSignal(emitter);   // 클라이언트에 재연결 시그널 전송
+            sendReconnectSignal(emitter);
             removeEmitter.run();
         });
         emitter.onError(e -> removeEmitter.run());
 
-        // Last-Event-ID 처리: 재연결 시 누락 알림 flush
+        // Last-Event-ID 처리 (④번에서 구현)
         if (lastEventId != null && !lastEventId.isBlank()) {
-            // TODO: Security 연동 후 userId + targetRole 기반 미전송 알림 재조회 후 전송
-            // notificationService.findAfter(userId, role, lastEventId)
-            //     .forEach(n -> send(emitter, n));
+            // TODO: ④ Last-Event-ID 기반 누락 알림 재전송
         }
 
-        // 최초 연결 확인용 더미 이벤트
         sendEvent(emitter, "connect", "connected");
         return emitter;
     }
@@ -60,22 +62,17 @@ public class SseEmitterManager {
     // ─────────────────── 전송 ───────────────────
 
     public void sendToUser(Long userId, Object data) {
-        List<SseEmitter> emitters = emitterMap.getOrDefault(userId, List.of());
-        emitters.forEach(emitter -> sendEvent(emitter, "notification", data));
+        UserSession session = sessionMap.get(userId);
+        if (session == null) return;
+        session.emitters.forEach(emitter -> sendEvent(emitter, "notification", data));
     }
 
+    // ✅ DB 조회 없이 세션에서 role 직접 비교
     public void sendToAll(NotificationTargetRole role, Object data) {
-        emitterMap.forEach((userId, list) -> {
-            userRepository.findById(userId).ifPresent(user -> {
-                boolean match = switch (role) {
-                    case ADMIN    -> user.getRole() == User.UserRole.ADMIN;
-                    case RESIDENT -> user.getRole() == User.UserRole.RESIDENT;
-                    default       -> false;
-                };
-                if (match) {
-                    list.forEach(emitter -> sendEvent(emitter, "notification", data));
-                }
-            });
+        sessionMap.forEach((userId, session) -> {
+            if (session.role == role) {
+                session.emitters.forEach(emitter -> sendEvent(emitter, "notification", data));
+            }
         });
     }
 
@@ -92,39 +89,33 @@ public class SseEmitterManager {
         }
     }
 
-    // 클라이언트에 재연결 시그널 전송 후 종료
     private void sendReconnectSignal(SseEmitter emitter) {
         try {
-            emitter.send(
-                    SseEmitter.event().name("reconnect").data("timeout")
-            );
-        } catch (IOException ignored) { }
+            emitter.send(SseEmitter.event().name("reconnect").data("timeout"));
+        } catch (IOException ignored) {}
     }
 
     // ─────────────────── Heartbeat ───────────────────
-    // SseEmitterManager 내부 @Scheduled: 30초마다 빈 comment 전송
     @Scheduled(fixedRate = 30000)
     public void sendHeartbeat() {
-        emitterMap.entrySet().forEach(entry -> {
-            Long userId = entry.getKey();
-            entry.getValue().forEach(emitter -> {
-                try {
-                    emitter.send(SseEmitter.event().comment("heartbeat"));
-                } catch (IOException e) {
-                    emitter.completeWithError(e);
-                    removeEmitter(userId, emitter); // ✅ 끊긴 emitter 즉시 제거
-                }
-            });
-        });
+        sessionMap.forEach((userId, session) ->
+                session.emitters.forEach(emitter -> {
+                    try {
+                        emitter.send(SseEmitter.event().comment("heartbeat"));
+                    } catch (IOException e) {
+                        emitter.completeWithError(e);
+                        removeEmitter(userId, emitter);
+                    }
+                })
+        );
     }
 
     // ─────────────────── 제거 ───────────────────
-
     private void removeEmitter(Long userId, SseEmitter emitter) {
-        List<SseEmitter> list = emitterMap.get(userId);
-        if (list != null) {
-            list.remove(emitter);
-            if (list.isEmpty()) emitterMap.remove(userId);
+        UserSession session = sessionMap.get(userId);
+        if (session != null) {
+            session.emitters.remove(emitter);
+            if (session.emitters.isEmpty()) sessionMap.remove(userId);
         }
     }
 }

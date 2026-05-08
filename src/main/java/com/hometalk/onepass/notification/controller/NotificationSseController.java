@@ -1,6 +1,7 @@
 package com.hometalk.onepass.notification.controller;
 
 import com.hometalk.onepass.auth.config.CustomUserDetails;
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
 import com.hometalk.onepass.notification.service.SseEmitterManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -26,6 +27,11 @@ public class NotificationSseController {
         // ✅ null 체크
         if (user == null) return new SseEmitter(0L);
 
-        return sseEmitterManager.connect(user.getUserId(), lastEventId);
+        // ✅ role 함께 전달
+        NotificationTargetRole role = switch (user.getRole()) {
+            case ADMIN -> NotificationTargetRole.ADMIN;
+            default    -> NotificationTargetRole.RESIDENT;
+        };
+        return sseEmitterManager.connect(user.getUserId(), role, lastEventId);
     }
 }

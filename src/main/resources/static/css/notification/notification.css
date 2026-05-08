@@ -250,7 +250,7 @@
 /* ---------- 토스트 (실시간 알림) ---------- */
 .noti-toast-container {
     position: fixed;
-    top: 70px;
+    top: 100px;
     right: 20px;
     z-index: 9998;
     display: flex;
