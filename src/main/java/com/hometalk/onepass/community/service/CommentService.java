@@ -68,7 +68,7 @@ public class CommentService {
                     NotificationType.COMMUNITY_COMMENT,
                     "새로운 댓글",
                     "새로운 댓글이 있습니다.",
-                    "/community",   // ← 단순화
+                    "/community/square/all",   // ← 단순화
                     comment.getId()
             );
         }
