@@ -543,3 +543,10 @@ body {
     width: 54px;
     text-align: center;
 }
+
+#todayScheduleList {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
