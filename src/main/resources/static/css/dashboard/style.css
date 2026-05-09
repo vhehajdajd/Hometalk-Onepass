@@ -1,247 +1,518 @@
-/*
-    style.css  - 전체 공통 스타일
-*/
-/* 기본 초기화 */
+/* style.css */
+
+:root {
+    --color-bg:              white;
+    --color-main:            #032154;
+    --color-sub:             #3C6ABC;
+    --color-btn:             #4073C9;
+    --color-btn-secondary:   #9EBFDB;
+    --color-btn-point:       #EB6E57;
+    --color-btn-point-hover: #D65A45;
+    --color-text-muted:      #888888;
+    --color-bg-white-btn:    #F5F5F5;
+    --color-modal-line:      #F1F5F9;
+    --color-text:            #000000;
+    --border-color:          #E2E8F0;
+    --badge-facility:        #d2eed8;
+    --badge-facility-font:   #6c977a;
+    --badge-safety:          #fff8e1;
+    --badge-safety-font:     #b8860b;
+    --badge-normal:          #e6f4f5;
+    --badge-normal-font:     #2a9da4;
+    --badge-default:         #c9c9c9;
+    --badge-default-font:    #5b5b5b;
+    --sidebar-width:         170px;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
-    /*background: #f0f4f8; color: #1e293b;*/
+    background: #eef1f8;
+    color: var(--color-text);
+    font-size: 14px;
     line-height: 1.6;
-    min-height: 100vh; display: flex;
-    flex-direction: column;
 }
 
-/*
-    헤더
-*/
-.site-header {
-    /*background: #1a1f35; padding: 0.8rem;*/
-    /*display: flex; align-items: center; justify-content: space-between;*/
+/* ── 전체 레이아웃 ── */
+.main-layout { display: flex; min-height: 100vh; }
 
-    display: flex;          /* 가로 배치 */
-    justify-content: space-between; /* 양 끝으로 밀어내기 (브랜드-왼쪽, 메뉴-오른쪽) */
-    align-items: center;    /* 세로 중앙 정렬 */
-    padding: 10px 40px;     /* 상하 10px, 좌우 40px 여백 */
-    background-color: #ffffff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 하단 가벼운 그림자 효과 */
-}
-.site-header .brand {
-    /*font-size: 1.25rem; font-weight: bold; color: #fff; text-decoration: none;*/
-
-    font-size: 24px;
-    font-weight: bold;
-    text-decoration: none;
-    color: #2c3e50;
-}
-
-.site-header .menu {
-    margin-left: auto; /* 왼쪽 여백을 최대로 밀어서 오른쪽 끝으로 이동 */
-}
-
-.site-header nav a {
-    /*color: #7dd3fc; text-decoration: none; margin-left: 1.5rem;*/
-
-    text-decoration: none;
-    color: #333;
-    margin-left: 30px;      /* 메뉴 글자 사이 간격 띄우기 */
-    font-size: 16px;
-    transition: color 0.3s;
-}
-.site-header nav a:hover {
-    /*color: #fff;*/
-
-    color: #3498db;         /* 마우스 올리면 파란색으로 변경 */
-}
-
-.header-second-row a:hover {
-    color: #3498db !important;
-    text-decoration: underline; /* 마우스 올리면 밑줄 효과 */
-}
-
-/* 전체 레이아웃 설정 */
-.main-layout {
-    display: flex;
-    min-height: 100vh;   /* height: 100vh 대신 min-height 사용 */
-    align-items: stretch; /* 자식(사이드바)이 부모 높이만큼 늘어남 */
-}
-
-/* 왼쪽 사이드바 설정 */
+/* ── 사이드바 ── */
 .sidebar {
-    width: 250px;  /* 원하는 너비 */
-    flex-shrink: 0;      /* 너비 고정 */
-    background-color: #2c3e50; /* 구분용 색상 */
-    /* height나 max-height 설정을 절대 넣지 마세요. stretch가 작동해야 합니다. */
-}
-
-/* 메인 콘텐츠와 헤더를 묶는 영역 */
-.right-section {
-    flex: 1;
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, #3a5fcd 0%, #6b8de3 100%);
     display: flex;
     flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
 }
 
-/*.sidebar {*/
-/*    width: 250px;          !* 사이드바 너비 고정 *!*/
-/*    background-color: #2c3e50;*/
-/*    color: white;*/
-/*    min-height: 100vh;     !* 높이를 화면 꽉 차게 *!*/
-/*    max-height: 800px;*/
-/*}*/
+.sidebar-logo {
+    width: 100%;
+    padding: 20px 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-/* 1. 리스트 항목 전체 글자색 변경 */
 .sidebar-menu {
-    list-style: none; /* 점 제거 (선택사항) */
-    padding: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 8px;
 }
 
-/* 2. 링크(a) 태그 색상을 하얀색으로 강제 지정 */
-.sidebar-menu li a {
-    color: #ffffff;         /* 하얀색 */
-    text-decoration: none;  /* 밑줄 제거 (선택사항) */
-    display: block;         /* 클릭 영역 확장 (선택사항) */
-    padding: 10px;          /* 간격 조절 (선택사항) */
-}
-
-/* 3. 마우스를 올렸을 때 효과 (선택사항) */
-.sidebar-menu li a:hover {
-    color: #cccccc;      /* 살짝 회색으로 변하게 */
-}
-
-/* 카테고리 메뉴 전체 바 */
-.category-menu-bar {
-    border-top: 1px solid #f0f0f0;
-    border-bottom: 1px solid #f0f0f0;
-    background-color: #ffffff;
-    padding: 10px 20px;
-}
-
-/* 리스트 스타일 제거 및 가로 배치 */
-.category-list {
-    display: flex;          /* 가로 나열 핵심 */
-    list-style: none;       /* 불렛 제거 */
-    margin: 0;
-    padding: 0;
-    gap: 40px;              /* 메뉴 사이 간격 */
-}
-
-/* 링크 스타일 */
-.category-list li a {
-    text-decoration: none;
-    color: #333;
+.sidebar-item {
+    width: 100%;
+    padding: 14px 12px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.8);
     font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.sidebar-item:hover { background: rgba(255,255,255,0.15); color: white; }
+.sidebar-item.active { background: rgba(255,255,255,0.25); color: white; font-weight: 700; }
+
+/* ── 사이드바 하단 ── */
+.s-bottom {
+    margin-top: auto;
+    width: 100%;
+    padding: 16px 8px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.s-phone { text-align: center; }
+.s-phone-label { font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 2px; }
+.s-phone-num { font-size: 12px; color: white; font-weight: 600; }
+
+.s-logout {
+    width: 100%;
+    padding: 7px 0;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
     font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.s-logout:hover { background: rgba(255,255,255,0.25); }
+
+/* ── 메인 래퍼 ── */
+.main-wrapper { flex: 1; display: flex; flex-direction: column; }
+
+/* ── 헤더 ── */
+.header {
+    height: 52px;
+    background: white;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-main);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+/* ── 카테고리 바 ── */
+.category-bar {
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 24px;
+    display: flex;
+    gap: 24px;
+    height: 40px;
+    align-items: center;
+    position: sticky;
+    top: 52px;
+    z-index: 99;
+}
+
+.category-item {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    text-decoration: none;
+    height: 100%;
+    display: flex;
+    align-items: center;
     transition: color 0.2s;
 }
 
-/* 마우스 올렸을 때 효과 */
-.category-list li a:hover {
-    color: #007bff;
-}
+.category-item:hover { color: var(--color-main); font-weight: 700;}
+.category-item.active { color: var(--color-main); font-weight: 700; border-bottom: 2px solid var(--color-main); }
 
-/* 선택된 메뉴 스타일 예시 */
-.sidebar-menu a.active {
-    background-color: #e9ecef; /* 배경색 변경 */
-    color: #007bff;            /* 글자색 파란색 */
-    font-weight: bold;         /* 글자 두껍게 */
-    border-left: 4px solid #007bff; /* 왼쪽에 강조 선 */
-    padding-left: 16px;        /* 선 때문에 밀리는 간격 조정 */
-}
+/* ── 콘텐츠 ── */
+.dashboard-content { flex: 1; padding: 20px 24px; overflow-y: auto; }
 
-/*.main-layout {*/
-/*    display: flex;         !* 가로 배치 핵심 *!*/
-/*    align-items: flex-start;*/
-/*    max-height: 1000px;*/
-/*}*/
+/* ── 그리드 ── */
+.dashboard-grid { display: flex; flex-direction: column; gap: 14px; max-width: 1500px; margin: 0 auto; }
+.row-1 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.row-2 { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 14px; }
+.row-3 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 
-/*
-    메인 켄텐츠 (.content)
-*/
-
-.main-layout .content { max-width: 100%; min-height: 882px; margin: 0 auto; padding: 2rem; flex: 1; }
-.main-layout .content h1 { text-align: center; margin-bottom: 1.5rem; }
-
-/*.content {*/
-/*    flex: 1;               !* 나머지 공간을 본문이 다 차지함 *!*/
-/*    padding: 20px;*/
-/*}*/
-
-/*
-    푸터
-*/
-.site-footer {
-    background:  #1a1f35; padding: 1.5rem; text-align: center; padding: 1.5rem; text-align: center; color: #94a3b8; font-weight: 600;
-    font-size: 0.85rem;
-}
-.site-footer .small {
-    font-site: 0.75rem; color: #64748b;
-}
-
-/*
-카드 그리드 (.card-grid)
-- 카드 목록을 가로로 배치
-*/
-.card-grid {
-    display: grid;
-    /* 한 줄에 동일한 크기로 3개 배치 (1fr 1fr 1fr) */
-    grid-template-columns: repeat(3, 1fr);
-    gap: 100px; /* 카드 사이의 간격 */
-    padding: 20px;
-}
-
-/*
-    카드 (.card)
-*/
+/* ── 카드 ── */
 .card {
-    /* 기존 크기보다 크게 설정 */
-    width: 100%;           /* 부모 그리드 너비에 맞춤 */
-    min-height: 400px;     /* 높이를 기존의 약 2배로 설정 */
-    padding: 40px;         /* 내부 여백을 넉넉하게 (2배) */
-    border-radius: 20px;
-    background-color: #fff;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 18px 20px;
     display: flex;
     flex-direction: column;
-    justify-content: center; /* 내용 중앙 정렬 */
-
-    position: relative; /* 위치 기준점 */
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
-.card::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 6px;  /* 선 두께 */
-    height: 100%; /* 카드 높이 전체 */
-    background: linear-gradient(to bottom, #3498db, #2980b9); /* 파란색 그라데이션 */
-    border-radius: 4px 0 0 4px; /* 왼쪽 모서리만 둥글게 */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 12px;
 }
 
-.card h2 {
-    font-size: 2.5rem;     /* 제목 크기 대폭 확대 */
-    margin-bottom: 20px;
-}
-.card .author {
-    font-size: 1.4rem;     /* 저자 이름 확대 */
-    color: #666;
-    margin-bottom: 30px;
-}
-.card .info {
-    font-size: 1.2rem;     /* 정보 텍스트 확대 */
-    line-height: 2;        /* 줄 간격 조절 */
+.card-title { font-size: 15px; font-weight: 700; color: var(--color-main); }
+.card-more { font-size: 13px; color: var(--color-text-muted); text-decoration: none; transition: color 0.2s; }
+.card-more:hover { color: var(--color-btn-point); }
+
+/* ── 공지 ── */
+.notice-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--color-modal-line);
+    text-decoration: none;
+    color: inherit;
 }
 
-.card .info span {
-    font-weight: bold;
-    color: #2c4f4a;        /* 강조색 */
+.notice-item:last-child { border-bottom: none; }
+.notice-item:hover .notice-title { color: var(--color-btn-point); text-decoration: underline; }
+
+.notice-badge {
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-/*
-    버튼 (.btn)
-*/
-.btn { display: inline-block; padding: 0.5rem 1.2rem; background: #3b82f6;
-    color: #fff; text-decoration: none; border-radius: 8px; font-size: 0.85rem;
-    font-weight: bold; border:none; cursor: pointer;
+.notice-badge.FACILITY { background: var(--badge-facility); color: var(--badge-facility-font); }
+.notice-badge.SAFETY   { background: var(--badge-safety);   color: var(--badge-safety-font); }
+.notice-badge.NORMAL   { background: var(--badge-normal);   color: var(--badge-normal-font); }
+
+.notice-title { flex: 1; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notice-date  { font-size: 12px; color: var(--color-text-muted); white-space: nowrap; }
+
+/* ── 커뮤니티 ── */
+.community-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--color-modal-line);
+    text-decoration: none;
+    color: inherit;
 }
-.btn:hover { background: #2563eb; }
+
+.community-item:last-child { border-bottom: none; }
+.community-item:hover .community-title { color: var(--color-btn-point); text-decoration: underline; }
+
+.community-badge {
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--badge-default);
+    color: var(--badge-default-font);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.community-title { flex: 1; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── 달력 ── */
+.dashboard-content .cal-nav { display: flex; align-items: center; gap: 8px; }
+
+.dashboard-content .cal-nav button {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    width: 24px; height: 24px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--color-main);
+    transition: background 0.2s;
+}
+
+.dashboard-content .cal-nav button:hover { background: var(--color-bg-white-btn); }
+.dashboard-content .cal-nav-title { font-size: 14px; font-weight: 700; color: var(--color-main); }
+
+.dashboard-content .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-top: 4px; }
+
+.dashboard-content .cal-day-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--color-text-muted); padding: 4px 0; }
+.dashboard-content .cal-day-header.sun { color: #e74c3c; }
+.dashboard-content .cal-day-header.sat { color: var(--color-sub); }
+
+.dashboard-content .cal-cell {
+    text-align: center;
+    padding: 3px 1px;
+    font-size: 11px;
+    color: var(--color-text);
+    border-radius: 4px;
+    min-height: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.dashboard-content .cal-cell.other-month { color: #c8d0da; }
+.dashboard-content .cal-cell.today .cal-date { background: var(--color-btn); color: white; border-radius: 50%; }
+
+.dashboard-content .cal-date { font-size: 11px; font-weight: 600; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+
+.dashboard-content .cal-dots { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
+.dashboard-content .cal-dot { width: 4px; height: 4px; border-radius: 50%; }
+.dashboard-content .cal-dot.FACILITY { background: #46d64b; }
+.dashboard-content .cal-dot.SAFETY   { background:  #f8d058; }
+.dashboard-content .cal-dot.NORMAL   { background:  #46d8eb; }
+.dashboard-content .cal-dot.DEFAULT  {background: #8c8c8c; }
+
+/* ── 오늘의 일정 ── */
+.today-schedule-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-modal-line);
+}
+
+.today-schedule-item:last-child { border-bottom: none; }
+.today-schedule-title { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.today-schedule-time  { font-size: 12px; color: var(--color-text-muted); }
+
+.today-schedule-badge {
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    align-self: flex-start;
+}
+
+.today-schedule-badge.FACILITY { background: var(--badge-facility); color: var(--badge-facility-font); }
+.today-schedule-badge.SAFETY   { background: var(--badge-safety);   color: var(--badge-safety-font); }
+.today-schedule-badge.NORMAL   { background: var(--badge-normal);   color: var(--badge-normal-font); }
+.today-schedule-badge.DEFAULT  { background: var(--badge-default);  color: var(--badge-default-font); }
+
+/* ── 주차 ── */
+.parking-section { margin-bottom: 0px; }
+.parking-section:last-child {margin-top: 8px; }
+.parking-section-title { font-size: 14px; font-weight: 600; color: var(--color-text-muted);  }
+
+
+.parking-vehicle-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--color-modal-line);
+    font-size: 14px;
+}
+
+
+/* ── 관리자 주차 현황 ── */
+.parking-stat-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+    flex: 1;
+}
+
+.parking-stat-box {
+    flex: 1;
+    border-radius: 10px;
+    padding: 16px 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.parking-stat-box.blue {
+    background: #e8eef8;
+    color: var(--color-main);
+}
+
+.parking-stat-box.yellow {
+    background: #fff8e1;
+    color: #b8860b;
+}
+
+.parking-stat-count {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.parking-stat-unit {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.parking-stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.parking-status { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
+.parking-status.badge-approved { background: #e6f4f5; color: #2a9da4; }
+.parking-status.badge-pending  { background: #fff8e1; color: #b8860b; }
+.parking-status.badge-rejected { background: #fdecea; color: var(--color-btn-point); }
+
+.ticket-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    justify-content: center;
+}
+
+.ticket-box {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ticket-label {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 8px;
+}
+
+.ticket-count-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 8px;
+    min-width: 60px;
+    justify-content: center;
+}
+
+.ticket-count {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-main);
+}
+
+.ticket-unit {
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+/* ── 하단 카드 ── */
+.small-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-modal-line);
+    gap: 6px;
+}
+
+.small-item:last-child { border-bottom: none; }
+.small-item-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; }
+.small-status { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+
+.s-answered   { background: var(--badge-normal);   color: var(--badge-normal-font); }
+.s-pending    { background: var(--badge-safety);   color: var(--badge-safety-font); }
+.s-confirmed  { background: var(--badge-facility); color: var(--badge-facility-font); }
+.s-unanswered { background: #fde8e8; color: #c0392b; }
+.s-processing { background: #e8eaf6; color: #3949ab; }
+.s-received   { background: var(--badge-default);  color: var(--badge-default-font); }
+
+/* ── 관리비 ── */
+
+.billing-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 14px;
+}
+.billing-card-left { display: flex; align-items: center; gap: 10px; }
+.billing-card-label { font-size: 15px; font-weight: 700; color: var(--color-main); }
+.billing-status-badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+}
+.billing-card-row-wrap {
+    margin-top: 16px;
+}
+.billing-status-badge.UNPAID { background: #fde8e8; color: var(--color-btn-point); }
+.billing-status-badge.PAID   { background: #e6f4f5; color: var(--badge-normal-font); }
+.billing-card-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+.billing-card-row-label { color: var(--color-text-muted); }
+.billing-card-row-value { font-weight: 600; color: var(--color-text); }
+
+.btn-detail {
+    display: inline-block;
+    padding: 6px 10px;
+    background: var(--color-main);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s;
+    align-self: flex-start;
+}
+
+.btn-detail:hover { opacity: 0.88; }
+
+/* ── 로딩 ── */
+.loading { color: var(--color-text-muted); font-size: 13px; text-align: center; padding: 16px 0; }
+
+/* ── 푸터 ── */
+.footer {
+    height: 48px;
+    background: white;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+}

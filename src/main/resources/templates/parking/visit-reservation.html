@@ -1,14 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>방문 차량 예약</title>
-    <meta name="_csrf" th:content="${_csrf.token}">
-    <meta name="_csrf_header" th:content="${_csrf.headerName}">
-    <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
-    <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
-</head>
+<head th:replace="~{fragments/head :: head('방문 차량 예약')}"></head>
+<link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+<link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
 <body>
 
 <div class="main-layout" style="display: flex; min-height: 100vh;">
@@ -20,7 +14,7 @@
     <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
 
         <!-- 상단 헤더 -->
-        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'parking', 'reservationRegister'} })}"></div>
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='parking')}"></div>
 
         <!-- 상단 메뉴 -->
         <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
@@ -36,8 +30,21 @@
                             th:onclick="'location.href=\'' + @{/parking/visit/register} + '\''">+ 예약하기</button>
                 </div>
 
+                <!-- 안내 멘트 -->
+                <div style="background-color: #f0f5ff; border: 1px solid #d0dff8; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #3C6ABC; display: flex; align-items: flex-start; gap: 8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3C6ABC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;">
+                        <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+                        <path d="M12 8v4"/>
+                        <path d="M12 16h.01"/>
+                    </svg>
+                    <span>
+                        방문 차량은 예약 시간 <strong>30분 전후</strong>에만 입차 가능합니다.<br>
+                        입차하지 못하셨다면 다시 예약해 주시기 바랍니다.
+                    </span>
+                </div>
+
                 <!-- 예약 목록 테이블 -->
-                <table id="reservationTable">
+                <table class="park-table" id="reservationTable">
                     <thead>
                     <tr>
                         <th>차량 번호</th>
@@ -50,7 +57,7 @@
                     <tbody id="reservationtbody">
                     <!-- 예약 없을 때 -->
                     <tr th:if="${#lists.isEmpty(reservations)}">
-                        <td colspan="5">예약된 방문 차량이 없습니다.</td>
+                        <td colspan="5" class="pk-empty">예약된 방문 차량이 없습니다.</td>
                     </tr>
                     <!-- 예약 목록 -->
                     <tr th:each="reservation : ${reservations}"
@@ -59,10 +66,10 @@
                         <td th:text="${reservation.purpose}"></td>
                         <td th:text="${#temporals.format(reservation.reservedAt, 'yyyy.MM.dd HH:mm')}"></td>
                         <td>
-                <span th:text="${reservation.status}"
-                      th:class="${reservation.status == '예약중'} ? 'status reserved' :
-                                (${reservation.status == '입차완료'} ? 'status entered' : 'status cancelled')">
-                </span>
+                            <span th:text="${reservation.status}"
+                                  th:class="${reservation.status == '예약중'} ? 'status reserved' :
+                                            (${reservation.status == '입차완료'} ? 'status entered' : 'status cancelled')">
+                            </span>
                         </td>
                         <td>
                             <th:block th:if="${reservation.status == '예약중'}">

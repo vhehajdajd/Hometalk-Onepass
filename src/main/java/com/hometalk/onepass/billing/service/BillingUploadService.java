@@ -10,6 +10,9 @@ import com.hometalk.onepass.billing.entity.BillingStatus;
 import com.hometalk.onepass.billing.repository.BillingDetailRepository;
 import com.hometalk.onepass.billing.repository.BillingLogRepository;
 import com.hometalk.onepass.billing.repository.BillingRepository;
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+import com.hometalk.onepass.notification.entity.NotificationType;
+import com.hometalk.onepass.notification.publisher.NotificationPublisher;
 import lombok.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,7 @@ public class BillingUploadService {
     private final BillingDetailRepository billingDetailRepository;
     private final BillingLogRepository    billingLogRepository;
     private final HouseholdRepository     householdRepository;
+    private final NotificationPublisher   notificationPublisher;
 
     // ─────────────────────────────────────────────
     // 유효성 검사 + 미리보기
@@ -151,6 +155,29 @@ public class BillingUploadService {
                     .userId(adminId)
                     .actionType(BillingActionType.UPLOAD)
                     .build());
+
+            String billingMonths = rows.stream()
+                    .map(UploadRow::getBillingMonth)
+                    .filter(m -> m != null && !m.isBlank())
+                    .distinct()
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("해당 월");
+
+            notificationPublisher.publishToAll(
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.BILLING_UPLOAD,
+                    "관리비 고지서 등록",
+                    billingMonths + " 관리비 고지서가 등록되었습니다.",
+                    "/billing"
+            );
+            notificationPublisher.publishToAll(
+                    NotificationTargetRole.ADMIN,
+                    NotificationType.BILLING_UPLOAD_DONE,
+                    "고지서 업로드 완료",
+                    billingMonths + " 고지서 업로드가 완료되었습니다. " +
+                            "(신규 " + insertCount + "건 / 수정 " + updateCount + "건)",
+                    "/admin/billing"
+            );
         }
 
         return new UploadConfirmResult(insertCount, updateCount);
@@ -163,16 +190,14 @@ public class BillingUploadService {
     private String validate(UploadRow row) {
         if (row.getHouseholdId() == null || row.getHouseholdId().isBlank()) return "세대 정보 누락";
         if (row.getBillingMonth() == null || row.getBillingMonth().isBlank()) return "부과월 누락";
-        if (row.getTotalAmount() == null || row.getTotalAmount().compareTo(BigDecimal.ZERO) < 0) return "금액 누락";
-        if (row.getTotalAmount() == null || row.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0)
-            return "금액 누락";   // 0원도 누락으로 처리
+        if (row.getTotalAmount() == null || row.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0) return "금액 누락";
         if (row.getDueDate() == null) return "납기일 누락";
         if (row.getItems() == null || row.getItems().isEmpty()) return "상세 항목 누락";
         return null;
     }
 
     // ─────────────────────────────────────────────
-    // 내부 유틸
+    // 내부 유틸 — postNum 제거, dong+ho로만 조회
     // ─────────────────────────────────────────────
 
     private Optional<Household> findHousehold(String householdId) {

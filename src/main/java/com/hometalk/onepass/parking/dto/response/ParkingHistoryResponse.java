@@ -27,25 +27,31 @@ public class ParkingHistoryResponse {
         this.exitTime = log.getExitTime() != null
                 ? log.getExitTime().format(FMT) : "주차 중";
         this.entryType = switch (log.getEntryType()) {
-            case NORMAL -> "입주자";
+            case NORMAL      -> "입주자";
             case RESERVATION -> "방문 예약";
-            case MANUAL -> "수동 입차";
+            case MANUAL      -> "수동 입차";
         };
         this.status = log.getStatus().name();
 
-        // 정산내역
+        // 정산 내역
         if (log.getExitTime() == null) {
             this.settlement = "주차 중";
         } else if (log.getTotalMinutes() == null) {
             this.settlement = "-";
+        } else if (log.getEntryType() == ParkingLog.EntryType.NORMAL) {
+            // 입주자는 항상 무료
+            this.settlement = "무료";
         } else {
-            int total = log.getTotalMinutes();
+            int total   = log.getTotalMinutes();
             int applied = log.getAppliedMinutes() != null ? log.getAppliedMinutes() : 0;
             int charged = Math.max(0, total - applied);
-            if (charged == 0) {
-                this.settlement = "무료";
-            } else {
+
+            if (charged > 0) {
                 this.settlement = "초과 " + formatMinutes(charged);
+            } else if (applied > 0) {
+                this.settlement = "티켓 사용";
+            } else {
+                this.settlement = "무료";
             }
         }
     }

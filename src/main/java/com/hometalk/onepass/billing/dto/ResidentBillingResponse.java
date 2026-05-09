@@ -31,6 +31,8 @@ public class ResidentBillingResponse {
     private final BigDecimal currentMonthAmount;
     private final int unpaidCount;
     private final LocalDate lastPaidDate;
+    private final String lastPaidBillingMonth; // 예: "4월"
+
 
     // 내역 리스트
     private final List<BillingSummaryResponse> billings;

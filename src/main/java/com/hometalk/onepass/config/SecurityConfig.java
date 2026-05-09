@@ -4,40 +4,61 @@ package com.hometalk.onepass.config;
 import com.hometalk.onepass.auth.config.CustomOAuth2LoginSuccessHandler;
 import com.hometalk.onepass.auth.config.CustomLogoutSuccessHandler;
 import com.hometalk.onepass.auth.config.CustomAuthorizationRequestResolver;
+import com.hometalk.onepass.auth.config.CustomLoginSuccessHandler;
+import com.hometalk.onepass.auth.config.RememberMeConfig;
 import com.hometalk.onepass.auth.service.CustomOAuth2UserService;
+import com.hometalk.onepass.auth.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 
 
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     // OAuth2 로그인 과정에서 각각 사용자 조회, 성공 후 분기, 로그아웃 후처리 역할을 맡는다.
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomLoginSuccessHandler customLoginSuccessHandler;
     private final CustomOAuth2LoginSuccessHandler customOAuth2LoginSuccessHandler;
     private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
     private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
+    private final CustomUserDetailsService customUserDetailsService;
+    private final PersistentTokenRepository persistentTokenRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // ★ 여기에 추가
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/**")
+                        .ignoringRequestMatchers("/admin/**")
+                        .ignoringRequestMatchers("/community/**")
+                )
+
                 .authorizeHttpRequests(auth -> auth
                         // 1. "/" 경로와 정적 리소스(css, js 등)는 모두에게 허용
                         .requestMatchers(
-                                "/auth",
+                                "/**",
                                 "/auth/loginimage/**",
                                 "/auth/signup",
                                 "/auth/login",
                                 "/auth/register/**",
                                 "/oauth2/authorization/**",
-                                "/login/oauth2/**"
+                                "/login/oauth2/**",
+                                "/home/**",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**"
                         ).permitAll()
+
 
                         // 2. 그 외의 모든 요청은 인증(로그인)이 필요함
                         .anyRequest().authenticated()
@@ -45,7 +66,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/auth")            // 1. 사용자 정의 로그인 페이지 경로
                         .loginProcessingUrl("/auth/login") // 2. 로그인 처리 URL
-                        .defaultSuccessUrl("/index", true)   // 3. 로그인 성공 시 이동할 경로
+                        .successHandler(customLoginSuccessHandler)   // 3. 로그인 성공 시 이동할 경로
                         .failureUrl("/auth?error=true")   // 4. 로그인 실패 시 이동할 경로
                         .permitAll()                  // 5. 로그인 페이지는 누구나 접근 가능해야 함
                         .usernameParameter("loginId") // username이 아닌 login_id으로 name 설정
@@ -68,6 +89,13 @@ public class SecurityConfig {
                         .logoutSuccessHandler(customLogoutSuccessHandler)
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
+                )
+                .rememberMe(rememberMe -> rememberMe
+                        .key(RememberMeConfig.REMEMBER_ME_KEY)
+                        .rememberMeParameter(RememberMeConfig.REMEMBER_ME_PARAMETER)
+                        .tokenValiditySeconds(RememberMeConfig.REMEMBER_ME_SECONDS)
+                        .userDetailsService(customUserDetailsService)
+                        .tokenRepository(persistentTokenRepository)
                 );
 
 

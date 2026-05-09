@@ -24,106 +24,35 @@ let sortDir        = 1;
    초기화
 ================================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-    fetchDongList();          // ★ 동 목록 먼저 로드
+    fetchDongList();
     fetchUnpaidList();
-    document.addEventListener('click', e => {
-        if (!e.target.closest('.panel-wrap')) closeAllPanels();
-    });
 });
 
 /* ================================================================
    필터 패널
 ================================================================ */
-function togglePanel(name) {
-    if (openPanel === name) { closeAllPanels(); return; }
-    closeAllPanels();
-    openPanel = name;
-    if (name === 'year')   buildYearGrid();
-    if (name === 'month')  buildMonthGrid();
-    if (name === 'dong')   buildDongGrid();
-    if (name === 'unpaid') buildUnpaidGrid();
+function onFilterChange() {
+    const year   = document.getElementById('selYear').value;
+    const month  = document.getElementById('selMonth').value;
+    const dong   = document.getElementById('selDong').value;
+    const filter = document.getElementById('selFilter').value;
 
-    const panelMap = { year:'panelYear', month:'panelMonth', dong:'panelDong', unpaid:'panelUnpaid' };
-    const btnMap   = { year:'btnYear',   month:'btnMonth',   dong:'btnDong',   unpaid:'btnUnpaidFilter' };
-    document.getElementById(panelMap[name]).style.display = 'block';
-    document.getElementById(btnMap[name]).classList.add('active');
-}
+    selYear   = year   ? parseInt(year)   : null;
+    selMonth  = month  ? parseInt(month)  : null;
+    selDong   = dong   || null;
+    selFilter = filter || 'unpaid';
 
-function closeAllPanels() {
-    ['panelYear','panelMonth','panelDong','panelUnpaid'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-    });
-    ['btnYear','btnMonth','btnDong','btnUnpaidFilter'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-    });
-    openPanel = null;
-}
-
-function buildYearGrid() {
-    document.getElementById('yearGrid').innerHTML =
-        `<button class="chip full${selYear===null?' selected':''}" onclick="pickYear(null)">전체</button>`
-        + YEARS.map(y =>
-            `<button class="chip${y===selYear?' selected':''}" onclick="pickYear(${y})">${y}년</button>`
-        ).join('');
-}
-
-function buildMonthGrid() {
-    document.getElementById('monthGrid').innerHTML =
-        `<button class="chip full${selMonth===null?' selected':''}" onclick="pickMonth(null)">전체</button>`
-        + MONTHS.map((m, i) =>
-            `<button class="chip${selMonth===i+1?' selected':''}" onclick="pickMonth(${i+1})">${m}</button>`
-        ).join('');
-}
-
-function buildDongGrid() {
-    document.getElementById('dongGrid').innerHTML =
-        `<button class="chip full${!selDong?' selected':''}" onclick="pickDong(null)">전체 동</button>`
-        + dongList.map(d =>
-            `<button class="chip${selDong===d?' selected':''}" onclick="pickDong('${d}')">${d}</button>`
-        ).join('');
-}
-
-function buildUnpaidGrid() {
-    const opts = [
-        { val: 'all',    label: '전체'           },
-        { val: 'unpaid', label: '미납만 보기'     },
-        { val: 'long',   label: '3개월 이상 체납' },
-        { val: 'paid',   label: '납부완료'         },
-    ];
-    document.getElementById('panelUnpaid').querySelector('.chip-grid').innerHTML =
-        opts.map(o =>
-            `<button class="chip status-chip${selFilter===o.val?' selected':''}"
-                onclick="pickUnpaidFilter('${o.val}','${o.label}')">${o.label}</button>`
-        ).join('');
-}
-
-function pickYear(y) {
-    selYear = y;
-    document.getElementById('lblYear').textContent = y ? y + '년' : '전체';
-    closeAllPanels();
     currentPage = 0;
-    fetchDongList();      // 연도 바뀌면 동 목록 재조회
     fetchUnpaidList();
 }
 
-function pickMonth(m) {
-    selMonth = m;
-    document.getElementById('lblMonth').textContent = m ? MONTHS[m-1] : '전체 월';
-    closeAllPanels(); currentPage = 0; fetchUnpaidList();
-}
-
-function pickDong(d) {
-    selDong = d;
-    document.getElementById('lblDong').textContent = d || '전체 동';
-    closeAllPanels(); currentPage = 0; fetchUnpaidList();
-}
-
-function pickUnpaidFilter(val, label) {
-    selFilter = val;
-    document.getElementById('lblUnpaid').textContent = label;
-    closeAllPanels(); currentPage = 0; fetchUnpaidList();
+function updateDongOptions() {
+    const dongs = [...new Set(allItems.map(i => i.dong).filter(Boolean))].sort();
+    const sel = document.getElementById('selDong');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">전체 동</option>'
+        + dongs.map(d => `<option value="${d}">${d}</option>`).join('');
+    sel.value = cur;
 }
 
 // 동 목록 전체 조회 (필터와 무관하게 전체 동 목록 확보)
@@ -134,9 +63,10 @@ async function fetchDongList() {
         params.set('size', 500);
         const res  = await fetch(`${CONTEXT_PATH}/api/billing/admin/list?${params}`);
         const data = await res.json();
-        dongList = [...new Set(
-            (data.content || []).map(i => i.dong).filter(Boolean)
-        )].sort();
+        // 기존 dongList 관련 코드 삭제 후
+        if (!selDong && allItems.length > 0) {
+            updateDongOptions();
+        }
     } catch (err) {
         console.warn('동 목록 조회 실패', err);
     }
@@ -243,7 +173,6 @@ function renderTableBody(items) {
             <td>${checkbox}</td>
             <td>${num}</td>
             <td>${item.unit || '—'}</td>
-            <td>${item.residentName || '—'}</td>
             <td>${item.billingMonth || '—'}</td>
             <td>${Number(item.totalAmount).toLocaleString()}원</td>
             <td>${item.dueDate ? item.dueDate.replace(/-/g,'.') : '—'}</td>
@@ -421,6 +350,29 @@ async function refreshStats() {
         if (el('statUnpaid'))  el('statUnpaid').textContent  = data.unpaidCount     ?? '—';
         if (el('statRate'))    el('statRate').textContent    =
             data.paidRate != null ? data.paidRate.toFixed(1) + '%' : '—';
+        if (el('statUnpaidAmount')) el('statUnpaidAmount').textContent =
+            data.unpaidAmount != null
+                ? Number(data.unpaidAmount).toLocaleString() + '원'
+                : '—';
+        if (el('statUnpaidAmountLabel')) {
+            let labelMonth;
+            if (selMonth) {
+                // 월 필터 선택 시 해당 월
+                labelMonth = parseInt(selMonth);
+            } else {
+                // 필터 없을 때: 납부기한(익월 10일) 기준
+                // 오늘이 10일 이후면 당월, 이전이면 전월
+                const today = new Date();
+                if (today.getDate() > 10) {
+                    labelMonth = today.getMonth() + 1; // 당월
+                } else {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() - 1);
+                    labelMonth = d.getMonth() + 1;     // 전월
+                }
+            }
+            el('statUnpaidAmountLabel').textContent = `${labelMonth}월 미납 총액`;
+        }
 
         // 필터 라벨 갱신
         const labelParts = [];
@@ -431,6 +383,12 @@ async function refreshStats() {
             ? labelParts.join(' · ') + ' 기준'
             : '전체 기간 기준';
         if (el('statFilterLabel')) el('statFilterLabel').textContent = label;
+        if (el('statFilterLabel')) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - 1);
+            el('statFilterLabel').textContent =
+                `${d.getFullYear()}년 ${d.getMonth() + 1}월 기준`;
+        }
 
         // 아랫줄: 전체 고정 통계
         if (el('statGlobalBillings'))   el('statGlobalBillings').textContent   =
@@ -439,6 +397,7 @@ async function refreshStats() {
             (data.globalUnpaidHouseholds  ?? '—') + '세대';
         if (el('statGlobalOverdue'))     el('statGlobalOverdue').textContent     =
             (data.globalOverdueHouseholds ?? '—') + '세대';
+
 
     } catch (err) {
         console.error('통계 갱신 실패', err);

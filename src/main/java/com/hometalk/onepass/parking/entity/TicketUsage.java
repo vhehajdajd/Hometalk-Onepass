@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
 @Entity
 @Table(name = "ticket_usage")
 @Getter
@@ -45,7 +44,13 @@ public class TicketUsage extends BaseTimeEntity {
         this.ticket = ticket;
         this.usedCount = usedCount;
         this.usedMinutes = ticket.getType().toMinutes(usedCount);
-
         ticket.use(usedCount);
+    }
+
+    // 생성자 밖으로 분리
+    public void updateCount(int newCount) {
+        if (newCount <= 0) throw new IllegalArgumentException("수량은 1 이상이어야 합니다.");
+        this.usedCount = newCount;
+        this.usedMinutes = ticket.getType().toMinutes(newCount);
     }
 }

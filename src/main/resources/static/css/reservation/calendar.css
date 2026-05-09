@@ -1,0 +1,144 @@
+:root {
+    --fc-event-border-color: transparent !important;
+    --fc-event-text-color: #444444 !important;
+}
+
+/* =========================
+   1. LAYOUT & CONTAINER
+========================= */
+.container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 30px 40px;
+    background: #ffffff;
+}
+
+/* 상단 영역: 제목/시설탭(왼쪽) vs 예약신청 버튼(오른쪽) */
+.header-with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* 바닥 라인 정렬 */
+    margin-bottom: var(--spacing-lg); /* 캘린더와의 간격 24px */
+}
+
+.title-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md); /* 제목과 시설버튼 사이 16px 여백 확보 */
+}
+
+.module-title.title {
+    font-size: var(--font-title);
+    font-weight: 700;
+    color: var(--color-main);
+    margin: 0; /* gap으로 조절하므로 마진 제거 */
+}
+
+/* =========================
+   2. 시설 선택 탭 (FACILITY TABS)
+========================= */
+.facility-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm); /* 버튼들 사이 8px 간격 */
+}
+
+.facility-btn {
+    padding: 8px 18px;
+    border: 1px solid var(--border-color);
+    background: #fff;
+    border-radius: 30px; /* 알약 모양 */
+    font-size: var(--font-small);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.facility-btn:hover {
+    background-color: var(--color-bg-white-btn);
+}
+
+.facility-btn.active {
+    background-color: var(--color-main);
+    color: #fff;
+    border-color: var(--color-main);
+    box-shadow: 0 4px 10px rgba(3, 33, 84, 0.2);
+}
+
+/* =========================
+   3. CALENDAR WRAPPER (둥글게)
+========================= */
+#calendar-container {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+/* FullCalendar 내부 스타일 복구 및 강화 */
+.fc .fc-toolbar-title {
+    font-size: 1.5rem !important;
+    font-weight: 700;
+    color: var(--color-main);
+}
+
+/* 상단 이동 버튼들 */
+.fc .fc-button-primary {
+    background-color: #fff !important;
+    border-color: var(--border-color) !important;
+    color: var(--color-text) !important;
+    border-radius: 8px !important;
+    font-weight: 600;
+}
+
+.fc .fc-button-primary:hover {
+    background-color: var(--color-bg-white-btn) !important;
+}
+
+.fc .fc-button-active {
+    background-color: var(--color-main) !important;
+    border-color: var(--color-main) !important;
+    color: #fff !important;
+}
+
+/* 요일 헤더 스타일 */
+.fc-col-header-cell {
+    background: #f8fafc;
+    padding: 12px 0 !important;
+    color: #64748b;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* 날짜 숫자 */
+.fc-daygrid-day-number {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px !important;
+}
+
+/* 오늘 날짜 강조 */
+.fc-day-today {
+    background: #eff6ff !important;
+}
+
+.fc-event {
+    border: none !important;
+    box-shadow: none !important;
+    color: #444 !important;
+}
+
+/* 캘린더 날짜 숫자 크기 조절 */
+.fc-daygrid-day-number {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: var(--color-main) !important;
+    padding: 8px !important;
+    text-decoration: none !important;
+}
+
+.fc-day-today .fc-daygrid-day-number {
+    color: var(--color-btn-point) !important;
+}

@@ -1,11 +1,13 @@
 package com.hometalk.onepass.parking.controller;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.parking.dto.request.VisitReservationRequest;
 import com.hometalk.onepass.parking.dto.response.VisitReservationResponse;
 import com.hometalk.onepass.parking.entity.VisitReservation;
 import com.hometalk.onepass.parking.service.VisitReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,8 +24,9 @@ public class VisitReservationController {
 
     // 방문 예약 목록 페이지
     @GetMapping("/visit")
-    public String visitReservationPage(Model model) {
-        Long householdId = 1L;          // TODO: JWT 연동 후 추출
+    public String visitReservationPage(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                       Model model) {
+        Long householdId = userDetails.getHouseholdId();
         List<VisitReservationResponse> reservations =
                 visitReservationService.getHouseholdReservations(householdId);
         model.addAttribute("reservations", reservations);
@@ -48,14 +51,12 @@ public class VisitReservationController {
     }
 
     // 방문 예약 등록 처리 (JSON)
-    @PostMapping("/visit/register/{householdId}")
+    @PostMapping("/visit/register")
     @ResponseBody
     public ResponseEntity<VisitReservationResponse> register(
-            @PathVariable Long householdId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody VisitReservationRequest request) {
-        if (householdId == null) {
-            throw new IllegalArgumentException("householdId는 필수입니다.");
-        }
+        Long householdId = userDetails.getHouseholdId();
         return ResponseEntity.ok(visitReservationService.register(householdId, request));
     }
 
@@ -84,19 +85,21 @@ public class VisitReservationController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/visit/pending/{householdId}")
+    @GetMapping("/visit/pending")
     @ResponseBody
     public ResponseEntity<List<VisitReservationResponse>> getPendingConfirm(
-            @PathVariable Long householdId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long householdId = userDetails.getHouseholdId();
         return ResponseEntity.ok(visitReservationService.getPendingConfirmReservations(householdId));
     }
 
     // 상태별 예약 목록 조회 (JSON)
-    @GetMapping("/visit/list/{householdId}")
+    @GetMapping("/visit/list")
     @ResponseBody
     public ResponseEntity<List<VisitReservationResponse>> getReservationsByStatus(
-            @PathVariable Long householdId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) VisitReservation.ReservationStatus status) {
+        Long householdId = userDetails.getHouseholdId();
         if (status != null) {
             return ResponseEntity.ok(
                     visitReservationService.getHouseholdReservationsByStatus(householdId, status));
@@ -106,11 +109,11 @@ public class VisitReservationController {
 
     // 날짜 select용 데이터 공통 메서드
     private void addDateTimeAttributes(Model model) {
-        model.addAttribute("years", List.of(2025, 2026));
+        model.addAttribute("years", List.of(2026, 2027, 2028));
         model.addAttribute("months", IntStream.rangeClosed(1, 12).boxed().toList());
         model.addAttribute("days", IntStream.rangeClosed(1, 31).boxed().toList());
         model.addAttribute("hours", IntStream.rangeClosed(0, 23).boxed().toList());
-        model.addAttribute("minutes", List.of(0, 10, 20, 30, 40, 50));
+        model.addAttribute("minutes", List.of(00, 10, 20, 30, 40, 50));
     }
 
     // 방문 차량 관리 페이지

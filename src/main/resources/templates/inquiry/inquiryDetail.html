@@ -1,92 +1,119 @@
+
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HomeTOP - 문의 상세 보기</title>
-    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
-    <style>
-        body { font-family: 'Pretendard', sans-serif; background-color: #f9f9f9; color: #333; margin: 0; padding: 20px; }
-        .post-detail-container { max-width: 800px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        .post-header { margin-bottom: 20px; }
-        .category { display: inline-block; background: #f0f0f0; padding: 4px 12px; border-radius: 4px; font-size: 13px; color: #666; margin-bottom: 10px; }
-        .status-badge { float: right; font-weight: 700; font-size: 14px; }
-        h1 { font-size: 28px; margin: 10px 0; color: #111; }
-        .post-info { font-size: 14px; color: #999; margin-top: 15px; }
-        .post-info span { margin-right: 15px; }
-        hr { border: 0; border-top: 1px solid #eee; margin: 25px 0; }
-        .post-content { line-height: 1.8; font-size: 16px; min-height: 200px; }
-        .attachments { background: #f8f9fa; padding: 15px; border-radius: 8px; font-size: 14px; }
-        .attachments ul { list-style: none; padding: 0; margin: 10px 0 0 0; }
-        .attachments a { color: #0066cc; text-decoration: none; }
-        .post-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; }
-        .btn { padding: 10px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; transition: 0.2s; cursor: pointer; border: none; }
-        .btn-list { background: #333; color: #fff; }
-        .btn-edit { background: #eee; color: #333; margin-right: 8px; }
-        .btn-delete { background: #ffebee; color: #d32f2f; }
-        /* 관리자 답변 영역 */
-        .admin-answer-section { background-color: #fcfaf5; padding: 25px; border-left: 4px solid #d4a373; border-radius: 4px; margin-top: 30px; }
-    </style>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='문의 내용')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
 </head>
 <body>
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='inquiry')}"></div>
+    <div class="main-wrapper">
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'inquiry'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"></div>
+        <!-- 메인 콘텐츠 -->
+        <div class="dashboard-content">
 
-<div class="post-detail-container">
-    <div class="post-header">
-        <span class="category" th:text="${complaint.category}">카테고리</span>
-        <span class="status-badge"
-              th:text="${complaint.status}"
-              th:classappend="${complaint.status == '처리완료'} ? 'done' : 'pending'"></span>
+            <main class="container">
+                <div class="post-header mt-lg">
+                    <div class="flex-between">
+                        <span class="category" th:text="${inquiry.category}">카테고리</span>
+                        <span class="badge"
+                              th:text="${inquiry.status}"
+                              th:classappend="${inquiry.status == '처리완료'} ? 'status-complete' : 'status-waiting' ">상태</span>
+                    </div>
 
-        <h1 th:text="${complaint.title}">민원 제목</h1>
+                    <h1 class="title mt-sm" th:text="${inquiry.title}">민원 제목</h1>
 
-        <div class="post-info">
-            <span th:text="|작성자 ID: ${complaint.userId}|">작성자</span>
-            <span th:text="${complaint.createdAt != null ? #temporals.format(complaint.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">작성일</span>
+                    <div class="post-info text-muted mt-sm">
+                        <span th:text="|작성자 : ${inquiry.userName}|">작성자</span>
+                        <span th:text="${inquiry.createdAt != null ? #temporals.format(inquiry.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">작성일</span>
+                    </div>
+                </div>
+
+                <div class="post-content">
+                    <div class="content-body" th:utext="${inquiry.content}" style="min-height: 200px; white-space: pre-wrap;">문의 내용</div>
+
+                    <div th:if="${inquiry.attachments != null and not #lists.isEmpty(inquiry.attachments)}" class="attachments mt-lg" style="margin-top: 30px;">
+                        <p class="sub-title">📎 첨부파일</p>
+                        <ul class="attachment-list mt-sm">
+                            <li th:each="file : ${inquiry.attachments}">
+                                <a th:href="@{/inquiries/download(fileName=${file.storedFileName})}"
+                                   th:text="${file.originFileName}"
+                                   class="text-small" style="color: var(--color-sub); text-decoration: underline;">
+                                    파일명
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div th:if="${inquiry.answer != null}" class="admin-answer-section">
+                    <h4 class="sub-title">✉️ 관리자 답변</h4>
+                    <p th:text="${inquiry.answer}" class="answer-box mt-sm">답변 내용</p>
+                </div>
+
+                <div class="admin-only admin-answer-form mt-xl pt-lg">
+                    <h3 class="sub-title" style="margin-top: 20px;">관리자 답변 등록</h3>
+                    <form th:action="@{/api/inquiries/{id}/respond(id=${inquiry.id})}" method="post" class="mt-sm">
+                        <textarea id="adminResponse" name="answer" rows="5" class="input-field" placeholder="여기에 답변을 입력하세요..."></textarea>
+                        <div class="flex-end mt-sm">
+                            <button type="button" class="btn btn-primary" th:onclick="submitResponse([[${inquiry.id}]])">답변 저장하기</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="post-footer flex-between mt-lg pt-lg">
+                    <a th:href="@{/inquiries/list}" class="btn btn-outline">목록으로</a>
+
+                    <div class="auth-buttons flex" style="gap: var(--spacing-sm);">
+                        <button type="button" class="btn btn-danger-outline" th:onclick="|confirmDelete(${inquiry.id})|">삭제</button>
+                    </div>
+                </div>
+            </main>
         </div>
-    </div>
-
-    <hr>
-
-    <div class="post-content">
-        <div th:utext="${complaint.content}">민원 내용</div>
-
-        <div th:if="${complaint.attachments != null and not #lists.isEmpty(complaint.attachments)}" class="attachments" style="margin-top: 30px;">
-            <p><strong>📎 첨부파일</strong></p>
-            <ul>
-                <li th:each="file : ${complaint.attachments}">
-                    <a th:href="@{/hometop/inquiries/download(fileName=${file.storedFileName})}"
-                       th:text="${file.originFileName}">파일명</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-
-    <div th:if="${complaint.answer != null}" class="admin-answer-section">
-        <h4 style="margin-top:0;">✉️ 관리자 답변</h4>
-        <p th:text="${complaint.answer}" style="margin-bottom:0; white-space: pre-wrap;">답변 내용</p>
-    </div>
-
-    <hr>
-
-    <div class="post-footer">
-        <a th:href="@{/hometop/inquiries/list}" class="btn btn-list">목록으로</a>
-
-        <div class="auth-buttons">
-            <a th:href="@{/hometop/inquiries/edit/{id}(id=${complaint.id})}" class="btn btn-edit">수정</a>
-
-            <button type="button"
-                    class="btn btn-delete"
-                    th:onclick="'confirmDelete(' + ${complaint.id} + ')'">
-                삭제
-            </button>
-        </div>
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
 </div>
 
 <script th:inline="javascript">
     function confirmDelete(id) {
         if (confirm("정말로 이 문의글을 삭제하시겠습니까?")) {
-            location.href = "/hometop/inquiries/delete/" + id;
+            fetch(`/hometop/api/inquiries/${id}`, {
+                method: 'DELETE'
+            })
+        }
+    }
+
+    async function submitResponse(id) {
+        const answerText = document.getElementById('adminResponse').value;
+        if(!answerText.trim()) {
+            alert("답변 내용을 입력해주세요.");
+            return;
+        }
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        try {
+            const response = await fetch(`/hometop/api/inquiries/${id}/respond`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(csrfHeader && {[csrfHeader]: csrfToken})
+                },
+                body: JSON.stringify({ "answer": answerText })
+            });
+
+            if (response.ok) {
+                alert("답변이 등록되었습니다.");
+                location.reload(); // 새로고침하여 답변 확인
+            } else {
+                alert("답변 등록에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
         }
     }
 </script>

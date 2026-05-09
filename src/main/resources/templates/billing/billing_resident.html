@@ -8,41 +8,39 @@
     <meta name="_csrf_header" th:content="${_csrf?.headerName}" />
     <link rel="stylesheet" th:href="@{/css/dashboard/style.css}" />
     <link rel="stylesheet" th:href="@{/css/billing/billing_common.css}" />
-    <link rel="stylesheet" th:href="@{/css/billing/billing_admin_upload.css}" />
     <link rel="stylesheet" th:href="@{/css/billing/billing_resident.css}" />
+
+    <!--✅ 알림 추가 -->
+    <meta name="ctx" th:content="@{/}">
+    <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
+    <script th:src="@{/js/notification/notification-sse.js}"></script>
+    <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
 <body>
 
-<div class="main-layout" style="display:flex; min-height:100vh;">
-
-    <!-- 사이드바 -->
+<div class="main-layout">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='billing')}"></div>
+    <div class="main-wrapper">
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='billing')}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: billing}"></div>
 
-    <!-- 오른쪽 영역 -->
-    <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
+        <div class="container">
 
-        <!-- 헤더 -->
-        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'billing'} })}"></div>
-<!--        <div th:replace="~{fragments/header_menu :: header_menu(currentPath01='billing', currentPath02='')}"></div>-->
+            <!-- 페이지 타이틀 -->
+            <div class="page-title">관리비</div>
 
-        <!-- 카테고리 바 — 미납 배너 -->
-        <header class="category-menu-bar">
-            <div class="bp-alert-inner" th:if="${unpaidList != null and !unpaidList.isEmpty()}">
-                <div class="bp-alert-icon">!</div>
-                <div>
+            <!-- 미납 배너 (미납 시만 노출) -->
+            <div class="bp-alert-box" th:if="${unpaidList != null and !unpaidList.isEmpty()}">
+                <div class="bp-alert-inner">
                     <div class="bp-alert-title">
                         <span th:each="b, stat : ${unpaidList}">
                             <th:block th:text="${b.billingMonth}"></th:block>
                             <th:block th:if="!${stat.last}">, </th:block>
                         </span>
-                        관리비가 미납 상태입니다. 관리사무소로 연락 바랍니다. ☎️02-888-9999
+                        관리비가 미납 상태입니다. 관리사무소로 연락 바랍니다. ☎️02-1111-2222
                     </div>
                 </div>
             </div>
-        </header>
-
-        <!-- 메인 콘텐츠 -->
-        <div class="main-content">
 
             <!-- 요약 카드 3개 -->
             <div class="bp-summary-grid">
@@ -76,37 +74,40 @@
 
             <!-- 필터 행 -->
             <div class="bp-filter-row">
-                <div class="panel-wrap">
-                    <button class="filter-btn" id="btnYear" onclick="togglePanel('year')">
-                        <span id="lblYear">2026년</span><span class="caret">▼</span>
-                    </button>
-                    <div class="filter-panel" id="panelYear" style="display:none">
-                        <div class="chip-grid year-g" id="yearGrid"></div>
-                    </div>
-                </div>
-                <div class="panel-wrap">
-                    <button class="filter-btn" id="btnMonth" onclick="togglePanel('month')">
-                        <span id="lblMonth">전체 월</span><span class="caret">▼</span>
-                    </button>
-                    <div class="filter-panel" id="panelMonth" style="display:none">
-                        <div class="chip-grid month-g" id="monthGrid"></div>
-                    </div>
-                </div>
-                <div class="panel-wrap">
-                    <button class="filter-btn" id="btnStatus" onclick="togglePanel('status')">
-                        <span id="lblStatus">전체 상태</span><span class="caret">▼</span>
-                    </button>
-                    <div class="filter-panel" id="panelStatus" style="display:none">
-                        <div class="chip-grid status-g" id="statusGrid"></div>
-                    </div>
-                </div>
+                <select id="selYear" onchange="onFilterChange()">
+                    <option value="">전체 연도</option>
+                    <option value="2026" selected>2026년</option>
+                    <option value="2025">2025년</option>
+                    <option value="2024">2024년</option>
+                    <option value="2023">2023년</option>
+                </select>
+                <select id="selMonth" onchange="onFilterChange()">
+                    <option value="">전체 월</option>
+                    <option value="01">1월</option>
+                    <option value="02">2월</option>
+                    <option value="03">3월</option>
+                    <option value="04">4월</option>
+                    <option value="05">5월</option>
+                    <option value="06">6월</option>
+                    <option value="07">7월</option>
+                    <option value="08">8월</option>
+                    <option value="09">9월</option>
+                    <option value="10">10월</option>
+                    <option value="11">11월</option>
+                    <option value="12">12월</option>
+                </select>
+                <select id="selStatus" onchange="onFilterChange()">
+                    <option value="">전체 상태</option>
+                    <option value="UNPAID">미납</option>
+                    <option value="PAID">납부완료</option>
+                </select>
             </div>
 
             <!-- 관리비 목록 -->
             <div class="bp-list" id="billingList">
                 <th:block th:each="b : ${billings}">
                     <div th:with="isUnpaid=${b.status.name() == 'UNPAID'},
-                             isOverdue=${b.status.name() == 'UNPAID' and #temporals.createToday().isAfter(b.dueDate)}"
+                                  isOverdue=${b.status.name() == 'UNPAID' and #temporals.createToday().isAfter(b.dueDate)}"
                          th:classappend="${isOverdue} ? 'overdue'"
                          class="bp-item">
                         <div class="bp-item-left">
@@ -141,12 +142,12 @@
                 <button class="bp-btn-load" onclick="loadMore()">더보기</button>
             </div>
 
-        </div><!-- /main-content -->
+        </div>
 
         <footer th:replace="~{fragments/footer :: footer}"></footer>
 
-    </div><!-- /main-wrapper -->
-</div><!-- /main-layout -->
+    </div>
+</div>
 
 <!-- 고지서 모달 -->
 <div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModal(event)">
@@ -173,6 +174,7 @@
         </div>
     </div>
 </div>
+
 
 <script th:inline="javascript">
     /*<![CDATA[*/

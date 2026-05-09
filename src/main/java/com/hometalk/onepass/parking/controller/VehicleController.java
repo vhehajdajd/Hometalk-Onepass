@@ -1,16 +1,19 @@
 package com.hometalk.onepass.parking.controller;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.parking.dto.request.VehicleRegisterRequest;
 import com.hometalk.onepass.parking.dto.response.VehicleResponse;
 import com.hometalk.onepass.parking.service.VehicleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -21,11 +24,21 @@ public class VehicleController {
 
     // 세대 차량 목록 조회 페이지
     @GetMapping("/vehicle")
-    public String vehicleList(Model model) {
-        Long householdId = null; // TODO: JWT 연동 후 추출
+    public String vehicleList(@AuthenticationPrincipal CustomUserDetails userDetails,
+                              Model model) {
+        Long householdId = userDetails.getHouseholdId();
         List<VehicleResponse> vehicles = vehicleService.getHouseholdVehicles(householdId);
         model.addAttribute("vehicles", vehicles);
         return "parking/vehicle-status";
+    }
+
+    // 세대 차량 목록 조회 (JSON - 대시보드용)
+    @GetMapping("/vehicle/list")
+    @ResponseBody
+    public ResponseEntity<List<VehicleResponse>> getVehicleList(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long householdId = userDetails.getHouseholdId();
+        return ResponseEntity.ok(vehicleService.getHouseholdVehicles(householdId));
     }
 
     // 차량 등록 페이지
@@ -37,11 +50,18 @@ public class VehicleController {
     // 차량 등록 처리
     @PostMapping("/vehicle/register")
     public String vehicleRegister(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @ModelAttribute VehicleRegisterRequest request,
-            @RequestParam(value = "documents") List<MultipartFile> documents) {
-        Long userId = null; // TODO: JWT 연동 후 추출
-        vehicleService.register(userId, request, documents);
-        return "redirect:/parking/vehicle";
+            @RequestParam(value = "documents") List<MultipartFile> documents,
+            Model model) {
+        try {
+            Long userId = userDetails.getUserId();
+            vehicleService.register(userId, request, documents);
+            return "redirect:/parking/vehicle";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "parking/vehicle-register";
+        }
     }
 
     // 반려 사유 조회 (JSON)
@@ -66,8 +86,35 @@ public class VehicleController {
     @PostMapping("/vehicle/reapply/{vehicleId}")
     public String vehicleReapply(
             @PathVariable Long vehicleId,
-            @RequestParam(value = "documents") List<MultipartFile> documents) {
-        vehicleService.reapply(vehicleId, documents);
-        return "redirect:/parking/vehicle";
+            @RequestParam(value = "documents") List<MultipartFile> documents,
+            Model model) {
+        try {
+            vehicleService.reapply(vehicleId, documents);
+            return "redirect:/parking/vehicle";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "parking/vehicle-reapply";
+        }
+    }
+
+    // 차량 삭제
+    @PostMapping("/vehicle/delete/{vehicleId}")
+    @ResponseBody
+    public ResponseEntity<Void> deleteVehicle(@PathVariable Long vehicleId) {
+        try {
+            vehicleService.delete(vehicleId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    // 차량 번호 중복 체크
+    @GetMapping("/vehicle/check")
+    @ResponseBody
+    public ResponseEntity<Map<String, Boolean>> checkVehicleNumber(
+            @RequestParam String vehicleNumber) {
+        String cleaned = vehicleNumber.replace(" ", "");
+        boolean exists = vehicleService.existsByVehicleNumber(cleaned);
+        return ResponseEntity.ok(Map.of("exists", exists));
     }
 }

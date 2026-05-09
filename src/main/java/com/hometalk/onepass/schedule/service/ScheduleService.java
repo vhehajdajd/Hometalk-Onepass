@@ -8,6 +8,7 @@ import com.hometalk.onepass.notice.repository.NoticeRepository;
 import com.hometalk.onepass.schedule.dto.ScheduleCalResponseDto;
 import com.hometalk.onepass.schedule.dto.ScheduleDetailResponseDto;
 import com.hometalk.onepass.schedule.dto.ScheduleRequestDto;
+import com.hometalk.onepass.schedule.entity.RepeatType;
 import com.hometalk.onepass.schedule.entity.Schedule;
 import com.hometalk.onepass.schedule.exception.ScheduleNotFoundException;
 import com.hometalk.onepass.schedule.repository.ScheduleRepository;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,7 +54,8 @@ public class ScheduleService {
                         schedule.getStartAt(),
                         schedule.getEndAt(),
                         schedule.getNotice() != null ? schedule.getNotice().getId() : null,
-                        schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null
+                        schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
+                        schedule.getRepeatGroupId()
                 ))
                 .collect(Collectors.toList());
     }
@@ -63,6 +66,16 @@ public class ScheduleService {
         Schedule schedule = scheduleRepository.findById(id)
                 .orElseThrow(() -> new ScheduleNotFoundException(id));
 
+        LocalDateTime repeatGroupStartAt = null;
+        if (schedule.getRepeatGroupId() != null) {
+            repeatGroupStartAt = scheduleRepository
+                    .findByRepeatGroupId(schedule.getRepeatGroupId())
+                    .stream()
+                    .map(Schedule::getStartAt)
+                    .min(LocalDateTime::compareTo)
+                    .orElse(schedule.getStartAt());
+        }
+
         return new ScheduleDetailResponseDto(
                 schedule.getId(),
                 schedule.getNotice() != null ? schedule.getNotice().getId() : null,
@@ -72,9 +85,14 @@ public class ScheduleService {
                 schedule.getReferenceUrl(),
                 schedule.getStartAt(),
                 schedule.getEndAt(),
-                schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null
+                schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
+                schedule.getRepeatType() != null ? schedule.getRepeatType().name() : null,
+                schedule.getRepeatEndAt(),
+                schedule.getRepeatGroupId(),
+                repeatGroupStartAt  // ← 추가
         );
     }
+
 
     // ── 공지로 연결된 일정 상세 조회 ─────────────────────────────────────────
     @Transactional(readOnly = true)
@@ -89,7 +107,11 @@ public class ScheduleService {
                         schedule.getReferenceUrl(),
                         schedule.getStartAt(),
                         schedule.getEndAt(),
-                        schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null
+                        schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
+                        (String) null,
+                        (LocalDateTime) null,
+                        (Long) null,
+                        (LocalDateTime) null  // ← repeatGroupStartAt 추가
                 ))
                 .orElse(null);
     }
@@ -152,7 +174,7 @@ public class ScheduleService {
         if (startAt == null) return;
 
         scheduleRepository.findFirstByNotice(notice).ifPresent(schedule -> {
-            schedule.update(title, info, location, referenceUrl, startAt, endAt, null);
+            schedule.update(title, info, location, referenceUrl, startAt, endAt, null, RepeatType.NONE, null);
         });
     }
 
@@ -161,15 +183,43 @@ public class ScheduleService {
         Schedule schedule = scheduleRepository.findById(id)
                 .orElseThrow(() -> new ScheduleNotFoundException(id));
 
-        schedule.update(
-                dto.getTitle(),
-                dto.getInfo(),
-                dto.getLocation(),
-                dto.getReferenceUrl(),
-                dto.getStartAt(),
-                dto.getEndAt(),
-                dto.getBadge()
-        );
+        if (schedule.getRepeatGroupId() != null) {
+            // 기존 그룹 전체 삭제
+            List<Schedule> group = scheduleRepository.findByRepeatGroupId(schedule.getRepeatGroupId());
+            group.sort(Comparator.comparing(Schedule::getStartAt));
+            scheduleRepository.deleteAll(group);
+
+            // dto의 날짜+시간을 그대로 새 시작일로 사용 (기존 originalStart 고정 제거)
+            LocalDateTime newStart = dto.getStartAt();
+
+            if (dto.getEndAt() != null) {
+                long durationMinutes = java.time.Duration.between(dto.getStartAt(), dto.getEndAt()).toMinutes();
+                dto.setEndAt(newStart.plusMinutes(durationMinutes));
+            }
+
+            dto.setStartAt(newStart);
+            dto.setRepeatGroupId(schedule.getRepeatGroupId());
+            createRepeatSchedule(dto);
+        } else if (dto.getRepeatType() != null && dto.getRepeatType() != RepeatType.NONE) {
+            // 단일 → 반복으로 변경
+            scheduleRepository.delete(schedule);
+            dto.setRepeatGroupId(System.currentTimeMillis());
+            createRepeatSchedule(dto);
+
+        } else {
+            // 단일 → 단일 수정
+            schedule.update(
+                    dto.getTitle(),
+                    dto.getInfo(),
+                    dto.getLocation(),
+                    dto.getReferenceUrl(),
+                    dto.getStartAt(),
+                    dto.getEndAt(),
+                    dto.getBadge(),
+                    RepeatType.NONE,
+                    null
+            );
+        }
         return schedule.getId();
     }
 
@@ -179,4 +229,190 @@ public class ScheduleService {
                 .orElseThrow(() -> new ScheduleNotFoundException(id));
         scheduleRepository.delete(schedule);
     }
+
+    public Long createRepeatSchedule(ScheduleRequestDto dto) {
+        User user = getCurrentUser();
+
+        if (dto.getRepeatType() == null || dto.getRepeatType() == RepeatType.NONE) {
+            return createSchedule(dto);
+        }
+
+        Long groupId = System.currentTimeMillis(); // 그룹 ID로 현재 시간 사용
+        LocalDateTime current = dto.getStartAt();
+        LocalDateTime repeatEndAt = dto.getRepeatEndAt();
+
+        if (repeatEndAt == null) {
+            repeatEndAt = current.plusYears(1); // 기본 1년
+        }
+
+        Long firstId = null;
+        while (!current.isAfter(repeatEndAt)) {
+            LocalDateTime endAt = dto.getEndAt() != null
+                    ? current.plus(java.time.Duration.between(dto.getStartAt(), dto.getEndAt()))
+                    : null;
+
+            Schedule schedule = Schedule.builder()
+                    .user(user)
+                    .title(dto.getTitle())
+                    .info(dto.getInfo())
+                    .location(dto.getLocation())
+                    .referenceUrl(dto.getReferenceUrl())
+                    .startAt(current)
+                    .endAt(endAt)
+                    .badge(dto.getBadge())
+                    .repeatType(dto.getRepeatType())
+                    .repeatEndAt(repeatEndAt)
+                    .repeatGroupId(groupId)
+                    .build();
+
+            scheduleRepository.save(schedule);
+            if (firstId == null) firstId = schedule.getId();
+
+            switch (dto.getRepeatType()) {
+                case WEEKLY  -> current = current.plusWeeks(1);
+                case MONTHLY -> current = current.plusMonths(1);
+                default -> { return firstId; }
+            }
+        }
+        return firstId;
+    }
+
+    public void deleteRepeatSchedule(Long id, String deleteType) {
+        Schedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() -> new ScheduleNotFoundException(id));
+
+        switch (deleteType) {
+            case "this" -> scheduleRepository.delete(schedule);
+            case "after" -> {
+                if (schedule.getRepeatGroupId() != null) {
+                    List<Schedule> targets = scheduleRepository
+                            .findByRepeatGroupIdAndStartAtGreaterThanEqual(
+                                    schedule.getRepeatGroupId(), schedule.getStartAt());
+                    scheduleRepository.deleteAll(targets);
+                } else {
+                    scheduleRepository.delete(schedule);
+                }
+            }
+            case "all" -> {
+                if (schedule.getRepeatGroupId() != null) {
+                    List<Schedule> targets = scheduleRepository
+                            .findByRepeatGroupId(schedule.getRepeatGroupId());
+                    scheduleRepository.deleteAll(targets);
+                } else {
+                    scheduleRepository.delete(schedule);
+                }
+            }
+        }
+    }
+
+    // 공지 작성 시 반복일정 생성
+    public void createRepeatScheduleWithNotice(Notice notice, String title,
+                                               LocalDateTime startAt, LocalDateTime endAt,
+                                               String info, String location, String referenceUrl,
+                                               RepeatType repeatType, LocalDateTime repeatEndAt) {
+        if (title == null || title.isBlank()) return;
+        if (startAt == null) return;
+
+        User user = getCurrentUser();
+
+        if (repeatEndAt == null) {
+            repeatEndAt = startAt.plusYears(1);
+        }
+
+        Long groupId = System.currentTimeMillis();
+        LocalDateTime current = startAt;
+
+        while (!current.isAfter(repeatEndAt)) {
+            LocalDateTime currentEnd = endAt != null
+                    ? current.plus(java.time.Duration.between(startAt, endAt))
+                    : null;
+
+            Schedule schedule = Schedule.builder()
+                    .user(user)
+                    .notice(notice)
+                    .title(title)
+                    .info(info)
+                    .location(location)
+                    .referenceUrl(referenceUrl)
+                    .startAt(current)
+                    .endAt(currentEnd)
+                    .badge(null)
+                    .repeatType(repeatType)
+                    .repeatEndAt(repeatEndAt)
+                    .repeatGroupId(groupId)
+                    .build();
+
+            scheduleRepository.save(schedule);
+
+            switch (repeatType) {
+                case WEEKLY  -> current = current.plusWeeks(1);
+                case MONTHLY -> current = current.plusMonths(1);
+                default -> { return; }
+            }
+        }
+    }
+
+    // 공지 연동 일정 삭제
+    public void deleteScheduleByNotice(Notice notice) {
+        List<Schedule> schedules = scheduleRepository.findByNotice(notice);
+        if (!schedules.isEmpty()) {
+            Schedule first = schedules.get(0);
+            if (first.getRepeatGroupId() != null) {
+                List<Schedule> group = scheduleRepository.findByRepeatGroupId(first.getRepeatGroupId());
+                scheduleRepository.deleteAll(group);
+            } else {
+                scheduleRepository.deleteAll(schedules);
+            }
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<ScheduleCalResponseDto> getTodaySchedules() {
+        LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusSeconds(1);
+
+        // endAt 있는 연속일정 + startAt이 오늘인 당일 일정 합산
+        List<Schedule> result = new java.util.ArrayList<>();
+        result.addAll(scheduleRepository.findByStartAtLessThanEqualAndEndAtGreaterThanEqual(endOfDay, startOfDay));
+        result.addAll(scheduleRepository.findByStartAtBetweenAndEndAtIsNull(startOfDay, endOfDay));
+
+        return result.stream()
+                .distinct()
+                .map(schedule -> new ScheduleCalResponseDto(
+                        schedule.getId(),
+                        schedule.getTitle(),
+                        schedule.getStartAt(),
+                        schedule.getEndAt(),
+                        schedule.getNotice() != null ? schedule.getNotice().getId() : null,
+                        schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
+                        schedule.getRepeatGroupId()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ScheduleCalResponseDto> getTomorrowSchedules() {
+        LocalDateTime startOfTomorrow = LocalDateTime.now().toLocalDate()
+                .plusDays(1).atStartOfDay();
+        LocalDateTime endOfTomorrow = startOfTomorrow.plusDays(1).minusSeconds(1);
+        List<Schedule> result = new java.util.ArrayList<>();
+        result.addAll(scheduleRepository.findByStartAtLessThanEqualAndEndAtGreaterThanEqual(
+                endOfTomorrow, startOfTomorrow));
+        result.addAll(scheduleRepository.findByStartAtBetweenAndEndAtIsNull(
+                startOfTomorrow, endOfTomorrow));
+        return result.stream()
+                .distinct()
+                .map(schedule -> new ScheduleCalResponseDto(
+                        schedule.getId(),
+                        schedule.getTitle(),
+                        schedule.getStartAt(),
+                        schedule.getEndAt(),
+                        schedule.getNotice() != null ? schedule.getNotice().getId() : null,
+                        schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
+                        schedule.getRepeatGroupId()
+                ))
+                .collect(Collectors.toList());
+    }
+
+
 }

@@ -6,73 +6,125 @@
   <title>관리자 티켓 발급</title>
   <meta name="_csrf" th:content="${_csrf.token}">
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
-  <style>
-    /* CSS는 나중에 추가 */
-  </style>
+  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
 </head>
 <body>
 
-<div class="container">
-  <h2 class="page-title">관리자 티켓 발급</h2>
+<div class="main-layout">
 
-  <!-- 전체 세대 월별 자동 발급 -->
-  <div class="section">
-    <h3>전체 세대 월별 티켓 발급</h3>
-    <p class="hint">*매달 1일 자동 발급되며, 수동으로 즉시 발급할 수 있습니다.</p>
-    <button type="button" id="monthlyIssueBtn" onclick="issueMonthly(this)">
-      전체 세대 티켓 발급
-    </button>
-    <span class="result-msg" id="monthlyResult"></span>
-  </div>
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
-  <hr>
+  <div class="main-wrapper">
 
-  <!-- 특정 세대 수동 발급 -->
-  <div class="section">
-    <h3>특정 세대 수동 발급</h3>
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='parking')}"></div>
+    <div th:replace="~{fragments/headerCategoryMenu :: parkingAdmin}"></div>
 
-    <div class="form-group">
-      <label for="householdSelect">세대 선택</label>
-      <select id="householdSelect">
-        <option value="">세대를 선택해주세요</option>
-        <option th:each="household : ${households}"
-                th:value="${household.id}"
-                th:text="${household.dong} + ' ' + ${household.ho}">
-        </option>
-      </select>
-      <span class="error-msg" id="householdError"></span>
-    </div>
+    <main class="content">
+      <div class="container">
+        <h2 class="page-title">관리자 티켓 발급</h2>
 
-    <div class="form-group">
-      <label>티켓 종류</label>
-      <div class="ticket-type-group">
-        <label>
-          <input type="radio" name="ticketType" value="HOUR"> 1시간권
-        </label>
-        <label>
-          <input type="radio" name="ticketType" value="DAY"> 1일권
-        </label>
+        <!-- 전체 세대 월별 자동 발급 -->
+        <div class="section" style="margin-bottom: 32px;">
+          <h3 style="font-size: 18px; font-weight: 700; color: var(--color-main); margin: 0 0 8px 0;">전체 세대 월별 티켓 발급</h3>
+          <p class="hint" style="margin-bottom: 16px;">*매달 1일 자동 발급되며, 수동으로 즉시 발급할 수 있습니다.</p>
+          <button type="button" class="pk-btn pk-btn-primary" id="monthlyIssueBtn" onclick="issueMonthly(this)">
+            전체 세대 티켓 발급
+          </button>
+          <span id="monthlyResult" style="margin-left: 12px; font-size: 13px;"></span>
+        </div>
+
+        <hr style="border: none; border-top: 2px solid #f1f5f9; margin-bottom: 32px;">
+
+        <!-- 특정 세대 수동 발급 -->
+        <div class="section">
+          <h3 style="font-size: 18px; font-weight: 700; color: var(--color-main); margin: 0 0 24px 0;">특정 세대 수동 발급</h3>
+
+          <!-- 세대 선택 -->
+          <div class="form-group">
+            <label>세대 선택</label>
+            <div class="multi-select-wrapper" id="msWrapper">
+              <div class="multi-select-trigger" id="msTrigger" onclick="toggleDropdown()">
+                <div class="tags-area" id="tagsArea">
+                  <span class="ms-placeholder" id="msPlaceholder">세대를 선택해주세요</span>
+                </div>
+                <span id="msClearAll"
+                      style="display:none; font-size:12px; color:#999; cursor:pointer; flex-shrink:0; padding: 2px 4px;"
+                      onclick="event.stopPropagation(); clearAll()">전체 삭제</span>
+                <span class="ms-chevron" id="msChevron">▼</span>
+              </div>
+              <div class="ms-dropdown" id="msDropdown">
+                <div class="ms-search">
+                  <input type="text" id="msSearch" placeholder="동/호 검색..."
+                         oninput="filterOptions(this.value)"
+                         onclick="event.stopPropagation()">
+                </div>
+                <div class="ms-select-all" onclick="toggleSelectAll()">
+                  <input type="checkbox" id="msSelectAllCb"> 전체 선택
+                </div>
+                <div id="msOptionList">
+                  <div class="ms-item"
+                       th:each="household : ${households}"
+                       th:data-id="${household.id}"
+                       th:data-label="${household.dong} + ' ' + ${household.ho}">
+                    <input type="checkbox"
+                           th:value="${household.id}"
+                           th:data-label="${household.dong} + ' ' + ${household.ho}"
+                           onchange="toggleOption(this)">
+                    <span th:text="${household.dong} + ' ' + ${household.ho}"></span>
+                  </div>
+                </div>
+                <div class="ms-empty" id="msEmpty" style="display:none;">검색 결과가 없습니다.</div>
+              </div>
+            </div>
+            <span class="error-msg" id="householdError"></span>
+          </div>
+
+          <!-- 티켓 종류 -->
+          <div class="form-group">
+            <label>티켓 종류</label>
+            <div style="display: flex; gap: 16px; align-items: center;">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; width: auto;">
+                <input type="radio" name="ticketType" value="HOUR"
+                       style="cursor: pointer; accent-color: var(--color-main);"> 1시간권
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; width: auto;">
+                <input type="radio" name="ticketType" value="DAY"
+                       style="cursor: pointer; accent-color: var(--color-main);"> 1일권
+              </label>
+            </div>
+            <span class="error-msg" id="typeError"></span>
+          </div>
+
+          <!-- 수량 -->
+          <div class="form-group">
+            <label>수량</label>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <p class="hint" style="margin: 0;">*선택된 모든 세대에 동일한 수량이 발급됩니다.</p>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="ticket-apply-group" style="margin-top: 0;">
+                  <button type="button" onclick="decreaseCount()">-</button>
+                  <input type="number" id="countDisplay" value="1" min="1" max="1000"
+                         style="width: 50px; text-align: center; font-size: 16px; font-weight: 700;
+                      color: var(--color-main); border: 1px solid var(--color-border);
+                      border-radius: var(--radius-sm); padding: 4px 8px;"
+                         oninput="handleCountInput(this)">
+                  <button type="button" onclick="increaseCount()">+</button>
+                </div>
+                <button type="button" class="pk-btn pk-btn-primary" id="issueBtn" onclick="issueTicket(this)">발급</button>
+              </div>
+            </div>
+            <input type="hidden" id="totalCount" value="1">
+          </div>
+
+          <span id="issueResult" style="font-size: 13px; display: block; margin-top: 8px;"></span>
+        </div>
+
       </div>
-      <span class="error-msg" id="typeError"></span>
-    </div>
-
-    <div class="form-group">
-      <label for="totalCount">수량</label>
-      <div class="count-group">
-        <button type="button" onclick="decreaseCount()">-</button>
-        <span id="countDisplay">1</span>
-        <button type="button" onclick="increaseCount()">+</button>
-      </div>
-      <input type="hidden" id="totalCount" value="1">
-    </div>
-
-    <div class="form-actions">
-      <button type="button" id="issueBtn" onclick="issueTicket(this)">발급</button>
-    </div>
-    <span class="result-msg" id="issueResult"></span>
+    </main>
   </div>
 </div>
-
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 <script th:inline="javascript">
   const contextPath = /*[[@{/}]]*/ '/';
   const csrfToken = document.querySelector('meta[name="_csrf"]').content;
@@ -80,111 +132,178 @@
 
   let count = 1;
   const MAX_COUNT = 1000;
+  const selectedHouseholds = new Map();
 
-  // 수량 증가
+  /* ── 멀티셀렉트 ── */
+  function toggleDropdown() {
+    const dropdown = document.getElementById('msDropdown');
+    const chevron  = document.getElementById('msChevron');
+    const trigger  = document.getElementById('msTrigger');
+    const isOpen   = dropdown.classList.contains('open');
+    dropdown.classList.toggle('open', !isOpen);
+    chevron.classList.toggle('open',  !isOpen);
+    trigger.classList.toggle('open',  !isOpen);
+    if (!isOpen) document.getElementById('msSearch').focus();
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('msWrapper').contains(e.target)) {
+      document.getElementById('msDropdown').classList.remove('open');
+      document.getElementById('msChevron').classList.remove('open');
+      document.getElementById('msTrigger').classList.remove('open');
+    }
+  });
+
+  function toggleOption(cb) {
+    if (cb.checked) selectedHouseholds.set(cb.value, cb.dataset.label);
+    else            selectedHouseholds.delete(cb.value);
+    renderTags();
+  }
+
+  function removeTag(id) {
+    selectedHouseholds.delete(id);
+    const cb = document.querySelector(`#msOptionList input[value="${id}"]`);
+    if (cb) cb.checked = false;
+    renderTags();
+  }
+
+  function clearAll() {
+    selectedHouseholds.clear();
+    document.querySelectorAll('#msOptionList input[type=checkbox]').forEach(cb => cb.checked = false);
+    document.getElementById('msSelectAllCb').checked = false;
+    renderTags();
+  }
+
+  function renderTags() {
+    const area     = document.getElementById('tagsArea');
+    const clearBtn = document.getElementById('msClearAll');
+    area.innerHTML = '';
+    if (selectedHouseholds.size === 0) {
+      area.innerHTML = '<span class="ms-placeholder">세대를 선택해주세요</span>';
+      clearBtn.style.display = 'none';
+    } else {
+      clearBtn.style.display = '';
+      selectedHouseholds.forEach((label, id) => {
+        const tag = document.createElement('span');
+        tag.className = 'ms-tag';
+        tag.innerHTML = `${label}<span class="ms-tag-remove" onclick="event.stopPropagation(); removeTag('${id}')">×</span>`;
+        area.appendChild(tag);
+      });
+    }
+  }
+
+  function toggleSelectAll() {
+    const allCb = document.getElementById('msSelectAllCb');
+    const visibleItems = [...document.querySelectorAll('#msOptionList .ms-item')]
+      .filter(item => item.style.display !== 'none');
+    const allChecked = visibleItems.every(item => item.querySelector('input[type=checkbox]').checked);
+    allCb.checked = !allChecked;
+    visibleItems.forEach(item => {
+      const cb = item.querySelector('input[type=checkbox]');
+      cb.checked = !allChecked;
+      if (!allChecked) selectedHouseholds.set(cb.value, cb.dataset.label);
+      else             selectedHouseholds.delete(cb.value);
+    });
+    renderTags();
+  }
+
+  function filterOptions(query) {
+    const items = document.querySelectorAll('#msOptionList .ms-item');
+    let visible = 0;
+    items.forEach(item => {
+      const match = (item.dataset.label || item.textContent.trim()).includes(query);
+      item.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    document.getElementById('msEmpty').style.display = visible === 0 ? '' : 'none';
+    const visibleItems = [...items].filter(item => item.style.display !== 'none');
+    const allChecked = visibleItems.length > 0 && visibleItems.every(item => item.querySelector('input[type=checkbox]').checked);
+    document.getElementById('msSelectAllCb').checked = allChecked;
+  }
+
+  /* ── 수량 ── */
   function increaseCount() {
-      if (count < MAX_COUNT) {
-          count++;
-          document.getElementById('countDisplay').textContent = count;
-          document.getElementById('totalCount').value = count;
-      }
+    if (count < MAX_COUNT) { count++; sync(); }
   }
-
-  // 수량 감소
   function decreaseCount() {
-      if (count > 1) {
-          count--;
-          document.getElementById('countDisplay').textContent = count;
-          document.getElementById('totalCount').value = count;
-      }
+    if (count > 1) { count--; sync(); }
+  }
+  function handleCountInput(input) {
+    let val = parseInt(input.value);
+    if (isNaN(val) || val < 1) val = 1;
+    if (val > MAX_COUNT) val = MAX_COUNT;
+    input.value = val;
+    count = val;
+    document.getElementById('totalCount').value = count;
+  }
+  function sync() {
+    document.getElementById('countDisplay').value = count;
+    document.getElementById('totalCount').value   = count;
   }
 
-  // 전체 세대 월별 티켓 발급
+  /* ── 전체 세대 발급 ── */
   function issueMonthly(btn) {
-      if (!confirm('전체 세대에 이번 달 티켓을 발급하시겠습니까?')) return;
-
-      btn.disabled = true;
-      const resultMsg = document.getElementById('monthlyResult');
-      resultMsg.textContent = '';
-
-      fetch(`${contextPath}admin/ticket/issue/monthly`, {
-          method: 'POST',
-          headers: {
-              [csrfHeader]: csrfToken
-          }
-      })
-          .then(async res => {
-              if (!res.ok) {
-                  const msg = await res.text();
-                  throw new Error(msg || '서버 오류');
-              }
-              resultMsg.textContent = '✅ 전체 세대 티켓 발급이 완료되었습니다.';
-              resultMsg.style.color = 'green';
-          })
-          .catch(err => {
-              console.error(err);
-              resultMsg.textContent = '❌ 발급 중 오류가 발생했습니다.';
-              resultMsg.style.color = 'red';
-          })
-          .finally(() => {
-              btn.disabled = false;
-          });
+    if (!confirm('전체 세대에 이번 달 티켓을 발급하시겠습니까?')) return;
+    btn.disabled = true;
+    const msg = document.getElementById('monthlyResult');
+    msg.textContent = '';
+    fetch(`${contextPath}admin/ticket/issue/monthly`, {
+      method: 'POST',
+      headers: { [csrfHeader]: csrfToken }
+    })
+    .then(async res => {
+      if (!res.ok) throw new Error(await res.text() || '서버 오류');
+      msg.textContent = '✅ 전체 세대 티켓 발급이 완료되었습니다.';
+      msg.style.color = 'green';
+    })
+    .catch(err => {
+      msg.textContent = '❌ 발급 중 오류가 발생했습니다.';
+      msg.style.color = 'red';
+    })
+    .finally(() => { btn.disabled = false; });
   }
 
-  // 특정 세대 수동 발급
+  /* ── 특정 세대 bulk 발급 ── */
   function issueTicket(btn) {
-      const householdId = document.getElementById('householdSelect').value;
-      const ticketType = document.querySelector('input[name="ticketType"]:checked')?.value;
-      const totalCount = document.getElementById('totalCount').value;
+    const ticketType = document.querySelector('input[name="ticketType"]:checked')?.value;
+    const totalCount = parseInt(document.getElementById('totalCount').value);
+    const householdError = document.getElementById('householdError');
+    const typeError      = document.getElementById('typeError');
+    const issueResult    = document.getElementById('issueResult');
 
-      const householdError = document.getElementById('householdError');
-      const typeError = document.getElementById('typeError');
-      const issueResult = document.getElementById('issueResult');
+    householdError.textContent = '';
+    typeError.textContent      = '';
+    issueResult.textContent    = '';
 
-      householdError.textContent = '';
-      typeError.textContent = '';
-      issueResult.textContent = '';
+    if (selectedHouseholds.size === 0) { householdError.textContent = '세대를 선택해주세요.'; return; }
+    if (!ticketType)                   { typeError.textContent = '티켓 종류를 선택해주세요.'; return; }
 
-      if (!householdId) {
-          householdError.textContent = '세대를 선택해주세요.';
-          return;
-      }
-      if (!ticketType) {
-          typeError.textContent = '티켓 종류를 선택해주세요.';
-          return;
-      }
+    btn.disabled = true;
+    issueResult.textContent = '발급 중...';
+    issueResult.style.color = '#888';
 
-      btn.disabled = true;
-
-      fetch(`${contextPath}admin/ticket/issue?householdId=${householdId}&type=${ticketType}&totalCount=${totalCount}`, {
-          method: 'POST',
-          headers: {
-              [csrfHeader]: csrfToken
-          }
+    fetch(`${contextPath}admin/ticket/issue/bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', [csrfHeader]: csrfToken },
+      body: JSON.stringify({
+        householdIds: Array.from(selectedHouseholds.keys()).map(Number),
+        type: ticketType,
+        totalCount: totalCount
       })
-          .then(async res => {
-              if (!res.ok) {
-                  const msg = await res.text();
-                  throw new Error(msg || '서버 오류');
-              }
-              issueResult.textContent = '✅ 티켓 발급이 완료되었습니다.';
-              issueResult.style.color = 'green';
-
-              // 초기화
-              document.getElementById('householdSelect').value = '';
-              document.querySelectorAll('input[name="ticketType"]').forEach(r => r.checked = false);
-              count = 1;
-              document.getElementById('countDisplay').textContent = 1;
-              document.getElementById('totalCount').value = 1;
-          })
-          .catch(err => {
-              console.error(err);
-              issueResult.textContent = '❌ 발급 중 오류가 발생했습니다: ' + err.message;
-              issueResult.style.color = 'red';
-          })
-          .finally(() => {
-              btn.disabled = false;
-          });
+    })
+    .then(async res => {
+      if (!res.ok) throw new Error(await res.text());
+      issueResult.textContent = `✅ ${selectedHouseholds.size}개 세대 티켓 발급이 완료되었습니다.`;
+      issueResult.style.color = 'green';
+      clearAll();
+      document.querySelectorAll('input[name="ticketType"]').forEach(r => r.checked = false);
+      count = 1; sync();
+    })
+    .catch(err => {
+      issueResult.textContent = `❌ 오류: ${err.message}`;
+      issueResult.style.color = 'red';
+    })
+    .finally(() => { btn.disabled = false; });
   }
 </script>
 

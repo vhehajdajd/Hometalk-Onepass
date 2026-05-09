@@ -1,9 +1,14 @@
 package com.hometalk.onepass.community.service;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
+import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
+import com.hometalk.onepass.community.entity.Category;
 import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.entity.Post;
 import com.hometalk.onepass.community.enums.PostStatus;
+import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
+import com.hometalk.onepass.community.repository.CategoryRepository;
 import com.hometalk.onepass.community.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,41 +22,66 @@ public class PostActionService {
 
     private final PostRepository postRepository;
 
-    public void updateMarketStatus(Long postId, MarketStatus status) {
+    @Transactional
+    public void updateMarketStatus(Long postId, CustomUserDetails user, MarketStatus status) {
+        if (user == null) {
+            throw new UnauthorizedAccessException("로그인이 필요합니다.");
+        }
+
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
+
+        if (!post.getWriter().getId().equals(user.getUserId())) {
+            throw new UnauthorizedAccessException("작성자만 상태 변경 가능합니다.");
+        }
         post.updateMarketStatus(status);
     }
 
     @Transactional
-    public boolean togglePin(Long id, Long adminId) {
-        // 1. 게시글 조회
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
-        // 2. 관리자 권한 확인 (임시로 adminId가 1L인 경우만 허용하거나, 나중에 Role로 체크)
-        // 지금은 테스트를 위해 간단히 처리
-        if (adminId == null || adminId != 1L) {
-            throw new IllegalStateException("관리자 권한이 필요합니다.");
+    public boolean togglePin(Long postId, CustomUserDetails user) {
+        // 0. 로그인 체크
+        if (user == null) {
+            throw new UnauthorizedAccessException("로그인이 필요합니다.");
         }
+        // 1. 관리자 권한 체크
+        if (user.getRole() != User.UserRole.ADMIN) {
+            throw new UnauthorizedAccessException("관리자 권한이 필요합니다.");
+        }
+        // 2. 게시글 조회
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
         // 3. 상태 반전 (true -> false / false -> true)
         post.togglePinned();
         return post.isPinned();
     }
 
+    @Transactional
     public void saveAsDraft(Long postId, PostRequestDTO dto) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
-        post.update(dto);
+        post.update(dto.getTitle(), dto.getContent(), post.getCategory(), dto.getPostStatus());
         post.updateStatus(PostStatus.DRAFT);
     }
 
 
     // 관리자 '숨김' 처리
     @Transactional
-    public void hidePost(Long postId) {
+    public void hidePost(Long postId, CustomUserDetails user) {
+        if (user == null || user.getRole() != User.UserRole.ADMIN) throw  new UnauthorizedAccessException("관리자 권한 필요");
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글 없음"));
         post.updateStatus(PostStatus.HIDDEN);
+    }
+
+    // 관리자 숨김 '해제' 처리
+    @Transactional
+    public void unhidePost(Long postId, CustomUserDetails user) {
+        if (user == null || user.getRole() != User.UserRole.ADMIN) {
+            throw new UnauthorizedAccessException("관리자 권한이 필요합니다.");
+        }
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
+        post.updateStatus(PostStatus.ACTIVE);
     }
 
     // 조회수 증가

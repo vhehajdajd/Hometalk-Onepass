@@ -1,70 +1,124 @@
 package com.hometalk.onepass.community.controller;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
+import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.community.dto.request.CommentRqDTO;
 import com.hometalk.onepass.community.service.CommentService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-/*
-    댓글 저장/수정/삭제
- */
+import java.util.List;
+
 @Slf4j
 @Controller
 @RequestMapping("/community/{boardCode}/{categoryCode}/{postId}/comments")
 @RequiredArgsConstructor
 public class CommentController {
+
     private final CommentService commentService;
 
-    // 댓글 작성
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @PostMapping
     public String saveComment(@PathVariable String boardCode,
                               @PathVariable String categoryCode,
                               @PathVariable Long postId,
                               @ModelAttribute CommentRqDTO commentRqDTO,
-                              RedirectAttributes redirectAttributes) {
-        // [임시] 로그인 연동 전 더미 ID
-        Long tempUserId = 1L;
+                              RedirectAttributes redirectAttributes,
+                              Authentication authentication) {
 
-        // 댓글 저장
-        commentService.saveComment(postId, tempUserId, commentRqDTO);
+        Long userId = getLoginUserId(authentication);
+
+        commentService.saveComment(postId, userId, commentRqDTO);
 
         redirectAttributes.addFlashAttribute("successMessage", "댓글이 등록되었습니다.");
         log.info("입력된 댓글 내용: {}", commentRqDTO.getContent());
-        // 처리가 끝나면 다시 상세 페이지로 리다이렉트
+
         return String.format("redirect:/community/%s/%s/%d", boardCode, categoryCode, postId);
     }
 
-
-    // 댓글 수정
     @PostMapping("/{commentId}/edit")
     public String updateComment(@PathVariable String boardCode,
                                 @PathVariable String categoryCode,
                                 @PathVariable Long postId,
                                 @PathVariable Long commentId,
-                                @ModelAttribute CommentRqDTO commentRqDTO) {
+                                @ModelAttribute CommentRqDTO commentRqDTO,
+                                Authentication authentication) {
 
-        Long tempUserId = 1L;
-        commentService.updateComment(commentId, tempUserId, commentRqDTO);
+        Long userId = getLoginUserId(authentication);
+
+        commentService.updateComment(commentId, userId, commentRqDTO);
 
         return String.format("redirect:/community/%s/%s/%d", boardCode, categoryCode, postId);
     }
 
-
-    // 댓글 삭제
     @PostMapping("/{commentId}/delete")
     public String deleteComment(@PathVariable String boardCode,
                                 @PathVariable String categoryCode,
                                 @PathVariable Long postId,
                                 @PathVariable Long commentId,
-                                RedirectAttributes redirectAttributes) {
-        Long tempUserId = 1L;
-        commentService.deleteComment(commentId, tempUserId);
+                                RedirectAttributes redirectAttributes,
+                                Authentication authentication) {
+
+        Long userId = getLoginUserId(authentication);
+
+        commentService.deleteComment(commentId, userId);
 
         redirectAttributes.addFlashAttribute("successMessage", "댓글이 삭제되었습니다.");
         return String.format("redirect:/community/%s/%s/%d", boardCode, categoryCode, postId);
     }
 
+    private Long getLoginUserId(Authentication authentication) {
+        return getLoginUser(authentication).getId();
+    }
+
+    private User getLoginUser(Authentication authentication) {
+
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof CustomUserDetails customUserDetails) {
+            Long userId = customUserDetails.getUserId();
+
+            if (userId != null) {
+                User user = entityManager.find(User.class, userId);
+
+                if (user != null) {
+                    return user;
+                }
+            }
+        }
+
+        String loginId = authentication.getName();
+
+        List<User> users = entityManager.createQuery(
+                        "select u " +
+                                "from LocalAccount la " +
+                                "join la.user u " +
+                                "where la.loginId = :loginId",
+                        User.class
+                )
+                .setParameter("loginId", loginId)
+                .setMaxResults(1)
+                .getResultList();
+
+        if (users.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다.");
+        }
+
+        return users.get(0);
+    }
 }

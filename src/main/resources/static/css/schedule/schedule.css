@@ -1,26 +1,5 @@
 /* schedule.css */
 
-:root {
-    --color-bg:            #FAF4F0;
-    --color-main:          #032154;
-    --color-sub:           #3C6ABC;
-    --color-btn:           #4073C9;
-    --color-btn-secondary: #9EBFDB;
-    --color-btn-point:     #EB6E57;
-    --color-point-text:    #7ED3D9;
-    --color-text:          #170124;
-    --border-color:        #E2E8F0;
-
-    /* 배지 색 */
-    --badge-facility:       #d2eed8;
-    --badge-facility-font:  #6c977a;
-    --badge-safety:         #fff8e1;
-    --badge-safety-font:    #b8860b;
-    --badge-normal:         #e6f4f5;
-    --badge-normal-font:    #2a9da4;
-    --badge-default:        #c9c9c9;
-    --badge-default-font:   #5b5b5b;
-}
 
 .container { padding: 24px 40px; background: var(--color-bg); }
 
@@ -29,7 +8,7 @@
     display: flex;
     gap: 16px;
     margin-bottom: 24px;
-    max-width: 1500px;
+    max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -37,8 +16,8 @@
 /* ── 오늘 카드 ─────────────────────────────────────────────────────────────── */
 .cal-today-card {
     flex: 1;
-    background: #f2ece8;
-    border-radius: 16px;
+    background: var(--color-modal-line);
+    border-radius: 4px;
     padding: 20px 28px 10px 28px;
     color: #fff;
     position: relative;
@@ -57,7 +36,7 @@
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 2px;
-    color: #888;
+    color: var(--color-main);
     margin-bottom: 2px;
 }
 
@@ -66,19 +45,19 @@
     font-weight: 800;
     line-height: 1;
     margin-bottom: 2px;
-    color: #595959;
+    color: var(--color-main);
 }
 
 .cal-today-weekday {
     font-size: 13px;
-    color: #888;
+    color: var(--color-main);
     margin-bottom: 8px;
     margin-top: 16px;
 }
 
 .cal-today-count {
     font-size: 12px;
-    color: #888;
+    color: var(--color-main);
 }
 
 .cal-today-btns {
@@ -91,43 +70,41 @@
     align-self: stretch;
 }
 
+/* 흰 버튼 계열 */
 .cal-today-btn {
-    background: var(--color-btn-secondary);
-    color: white;
-    border: none;
-    border-radius: 20px;
-    padding: 7px 16px;
-    font-size: 13px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background 0.15s;
-    white-space: nowrap;
-}
-
-.cal-today-btn:hover { background: #879aaa; }
-
-.cal-add-btn {
     background: var(--color-main);
     color: white;
     border: none;
-    border-radius: 20px;
-    padding: 7px 16px;
+    border-radius: 4px;
+    padding: 6px 10px;
     font-size: 13px;
     cursor: pointer;
-    font-weight: 700;
-    transition: background 0.15s;
+    font-weight: 600;
+    transition: opacity 0.15s;
     white-space: nowrap;
 }
 
-.cal-add-btn:hover { background: #879aaa; }
+.cal-today-btn:hover { opacity: 0.88; }
 
-.cal-today-badges {
-    display: none;
+/* 메인 버튼 */
+.cal-add-btn {
+    background: white;
+    color: var(--color-main);
+    border: 1px solid var(--color-main);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: opacity 0.15s;
+    white-space: nowrap;
 }
 
-.cal-today-info {
-    padding-top: 20px;
-}
+.cal-add-btn:hover { opacity: 0.88; }
+
+.cal-today-badges { display: none; }
+
+.cal-today-info { padding-top: 20px; }
 
 /* ── 배지 범례 ─────────────────────────────────────────────────────────────── */
 .cal-badge-legend {
@@ -139,8 +116,8 @@
 }
 
 .legend-item {
-    font-size: 13px;
-    padding: 4px 14px;
+    font-size: 14px;
+    padding: 3px 12px;
     border-radius: 20px;
     font-weight: 600;
 }
@@ -148,18 +125,20 @@
 /* ── 네비 카드 ─────────────────────────────────────────────────────────────── */
 .cal-nav-card {
     width: 280px;
-    background: var(--color-btn-secondary);
-    border-radius: 16px;
+    background: var(--color-main);
+    border-radius: 4px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
     padding: 20px 18px;
     color: #fff;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    justify-content: center;
 }
 
 .cal-nav-year {
-    font-size: 13px;
+    font-size: 15px;
     color: white;
     font-weight: 600;
 }
@@ -192,16 +171,13 @@
     font-weight: 800;
 }
 
-.cal-nav-selects {
-    display: flex;
-    gap: 6px;
-}
+.cal-nav-selects { display: flex; gap: 6px; margin-top: 10px;}
 
 .cal-select {
-    padding: 8px 8px;
-    border-radius: 8px;
+    padding: 7px 8px;
+    border-radius: 4px;
     border: none;
-    font-size: 13px;
+    font-size: 14px;
     background: rgba(255,255,255,0.2);
     color: #fff;
     cursor: pointer;
@@ -214,11 +190,11 @@
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     background: #fff;
-    border-radius: 16px;
+    border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 2px 12px rgba(0,0,0,0.07);
     border: 1px solid var(--border-color);
-    max-width: 1500px;
+    max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -230,7 +206,7 @@
     font-weight: 700;
     color: #64748b;
     background: #f8fafc;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
     letter-spacing: 1px;
 }
 
@@ -250,7 +226,6 @@
 .cal-cell:hover { background: #f8fafc; }
 .cal-cell.other-month { background: #fafbfc; }
 .cal-cell.other-month .cal-date-num { color: #c8d0da; }
-.cal-cell.is-today { background: #fff8f6; }
 
 .cal-date-num {
     font-size: 13px;
@@ -267,7 +242,7 @@
 }
 
 .cal-date-num.today-circle {
-    background: var(--color-main);
+    background: var(--color-btn);
     color: #fff;
 }
 
@@ -278,7 +253,7 @@
     gap: 2px;
 }
 
-/* ── 일정 배지 (단일) ──────────────────────────────────────────────────────── */
+/* ── 일정 배지 ─────────────────────────────────────────────────────────────── */
 .cal-badge {
     font-size: 11px;
     padding: 3px 8px;
@@ -300,30 +275,11 @@
     min-height: 22px;
 }
 
-.cal-badge-multi.multi-start {
-    margin: 0;
-    min-height: 22px;
-}
+.cal-badge-multi.multi-start { margin: 0; min-height: 22px; }
+.cal-badge-multi.multi-mid { border-radius: 0; margin: 0; min-height: 22px; }
+.cal-badge-multi.multi-end { border-radius: 0; margin: 0; min-height: 22px; }
 
-.cal-badge-multi.multi-mid {
-    border-radius: 0;
-    margin: 0;
-    opacity: 0.85;
-    min-height: 22px;
-}
-
-.cal-badge-multi.multi-end {
-    border-radius: 0 4px 4px 0;
-    margin: 0;
-    opacity: 0.85;
-    min-height: 22px;
-}
-
-/* ── 빈 슬롯 placeholder ───────────────────────────────────────────────────── */
-.cal-badge-placeholder {
-    height: 22px;
-    display: block;
-}
+.cal-badge-placeholder { height: 22px; display: block; }
 
 .cal-more { font-size: 10px; color: #94a3b8; padding: 1px 8px; cursor: pointer; }
 
@@ -347,7 +303,7 @@
 
 .modal-box {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 4px;
     width: 500px;
     max-width: 94%;
     box-shadow: 0 8px 32px rgba(0,0,0,0.18);
@@ -364,12 +320,12 @@
     justify-content: space-between;
     align-items: center;
     padding: 18px 24px;
-    border-bottom: 1px solid #eef0f4;
-    font-weight: 700;
+    border-bottom: 2px solid var(--color-modal-line);
+    font-weight: 600;
     font-size: 16px;
     color: var(--color-main);
     background: #f8fafc;
-    border-radius: 14px 14px 0 0;
+    border-radius: 4px 4px 0 0;
 }
 
 .modal-close {
@@ -410,15 +366,23 @@
 .modal-table input[type="date"],
 .modal-table select,
 .modal-table textarea {
-    width: 100%;
-    padding: 7px 10px;
+    width: 100% ;
+    padding: 7px 10px !important;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 13px;
-    background: #f8fafc;
-    color: var(--color-text);
+    border-radius: 4px !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    font-family: 'Segoe UI', Arial, sans-serif !important;
     box-sizing: border-box;
-    transition: border 0.15s;
+    outline: none;
+    background: white;
+    color: var(--color-text);
+}
+
+.modal-table select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 10px !important;
 }
 
 .modal-table input:focus,
@@ -431,12 +395,7 @@
 
 .modal-table textarea { resize: vertical; height: 80px; }
 
-.time-group {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-}
-
+.time-group { display: flex; gap: 6px; align-items: center; }
 .time-group input[type="date"] { flex: 1; }
 .time-group select { width: 68px; }
 
@@ -446,26 +405,30 @@
     gap: 8px;
 }
 
+/* 흰 버튼 */
 .btn-submit {
-    background: var(--color-main);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 9px 22px;
+    background: white;
+    color: #666;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 6px 10px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
 }
 
-.btn-submit:hover { background: var(--color-sub); }
+.btn-submit:hover {
+    background: var(--color-bg-white-btn);
+    color: #888;
+}
 
 .btn-cancel-modal {
-    background: #f0f4f8;
+    background: var(--color-bg-white-btn);
     color: #475569;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 9px 22px;
+    border-radius: 4px;
+    padding: 6px 10px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -474,33 +437,68 @@
 
 .btn-cancel-modal:hover { background: #e2e8f0; }
 
+/* 흰 버튼 */
 .btn-edit-modal {
-    background: var(--color-btn-secondary);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 9px 18px;
+    background: white;
+    color: #666;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 6px 10px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
 }
 
-.btn-edit-modal:hover { background: var(--color-sub); }
+.btn-edit-modal:hover {
+    background: var(--color-bg-white-btn);
+    color: #888;
+}
 
+/* 삭제 버튼 - 포인트 컬러 */
 .btn-delete-modal {
     background: var(--color-btn-point);
     color: #fff;
     border: none;
-    border-radius: 8px;
-    padding: 9px 18px;
+    border-radius: 4px;
+    padding: 6px 10px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
 }
 
-.btn-delete-modal:hover { background: #d65a45; }
+.btn-delete-modal:hover { background: var(--color-btn-point-hover); }
+
+.repeat-delete-btn {
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background: white;
+    color: #888;
+    transition: all 0.2s;
+}
+
+.repeat-delete-btn:hover {
+    background: var(--color-bg-white-btn);
+    color: #888;
+}
+
+.repeat-delete-btn.danger,
+.repeat-delete-btn.this {
+    border: 1px solid var(--border-color);
+    color: #888;
+}
+
+.repeat-delete-btn.danger:hover,
+.repeat-delete-btn.this:hover {
+    background: var(--color-btn-secondary);
+    color: white;
+}
 
 .detail-link {
     color: var(--color-main);
@@ -509,3 +507,7 @@
 }
 
 .detail-link:hover { text-decoration: underline; }
+
+.cal-cell:not(.other-month) {
+    cursor: pointer;
+}

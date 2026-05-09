@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>회원가입 - Home Talk One Pass</title>
     <style>
-        .auth-container { width: 400px; margin: 20px auto; text-align: center; border: 1px solid #bdbaba; padding: 20px; border-radius: 8px; }
+        .auth-container { width: 400px; margin: 20px auto; text-align: center; border: 1px solid #bdbaba; padding: 30px; border-radius: 8px; }
         .input-group { margin-bottom: 15px; text-align: left; }
         .input-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
         input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #bdbaba; border-radius: 4px; height: 50px; }
@@ -21,66 +21,80 @@
 
 <div class="auth-container">
     <h2>회원가입</h2>
-    <p>서비스 이용을 위해 정보를 입력해주세요.</p>
+    <p>서비스 이용을 위해 추가 정보를 입력해주세요.</p>
 
     <!-- *{} = 객체를 전달받은 경우 매핑    -->
-    <form th:action="@{/auth/register/signup}" th:object="${signUpDTO}" method="post">
-        <input type="hidden" name="currentStep" th:value="${step}" />
+    <form method="post" th:action="@{/auth/register/signup}" th:object="${signUpDTO}" onsubmit="return validateForm()">
+        <input name="currentStep" th:value="${step}" type="hidden"/>
 
         <div th:if="${step == 1}">
             <div class="input-group">
                 <label for="email">이메일</label>
-                <input type="email" th:field="*{email}" placeholder="example@hometalk.com" required>
+                <input placeholder="example@hometalk.com" required th:field="*{email}" type="email">
             </div>
 
             <div class="input-group">
                 <label for="loginId">아이디</label>
-                <input type="text" th:field="*{loginId}" placeholder="아이디를 입력하세요" required>
+                <input placeholder="아이디를 입력하세요" required th:field="*{loginId}" type="text">
+                <button type="button" onclick="checkIdDuplicate()" style="width: 30%; font-size: 12px;">중복 확인</button>
+                <p id="id-check-msg" style="font-size: 12px; margin-top: 5px;"
+                   th:styleappend="${idError} ? 'color: red;' : ''"
+                   th:text="${idError}"></p>
+                <!-- 중복 확인 여부를 저장할 숨겨진 필드 (선택 사항: 가입 방지용) -->
+                <input type="hidden" id="isIdChecked" value="false">
             </div>
 
             <div class="input-group">
                 <label for="phoneNumber">연락처</label>
-                <input type="text" th:field="*{phoneNumber}" placeholder="휴대폰 번호(-)제외" required>
+                <input placeholder="휴대폰 번호(-)제외" required th:field="*{phoneNumber}" type="text">
             </div>
 
             <div class="input-group">
                 <label for="password">비밀번호</label>
-                <input type="password" th:field="*{password}" placeholder="비밀번호를 입력하세요" required>
+                <input id="pw1" pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$" placeholder="비밀번호를 입력하세요" required th:field="*{password}"
+                       title="8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다."
+                       type="password">
+            </div>
+
+            <div class="input-group">
+                <label>비밀번호 확인</label>
+                <input type="password" id="pw2" placeholder="비밀번호 재입력">
+                <p id="match-msg" style="font-size: 12px; margin-top: 5px;"></p>
             </div>
 
             <div class="input-group">
                 <label for="name">이름</label>
-                <input type="text" th:field="*{name}" placeholder="이름을 입력하세요" required>
+                <input placeholder="이름을 입력하세요" required th:field="*{name}" type="text">
             </div>
 
             <div class="input-group">
                 <label for="nickname">별명</label>
-                <input type="text" th:field="*{nickname}" placeholder="별명을 입력해주세요" required>
+                <input placeholder="별명을 입력해주세요" required th:field="*{nickname}" type="text">
             </div>
 
-            <button type="submit" name="action" value="next">다음</button>
+            <button name="action" type="submit" value="next">다음</button>
         </div>
 
         <div th:if="${step == 2}">
-            <input type="hidden" th:field="*{email}">
-            <input type="hidden" th:field="*{loginId}">
-            <input type="hidden" th:field="*{phoneNumber}">
-            <input type="hidden" th:field="*{password}">
-            <input type="hidden" th:field="*{name}">
-            <input type="hidden" th:field="*{nickname}">
+            <input th:field="*{email}" type="hidden">
+            <input th:field="*{loginId}" type="hidden">
+            <input th:field="*{phoneNumber}" type="hidden">
+            <input th:field="*{password}" type="hidden">
+            <input th:field="*{name}" type="hidden">
+            <input th:field="*{nickname}" type="hidden">
 
             <div class="input-group">
                 <label for="postNum">주소</label>
                 <div class="address-group">
-                    <input type="text" th:field="*{postNum}" id="postNum" placeholder="우편 번호를 입력하세요">
-                    <button type="button" onclick="execDaumPostcode()"> 우편번호 찾기 </button>
+                    <input id="postNum" placeholder="우편 번호를 입력하세요" th:field="*{postNum}" type="text">
+                    <button onclick="execDaumPostcode()" type="button"> 우편번호 찾기</button>
                 </div>
             </div>
 
 
             <div class="input-group">
                 <label for="buildingName"></label>
-                <input type="text" th:field="*{buildingName}"  id="buildingName" placeholder="주소를 입력하세요">
+                <input id="buildingName" placeholder="주소를 입력하세요" th:field="*{buildingName}" type="text">
             </div>
 
             <span class="address-detail">
@@ -89,69 +103,162 @@
 
             <div class="input-group">
                 <label for="dong">동</label>
-                <input type="text" th:field="*{dong}" placeholder="동을 입력하세요 (ex 102동 -> 102 입력)">
+                <input placeholder="동을 입력하세요 (ex 102동 -> 102)" th:field="*{dong}" type="text">
             </div>
 
             <div class="input-group">
                 <label for="ho">호</label>
-                <input type="text" th:field="*{ho}" placeholder="호를 입력하세요 (ex 201호 -> 201 입력)">
+                <input placeholder="호를 입력하세요 (ex 201호 -> 201)" th:field="*{ho}" type="text">
             </div>
 
             <div style="display: flex; gap: 10px;">
-                <button type="submit" name="action" value="prev">이전</button>
-                <button type="submit" name="action" value="complete">가입 완료</button>
+                <button name="action" type="submit" value="prev">이전</button>
+                <button name="action" type="submit" value="complete">가입 완료</button>
             </div>
         </div>
     </form>
 </div>
 
-
-
-
 <script src="//t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
-<script>
+<script th:inline="javascript">
+
+    // 1. 카카오 주소 API 관련 함수
     function execDaumPostcode() {
         new kakao.Postcode({
             oncomplete: function(data) {
-                // 팝업에서 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+                var addr = '';
+                var extraAddr = '';
 
-                // 각 주소의 노출 규칙에 따라 주소를 조합한다.
-                // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
-                var addr = ''; // 주소 변수
-                var extraAddr = ''; // 참고항목 변수
-
-                //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
-                if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+                if (data.userSelectedType === 'R') {
                     addr = data.roadAddress;
-                } else { // 사용자가 지번 주소를 선택했을 경우(J)
+                } else {
                     addr = data.jibunAddress;
                 }
 
-                // 사용자가 선택한 주소가 도로명 타입일때 참고항목을 조합한다.
                 if(data.userSelectedType === 'R') {
-                    // 법정동명이 있을 경우 추가한다. (법정리는 제외)
-                    // 법정동의 경우 마지막 문자가 "동/로/가"로 끝난다.
                     if (data.bname !== '' && /[동로가]$/.test(data.bname)) {
                         extraAddr += data.bname;
                     }
-                    // 건물명이 있고, 공동주택일 경우 추가한다.
                     if (data.buildingName !== '' && data.apartment === 'Y') {
                         extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
                     }
-                    // 표시할 참고항목이 있을 경우, 괄호까지 추가한 최종 문자열을 만든다.
                     if (extraAddr !== '') {
                         extraAddr = ' (' + extraAddr + ')';
                     }
                 }
 
-                // 우편번호와 주소 정보를 해당 필드에 넣는다.
                 document.getElementById('postNum').value = data.zonecode;
                 document.getElementById('buildingName').value = addr + extraAddr;
 
-                // 주소 입력 후 바로 '동' 입력창으로 포커스 이동 (사용자 편의)
-                document.getElementsByName('dong')[0].focus();
+                // 동 입력창 포커스 (id가 아닌 name으로 접근 시 주의)
+                const dongInput = document.querySelector('input[name="dong"]');
+                if(dongInput) dongInput.focus();
             }
         }).open();
+    }
+
+    // 2. 페이지 로드 시 이벤트 연결 (비밀번호 체크 및 아이디 리셋)
+    window.addEventListener('DOMContentLoaded', function() {
+        const pw1 = document.getElementById('pw1');
+        const pw2 = document.getElementById('pw2');
+        const msg = document.getElementById('match-msg');
+        const loginIdInput = document.getElementById('loginId');
+
+        // 비밀번호 실시간 일치 확인
+        if (pw1 && pw2 && msg) {
+            const checkMatch = function() {
+                const val1 = pw1.value;
+                const val2 = pw2.value;
+
+                if (val1 === "" || val2 === "") {
+                    msg.textContent = "";
+                } else if (val1 === val2) {
+                    msg.textContent = "✅ 비밀번호가 일치합니다.";
+                    msg.style.color = "green";
+                } else {
+                    msg.textContent = "❌ 비밀번호가 일치하지 않습니다.";
+                    msg.style.color = "red";
+                }
+            };
+            pw1.addEventListener('input', checkMatch);
+            pw2.addEventListener('input', checkMatch);
+        }
+
+        // 아이디 입력값이 바뀌면 중복확인 상태 초기화
+        if (loginIdInput) {
+            loginIdInput.addEventListener('input', function() {
+                const isCheckedInput = document.getElementById('isIdChecked');
+                const idMsg = document.getElementById('id-check-msg');
+                if (isCheckedInput) isCheckedInput.value = "false";
+                if (idMsg) idMsg.innerText = "";
+            });
+        }
+    });
+
+    // 3. 아이디 중복 확인 함수 (비동기)
+    async function checkIdDuplicate() {
+        const loginId = document.getElementById('loginId').value.trim();
+        const msgElement = document.getElementById('id-check-msg');
+        const isCheckedInput = document.getElementById('isIdChecked');
+        const checkIdUrl = /*[[@{/auth/api/check-id-duplication}]]*/ '/auth/api/check-id-duplication';
+
+        if (!loginId) {
+            alert("아이디를 입력해주세요.");
+            return;
+        }
+
+        try {
+            // 타임리프의 @{}를 사용하여 서버 context-path 자동 반영
+            const response = await fetch(`${checkIdUrl}?loginId=${encodeURIComponent(loginId)}`);
+
+            if (!response.ok) {
+                throw new Error("서버 응답 에러 (상태코드: " + response.status + ")");
+            }
+
+            const isDuplicate = await response.json(); // true: 중복, false: 사용가능
+
+            if (isDuplicate) {
+                msgElement.innerText = "이미 사용 중인 아이디입니다.";
+                msgElement.style.color = "red";
+                isCheckedInput.value = "false";
+            } else {
+                msgElement.innerText = "사용 가능한 아이디입니다.";
+                msgElement.style.color = "green";
+                isCheckedInput.value = "true";
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("중복 확인 중 오류가 발생했습니다. ");
+        }
+    }
+
+    // 4. 폼 전송 전 전체 유효성 검사
+    function validateForm() {
+        const currentStepInput = document.querySelector('input[name="currentStep"]');
+        if (!currentStepInput) return true;
+
+        const currentStep = currentStepInput.value;
+
+        if (currentStep === "1") {
+            const isIdChecked = document.getElementById('isIdChecked').value;
+            const pw1 = document.getElementById('pw1').value;
+            const pw2 = document.getElementById('pw2').value;
+
+            // 중복 확인 여부 체크
+            if (isIdChecked !== "true") {
+                alert("아이디 중복 확인을 완료해 주세요.");
+                document.getElementById('loginId').focus();
+                return false;
+            }
+
+            // 비밀번호 일치 여부 체크
+            if (pw1 === "" || pw1 !== pw2) {
+                alert("비밀번호가 일치하지 않거나 입력되지 않았습니다.");
+                document.getElementById('pw2').focus();
+                return false;
+            }
+        }
+        return true;
     }
 </script>
 </body>

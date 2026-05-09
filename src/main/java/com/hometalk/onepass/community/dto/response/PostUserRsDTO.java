@@ -1,5 +1,6 @@
 package com.hometalk.onepass.community.dto.response;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.community.entity.Post;
 import lombok.*;
@@ -10,10 +11,8 @@ import lombok.*;
 @Builder
 // 작성자 닉네임 표시 + 권한 체크 용도 DTO
 public class PostUserRsDTO {
-    private Long id;
+    private Long userId;
     private String role;
-    private String title;
-    private String content;
     private String nickname;
 
     // 권한 관련
@@ -31,9 +30,7 @@ public class PostUserRsDTO {
 
 
     public PostUserRsDTO(Post post, User currentUser) {
-        this.id = post.getId();
-        this.title = post.getTitle();
-        this.content = post.getContent();
+        this.userId = currentUser != null ? currentUser.getId() : null;
         this.nickname = post.getWriter().getNickname();
         // 작성자와 현재 로그인 유저의 ID 비교
         if (currentUser != null) {
@@ -45,5 +42,14 @@ public class PostUserRsDTO {
         // 3번 기능: 마켓 상태 및 고정 여부
         this.marketStatus = post.getMarketStatus().name();
         this.isPinned = post.isPinned();
+    }
+
+    public static PostUserRsDTO from(CustomUserDetails user) {
+        if (user == null) return null;
+        return PostUserRsDTO.builder()
+                .userId(user.getUserId())
+                .role(user.getRole().name())
+                .nickname(user.getName()) // .nickname(user.getNickname()) 수정 예정
+                .build();
     }
 }

@@ -26,7 +26,7 @@ public class ScheduleController {
         return "schedule/scheduleCalendar";
     }
 
-    // ── 달력용 일정 목록 조회 (JSON) ──────────────────────────────────────────
+    // ── 달력용 일정 목록 조회 ──────────────────────────────────────────
     // 달력 JS에서 Ajax로 호출
     @GetMapping("/api/list")
     @ResponseBody
@@ -36,7 +36,7 @@ public class ScheduleController {
         return scheduleService.getSchedulesByMonth(year, month);
     }
 
-    // ── 일정 상세 조회 (JSON) ─────────────────────────────────────────────────
+    // ── 일정 상세 조회 ─────────────────────────────────────────────────
     // 달력에서 일정 클릭 시 모달에 표시
     @GetMapping("/api/{id}")
     @ResponseBody
@@ -44,7 +44,7 @@ public class ScheduleController {
         return scheduleService.getScheduleDetail(id);
     }
 
-    // ── 일정 등록 (JSON) ──────────────────────────────────────────────────────
+    // ── 일정 등록 ──────────────────────────────────────────────────────
     // 일정 페이지에서 독립적으로 등록
     @PostMapping("/write")
     @ResponseBody
@@ -54,7 +54,7 @@ public class ScheduleController {
         return ResponseEntity.ok(id);
     }
 
-    // ── 일정 수정 (JSON) ──────────────────────────────────────────────────────
+    // ── 일정 수정 ──────────────────────────────────────────────────────
     @PostMapping("/api/{id}/edit")
     @ResponseBody
     @PreAuthorize("hasRole('ADMIN')")
@@ -64,12 +64,37 @@ public class ScheduleController {
         return ResponseEntity.ok(updatedId);
     }
 
-    // ── 일정 삭제 (JSON) ──────────────────────────────────────────────────────
+    // ── 일정 삭제 ──────────────────────────────────────────────────────
     @DeleteMapping("/api/{id}")
     @ResponseBody
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteSchedule(@PathVariable Long id) {
         scheduleService.deleteSchedule(id);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/write/repeat")
+    @ResponseBody
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Long> createRepeatSchedule(@RequestBody ScheduleRequestDto dto) {
+        Long id = scheduleService.createRepeatSchedule(dto);
+        return ResponseEntity.ok(id);
+    }
+
+    @DeleteMapping("/api/{id}/repeat")
+    @ResponseBody
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteRepeatSchedule(
+            @PathVariable Long id,
+            @RequestParam String deleteType) {
+        scheduleService.deleteRepeatSchedule(id, deleteType);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/api/calendar")
+    @ResponseBody
+    public ResponseEntity<List<ScheduleCalResponseDto>> getDashboardSchedules() {
+        List<ScheduleCalResponseDto> schedules = scheduleService.getTodaySchedules();
+        return ResponseEntity.ok(schedules);
     }
 }

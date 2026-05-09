@@ -1,7 +1,7 @@
 package com.hometalk.onepass.billing.controller;
 
+import com.hometalk.onepass.billing.dto.AdminDashboardResponse;
 import com.hometalk.onepass.billing.dto.BillingSummaryResponse;
-import com.hometalk.onepass.billing.dto.ResidentBillingResponse;
 import com.hometalk.onepass.billing.entity.BillingStatus;
 import com.hometalk.onepass.billing.service.BillingService.AdminBillingStats;
 
@@ -11,69 +11,38 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/billing")
 @RequiredArgsConstructor
+// @PreAuthorize("hasRole('ADMIN')")
 public class BillingPageController {
 
     private final BillingService billingService;
 
-    // ─────────────────────────────────────────────
-    // 입주민 관리비 페이지
-    // ─────────────────────────────────────────────
-
-    @GetMapping
-    public String billingPage(Model model, HttpServletRequest request) {
-        // TODO: Security 완성 후 CustomUserDetails에서 추출
-        Long householdId = 1L;
-
-        ResidentBillingResponse response = billingService.getResidentBillingPage(householdId);
-
-        // HTML 변수명에 맞춰 개별로 넘기기
-        List<BillingSummaryResponse> unpaidList = billingService
-                .getBillingList(householdId, null, null, BillingStatus.UNPAID,
-                        PageRequest.of(0, 12, Sort.by(Sort.Direction.DESC, "billingMonth")))
-                .getContent();
-
-        model.addAttribute("currentUri", request.getRequestURI());
-        model.addAttribute("contextPath", "/hometop");
-        model.addAttribute("unpaidList",    unpaidList);
-        model.addAttribute("unpaidMonths",  unpaidList.stream()
-                .map(BillingSummaryResponse::getBillingMonth)
-                .toList());
-        model.addAttribute("currentMonthAmount", response.getCurrentMonthAmount());
-        model.addAttribute("currentMonthLabel",
-                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy년 M월")));
-        model.addAttribute("unpaidCount",   response.getUnpaidCount());
-        model.addAttribute("latestPaidDate", response.getLastPaidDate() != null
-                ? response.getLastPaidDate()
-                .format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
-                : null);
-        model.addAttribute("latestPaidMonth", response.getLastPaidDate() != null
-                ? response.getLastPaidDate()
-                .format(DateTimeFormatter.ofPattern("M월"))
-                : null);
-        model.addAttribute("billings",    response.getBillings());
-        model.addAttribute("hasMore",     false);
-        model.addAttribute("householdId", householdId);
-        model.addAttribute("unitInfo",    "");
-        model.addAttribute("menu",        "billing");
-        return "billing/billing_resident";
+    // ─────────────────────────────────────────────────────────
+    // 대시보드 - 관리자 특정 월의 '미납 총액' 합계
+    // ─────────────────────────────────────────────────────────
+    @GetMapping("/api/billing/admin/dashboard-summary")
+    @ResponseBody
+    public ResponseEntity<AdminDashboardResponse> getDashboardSummary() {
+        AdminDashboardResponse summary = billingService.getAdminUnpaidSummary();
+        return ResponseEntity.ok(summary);
     }
 
-
     // ─────────────────────────────────────────────
-    // 관리자 고지서 업로드 페이지
+    // 관리자 고지서 업로드 페이지 (ADMIN 전용)
     // ─────────────────────────────────────────────
 
     @GetMapping("/admin/upload")
@@ -94,7 +63,7 @@ public class BillingPageController {
     }
 
     // ─────────────────────────────────────────────
-    // 관리자 미납 세대 관리 페이지
+    // 관리자 미납 세대 관리 페이지 (ADMIN 전용)
     // ─────────────────────────────────────────────
 
     @GetMapping("/admin/unpaid")

@@ -1,133 +1,160 @@
-/* [디자인 시스템 가이드] :root 변수 */
-:root {
-    --color-main: #032154;            /* main (제목, 서브 버튼) */
-    --color-text-muted: #888888;      /* 연한 글자 */
-    --color-btn-point: #EB6E57;       /* 포인트 버튼 & 글자 */
-    --color-btn: #4073C9;              /* 메인 버튼 */
-    --border-color: #E2E8F0;          /* 흰 버튼 테두리 & 카드 요약 테두리 */
-    --color-bg-white-btn: #F5F5F5;    /* 흰 버튼 호버 */
-    --color-btn-point-hover: #D65A45; /* 포인트버튼 호버 */
-    --color-modal-line: #F1F5F9;      /* 모달 헤더 bottom (선) */
-    --color-text: #000000;            /* 일반 내용 글자 */
-}
-
-/* 기본 레이아웃 */
-body {
-    font-family: "Pretendard Variable", 'Segoe UI', Arial, sans-serif;
-    color: var(--color-text);
-    background-color: #ffffff;
-    margin: 0;
-    padding: 0;
-    -webkit-font-smoothing: antialiased;
-}
-
+/* =========================
+   1. LAYOUT & CONTAINER
+   (common.css의 토큰 활용)
+========================= */
 .container {
-    max-width: 600px; /* 모바일 친화적으로 폭 조정 */
-    margin: 40px auto;
-    padding: 0 20px;
-}
-
-/* 모듈 제목 (30px) & 하단 Border 2px */
-.module-title {
-    font-size: 30px;
-    font-weight: 600;
-    color: var(--color-main);
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid var(--color-modal-line);
-}
-
-/* 카드 규격 (곡률 4px, 테두리 적용) */
-.summary-card {
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 24px;
-    background-color: #ffffff;
-}
-
-/* 표 제목 (16px, weight 600) */
-.label-text {
-    display: block;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--color-text);
-    margin-bottom: 12px;
-}
-
-/* 입력창 공통 */
-.input-field {
     width: 100%;
-    padding: 14px;
-    font-size: 15px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    box-sizing: border-box;
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 30px 40px;
+    background: #ffffff;
 }
 
-/* ------------------------------------------- */
-/* 모바일 캘린더 스타일 (단계별 UI) */
-/* ------------------------------------------- */
+/* =========================
+   1-1. TABLE CUSTOM (리스트)
+========================= */
+.table thead th {
+    text-align: center;
+}
+.table td {
+    text-align: center; /* 기본 중앙 정렬 */
+}
 
+.table td.title-cell {
+    text-align: left; /* 제목만 왼쪽 정렬 */
+}
+
+/* =========================
+   2. POST DETAIL (문의/민원 상세)
+========================= */
+.post-header {
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--color-main);
+    margin-bottom: var(--spacing-lg);
+}
+
+.post-info {
+    display: flex;
+    gap: 15px;
+    color: var(--color-text-muted);
+    font-size: var(--font-meta);
+}
+
+.post-content {
+    min-height: 250px;
+    padding: var(--spacing-lg) 0;
+    line-height: 1.8;
+}
+
+/* 관리자 답변 박스 */
+.admin-answer-section {
+    background-color: var(--color-modal-line);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius);
+    margin-top: 30px;
+}
+
+.admin-answer-form {
+    border-top: 1px solid var(--border-color);
+}
+
+/* =========================
+   본문 텍스트 스타일 (content-body)
+========================= */
+.content-body {
+    font-size: 16px;          /* 읽기 적당한 크기 */
+    line-height: 1.8;         /* 줄 간격을 넓혀서 가독성 확보 */
+    color: var(--color-text); /* 기본 검정색 */
+    word-break: break-word;   /* 긴 단어 자동 줄바꿈 */
+    min-height: 200px;        /* 내용이 적어도 최소 높이 유지 */
+    padding: 10px 0;
+}
+
+/* 본문 내 이미지나 테이블이 있을 경우 대비 */
+.content-body img {
+    max-width: 100%;          /* 컨테이너 밖으로 나가지 않게 */
+    height: auto;
+    border-radius: var(--radius);
+    margin: 20px 0;
+}
+
+/* 텍스트 구분선 */
+.divider {
+    margin: 0 10px;
+    color: #e2e8f0;
+}
+
+/* 첨부파일 영역 상단 여백 */
+.attachments {
+    border-top: 1px dashed var(--border-color); /* 본문과 구분되는 점선 */
+    padding-top: var(--spacing-lg);
+}
+
+.attachment-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.attachment-item {
+    display: flex;
+    flex-direction: column;
+    max-width: 300px;
+}
+
+.img-preview {
+    width: 100%;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+    object-fit: cover;
+}
+
+/* =========================
+   3. STEP-BY-STEP UI (예약/시설 신청)
+========================= */
 .step-section {
     display: none;
     animation: fadeIn 0.4s ease-out;
 }
-.step-section.active { display: block; }
+.step-section.active { display: block; animation: fadeIn 0.5s ease-in-out; }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* STEP 1: 시설 리스트 */
-.facility-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
+/* 시설 아이템 */
 .facility-item {
-    padding: 20px;
+    padding: 30px 20px;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
+    border-radius: var(--radius);
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
+    margin-bottom: 10px;
 }
-.facility-item:hover {
-    background-color: var(--color-bg-white-btn);
+.facility-item:hover, .facility-item.active {
     border-color: var(--color-main);
-    color: var(--color-main);
+    background-color: rgba(3, 33, 84, 0.02);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* STEP 3: 시간 요약 박스 (n시 -> n시) */
-.time-display-box {
-    background-color: var(--color-modal-line);
-    padding: 24px;
-    border-radius: 4px;
-    text-align: center;
-    margin-bottom: 25px;
-}
-.time-range-text {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--color-text-muted);
-}
-
-/* 타임 칩 그리드 */
+/* 타임 칩 그리드 (4열 배치) */
 .time-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4열 배치 */
-    gap: 8px;
-    margin-top: 10px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    margin-top: 15px;
 }
 .time-radio { display: none; }
 .time-chip {
     padding: 12px 0;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
+    border-radius: var(--radius);
     text-align: center;
-    font-size: 14px;
+    font-size: var(--font-small);
     font-weight: 600;
     cursor: pointer;
     background: white;
@@ -138,67 +165,131 @@ body {
     border-color: var(--color-main);
 }
 
-/* ------------------------------------------- */
-/* 버튼 정책 (곡률 4px, 패딩 준수) */
-/* ------------------------------------------- */
-
-.btn-group {
+.bg-light {
+    background-color: #f8fafc;
+    padding: 40px;
+    border-radius: var(--radius);
     display: flex;
-    gap: 10px;
-    margin-top: 25px;
-}
-.btn {
-    flex: 1;
-    padding: 14px;
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    text-align: center;
-    transition: 0.2s;
+    justify-content: center;
 }
 
-/* 메인 버튼: 호버 시 opacity 0.88 */
-.btn-main {
-    background-color: var(--color-btn);
-    color: white;
-}
-.btn-main:hover {
-    opacity: 0.88;
-}
+/* =========================
+   4. STATUS BADGES (상태 배지 고도화)
+========================= */
 
-/* 포인트 버튼: 코랄 색상 */
-.btn-point {
-    background-color: var(--color-btn-point);
-    color: white;
-}
-.btn-point:hover {
-    background-color: var(--color-btn-point-hover);
-}
-/* 상태 배지 기본 스타일 */
-.status-badge {
-    padding: 4px 10px;
-    border-radius: 20px; /* 둥근 배지 스타일 */
-    font-size: 12px;
-    font-weight: 600;
+/* 공통 뱃지 스타일 */
+.status-badge, .badge {
     display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--radius); /* 정의된 4px 변수 활용 */
+    font-size: var(--font-small); /* 14px */
+    font-weight: 600;
+    text-align: center;
+    min-width: 65px;
+    line-height: 1.5;
+    border: none !important;
 }
 
-/* 예약 완료: 네이비 톤 투명 배경 */
-.status-active {
-    background-color: rgba(26, 35, 126, 0.1);
-    color: var(--color-main);
+/* 1. 예약완료 / 승인완료 (CONFIRMED) - 파스텔 블루 */
+.status-active, .status-complete, .badge-confirmed {
+    background-color: #AEC6CF !important;
+    color: #334155 !important; /* 가독성을 위한 진한 슬레이트 그레이 */
 }
 
-/* 취소됨: 코랄 톤 투명 배경 */
-.status-canceled {
-    background-color: rgba(255, 112, 67, 0.1);
-    color: var(--color-btn-point);
+/* 2. 승인대기 (PENDING) - 파스텔 핑크/살구 */
+.status-waiting, .status-pending, .badge-pending {
+    background-color: #FFE5E5 !important;
+    color: #FF6B6B !important;
 }
 
-/* 테이블 호버 효과 (선택사항) */
-tbody tr:hover {
-    background-color: #f9f9f9;
-    transition: background-color 0.2s;
+/* 3. 취소됨 (CANCELED) - 라이트 그레이 */
+.status-canceled, .badge-canceled {
+    background-color: #E5E4E2 !important;
+    color: #64748b !important;
+}
+
+.status-check { background-color: #FFF4E0; color: #FFAD06; }        /* 확인 */
+.status-processing { background-color: #E3F2FD; color: #2196F3; }   /* 처리중 */
+.status-finished { background-color: #E8F5E9; color: #4CAF50;}      /* 처리완료 */
+
+/* 시설/카테고리용 기본 배지 */
+.category-badge {
+    background-color: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+/* =========================
+   5. UTILS (보완)
+========================= */
+/* 입력 필드 공통 */
+.input-field, .select-field, .file-upload-wrapper {
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+.input-field:focus {
+    outline: none;
+    border-color: var(--color-main);
+    box-shadow: 0 0 0 3px rgba(3, 33, 84, 0.1);
+}
+
+.flex-end { display: flex; justify-content: flex-end; }
+.flex-center { display: flex; justify-content: center; }
+.gap-md { gap: 15px; }
+.mb-md { margin-bottom: 20px; }
+.mb-lg { margin-bottom: 30px; }
+.mb-xl { margin-bottom: 40px; }
+.mt-xl { margin-top: 50px; }
+
+
+
+/* =========================
+   6. 폼 레이아웃
+========================= */
+.write-form {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 32px;
+}
+
+.form-label {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #334155;
+}
+
+.select-field {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,..."); /
+}
+
+.textarea-field {
+    min-height: 300px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+/* 파일 업로드 관련 */
+.file-upload-wrapper {
+    padding: 15px;
+    background-color: #fcfcfc;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius);
+}
+
+.file-hint {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
 }

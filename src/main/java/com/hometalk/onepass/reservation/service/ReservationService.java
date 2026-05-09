@@ -4,6 +4,10 @@ import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.UserRepository;
 import com.hometalk.onepass.facility.entity.Facility;
 import com.hometalk.onepass.facility.repository.FacilityRepository;
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+import com.hometalk.onepass.notification.entity.NotificationType;
+import com.hometalk.onepass.notification.publisher.NotificationPublisher;
+import com.hometalk.onepass.reservation.dto.ReservationCalendarDto;
 import com.hometalk.onepass.reservation.dto.ReservationRequestDto;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.entity.Reservation;
@@ -14,7 +18,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,89 +31,160 @@ public class ReservationService {
     private final FacilityRepository facilityRepository;
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
+    private final NotificationPublisher notificationPublisher;
 
-    /**
-     * 시설 예약 등록 (DTO 기반 - String 날짜/시간 처리)
-     */
     @Transactional
-    public Long register(ReservationRequestDto dto) {
-        // 1. 시설 확인 (이름으로 찾기)
-        Facility facility = facilityRepository.findByName(dto.getFacilityName())
+    public Long register(ReservationRequestDto dto, Long loginUserId) {
+        Facility facility = facilityRepository.findById(dto.getFacilityId())
                 .orElseThrow(() -> new RuntimeException("해당 시설을 찾을 수 없습니다."));
 
-        // 2. 유저 확인 (현재는 DTO의 userId 사용, 추후 세션/Security에서 가져오도록 변경 가능)
-        User user = userRepository.findById(dto.getUserId())
+        User user = userRepository.findById(loginUserId)
                 .orElseThrow(() -> new RuntimeException("해당 회원을 찾을 수 없습니다."));
 
-        // 3. 문자열(String)을 LocalDateTime으로 변환
-        // 포맷: "2026-05-09" + " " + "19:00" -> "2026-05-09 19:00"
-        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        java.time.LocalDateTime startDateTime = java.time.LocalDateTime.parse(dto.getReservationDate() + " " + dto.getStartTime(), formatter);
-        java.time.LocalDateTime endDateTime = java.time.LocalDateTime.parse(dto.getReservationDate() + " " + dto.getEndTime(), formatter);
+        LocalDateTime start = dto.getStartTime();
+        LocalDateTime end = dto.getEndTime();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate targetDate = start.toLocalDate();
 
-        // 4. 중복 예약 체크 (유저당 1건 제한 로직 유지 시)
-        boolean existsMember = reservationRepository.existsByFacilityIdAndUserId(
-                facility.getId(),
-                user.getId());
-
-        if (existsMember) {
-            throw new RuntimeException("이미 이 시설에 대한 예약 내역이 존재합니다.");
+        if (start.isBefore(now)) {
+            throw new RuntimeException("현재 시간보다 이전 시간으로는 예약할 수 없습니다.");
         }
 
-        // 5. 시간 중복 체크
-        ReservationTime reservationTime = new ReservationTime(startDateTime, endDateTime);
-        boolean existsTime = reservationRepository.existsByFacilityIdAndReservationTime(
-                facility.getId(),
-                reservationTime);
-
-        if (existsTime) {
-            throw new RuntimeException("해당 시간에 다른 예약자가 있습니다.");
+        if (targetDate.isAfter(now.toLocalDate().plusWeeks(1))) {
+            throw new RuntimeException("예약은 최대 1주일 이내만 가능합니다.");
         }
 
-        // 6. 엔티티 생성 및 저장
+        LocalDateTime startOfDay = targetDate.atStartOfDay();
+        LocalDateTime endOfDay = targetDate.atTime(23, 59, 59);
+
+        boolean alreadyReservedToday = reservationRepository.existsByUserIdAndOverlapTime(
+                user.getId(), facility.getId(), startOfDay, endOfDay
+        );
+
+        if (alreadyReservedToday) {
+            throw new RuntimeException("해당 시설은 하루에 한 번만 예약 가능합니다.");
+        }
+
+        List<Reservation> conflicting = reservationRepository.findConflictingReservations(
+                facility.getId(), start, end
+        );
+
+        if (!conflicting.isEmpty()) {
+            throw new RuntimeException("해당 시간대에 이미 예약 또는 승인대기 예약이 존재합니다.");
+        }
+
         Reservation reservation = Reservation.builder()
                 .facility(facility)
                 .user(user)
-                .reservationTime(reservationTime)
-                .status(ReservationStatus.CONFIRMED)
+                .reservationTime(new ReservationTime(start, end))
+                .status(ReservationStatus.PENDING)
                 .build();
 
         return reservationRepository.save(reservation).getId();
     }
 
-    /**
-     * 특정 예약 조회 (엔티티 반환)
-     */
-    public Reservation findOne(Long id) {
-        return reservationRepository.findById(id)
+    public ReservationResponseDto findOne(Long id, Long currentUserId, User.UserRole currentUserRole) {
+        Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("해당 예약을 찾을 수 없습니다."));
+
+        if (!reservation.getUser().getId().equals(currentUserId)
+                && !currentUserRole.equals(User.UserRole.ADMIN)) {
+            throw new RuntimeException("조회 권한이 없습니다.");
+        }
+
+        return ReservationResponseDto.fromEntity(reservation);
     }
 
-    /**
-     * 모든 예약 조회 (DTO 리스트 반환)
-     */
     public List<ReservationResponseDto> findAll() {
-        return reservationRepository.findAll().stream()
+        return reservationRepository.findAll()
+                .stream()
                 .map(ReservationResponseDto::fromEntity)
-                .toList();
+                .collect(Collectors.toList());
     }
 
-    /**
-     * 예약 취소
-     */
     @Transactional
-    public void cancel(Long id) {
-        Reservation reservation = findOne(id);
-        reservation.cancel(); // Reservation 엔티티에 cancel() 메서드가 있어야 합니다.
+    public void approve(Long id) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 예약을 찾을 수 없습니다."));
+
+        if (reservation.getStatus() == ReservationStatus.CONFIRMED) {
+            throw new RuntimeException("이미 승인된 예약입니다.");
+        }
+
+        if (reservation.getStatus() == ReservationStatus.CANCELED) {
+            throw new RuntimeException("취소된 예약은 승인할 수 없습니다.");
+        }
+
+        reservation.approve();
+        reservationRepository.save(reservation);
+
+        if (reservation.getUser() != null) {
+            notificationPublisher.publish(
+                    reservation.getUser().getId(),
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.RESERVATION_CONFIRMED,
+                    "시설 예약 확정",
+                    reservation.getFacility().getName() + " 예약이 확정되었습니다.",
+                    "/reservation/" + reservation.getId(),
+                    reservation.getId()
+            );
+        }
     }
 
-    /**
-     * 관리자용: 모든 예약 내역을 최신순으로 상세 조회
-     */
+    @Transactional
+    public void cancel(Long reservationId, Long currentUserId, User.UserRole currentUserRole) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new RuntimeException("해당 예약을 찾을 수 없습니다."));
+
+        if (reservation.getStatus() == ReservationStatus.CANCELED) {
+            throw new RuntimeException("이미 취소된 예약입니다.");
+        }
+
+        if (!reservation.getUser().getId().equals(currentUserId)
+                && !currentUserRole.equals(User.UserRole.ADMIN)) {
+            throw new RuntimeException("취소 권한이 없습니다.");
+        }
+
+        reservation.cancel();
+        reservationRepository.save(reservation);
+    }
+
     public List<ReservationResponseDto> findAllWithDetails() {
-        // Repository에서 작성한 최신순 조회 메서드를 호출합니다.
-        return reservationRepository.findAllByOrderByIdDesc().stream()
+        return reservationRepository.findAll()
+                .stream()
+                .sorted((r1, r2) -> r2.getId().compareTo(r1.getId()))
                 .map(ReservationResponseDto::fromEntity)
-                .toList();
+                .collect(Collectors.toList());
+    }
+
+    public List<ReservationCalendarDto> getCalendar(int year, int month) {
+        LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
+        LocalDateTime end = start.plusMonths(1).minusSeconds(1);
+
+        return reservationRepository.findByMonthRange(start, end)
+                .stream()
+                .map(ReservationCalendarDto::from)
+                .collect(Collectors.toList());
+    }
+
+    public List<ReservationResponseDto> findByUserId(Long userId) {
+        return reservationRepository.findByUserIdOrderByIdDesc(userId)
+                .stream()
+                .map(ReservationResponseDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<ReservationResponseDto> findMyRecent(Long userId) {
+        return reservationRepository.findTop5ByUser_IdOrderByIdDesc(userId)
+                .stream()
+                .map(ReservationResponseDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<ReservationResponseDto> findAdminRecent() {
+        return reservationRepository.findTop10ByOrderByIdDesc()
+                .stream()
+                .map(ReservationResponseDto::fromEntity)
+                .collect(Collectors.toList());
     }
 }

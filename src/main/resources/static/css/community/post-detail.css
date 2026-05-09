@@ -1,23 +1,15 @@
+
+
 /* 1. 헤더 내부 디테일 (제목, 카테고리 태그) */
 .post-header {
+    position: relative;
     margin-bottom: 25px;
 }
 
-.category-tag {
-    display: inline-block;
-    background-color: var(--soft-mint);
-    color: var(--main-navy);
-    padding: 5px 14px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 15px;
-}
-
 .post-title {
-    font-size: 2.2rem;
+    font-size: 24px;
     color: var(--main-navy);
-    font-weight: 800;
+    font-weight: 600;
     margin: 10px 0 20px 0;
     letter-spacing: -0.5px;
     line-height: 1.3;
@@ -29,7 +21,7 @@
     align-items: center;
     gap: 20px;
     color: #64748b;
-    font-size: 0.95rem;
+    font-size: 13px;
 }
 
 .post-meta span:not(:last-child)::after {
@@ -37,56 +29,87 @@
     margin-left: 20px;
     color: #cbd5e1;
 }
+.post-meta span:last-child::after {
+    display: none;
+}
 
 /* 3. 본문 내용 영역 */
-.page-body {
-    padding: 40px 0;
+.post-content {
+    padding: 40px 0 60px 15px;
     min-height: 400px;
-    line-height: 1.8;
+    line-height: 1.6;
     color: #334155;
-    font-size: 1.1rem;
+    font-size: 14px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+.post-content > div {
+    min-height: auto;
+    padding-bottom: 0;
 }
 
-.page-body p { margin-bottom: 1.5rem; }
-
-/* 4. 버튼 색상 및 호버 (배치 레이아웃은 common에 있음) */
-.btn {
-    display: inline-block;
-    padding: 12px 24px;
-    background-color: #f8fafc;
-    color: #64748b;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: 0.2s;
-}
-.btn:hover {
-    background-color: #f1f5f9;
-    color: #334155;
+.post-content > *:last-child {
+    margin-bottom: 0;
 }
 
-.btn-edit {
-    background-color: var(--main-navy);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
+.post-content img {
+    max-width: 100%;
+    height: auto;
 }
 
-.btn-delete {
-    background-color: var(--point-coral);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
+.post-content + hr {
+    border: 0;
+    margin-bottom: 0;
 }
 
-.btn-edit:hover, .btn-delete:hover {
-    opacity: 0.85;
+.tag-filter-wrapper {
+    margin-top: 20px !important;
+    padding-bottom: 20px;
+}
+
+/* 본문 바로 다음에 '태그'가 올 경우 */
+.post-content + .tag-filter-wrapper {
+    margin-top: 20px !important; /* 본문 하단 30px + 마진 20px = 총 50px */
+}
+
+/* 본문 다음에 바로 'hr(구분선)'이 올 경우 (태그가 없을 때) */
+.post-content + hr {
+    margin-top: 30px !important;
+    margin-bottom: 30px;
+    border: 0;
+    border-top: 1px solid #eee;
+}
+
+/* 태그 다음에 'hr'이 올 경우 */
+.tag-filter-wrapper + hr {
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+/* 목록 버튼 (왼쪽 정렬) */
+.page-footer .btn-outline {
+    float: left;
+}
+
+/* 수정/삭제 버튼 그룹 (오른쪽 정렬) */
+.edit-delete-group {
+    float: right;
+    display: flex; /* 버튼끼리만 가로 정렬 */
+    gap: 8px;
+    align-items: center;
+}
+
+/* float 해제 (푸터 높이 유지) */
+.page-footer::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+#deleteForm {
+    margin: 0;
+    display: flex;
+    align-items: center;
 }
 
 /* 5. 댓글 영역 전용 스타일 */
@@ -97,10 +120,106 @@
     border-radius: 12px;
 }
 
-/* 6. 기타 도구 (관리자 핀 등) */
-.admin-tools { display: inline-block; margin-left: 10px; }
-.btn-pin {
-    padding: 4px 10px; border-radius: 4px; border: 1px solid #e2e8f0;
-    background: #fff; cursor: pointer;
+/* 6. 관리자 도구 (상단 고정 및 숨김) */
+.admin-tools {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    gap: 8px;
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
 }
-.btn-pin.active { background: var(--soft-mint); border-color: var(--soft-mint); }
+
+/* 관리자 공통 버튼 스타일 */
+.admin-tools button {
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background: white;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+
+/* 핀 활성화 상태 */
+.btn-pin.active {
+    background-color: var(--point-coral) !important;
+    color: white !important;
+    border-color: var(--point-coral) !important;
+}
+
+/* 숨김 버튼 호버: 삭제와 비슷한 느낌으로 */
+.btn-hide:hover {
+    background-color: #fff1f2;
+    color: #e11d48;
+    border-color: #fda4af;
+}
+
+.admin-tools button:hover:not(.active) {
+    border-color: var(--main-navy);
+    color: var(--main-navy);
+}
+
+/* 작성자 전용 도구 */
+/*.writer-only-tools {
+    display: inline-flex;    *//* 내부 요소들을 가로로 정렬 *//*
+    align-items: center;     *//* 세로 중앙 정렬 *//*
+    vertical-align: middle;  *//* 주변 텍스트(조회수 등)와 높이 맞춤 *//*
+    margin-left: 8px;       *//* 왼쪽 '조회수' 텍스트와의 간격 *//*
+    padding-left: 8px;      *//* 구분선과 내부 요소 사이 간격 *//*
+    border-left: 1px solid #e5e7eb; *//* 조회수와 구분하기 위한 얇은 세로선 *//*
+    height: 1.2em;           *//* 주변 텍스트 높이에 맞춤 *//*
+}*/
+
+/* 상태 변경 셀렉트 박스 */
+.status-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    padding: 4px 28px 4px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    background-color: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+
+    /* 커스텀 화살표 아이콘 (SVG) */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 14px;
+}
+
+/* 호버 효과 */
+.status-select:hover {
+    border-color: #9ca3af;
+    background-color: #f9fafb;
+}
+
+/* 포커스 효과 */
+.status-select:focus {
+    border-color: #4A69BD; /* 프로젝트 메인 컬러로 변경 가능 */
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
+}
+
+/* 상태별 색상 강조 */
+.status-select option[value="COMPLETED"] {
+    color: #999;
+}
+.status-select option[value="RESERVED"] {
+    color: #E67E22;
+}

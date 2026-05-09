@@ -1,37 +1,24 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>방문 차량 예약</title>
-  <meta name="_csrf" th:content="${_csrf.token}">
-  <meta name="_csrf_header" th:content="${_csrf.headerName}">
-  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
-  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
-</head>
+<head th:replace="~{fragments/head :: head('방문 차량 예약')}"></head>
+<link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+<link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
 <body>
 
 <div class="main-layout" style="display: flex; min-height: 100vh;">
-
-  <!-- 1. 왼쪽 사이드바 -->
   <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
-  <!-- 2. 오른쪽 영역 (헤더 + 본문) -->
   <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
 
-    <!-- 상단 헤더 -->
     <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'parking', 'reservationRegister', 'reservationRegisterForm'} })}"></div>
 
-    <!-- 상단 메뉴 -->
     <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
 
-    <!-- 메인 콘텐츠 -->
     <main class="content" style="flex: 1;">
       <div class="container">
 
         <h2 class="page-title" th:text="${reservation != null} ? '방문 차량 예약 수정' : '방문 차량 예약'"></h2>
 
-        <!-- 차량 번호 -->
         <div class="form-group">
           <label for="vehicleNumber">차량 번호</label>
           <input type="text" id="vehicleNumber" name="vehicleNumber"
@@ -40,7 +27,6 @@
           <span class="error-msg" id="vehicleNumberError"></span>
         </div>
 
-        <!-- 방문 목적 -->
         <div class="form-group">
           <label for="purpose">방문 목적</label>
           <input type="text" id="purpose" name="purpose"
@@ -49,7 +35,6 @@
           <span class="error-msg" id="purposeError"></span>
         </div>
 
-        <!-- 방문 예정 시각 -->
         <div class="form-group">
           <label>방문 시각</label>
           <div class="datetime-group">
@@ -87,7 +72,6 @@
           <span class="error-msg" id="datetimeError"></span>
         </div>
 
-        <!-- 버튼 -->
         <div class="form-actions">
           <button type="button"
                   th:onclick="'location.href=\'' + @{/parking/visit} + '\''">취소</button>
@@ -99,7 +83,6 @@
       </div>
     </main>
 
-    <!-- 하단 푸터 삽입 -->
     <footer th:replace="~{fragments/footer :: footer}"></footer>
 
   </div>
@@ -111,7 +94,6 @@
   const contextPath = /*[[@{/}]]*/ '/';
   const vehicleNumberRegex = /^\d{2,3}[가-힣]\d{4}$/;
 
-  const householdId = 1;
   const reservationId = [[${reservation != null ? reservation.reservationId : null}]];
   const isUpdate = reservationId !== null;
 
@@ -181,7 +163,7 @@
 
       const url = isUpdate
               ? `${contextPath}parking/visit/update/${reservationId}`
-              : `${contextPath}parking/visit/register/${householdId}`;
+              : `${contextPath}parking/visit/register`;
 
       fetch(url, {
           method: 'POST',

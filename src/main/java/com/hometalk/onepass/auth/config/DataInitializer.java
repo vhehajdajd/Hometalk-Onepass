@@ -44,7 +44,7 @@ public class DataInitializer implements CommandLineRunner {
                     "112233", "홈톡아파트", "103동", "909호",
                     User.UserRole.MEMBER, User.UserStatus.PENDING);
 
-            log.info("더미 데이터 3세트 저장 완료!");
+            log.info("더미 데이터 3세트 저장 완료");
         }
     }
 

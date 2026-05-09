@@ -1,16 +1,25 @@
 package com.hometalk.onepass.complaint.controller;
 
+import com.hometalk.onepass.complaint.config.FileProperties;
 import com.hometalk.onepass.complaint.dto.ComplaintDto;
-import com.hometalk.onepass.complaint.entity.Complaint;
 import com.hometalk.onepass.complaint.service.ComplaintService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriUtils;
 
 import java.io.IOException;
@@ -19,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,83 +36,102 @@ import java.util.List;
 public class ComplaintController {
 
     private final ComplaintService complaintService;
+    private final FileProperties fileProperties;
 
-    /**
-     * 민원 등록 (글 + 파일 통합)
-     */
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    // 등록
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Long register(
-            @RequestPart("dto") ComplaintDto complaintDto,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) throws IOException {
-        return complaintService.saveWithFiles(complaintDto, files);
+            @ModelAttribute ComplaintDto complaintDto,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            Authentication authentication) throws IOException {
+
+        return complaintService.saveWithFiles(complaintDto, files, authentication);
     }
 
-    /**
-     * 전체 민원 목록 조회
-     */
-    @GetMapping
-    public List<ComplaintDto> list() {
-        return complaintService.findAll();
-    }
-
-    /**
-     * 내 민원 목록 조회 (지현님이 말씀하신 기능)
-     */
-    @GetMapping("/my/{userId}")
-    public List<ComplaintDto> myLimitList(@PathVariable("userId") Long userId) {
-        return complaintService.findByUserId(userId);
-    }
-
-    /**
-     * 상세 조회
-     */
+    // 상세 조회
     @GetMapping("/{id}")
-    public ComplaintDto detail(@PathVariable("id") Long id) {
-        Complaint complaint = complaintService.findOne(id);
-        return ComplaintDto.fromEntity(complaint);
+    public ComplaintDto read(@PathVariable Long id, Authentication authentication) {
+        return complaintService.getComplaintDetail(id, authentication);
     }
 
-    /**
-     * 삭제
-     */
+    @GetMapping
+    public Page<ComplaintDto> list(
+            Authentication authentication,
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Long userId = null;
+        boolean isAdmin = false;
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            userId = complaintService.getLoginUserId(authentication);
+            isAdmin = complaintService.isAdmin(authentication);
+        }
+
+        return complaintService.findAll(userId, isAdmin, pageable);
+    }
+
+    // 삭제
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable("id") Long id) {
-        complaintService.delete(id);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id, Authentication authentication) {
+        complaintService.delete(id, authentication);
     }
 
-    /**
-     * 첨부파일 다운로드
-     */
-    @GetMapping("/download")
-    public ResponseEntity<Resource> downloadFile(@RequestParam String fileName, @RequestParam String originName) throws IOException {
-        Path path = Paths.get("C:/onepass/complaint_uploads/" + fileName);
+    // 파일
+    @GetMapping("/file/{type}") // type: download or display
+    public ResponseEntity<Resource> handleFile(
+            @PathVariable String type,
+            @RequestParam String fileName,
+            @RequestParam(required = false) String originName) throws IOException {
+
+        Path path = validateAndGetPath(fileName);
         Resource resource = new InputStreamResource(Files.newInputStream(path));
 
-        String encodedName = UriUtils.encode(originName, StandardCharsets.UTF_8);
+        HttpHeaders headers = new HttpHeaders();
+        if ("download".equals(type)) {
+            String encodedName = UriUtils.encode(originName, StandardCharsets.UTF_8);
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedName + "\"");
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        } else {
+            String contentType = Files.probeContentType(path);
+            headers.setContentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"));
+        }
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedName + "\"")
-                .body(resource);
+        return ResponseEntity.ok().headers(headers).body(resource);
     }
 
-    /**
-     * 이미지 미리보기용 출력
-     */
-    @GetMapping("/display")
-    public ResponseEntity<Resource> display(@RequestParam String fileName) throws IOException {
-        Path path = Paths.get("C:/onepass/complaint_uploads/" + fileName);
-        Resource resource = new InputStreamResource(Files.newInputStream(path));
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG) // 이미지 형식에 따라 조정 가능
-                .body(resource);
+    // 경로 조작 공격(Path Traversal) 방지 공통 로직
+    private Path validateAndGetPath(String fileName) {
+        Path basePath = Paths.get(fileProperties.getPath()).toAbsolutePath().normalize();
+        Path path = basePath.resolve(fileName).normalize();
+        if (!path.startsWith(basePath) || !Files.exists(path)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 파일 접근입니다.");
+        }
+        return path;
     }
 
+
+    // 관리자
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/respond")
-    public ResponseEntity<String> respond(@PathVariable("id") Long id, @RequestBody String respond) {
-        complaintService.respond(id, respond);
-        return ResponseEntity.ok("답변 등록 완료");
+    public void respond( // ResponseEntity 대신 void 혹은 업데이트된 DTO 반환
+                         @PathVariable Long id,
+                         @RequestBody Map<String, String> body,
+                         Authentication authentication) {
+
+        String answer = body.get("answer");
+        if (answer == null || answer.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "답변 내용을 입력해주세요.");
+        }
+
+        complaintService.respond(id, answer, authentication);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/complete")
+    public void complete(@PathVariable Long id, Authentication authentication) {
+        complaintService.complete(id, authentication);
+    }
 }

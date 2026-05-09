@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,9 +16,18 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.util.List;
 
+
 @Slf4j
 @RestControllerAdvice // @ControllerAdvice + @ResponseBody. 모든 컨트롤러에 적용되는 전역 예외 핸들러.
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException e) {
+        log.warn("[AccessDenied] {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(ErrorCode.FORBIDDEN));
+    }
+
     // ── 1. @Valid 검증 실패 (RequestBody) ─────────────────────────────────────────
     /*
      * @RequestBody에 @Valid를 붙였을 때 검증 실패 시 스프링이 자동으로 던진다.
@@ -125,6 +135,14 @@ public class GlobalExceptionHandler {
      * 예상하지 못한 오류이므로 error 레벨로 전체를 기록한다.
      * 클라이언트에는 내부 구현이 드러나지 않도록 최소한의 메시지만 반환한다.
      */
+
+    // ✅ 추가 — SSE 연결 끊김 예외 무시 (handleException보다 위에 위치)
+    @ExceptionHandler(org.springframework.web.context.request.async.AsyncRequestNotUsableException.class)
+    public void handleAsyncRequestNotUsable(
+            org.springframework.web.context.request.async.AsyncRequestNotUsableException e) {
+        // SSE 연결 끊김은 정상 동작 — 무시
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
         log.error("[UnexpectedException]", e);

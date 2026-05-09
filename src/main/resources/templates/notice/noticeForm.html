@@ -20,18 +20,34 @@
 
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='notice')}"></div>
 
-    <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
+    <div class="main-wrapper">
 
-        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=#{'notice'})}"></div>
+        <!-- 상단 헤더 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='notice')}"></div>
+
+        <!-- 카테고리바 -->
+        <div th:replace="~{fragments/headerCategoryMenu :: notice}"></div>
 
         <div class="container">
             <h2>공지 작성</h2>
 
+            <!-- ── 임시저장 알림 ──────────────────────────────────────────── -->
+            <div th:if="${param.saved}" style="background:#D1E8E4; color:#155724; padding:10px 16px; border-radius:8px; margin-bottom:16px; font-size:13px;">
+                임시저장 되었습니다!
+            </div>
+
+            <!-- ── 임시저장 버튼 ──────────────────────────────────────────── -->
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:16px;">
+                <button type="button" class="btn-draft-list" onclick="openDraftModal()">임시저장 목록</button>
+                <button type="button" class="btn-draft" onclick="saveDraft()">임시저장</button>
+            </div>
+
+            <!-- ── 공지 작성 폼 ───────────────────────────────────────────── -->
             <form th:action="@{/notice/write}" method="post" enctype="multipart/form-data" id="noticeForm">
 
                 <div class="form-group">
                     <label for="badge">분류</label>
-                    <select id="badge" name="badge" required>
+                    <select id="badge" name="badge">
                         <option value="">분류 선택</option>
                         <option value="FACILITY">시설</option>
                         <option value="SAFETY">안전</option>
@@ -41,16 +57,16 @@
 
                 <div class="form-group">
                     <label for="title">제목</label>
-                    <input type="text" id="title" name="title" placeholder="제목을 입력하세요 (최대 100자)" maxlength="100" required>
+                    <input type="text" id="title" name="title" placeholder="제목을 입력하세요" maxlength="100">
                     <small><span id="charCount">0</span>/100</small>
                 </div>
 
+                <!-- ── Quill 에디터 + 일정 등록 모달 ────────────────────── -->
                 <div class="form-group notice-content-wrap">
                     <label>내용</label>
                     <input type="hidden" name="content" id="content">
                     <div id="editor" style="height: 300px;"></div>
 
-                    <!-- 일정 등록 모달 -->
                     <div class="schedule-modal" id="scheduleModal">
                         <div class="modal-header">
                             <span>일정 등록</span>
@@ -61,6 +77,20 @@
                                 <tr>
                                     <td>일정명</td>
                                     <td><input type="text" name="scheduleName" placeholder="일정명을 입력하세요."></td>
+                                </tr>
+                                <tr>
+                                    <td>반복</td>
+                                    <td>
+                                        <select name="scheduleRepeatType" id="scheduleRepeatType" onchange="toggleRepeatEndDate()">
+                                            <option value="NONE">반복 없음</option>
+                                            <option value="WEEKLY">매주</option>
+                                            <option value="MONTHLY">매월</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr id="repeatEndDateRow" style="display:none;">
+                                    <td>반복 종료일</td>
+                                    <td><input type="date" name="scheduleRepeatEndDate" id="scheduleRepeatEndDate"></td>
                                 </tr>
                                 <tr>
                                     <td>시작</td>
@@ -116,13 +146,22 @@
                     </div>
                 </div>
 
-                <!-- 일정 hidden inputs -->
+                <!-- ── hidden 필드 ────────────────────────────────────────── -->
                 <input type="hidden" id="scheduleStartAt" name="scheduleStartAt">
                 <input type="hidden" id="scheduleEndAt" name="scheduleEndAt">
+                <input type="hidden" id="scheduleRepeatEndAt" name="scheduleRepeatEndAt">
+                <input type="hidden" id="statusInput" name="status" value="PUBLISHED">
 
+                <!-- ── 첨부파일 ───────────────────────────────────────────── -->
+                <div class="file-section">
+                    <div class="file-section-title">📎 첨부파일</div>
+                    <div id="fileNames" class="file-list"></div>
+                </div>
+
+                <!-- ── 하단 버튼 그룹 ─────────────────────────────────────── -->
                 <div class="button-group">
                     <div class="button-group-left">
-                        <input type="file" id="file" name="file">
+                        <input type="file" id="file" name="files" multiple>
                         <label for="file" class="btn btn-file">파일 올리기</label>
                     </div>
                     <div class="button-group-right">
@@ -139,6 +178,21 @@
                 </div>
 
             </form>
+
+            <!-- ── 임시저장 목록 모달 ─────────────────────────────────────── -->
+            <div class="draft-modal-overlay" id="draftModalOverlay">
+                <div class="draft-modal-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h3 style="font-size:16px; font-weight:600; color:var(--color-main);">임시저장 목록</h3>
+                        <button type="button" onclick="closeDraftModal()"
+                                style="background:none; border:none; font-size:18px; cursor:pointer; color:#aaa;">✕</button>
+                    </div>
+                    <div id="draftList">
+                        <div style="text-align:center; color:#aaa; padding:20px;">불러오는 중...</div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <footer th:replace="~{fragments/footer :: footer}"></footer>
@@ -148,9 +202,11 @@
 
 <script th:inline="javascript">
     var imageUploadUrl = /*[[@{/notice/image-upload}]]*/ '/notice/image-upload';
+    var contextPath = /*[[@{/}]]*/ '/';
 </script>
 
 <script>
+    // ── Quill 에디터 초기화 ───────────────────────────────────────────────────
     var quill = new Quill('#editor', {
         theme: 'snow',
         modules: {
@@ -172,22 +228,26 @@
                             var file = input.files[0];
                             var formData = new FormData();
                             formData.append('file', file);
-
                             var csrfToken = document.querySelector('meta[name="_csrf"]').content;
                             var csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
-
                             var headers = {};
                             headers[csrfHeader] = csrfToken;
-
                             fetch(imageUploadUrl, {
                                 method: 'POST',
                                 headers: headers,
                                 body: formData
                             })
-                            .then(res => res.json())
+                            .then(res => {
+                                if (!res.ok) throw new Error('업로드 실패');
+                                return res.json();
+                            })
                             .then(data => {
                                 var range = quill.getSelection();
-                                quill.insertEmbed(range.index, 'image', data.url);
+                                var index = range ? range.index : quill.getLength();
+                                quill.insertEmbed(index, 'image', data.url);
+                            })
+                            .catch(err => {
+                                alert('이미지 업로드에 실패했습니다.');
                             });
                         };
                     }
@@ -196,27 +256,138 @@
         }
     });
 
+    // ── 반복 종료일 표시/숨김 ────────────────────────────────────────────────
+    function toggleRepeatEndDate() {
+        var repeatType = document.getElementById('scheduleRepeatType').value;
+        var row = document.getElementById('repeatEndDateRow');
+        row.style.display = repeatType === 'NONE' ? 'none' : '';
+    }
+
+    // ── 제목 글자수 카운트 ───────────────────────────────────────────────────
     document.getElementById('title').addEventListener('input', function() {
         document.getElementById('charCount').innerText = this.value.length;
     });
 
-    function registerSchedule() {
+    // ── 첨부파일 목록 표시 ───────────────────────────────────────────────────
+    document.getElementById('file').addEventListener('change', function() {
+        var container = document.getElementById('fileNames');
+        container.innerHTML = '';
+        Array.from(this.files).forEach(function(f) {
+            var div = document.createElement('div');
+            div.className = 'file-item';
+            div.textContent = '📎 ' + f.name;
+            container.appendChild(div);
+        });
+    });
+
+    // ── hidden 입력값 수집 ───────────────────────────────────────────────────
+    function collectScheduleData() {
+        document.getElementById('scheduleStartAt').value = '';
+        document.getElementById('scheduleEndAt').value = '';
+        document.getElementById('scheduleRepeatEndAt').value = '';
+
         var startDate   = document.querySelector('[name="startDate"]').value;
-        var endDate     = document.querySelector('[name="endDate"]').value;
         var startHour   = document.querySelector('[name="startHour"]').value;
         var startMinute = document.querySelector('[name="startMinute"]').value;
+        var endDate     = document.querySelector('[name="endDate"]').value;
         var endHour     = document.querySelector('[name="endHour"]').value;
         var endMinute   = document.querySelector('[name="endMinute"]').value;
+        var repeatEndDate = document.getElementById('scheduleRepeatEndDate').value;
+
+        if (startDate) {
+            document.getElementById('scheduleStartAt').value = startDate + 'T' + startHour + ':' + startMinute + ':00';
+        }
+        if (endDate) {
+            document.getElementById('scheduleEndAt').value = endDate + 'T' + endHour + ':' + endMinute + ':00';
+        }
+        if (repeatEndDate) {
+            document.getElementById('scheduleRepeatEndAt').value = repeatEndDate + 'T23:59:59';
+        }
+    }
+
+    // ── 임시저장 ─────────────────────────────────────────────────────────────
+    function saveDraft() {
+        document.getElementById('content').value = quill.root.innerHTML;
+        document.getElementById('statusInput').value = 'DRAFT';
+        collectScheduleData();
+        document.getElementById('noticeForm').submit();
+    }
+
+    // ── 임시저장 모달 열기/닫기 ──────────────────────────────────────────────
+    function openDraftModal() {
+        document.getElementById('draftModalOverlay').classList.add('open');
+        loadDrafts();
+    }
+
+    function closeDraftModal() {
+        document.getElementById('draftModalOverlay').classList.remove('open');
+    }
+
+    // ── 임시저장 목록 불러오기 ───────────────────────────────────────────────
+    function loadDrafts() {
+        fetch(contextPath + 'notice/api/drafts')
+            .then(res => res.json())
+            .then(function(data) {
+                var container = document.getElementById('draftList');
+                if (data.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; color:#aaa; padding:20px;">임시저장된 공지가 없습니다.</div>';
+                    return;
+                }
+                container.innerHTML = '';
+                data.forEach(function(draft) {
+                    var div = document.createElement('div');
+                    div.className = 'draft-item';
+                    var title = draft.title && draft.title.trim() !== '' ? draft.title : '(제목 없음)';
+                    var date = typeof draft.createdAt === 'string' ? draft.createdAt.substring(0, 10) : '';
+                    div.innerHTML =
+                        '<div class="draft-item-title" style="cursor:pointer;">' + title + '</div>' +
+                        '<div style="display:flex; align-items:center; gap:8px;">' +
+                        '<div class="draft-item-date">' + date + '</div>' +
+                        '<button class="draft-delete-btn" data-id="' + draft.id + '" style="background:none; border:none; color:#888; padding:2px 8px; font-size:11px; cursor:pointer;">삭제</button>' +
+                        '</div>';
+
+                    div.querySelector('.draft-item-title').addEventListener('click', function() {
+                        window.location.href = contextPath + 'notice/' + draft.id + '/edit';
+                    });
+
+                    div.querySelector('.draft-delete-btn').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (!confirm('임시저장을 삭제하시겠습니까?')) return;
+                        var csrfToken = document.querySelector('meta[name="_csrf"]').content;
+                        var csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+                        var headers = {};
+                        headers[csrfHeader] = csrfToken;
+                        fetch(contextPath + 'notice/' + draft.id + '/delete', {
+                            method: 'POST',
+                            headers: headers
+                        }).then(function(res) {
+                            if (res.ok) loadDrafts();
+                            else alert('삭제에 실패했습니다.');
+                        }).catch(() => alert('삭제 중 오류가 발생했습니다.'));
+                    });
+
+                    container.appendChild(div);
+                });
+                updateDraftCount();
+            });
+    }
+
+    document.getElementById('draftModalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeDraftModal();
+    });
+
+    // ── 일정 등록 유효성 검사 ────────────────────────────────────────────────
+    function registerSchedule() {
+        var startDate    = document.querySelector('[name="startDate"]').value;
+        var endDate      = document.querySelector('[name="endDate"]').value;
+        var startHour    = document.querySelector('[name="startHour"]').value;
+        var startMinute  = document.querySelector('[name="startMinute"]').value;
+        var endHour      = document.querySelector('[name="endHour"]').value;
+        var endMinute    = document.querySelector('[name="endMinute"]').value;
         var scheduleName = document.querySelector('[name="scheduleName"]').value.trim();
 
-        if (!scheduleName) {
-            alert('일정명을 입력해주세요.');
-            return;
-        }
-        if (!startDate) {
-            alert('시작 날짜를 입력해주세요.');
-            return;
-        }
+        if (!scheduleName) { alert('일정명을 입력해주세요.'); return; }
+        if (!startDate) { alert('시작 날짜를 입력해주세요.'); return; }
 
         if (endDate) {
             var startAt = new Date(startDate + 'T' + startHour + ':' + startMinute + ':00');
@@ -226,37 +397,55 @@
                 return;
             }
         }
-
         document.getElementById('scheduleModal').classList.remove('open');
     }
 
+    // ── 폼 제출 유효성 검사 ──────────────────────────────────────────────────
     document.getElementById('noticeForm').addEventListener('submit', function(e) {
+        var statusVal = document.getElementById('statusInput').value;
         var content = quill.root.innerHTML;
-        if (content === '<p><br></p>') {
-            alert('내용을 입력해주세요.');
-            e.preventDefault();
-            return;
+
+        if (statusVal === 'PUBLISHED') {
+            if (!document.getElementById('badge').value) {
+                alert('분류를 선택해주세요.');
+                e.preventDefault();
+                return;
+            }
+            if (!document.getElementById('title').value.trim()) {
+                alert('제목을 입력해주세요.');
+                e.preventDefault();
+                return;
+            }
+            if (content === '<p><br></p>') {
+                alert('내용을 입력해주세요.');
+                e.preventDefault();
+                return;
+            }
         }
+
         document.getElementById('content').value = content;
-
-        var startDate   = document.querySelector('[name="startDate"]').value;
-        var startHour   = document.querySelector('[name="startHour"]').value;
-        var startMinute = document.querySelector('[name="startMinute"]').value;
-        var endDate     = document.querySelector('[name="endDate"]').value;
-        var endHour     = document.querySelector('[name="endHour"]').value;
-        var endMinute   = document.querySelector('[name="endMinute"]').value;
-
-        if (startDate) {
-            document.getElementById('scheduleStartAt').value = startDate + 'T' + startHour + ':' + startMinute + ':00';
-        }
-        if (endDate) {
-            document.getElementById('scheduleEndAt').value = endDate + 'T' + endHour + ':' + endMinute + ':00';
-        }
+        collectScheduleData();
     });
 
     function confirmCancel() {
         return confirm("작성 중인 내용을 중단하고 목록으로 돌아가시겠습니까?");
     }
+
+    // ── 임시저장 개수 표시 ───────────────────────────────────────────────────
+    function updateDraftCount() {
+        fetch(contextPath + 'notice/api/drafts')
+            .then(res => res.json())
+            .then(function(data) {
+                var btn = document.querySelector('.btn-draft-list');
+                if (data.length > 0) {
+                    btn.textContent = '임시저장 목록 (' + data.length + ')';
+                } else {
+                    btn.textContent = '임시저장 목록';
+                }
+            });
+    }
+
+    updateDraftCount();
 </script>
 
 </body>

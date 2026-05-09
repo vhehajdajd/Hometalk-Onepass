@@ -4,211 +4,204 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>전체 주차 기록 조회</title>
-  <style>
-    /* CSS는 나중에 추가 */
-  </style>
+  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
 </head>
 <body>
 
-<div class="container">
-  <h2 class="page-title">전체 주차 기록 조회</h2>
+<div class="main-layout">
 
-  <!-- 필터 영역 -->
-  <div class="filter-group">
+  <!-- 1. 사이드바 -->
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
-    <!-- 년/월 선택 -->
-    <div class="dropdown-wrapper">
-      <button type="button" id="yearBtn" onclick="toggleYearDropdown()">
-        <span id="selectedYear"></span> ▼
-      </button>
-      <div id="yearDropdown" style="display:none;">
-        <ul id="yearList"></ul>
+  <!-- 2. 오른쪽 영역 -->
+  <div class="main-wrapper">
+
+    <!-- 상단 헤더 -->
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='parking')}"></div>
+
+    <!-- 상단 메뉴 -->
+    <div th:replace="~{fragments/headerCategoryMenu :: parkingAdmin}"></div>
+
+    <!-- 본문 -->
+    <main class="content">
+      <div class="container">
+        <h2 class="page-title">전체 주차 기록 조회</h2>
+
+        <div class="pk-filter-group">
+          <div class="pk-dropdown-wrapper">
+            <button type="button" class="pk-dropdown-btn" onclick="toggleYearDropdown()">
+              <span id="selectedYear"></span> ▼
+            </button>
+            <div id="yearDropdown" class="pk-dropdown-menu" style="display:none;">
+              <ul id="yearList"></ul>
+            </div>
+          </div>
+
+          <div class="pk-dropdown-wrapper">
+            <button type="button" class="pk-dropdown-btn" onclick="toggleMonthDropdown()">
+              <span id="selectedMonth"></span> ▼
+            </button>
+            <div id="monthDropdown" class="pk-dropdown-menu" style="display:none;">
+              <ul id="monthList"></ul>
+            </div>
+          </div>
+
+          <div class="pk-dropdown-wrapper">
+            <button type="button" class="pk-dropdown-btn" onclick="toggleTypeDropdown()">
+              <span id="selectedType">전체</span> ▼
+            </button>
+            <div id="typeDropdown" class="pk-dropdown-menu" style="display:none;">
+              <ul>
+                <li onclick="selectType('ALL', '전체')">전체</li>
+                <li onclick="selectType('RESIDENT', '입주자')">입주자</li>
+                <li onclick="selectType('VISITOR', '방문')">방문</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="pk-search-group">
+            <input type="text" id="householdSearch" class="pk-search-input" placeholder="동/호수 검색">
+            <button type="button" class="pk-btn pk-btn-primary" onclick="loadParkingLogs()">검색</button>
+          </div>
+        </div>
+
+        <table class="park-table">
+          <thead>
+          <tr>
+            <th>차량 번호</th>
+            <th>세대</th>
+            <th>등록구분</th>
+            <th>입차시간</th>
+            <th>출차시간</th>
+            <th>주차시간</th>
+            <th>정산내역</th>
+          </tr>
+          </thead>
+          <tbody id="parkingList">
+          <tr>
+            <td colspan="7" class="pk-empty">주차 기록이 없습니다.</td>
+          </tr>
+          </tbody>
+        </table>
+
+        <ul class="pk-pagination" id="pagination"></ul>
+
       </div>
-    </div>
-
-    <div class="dropdown-wrapper">
-      <button type="button" id="monthBtn" onclick="toggleMonthDropdown()">
-        <span id="selectedMonth"></span> ▼
-      </button>
-      <div id="monthDropdown" style="display:none;">
-        <ul id="monthList"></ul>
-      </div>
-    </div>
-
-    <!-- 차량 구분 필터 -->
-    <div class="dropdown-wrapper">
-      <button type="button" id="typeBtn" onclick="toggleTypeDropdown()">
-        <span id="selectedType">전체</span> ▼
-      </button>
-      <div id="typeDropdown" style="display:none;">
-        <ul>
-          <li onclick="selectType('ALL', '전체')">전체</li>
-          <li onclick="selectType('RESIDENT', '입주자 차량')">입주자 차량</li>
-          <li onclick="selectType('VISITOR', '방문 차량')">방문 차량</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- 세대 검색 -->
-    <div class="search-group">
-      <input type="text" id="householdSearch" placeholder="동/호수 검색">
-      <button type="button" onclick="loadParkingLogs()">검색</button>
-    </div>
-
+    </main>
   </div>
-
-  <!-- 주차 기록 테이블 -->
-  <table id="parkingTable">
-    <thead>
-    <tr>
-      <th>차량 번호</th>
-      <th>세대</th>
-      <th>등록구분</th>
-      <th>입차시간</th>
-      <th>출차시간</th>
-      <th>주차시간</th>
-      <th>정산내역</th>
-    </tr>
-    </thead>
-    <tbody id="parkingList">
-    <tr>
-      <td colspan="7">주차 기록이 없습니다.</td>
-    </tr>
-    </tbody>
-  </table>
 </div>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 
-<script>
+<script th:inline="javascript">
+  const contextPath = /*[[@{/}]]*/ '/';
   const YEARS  = [2026,2025,2024,2023,2022,2021,2020,2019,2018];
   const MONTHS = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
   const TODAY  = new Date();
+  const PAGE_SIZE = 10;
 
-  let selectedYear = TODAY.getFullYear();
+  let selectedYear  = TODAY.getFullYear();
   let selectedMonth = TODAY.getMonth() + 1;
-  let selectedType = 'ALL';
+  let selectedType  = 'ALL';
+  let currentPage   = 0;
 
-  // 페이지 로드 시 현재 년/월 초기화
-  document.getElementById('selectedYear').textContent = `${selectedYear}년`;
+  document.getElementById('selectedYear').textContent  = `${selectedYear}년`;
   document.getElementById('selectedMonth').textContent = `${selectedMonth}월`;
 
-  // 년 목록 생성
   const yearList = document.getElementById('yearList');
   YEARS.forEach(y => {
-      const li = document.createElement('li');
-      li.textContent = `${y}년`;
-      li.addEventListener('click', () => {
-          selectedYear = y;
-          document.getElementById('selectedYear').textContent = `${y}년`;
-          toggleYearDropdown();
-          loadParkingLogs();
-      });
-      yearList.appendChild(li);
+    const li = document.createElement('li');
+    li.textContent = `${y}년`;
+    li.addEventListener('click', () => { selectedYear = y; document.getElementById('selectedYear').textContent = `${y}년`; toggleYearDropdown(); currentPage = 0; loadParkingLogs(); });
+    yearList.appendChild(li);
   });
 
-  // 월 목록 생성
   const monthList = document.getElementById('monthList');
   MONTHS.forEach((m, index) => {
-      const li = document.createElement('li');
-      li.textContent = m;
-      li.addEventListener('click', () => {
-          selectedMonth = index + 1;
-          document.getElementById('selectedMonth').textContent = m;
-          toggleMonthDropdown();
-          loadParkingLogs();
-      });
-      monthList.appendChild(li);
+    const li = document.createElement('li');
+    li.textContent = m;
+    li.addEventListener('click', () => { selectedMonth = index + 1; document.getElementById('selectedMonth').textContent = m; toggleMonthDropdown(); currentPage = 0; loadParkingLogs(); });
+    monthList.appendChild(li);
   });
 
-  // 차량 구분 선택
-  function selectType(type, label) {
-      selectedType = type;
-      document.getElementById('selectedType').textContent = label;
-      toggleTypeDropdown();
-      loadParkingLogs();
-  }
+  function selectType(type, label) { selectedType = type; document.getElementById('selectedType').textContent = label; toggleTypeDropdown(); currentPage = 0; loadParkingLogs(); }
 
-  // 모든 드롭다운 닫기
   function closeAllDropdowns() {
-      document.getElementById('yearDropdown').style.display = 'none';
-      document.getElementById('monthDropdown').style.display = 'none';
-      document.getElementById('typeDropdown').style.display = 'none';
+    document.getElementById('yearDropdown').style.display  = 'none';
+    document.getElementById('monthDropdown').style.display = 'none';
+    document.getElementById('typeDropdown').style.display  = 'none';
   }
 
-  // 년 드롭다운 토글
-  function toggleYearDropdown() {
-      const dropdown = document.getElementById('yearDropdown');
-      const isOpen = dropdown.style.display !== 'none';
-      closeAllDropdowns();
-      if (!isOpen) dropdown.style.display = 'block';
-  }
+  function toggleYearDropdown()  { const dd = document.getElementById('yearDropdown');  const isOpen = dd.style.display !== 'none'; closeAllDropdowns(); if (!isOpen) dd.style.display = 'block'; }
+  function toggleMonthDropdown() { const dd = document.getElementById('monthDropdown'); const isOpen = dd.style.display !== 'none'; closeAllDropdowns(); if (!isOpen) dd.style.display = 'block'; }
+  function toggleTypeDropdown()  { const dd = document.getElementById('typeDropdown');  const isOpen = dd.style.display !== 'none'; closeAllDropdowns(); if (!isOpen) dd.style.display = 'block'; }
 
-  // 월 드롭다운 토글
-  function toggleMonthDropdown() {
-      const dropdown = document.getElementById('monthDropdown');
-      const isOpen = dropdown.style.display !== 'none';
-      closeAllDropdowns();
-      if (!isOpen) dropdown.style.display = 'block';
-  }
+  document.addEventListener('click', (e) => { if (!e.target.closest('.pk-dropdown-wrapper')) closeAllDropdowns(); });
+  document.getElementById('householdSearch').addEventListener('keydown', (e) => { if (e.key === 'Enter') { currentPage = 0; loadParkingLogs(); } });
 
-  // 차량 구분 드롭다운 토글
-  function toggleTypeDropdown() {
-      const dropdown = document.getElementById('typeDropdown');
-      const isOpen = dropdown.style.display !== 'none';
-      closeAllDropdowns();
-      if (!isOpen) dropdown.style.display = 'block';
-  }
-
-  // 외부 클릭 시 드롭다운 닫기
-  document.addEventListener('click', (e) => {
-      if (!e.target.closest('.dropdown-wrapper')) {
-          closeAllDropdowns();
-      }
-  });
-
-  // 세대 검색 Enter 키 처리
-  document.getElementById('householdSearch').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') loadParkingLogs();
-  });
-
-  // 주차 기록 조회
   function loadParkingLogs() {
-      const household = encodeURIComponent(document.getElementById('householdSearch').value.trim());
+    const household = encodeURIComponent(document.getElementById('householdSearch').value.trim());
+    const tbody = document.getElementById('parkingList');
+    tbody.innerHTML = `<tr><td colspan="7" class="pk-empty">로딩 중...</td></tr>`;
 
-      fetch(`/admin/parking/logs?year=${selectedYear}&month=${selectedMonth}&type=${selectedType}&household=${household}`)
-          .then(res => {
-              if (!res.ok) throw new Error('서버 오류');
-              return res.json();
-          })
-          .then(data => {
-              const parkingList = document.getElementById('parkingList');
-              parkingList.innerHTML = '';
-
-              if (data.length === 0) {
-                  parkingList.innerHTML = '<tr><td colspan="7">주차 기록이 없습니다.</td></tr>';
-                  return;
+    fetch(`${contextPath}admin/parking/logs/data?year=${selectedYear}&month=${selectedMonth}&type=${selectedType}&household=${household}&page=${currentPage}&size=${PAGE_SIZE}`)
+            .then(res => { if (!res.ok) throw new Error('서버 오류'); return res.json(); })
+            .then(data => {
+              tbody.innerHTML = '';
+              if (!data || !data.content || data.content.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="pk-empty">주차 기록이 없습니다.</td></tr>`;
+                renderPagination(0); return;
               }
-
-              data.forEach(log => {
-                  const row = document.createElement('tr');
-                  row.innerHTML = `
-                      <td>${log.vehicleNumber}</td>
-                      <td>${log.household ?? '-'}</td>
-                      <td>${log.vehicleType}</td>
-                      <td>${log.entryTime}</td>
-                      <td>${log.exitTime ?? '주차 중'}</td>
-                      <td>${log.parkingTime ?? '-'}</td>
-                      <td>${log.settlement}</td>
-                  `;
-                  parkingList.appendChild(row);
+              data.content.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+            <td>${log.vehicleNumber}</td>
+            <td>${log.household}</td>
+            <td>${log.vehicleType}</td>
+            <td>${log.entryTime}</td>
+            <td>${log.exitTime}</td>
+            <td>${log.parkingTime}</td>
+            <td>${log.settlement}</td>
+          `;
+                tbody.appendChild(tr);
               });
-          })
-          .catch(err => {
-              console.error(err);
-              alert('데이터 조회 중 오류가 발생했습니다.');
-          });
+              renderPagination(data.page.totalPages);
+            })
+            .catch(err => { console.error(err); tbody.innerHTML = `<tr><td colspan="7" class="pk-empty">데이터 조회 실패</td></tr>`; });
   }
 
-  // 페이지 로드 시 기록 조회
+  function renderPagination(totalPages) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+    if (totalPages <= 0) return;
+
+    const prevLi = document.createElement('li');
+    const prevA  = document.createElement('a');
+    prevA.textContent = '‹'; prevA.href = '#';
+    if (currentPage === 0) prevA.style.opacity = '0.4';
+    prevA.addEventListener('click', (e) => { e.preventDefault(); if (currentPage > 0) { currentPage--; loadParkingLogs(); } });
+    prevLi.appendChild(prevA); pagination.appendChild(prevLi);
+
+    const startPage = Math.max(0, currentPage - 2);
+    const endPage   = Math.min(totalPages - 1, startPage + 4);
+
+    for (let i = startPage; i <= endPage; i++) {
+      const li = document.createElement('li');
+      const a  = document.createElement('a');
+      a.textContent = i + 1; a.href = '#';
+      if (i === currentPage) li.classList.add('active');
+      a.addEventListener('click', (e) => { e.preventDefault(); currentPage = i; loadParkingLogs(); });
+      li.appendChild(a); pagination.appendChild(li);
+    }
+
+    const nextLi = document.createElement('li');
+    const nextA  = document.createElement('a');
+    nextA.textContent = '›'; nextA.href = '#';
+    if (currentPage === totalPages - 1) nextA.style.opacity = '0.4';
+    nextA.addEventListener('click', (e) => { e.preventDefault(); if (currentPage < totalPages - 1) { currentPage++; loadParkingLogs(); } });
+    nextLi.appendChild(nextA); pagination.appendChild(nextLi);
+  }
+
   loadParkingLogs();
 </script>
 
