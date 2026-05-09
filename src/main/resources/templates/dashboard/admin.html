@@ -310,7 +310,12 @@
 
     function renderTodaySchedule(data) {
         var el = document.getElementById('todayScheduleList');
-        if (!data || !data.length) { el.innerHTML = '<div class="loading">오늘 일정이 없습니다.</div>'; return; }
+        if (!data || !data.length) {
+            el.style.justifyContent = 'center';
+            el.innerHTML = '<div class="loading">오늘 일정이 없습니다.</div>';
+            return;
+        }
+        el.style.justifyContent = 'flex-start';
         el.innerHTML = data.map(function(s) {
             var badge   = s.badge || 'DEFAULT';
             var timeStr = formatTime(s.startAt);
