@@ -204,6 +204,7 @@ public class PostController {
     @GetMapping("/{boardCode}/temp-list")
     @ResponseBody
     public List<PostListResponse> getTempPosts(@PathVariable String boardCode,
+                                               RedirectAttributes redirectAttributes,
                                                Authentication authentication) {
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -211,6 +212,7 @@ public class PostController {
         }
 
         Long userId = getLoginUserId(authentication);
+        redirectAttributes.addFlashAttribute("successMessage", "임시저장 되었습니다.");
         return postService.getTempPosts(boardCode, userId);
     }
 

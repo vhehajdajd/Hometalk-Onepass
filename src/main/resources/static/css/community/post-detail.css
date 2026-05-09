@@ -42,6 +42,7 @@
     font-size: 14px;
     white-space: pre-wrap;
     word-wrap: break-word;
+    border-top: 1px solid #eee;
 }
 .post-content > div {
     min-height: auto;
