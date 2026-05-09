@@ -21,7 +21,7 @@ public interface NotificationReadRepository extends JpaRepository<NotificationRe
     void deleteByNotificationIdIn(List<Long> notificationIds);
 
     /**
-     * 전체 읽음 처리 (Native Bulk INSERT)
+     * 전체 삭제(읽음) 처리 (Native Bulk INSERT)
      * ⚠️ 호출 시 반드시 role.name() 전달 (String 파라미터)
      * 예: bulkReadAll(userId, role.name())
      */
