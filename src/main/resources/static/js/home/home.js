@@ -23,18 +23,18 @@ const API_ENDPOINTS = {
 };
 
 function goService(serviceKey) {
-  const SERVICE_URLS = getServiceUrls();
-  const destination = SERVICE_URLS[serviceKey] || SERVICE_URLS['community'];
   if (!window.IS_LOGGED_IN) {
     showToast('로그인이 필요한 서비스입니다.\n로그인 페이지로 이동합니다.');
     setTimeout(function () {
-      location.href = CTX + '/hometop/auth?redirectURL=' + encodeURIComponent(destination);
+      location.href = CTX + '/hometop/auth?redirectURL=' + encodeURIComponent('/hometop/service/' + serviceKey);
     }, 1200);
-  } else if (window.USER_ROLE === 'MEMBER') {
-    showToast('승인이 필요한 회원입니다.');
-  } else {
-    location.href = destination;
+    return;
   }
+  if (window.USER_ROLE === 'MEMBER') {
+    showToast('승인이 필요한 회원입니다.');
+    return;
+  }
+  location.href = CTX + '/hometop/service/' + serviceKey;
 }
 
 function goCommunity(boardCode) {
