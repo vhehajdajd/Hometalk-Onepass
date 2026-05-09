@@ -3,6 +3,8 @@ package com.hometalk.onepass.auth.controller;
 import com.hometalk.onepass.auth.service.AdminUserApprovalService;
 import com.hometalk.onepass.auth.entity.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,8 +23,25 @@ public class AdminUserApprovalController {
     private final AdminUserApprovalService adminUserApprovalService;
 
     @GetMapping("/approvals")
-    public String approvals(Model model) {
-        model.addAttribute("pendingUsers", adminUserApprovalService.getPendingUsers());
+    public String approvals(@RequestParam(defaultValue = "0") int page, Model model) {
+        int safePage = Math.max(page, 0);
+        var pendingUsers = adminUserApprovalService.getPendingUsers(
+                PageRequest.of(safePage, 15, Sort.by(Sort.Direction.DESC, "id"))
+        );
+        if (pendingUsers.getTotalPages() > 0 && safePage >= pendingUsers.getTotalPages()) {
+            pendingUsers = adminUserApprovalService.getPendingUsers(
+                    PageRequest.of(pendingUsers.getTotalPages() - 1, 15, Sort.by(Sort.Direction.DESC, "id"))
+            );
+        }
+        int currentPage = pendingUsers.getNumber();
+        int totalPages = pendingUsers.getTotalPages();
+        int pageGroupStart = totalPages == 0 ? 0 : (currentPage / 10) * 10;
+        int pageGroupEnd = totalPages == 0 ? 0 : Math.min(pageGroupStart + 9, totalPages - 1);
+
+        model.addAttribute("pendingUsers", pendingUsers.getContent());
+        model.addAttribute("pendingUserPage", pendingUsers);
+        model.addAttribute("pageGroupStart", pageGroupStart);
+        model.addAttribute("pageGroupEnd", pageGroupEnd);
         return "auth/admin/user-approvals";
     }
 
