@@ -89,13 +89,9 @@
                         </div>
                     </div>
 
-                    <hr>
-
                     <div class="page-body post-content">
                         <div th:utext="${post.content}">게시글 내용</div>
                     </div>
-
-                    <hr>
 
                     <div class="tag-filter-wrapper"
                          th:if="${postTags != null and !postTags.isEmpty()}">
@@ -104,8 +100,6 @@
                             <div th:replace="~{community/fragments/postTag :: tagList(tags=${postTags}, boardCode=${currentBoardCode})}"></div>
                         </div>
                     </div>
-
-                    <hr>
 
                     <div class="page-footer">
                         <a th:href="@{/community/{code}(code=${board.code})}" class="btn btn-outline">목록</a>

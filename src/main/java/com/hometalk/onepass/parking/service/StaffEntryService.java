@@ -86,7 +86,7 @@ public class StaffEntryService {
                                 NotificationType.VEHICLE_VISITOR_ENTRY,
                                 "방문 차량 입차",
                                 "예약하신 방문 차량(" + reservation.getVehicleNumber() + ")이 도착하여 입차했습니다.",
-                                "/parking",
+                                "/parking/vehicle",
                                 reservation.getReservationId()
                         ));
             }
@@ -117,7 +117,7 @@ public class StaffEntryService {
                         NotificationType.VEHICLE_ENTRY,
                         "입주자 입차",
                         "입주자 차량(" + vehicle.getVehicleNumber() + ")이 입차했습니다.",
-                        "/parking",
+                        "/parking/vehicle",
                         vehicle.getVehicleId()
                 );
             }

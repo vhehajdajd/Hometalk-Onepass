@@ -27,7 +27,7 @@
                             <h1>회원 승인</h1>
                             <p>가입 신청한 회원 정보를 확인하고 서비스 이용을 승인합니다.</p>
                         </div>
-                        <span class="approval-count" th:text="${#lists.size(pendingUsers)} + '건 대기'">0건 대기</span>
+                        <span class="approval-count" th:text="${pendingUserPage.totalElements} + '건 대기'">0건 대기</span>
                     </div>
 
                     <div class="approval-empty" th:if="${#lists.isEmpty(pendingUsers)}">
@@ -83,6 +83,20 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <nav class="approval-pagination" th:if="${pendingUserPage.totalPages > 1}" aria-label="회원 승인 페이지">
+                        <a class="approval-page-link"
+                           th:if="${pageGroupStart > 0}"
+                           th:href="@{/admin/users/approvals(page=${pageGroupStart - 1})}">이전</a>
+                        <a class="approval-page-link"
+                           th:each="pageNo : ${#numbers.sequence(pageGroupStart, pageGroupEnd)}"
+                           th:classappend="${pageNo == pendingUserPage.number} ? ' active'"
+                           th:href="@{/admin/users/approvals(page=${pageNo})}"
+                           th:text="${pageNo + 1}">1</a>
+                        <a class="approval-page-link"
+                           th:if="${pageGroupEnd + 1 < pendingUserPage.totalPages}"
+                           th:href="@{/admin/users/approvals(page=${pageGroupEnd + 1})}">다음</a>
+                    </nav>
                 </section>
             </div>
         </main>

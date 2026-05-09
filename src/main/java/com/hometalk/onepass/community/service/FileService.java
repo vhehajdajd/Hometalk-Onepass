@@ -1,5 +1,6 @@
 package com.hometalk.onepass.community.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -10,7 +11,8 @@ import java.util.UUID;
 @Service
 public class FileService {
     // 사진이 저장될 실제 컴퓨터 경로
-    private final String uploadPath = "C:/upload/";
+    @Value("${file.upload.path}")
+    private String uploadPath;
 
     public String storeFile(MultipartFile file) throws IOException {
         if (file.isEmpty()) return null;
@@ -24,7 +26,7 @@ public class FileService {
         if (!folder.exists()) folder.mkdirs();
 
         // 3. 실제 파일 저장
-        file.transferTo(new File(uploadPath + storeFileName));
+        file.transferTo(new File(folder, storeFileName));
 
         return storeFileName; // 저장된 파일명 반환
     }

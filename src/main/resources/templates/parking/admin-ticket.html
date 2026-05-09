@@ -8,6 +8,11 @@
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
   <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
   <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+  <!--✅ 알림 추가 -->
+  <meta name="ctx" th:content="@{/}">
+  <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
+  <script th:src="@{/js/notification/notification-sse.js}"></script>
+  <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
 <body>
 

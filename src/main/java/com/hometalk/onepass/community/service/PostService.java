@@ -59,11 +59,9 @@ public class PostService {
             // [CASE: 수정/등록] ID가 있으면 기존 글을 찾아서 업데이트
             post = postRepository.findById(dto.getId())
                     .orElseThrow(() -> new PostNotFoundException(dto.getId(), boardCode));
-
-            // 작성자 본인인지 확인하는 검증 로직 추가 (보안상 중요!)
+            // 작성자 본인인지 확인
             postValidator.validateOwner(post, userId);
-
-            // 기존 엔티티의 필드만 변경 (Dirty Checking으로 자동 반영)
+            // 기존 엔티티 필드
             post.update(dto.getTitle(), dto.getContent(), category, dto.getPostStatus());
 
             // 기존 태그 관계 초기화
@@ -98,12 +96,7 @@ public class PostService {
     // Read
     public Page<PostListResponse> searchPosts(Long boardId, Long categoryId, String searchType, String keyword, int page) {
         PostStatus status = PostStatus.ACTIVE;
-        Pageable pageable = PageRequest.of(page, 10,
-                Sort.by(
-                        Sort.Order.desc("pinned"), // 고정글이 1순위
-                        Sort.Order.desc("id")      // 그 안에서 최신순이 2순위
-                )
-        );
+        Pageable pageable = PageRequest.of(page, 10);
 
         // 1. 보드 엔티티 조회 (검색 메서드 파라미터가 Board 객체이므로 필요)
         Board board = boardRepository.findById(boardId)
@@ -184,6 +177,7 @@ public class PostService {
         post.softDelete();
     }
 
+    // 임시저장
     public List<PostListResponse> getTempPosts(String boardCode, Long userId) {
         PostStatus status = PostStatus.DRAFT;
         List<Post> posts = postRepository.findTempPosts(boardCode, userId, PostStatus.DRAFT);

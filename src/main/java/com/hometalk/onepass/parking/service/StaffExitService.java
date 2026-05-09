@@ -93,7 +93,7 @@ public class StaffExitService {
                     NotificationType.VEHICLE_EXIT,
                     "출차 완료",
                     "차량(" + parkingLog.getVehicleNumber() + ")이 정산 완료되어 출차하였습니다.",
-                    "/parking",
+                    "/parking/vehicle",
                     parkingLog.getParkingId()
             );
             return;
@@ -113,7 +113,7 @@ public class StaffExitService {
                             NotificationType.VEHICLE_TICKET_SHORTAGE,
                             "티켓 부족",
                             "티켓이 부족하여 출차할 수 없습니다. 티켓을 적용해 주세요.",
-                            "/parking",
+                            "/parking/ticket",
                             parkingLog.getParkingId()
                     ));
             throw new ParkingException("티켓이 부족합니다. 티켓을 먼저 등록해주세요.");
@@ -130,7 +130,7 @@ public class StaffExitService {
                         NotificationType.VEHICLE_VISITOR_EXIT,
                         "방문 차량 출차",
                         "방문 차량(" + parkingLog.getVehicleNumber() + ")이 출차하였습니다.",
-                        "/parking",
+                        "/parking/vehicle",
                         parkingLog.getParkingId()
                 ));
     }

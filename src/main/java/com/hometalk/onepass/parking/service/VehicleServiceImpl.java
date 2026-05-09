@@ -182,7 +182,7 @@ public class VehicleServiceImpl implements VehicleService {
                 NotificationType.VEHICLE_APPROVED,
                 "차량 등록 완료",
                 "차량등록이 완료되었습니다.",
-                "/parking",
+                "/parking/vehicle",
                 approval.getVehicle().getVehicleId()
         );
     }
@@ -204,7 +204,7 @@ public class VehicleServiceImpl implements VehicleService {
                 NotificationType.VEHICLE_REJECTED,
                 "차량 등록 반려",
                 "차량 등록이 반려되었습니다. 사유를 확인 후 다시 등록해 주세요.",
-                "/parking",
+                "/parking/vehicle",
                 approval.getVehicle().getVehicleId()
         );
     }
