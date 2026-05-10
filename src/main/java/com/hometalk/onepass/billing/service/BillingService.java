@@ -17,6 +17,7 @@ import com.hometalk.onepass.notification.publisher.NotificationPublisher;
 import com.hometalk.onepass.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -29,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BillingService {
@@ -140,16 +142,47 @@ public class BillingService {
     // /admin/stats/dashboard 에서 호출 (unpaid 페이지용)
     @Transactional(readOnly = true)
     public AdminDashboardStats getAdminDashboardStats(Integer year, String month, String dong) {
-        long totalHouseholds = householdRepository.count();
 
         String yearFrom = (year != null && month == null) ? year + "-01" : null;
         String yearTo   = (year != null && month == null) ? year + "-12" : null;
 
-        long paidCount   = billingRepository.countPaidWithFilter(dong, yearFrom, yearTo, month);
-        long unpaidCount = billingRepository.countUnpaidWithFilter(dong, yearFrom, yearTo, month);
-        double paidRate  = totalHouseholds > 0
+        long totalHouseholds, paidCount, unpaidCount;
+
+        if (month != null) {
+            // ✅ 월 선택 시 → 해당 월 기준
+            totalHouseholds = billingRepository.countTotalWithFilter(dong, null, null, month);
+            paidCount       = billingRepository.countPaidWithFilter(dong, null, null, month);
+            unpaidCount     = billingRepository.countUnpaidWithFilter(dong, null, null, month);
+        } else if (year != null) {
+            // ✅ 세대수/미납은 연도 전체, 납부율은 기준월 기준
+            LocalDate today2 = LocalDate.now();
+            YearMonth ref2 = today2.getDayOfMonth() > 10
+                    ? YearMonth.now()
+                    : YearMonth.now().minusMonths(1);
+            String rateMonth2 = ref2.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+
+            totalHouseholds = billingRepository.countTotalWithFilter(dong, null, null, rateMonth2);
+            paidCount       = billingRepository.countPaidWithFilter(dong, null, null, rateMonth2);
+            unpaidCount     = billingRepository.countUnpaidWithFilter(dong, null, null, rateMonth2);
+        } else {
+            // ✅ 기본값 (필터 없음) → 기준월(전월) 기준
+            LocalDate today = LocalDate.now();
+            YearMonth ref = today.getDayOfMonth() > 10
+                    ? YearMonth.now()
+                    : YearMonth.now().minusMonths(1);
+            String rateMonth = ref.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            totalHouseholds = billingRepository.countTotalWithFilter(dong, null, null, rateMonth);
+            paidCount       = billingRepository.countPaidWithFilter(dong, null, null, rateMonth);
+            unpaidCount     = billingRepository.countUnpaidWithFilter(dong, null, null, rateMonth);
+        }
+
+        double paidRate = totalHouseholds > 0
                 ? Math.round((double) paidCount / totalHouseholds * 1000.0) / 10.0
                 : 0.0;
+
+        log.info("[stats] totalHouseholds={}, paidCount={}, unpaidCount={}, paidRate={}",
+                totalHouseholds, paidCount, unpaidCount, paidRate);
+
 
         // 납부기한(익월 10일) 기준: 오늘이 10일 이후면 당월, 이전이면 전월
         LocalDate today = LocalDate.now();
@@ -160,11 +193,9 @@ public class BillingService {
 
         Long unpaidSum;
         if (month != null) {
-            // 월 필터 선택 시 해당 월 기준
             unpaidSum = billingRepository.sumTotalAmountByBillingMonthAndStatus(
                     month, BillingStatus.UNPAID);
         } else {
-            // 연도만 선택이거나 필터 없을 때 → 항상 기준월 고정
             unpaidSum = billingRepository.sumTotalAmountByBillingMonthAndStatus(
                     refMonthStr, BillingStatus.UNPAID);
         }
@@ -179,6 +210,7 @@ public class BillingService {
                 totalHouseholds, paidCount, unpaidCount, paidRate,
                 unpaidAmount, globalUnpaidBillings, globalUnpaidHouseholds, globalOverdueHouseholds
         );
+
     }
 
     // ─────────────────────────────────────────────
