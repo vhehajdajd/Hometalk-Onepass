@@ -217,21 +217,28 @@ body.auth-login-page {
 }
 
 .id-check-row,
+.email-check-row,
 .address-group {
     display: flex;
     gap: 10px;
 }
 
 .id-check-row .auth-input,
+.email-check-row .auth-input,
 .address-group .auth-input {
     flex: 1;
 }
 
 .id-check-row .auth-btn,
+.email-check-row .auth-btn,
 .address-group .auth-btn {
     flex: 0 0 30%;
     padding-right: 8px;
     padding-left: 8px;
+}
+
+.email-code-row {
+    margin-top: 8px;
 }
 
 .social-login-list {
@@ -276,11 +283,13 @@ body.auth-login-page {
 
     .auth-row,
     .id-check-row,
+    .email-check-row,
     .address-group {
         flex-direction: column;
     }
 
     .id-check-row .auth-btn,
+    .email-check-row .auth-btn,
     .address-group .auth-btn {
         flex-basis: auto;
         width: 100%;

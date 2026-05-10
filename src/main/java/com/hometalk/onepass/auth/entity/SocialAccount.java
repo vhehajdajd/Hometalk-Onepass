@@ -66,13 +66,6 @@ public class SocialAccount extends BaseTimeEntity {
         this.rawTokenData = rawTokenData;
     }
 
-    public void updateTokens(String accessToken, String refreshToken,
-                             LocalDateTime expiresAt, String rawData) {
-        this.socialAccessToken = accessToken;
-        this.socialRefreshToken = refreshToken;
-        this.socialTokenExpiresAt = expiresAt;
-        this.rawTokenData = rawData;
-    }
 
     // Enum
     public enum Platform {

@@ -91,13 +91,13 @@
 }
 
 .mp-summary-label {
-    color: var(--color-text-muted);
+    color: var(--color-main);
     font-size: 14px;
     font-weight: 600;
 }
 
 .mp-summary-card strong {
-    color: var(--color-main);
+    color: var(--color-text);
     font-size: 16px;
     line-height: 1.35;
     word-break: break-all;
@@ -328,14 +328,14 @@
 
 .mp-row dt {
     margin: 0 0 6px;
-    color: var(--mp-muted);
+    color: var(--mp-main);
     font-size: 14px;
     font-weight: 600;
 }
 
 .mp-row dd {
     margin: 0;
-    color: #170124;
+    color: #000000;
     font-size: 15px;
 }
 

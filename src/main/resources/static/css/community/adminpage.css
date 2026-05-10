@@ -121,7 +121,7 @@
 }
 
 /* 왼쪽 정렬 */
-.admin-management-table td.text-left, {
+.admin-management-table td.text-left {
     text-align: left;
     padding-left: 24px;
 }
@@ -177,16 +177,6 @@
     box-shadow: 0 15px 35px rgba(0,0,0,0.2);
     max-height: 90vh; /* 화면 높이의 90%만 차지 */
     overflow-y: auto;
-}
-.btn-close-x {
-    background: none;
-    border: none;
-    font-size: 24px; /* 크기를 시원하게 키움 */
-    line-height: 1;
-    color: #999;
-    cursor: pointer;
-    padding: 0;
-    transition: color 0.2s;
 }
 
 .btn-close-x:hover {

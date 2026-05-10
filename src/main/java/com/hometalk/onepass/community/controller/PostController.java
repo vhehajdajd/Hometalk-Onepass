@@ -146,7 +146,7 @@ public class PostController {
         Long id = postService.postSave(boardCode, dto, userId);
 
         String msg = isTemp ? "게시글이 임시저장되었습니다." : "글이 성공적으로 등록되었습니다.";
-        redirectAttributes.addFlashAttribute("successMessage", msg);
+        redirectAttributes.addFlashAttribute("message", msg);
 
         if (isTemp) {
             return "redirect:/community/" + boardCode + "/edit/" + id;
@@ -180,7 +180,7 @@ public class PostController {
 
         postService.postSave(boardCode, dto, userId);
 
-        redirectAttributes.addFlashAttribute("successMessage", "게시글이 수정되었습니다.");
+        redirectAttributes.addFlashAttribute("message", "게시글이 수정되었습니다.");
         return "redirect:/community/" + boardCode + "/" + categoryPath + "/" + id;
     }
 
@@ -197,8 +197,30 @@ public class PostController {
         Long userId = getLoginUserId(authentication);
         postService.deletePost(id, userId, boardCode);
 
-        redirectAttributes.addFlashAttribute("successMessage", "게시글이 삭제되었습니다.");
+        redirectAttributes.addFlashAttribute("message", "게시글이 삭제되었습니다.");
         return "redirect:/community/" + boardCode + "/all";
+    }
+
+
+    @PostMapping("/{boardCode}/save-temp")
+    @ResponseBody
+    public ResponseEntity<?> saveTempApi(@PathVariable String boardCode,
+                                         @ModelAttribute PostRequestDTO dto,
+                                         Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        dto.setPostStatus(PostStatus.DRAFT);
+
+        Long userId = getLoginUserId(authentication);
+        Long id = postService.postSave(boardCode, dto, userId);
+
+        // 성공 시 저장된 게시글의 ID와 메시지를 JSON으로 반환
+        return ResponseEntity.ok(Map.of(
+                "id", id,
+                "message", "게시글이 임시저장되었습니다."
+        ));
     }
 
     @GetMapping("/{boardCode}/temp-list")
@@ -212,7 +234,7 @@ public class PostController {
         }
 
         Long userId = getLoginUserId(authentication);
-        redirectAttributes.addFlashAttribute("successMessage", "임시저장 되었습니다.");
+        redirectAttributes.addFlashAttribute("message", "임시저장 되었습니다.");
         return postService.getTempPosts(boardCode, userId);
     }
 
