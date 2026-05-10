@@ -92,6 +92,9 @@ function initQuill() {
     if (content && content.trim() !== '') {
         quill.root.innerHTML = content;
     }
+
+    quill.root.addEventListener('paste', handlePaste, false);
+    quill.root.addEventListener('drop', handleDrop, false);
 }
 
 function imageHandler() {
@@ -125,6 +128,54 @@ function imageHandler() {
     };
 }
 
+// 붙여넣기
+function handlePaste(e) {
+    const clipboard = e.clipboardData;
+    if (clipboard && clipboard.files && clipboard.files.length) {
+        e.preventDefault();
+        [...clipboard.files].forEach(file => {
+            if (file.type.match(/^image\//)) {
+                uploadImageFile(file);
+            }
+        });
+    }
+}
+
+// 드래그 드롭
+function handleDrop(e) {
+    e.preventDefault();
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        [...e.dataTransfer.files].forEach(file => {
+            if (file.type.match(/^image\//)) {
+                uploadImageFile(file);
+            }
+        });
+    }
+}
+
+// 공통 업로드 함수
+async function uploadImageFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    try {
+        const res = await fetch('/hometop/community/image-upload', {
+            method: 'POST',
+
+            headers: { [header]: token },
+            body: formData
+        });
+        const data = await res.json();
+        const range = quill.getSelection() || { index: quill.getLength() };
+        quill.insertEmbed(range.index, 'image', data.url);
+    } catch (err) {
+        console.error("이미지 업로드 실패:", err);
+    }
+}
+
 
 /* ================================================
     [3] 게시글 작성 & 임시저장 기능
@@ -153,9 +204,42 @@ function saveTemp() {
         if (quill && contentInput) {
             contentInput.value = quill.root.innerHTML;
         }
-        // 임시저장 시 상태값 세팅
-        document.getElementById('isTemp').value = "true";
-        document.getElementById('postForm').submit();
+
+        const form = document.getElementById('postForm');
+        const formData = new FormData(form);
+
+        const pathSegments = window.location.pathname.split('/');
+        const boardCode = pathSegments[3];
+
+        const token = document.querySelector('meta[name="_csrf"]')?.content;
+        const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+        fetch(`/hometop/community/${boardCode}/save-temp`, {
+            method: 'POST',
+            headers: { [header]: token },
+            body: formData
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("임시저장 실패");
+                return res.json();
+            })
+            .then(data => {
+                if (data.id) {
+                    alert(data.message);
+                    let idInput = document.querySelector('input[name="id"]');
+                    if (!idInput) {
+                        idInput = document.createElement('input');
+                        idInput.type = 'hidden';
+                        idInput.name = 'id';
+                        form.appendChild(idInput);
+                    }
+                    idInput.value = data.id;
+                }
+            })
+            .catch(err => {
+                console.error("임시저장 에러:", err);
+                alert("임시저장 중 오류가 발생했습니다.");
+            });
     }
 }
 
@@ -249,7 +333,7 @@ function deleteTempPost(event, id, boardCode) {
 function submitPost() {
     const formData = new FormData(document.getElementById('postForm'));
 
-    fetch(`/community/${boardCode}/save`, {
+    fetch(`/hometop/community/${boardCode}/save`, {
         method: 'POST',
         body: formData,
         headers: { [header]: token }
