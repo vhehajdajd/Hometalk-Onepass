@@ -210,8 +210,11 @@
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 
 <script th:inline="javascript">
-    window.IS_LOGGED_IN = [[${#authorization.expression('isAuthenticated()')}]];
-    window.IS_ADMIN = [[${#authorization.expression('hasRole(''ADMIN'')')}]];
+    window.IS_LOGGED_IN = [[${isLoggedIn}]];
+    window.IS_ADMIN = [[${isAdmin}]];
+    window.USER_ROLE = [[${userRole}]];
+    /* 권한/로그인 실패로 홈에 돌아온 경우 home.js에서 토스트로 표시한다. */
+    window.AUTH_ALERT = [[${authAlert}]];
 </script>
 <script th:src="@{/js/home/home.js}"></script>
 </body>

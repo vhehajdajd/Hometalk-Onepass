@@ -53,6 +53,13 @@ async function initHome() {
   }
 }
 
+// 서버가 내려준 인증/권한 안내 문구가 있을 때 토스트 UI 출력
+function showAuthAlert() {
+  if (window.AUTH_ALERT) {
+    showToast(window.AUTH_ALERT);
+  }
+}
+
 async function loadSection(url, renderFn, elId, label) {
   try {
     const res = await fetch(url);

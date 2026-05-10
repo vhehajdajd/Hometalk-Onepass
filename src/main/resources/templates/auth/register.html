@@ -15,11 +15,22 @@
     <!-- *{} = 객체를 전달받은 경우 매핑    -->
     <form class="auth-form" method="post" th:action="@{/auth/register/signup}" th:object="${signUpDTO}" onsubmit="return validateForm()">
         <input name="currentStep" th:value="${step}" type="hidden"/>
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
         <div th:if="${step == 1}">
             <div class="input-group">
                 <label for="email">이메일</label>
-                <input class="auth-input" placeholder="example@hometalk.com" required th:field="*{email}" type="email">
+                <div class="email-check-row">
+                    <input class="auth-input" placeholder="example@hometalk.com" required th:field="*{email}" type="email">
+                    <button class="auth-btn" id="send-email-code-btn" type="button" onclick="sendEmailVerificationCode()">인증 발송</button>
+                </div>
+                <div class="email-check-row email-code-row">
+                    <input class="auth-input" id="emailVerificationCode" inputmode="numeric" maxlength="6" placeholder="인증 코드 6자리" type="text">
+                    <button class="auth-btn" type="button" onclick="verifyEmailCode()">인증 확인</button>
+                </div>
+                <p id="email-check-msg" class="auth-message auth-message-error"
+                   th:text="${signupError}"></p>
+                <input type="hidden" id="isEmailVerified" value="false">
             </div>
 
             <div class="input-group">
@@ -153,6 +164,7 @@
         const pw2 = document.getElementById('pw2');
         const msg = document.getElementById('match-msg');
         const loginIdInput = document.getElementById('loginId');
+        const emailInput = document.getElementById('email');
 
         // 비밀번호 실시간 일치 확인
         if (pw1 && pw2 && msg) {
@@ -184,7 +196,99 @@
                 if (idMsg) idMsg.innerText = "";
             });
         }
+
+        if (emailInput) {
+            emailInput.addEventListener('input', function() {
+                const isEmailVerified = document.getElementById('isEmailVerified');
+                const emailMsg = document.getElementById('email-check-msg');
+                if (isEmailVerified) isEmailVerified.value = "false";
+                if (emailMsg) {
+                    emailMsg.innerText = "";
+                    emailMsg.className = "auth-message";
+                }
+            });
+        }
     });
+
+    async function sendEmailVerificationCode() {
+        const email = document.getElementById('email').value.trim();
+        const msgElement = document.getElementById('email-check-msg');
+        const isEmailVerified = document.getElementById('isEmailVerified');
+        const sendEmailCodeUrl = /*[[@{/auth/register/email/send}]]*/ '/auth/register/email/send';
+
+        if (!email) {
+            alert("이메일을 입력해주세요.");
+            return;
+        }
+
+        try {
+            setEmailMessage("인증 코드를 발송 중입니다.", false);
+
+            const response = await fetch(sendEmailCodeUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                },
+                body: new URLSearchParams({ email })
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "인증 코드 발송에 실패했습니다.");
+            }
+
+            if (isEmailVerified) isEmailVerified.value = "false";
+            setEmailMessage(data.message, true);
+        } catch (error) {
+            console.error("Error:", error);
+            if (isEmailVerified) isEmailVerified.value = "false";
+            setEmailMessage(error.message, false);
+        }
+    }
+
+    async function verifyEmailCode() {
+        const email = document.getElementById('email').value.trim();
+        const code = document.getElementById('emailVerificationCode').value.trim();
+        const isEmailVerified = document.getElementById('isEmailVerified');
+        const verifyEmailCodeUrl = /*[[@{/auth/register/email/verify}]]*/ '/auth/register/email/verify';
+
+        if (!email || !code) {
+            alert("이메일과 인증 코드를 입력해주세요.");
+            return;
+        }
+
+        try {
+            const response = await fetch(verifyEmailCodeUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                },
+                body: new URLSearchParams({ email, code })
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "이메일 인증에 실패했습니다.");
+            }
+
+            isEmailVerified.value = "true";
+            setEmailMessage(data.message, true);
+        } catch (error) {
+            console.error("Error:", error);
+            isEmailVerified.value = "false";
+            setEmailMessage(error.message, false);
+        }
+    }
+
+    function setEmailMessage(message, success) {
+        const msgElement = document.getElementById('email-check-msg');
+        if (!msgElement) return;
+
+        msgElement.innerText = message;
+        msgElement.className = success
+            ? "auth-message auth-message-success"
+            : "auth-message auth-message-error";
+    }
 
     // 3. 아이디 중복 확인 함수 (비동기)
     async function checkIdDuplicate() {
@@ -232,8 +336,15 @@
 
         if (currentStep === "1") {
             const isIdChecked = document.getElementById('isIdChecked').value;
+            const isEmailVerified = document.getElementById('isEmailVerified').value;
             const pw1 = document.getElementById('pw1').value;
             const pw2 = document.getElementById('pw2').value;
+
+            if (isEmailVerified !== "true") {
+                alert("이메일 인증을 완료해 주세요.");
+                document.getElementById('email').focus();
+                return false;
+            }
 
             // 중복 확인 여부 체크
             if (isIdChecked !== "true") {

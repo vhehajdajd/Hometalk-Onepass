@@ -28,6 +28,7 @@ public class SignUpService {
     @Transactional
     public void signUp(SignUpDTO dto) {
         validateLoginIdAvailable(dto.getLoginId());
+        validateEmailAvailable(dto.getEmail());
 
         // 1. Household (세대 정보) 생성 및 저장
         // 세대 정보는 여러 유저가 공유할 수 있으나, 가입 시점에 생성하는 로직으로 작성합니다.
@@ -68,6 +69,16 @@ public class SignUpService {
 
         if (localAccountRepository.existsByLoginId(loginId.trim())) {
             throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
+        }
+    }
+
+    public void validateEmailAvailable(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("이메일을 입력해 주세요.");
+        }
+
+        if (userRepository.existsByEmail(email.trim())) {
+            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
         }
     }
 }
