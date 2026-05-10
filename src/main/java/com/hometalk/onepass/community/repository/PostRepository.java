@@ -32,7 +32,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @EntityGraph(attributePaths = {"category", "board", "writer", "postTags.tag"})
     @Query("SELECT p FROM Post p " +
             "WHERE p.board.id = :boardId AND p.postStatus = :status " +
-            "ORDER BY p.pinned DESC, " +                        // 1순위: 고정글 우선 (true인 것이 위로)
+            "ORDER BY p.pinned DESC, " +                        // 1순위: 고정글 우선
             "CASE WHEN p.pinned = true THEN p.id END ASC, " +   // 2순위: 고정글은 등록순
             "CASE WHEN p.pinned = false THEN p.id END DESC")    // 3순위: 일반글은 최신순
     Page<Post> findActivePosts(@Param("boardId") Long boardId,
@@ -41,7 +41,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     // 특정 게시판 내 특정 카테고리 글 조회
     @EntityGraph(attributePaths = {"category", "board", "writer", "postTags.tag"})
-    @Query("SELECT p FROM Post p WHERE p.board.id = :boardId AND p.category.id = :catId AND p.postStatus = :status")
+    @Query("SELECT p FROM Post p WHERE p.board.id = :boardId AND p.category.id = :catId AND p.postStatus = :status " +
+            "ORDER BY p.pinned DESC, " +
+            "CASE WHEN p.pinned = true THEN p.id END ASC, " +
+            "CASE WHEN p.pinned = false THEN p.id END DESC")
     Page<Post> findCategoryPosts(@Param("boardId") Long boardId,
                                  @Param("catId") Long catId,
                                  @Param("status") PostStatus status,

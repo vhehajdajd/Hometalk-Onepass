@@ -321,3 +321,16 @@
         transform: translateY(0);
     }
 }
+
+
+
+.btn-close-x {
+    background: none;
+    border: none;
+    font-size: 24px; /* 크기를 시원하게 키움 */
+    line-height: 1;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+}
