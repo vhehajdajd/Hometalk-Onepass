@@ -2,13 +2,19 @@ package com.hometalk.onepass.auth.controller;
 
 import com.hometalk.onepass.auth.dto.SignUpDTO;
 import com.hometalk.onepass.auth.dto.SocialSignUpDTO;
+import com.hometalk.onepass.auth.service.EmailVerificationService;
 import com.hometalk.onepass.auth.service.SignUpService;
 import com.hometalk.onepass.auth.service.SocialSignUpService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Slf4j
 @Controller
@@ -18,6 +24,7 @@ public class SignUpController {
 
     private final SignUpService signUpService;
     private final SocialSignUpService socialSignUpService;
+    private final EmailVerificationService emailVerificationService;
 
     @GetMapping("")
     public String Resister(Model model) {
@@ -36,14 +43,17 @@ public class SignUpController {
             @ModelAttribute("signUpDTO") SignUpDTO signUpDTO,      // DTO
             @RequestParam(required = false, defaultValue = "next") String action, // 버튼 상태
             @RequestParam(defaultValue = "1") int currentStep,  // 회원가입 단계
+            HttpSession session,
             Model model
     ) {
         if ("next".equals(action)) {
             try {
                 signUpService.validateLoginIdAvailable(signUpDTO.getLoginId());
+                signUpService.validateEmailAvailable(signUpDTO.getEmail());
+                emailVerificationService.assertVerified(signUpDTO.getEmail(), session);
             } catch (IllegalArgumentException e) {
                 model.addAttribute("step", 1);
-                model.addAttribute("idError", e.getMessage());
+                model.addAttribute("signupError", e.getMessage());
                 return "auth/register";
             }
 
@@ -58,17 +68,53 @@ public class SignUpController {
 
         if ("complete".equals(action)) {
             try {
+                emailVerificationService.assertVerified(signUpDTO.getEmail(), session);
                 // 최종 서비스 로직 호출 (회원가입 처리)
                 signUpService.signUp(signUpDTO);
+                emailVerificationService.clear(session);
                 return "redirect:/auth";
             } catch (IllegalArgumentException e) {
                 model.addAttribute("step", 1);
-                model.addAttribute("idError", e.getMessage());
+                model.addAttribute("signupError", e.getMessage());
                 return "auth/register";
             }
         }
 
         return "auth/register";
+    }
+
+    @PostMapping("/email/send")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> sendEmailVerificationCode(
+            @RequestParam String email,
+            HttpSession session
+    ) {
+        try {
+            signUpService.validateEmailAvailable(email);
+            emailVerificationService.sendCode(email, session);
+            return ResponseEntity.ok(Map.of("message", "인증 코드가 이메일로 발송되었습니다."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            log.warn("이메일 인증 코드 발송 실패: email={}", email, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/email/verify")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> verifyEmailCode(
+            @RequestParam String email,
+            @RequestParam String code,
+            HttpSession session
+    ) {
+        try {
+            emailVerificationService.verifyCode(email, code, session);
+            return ResponseEntity.ok(Map.of("message", "이메일 인증이 완료되었습니다."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 
 
