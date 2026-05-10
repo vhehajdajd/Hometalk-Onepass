@@ -87,24 +87,28 @@ public class StaffExitService {
             parkingLog.exit(totalMinutes, totalMinutes);
 
             // ✅ 알림 — ⑤ 입주자 출차
-            notificationPublisher.publish(
-                    parkingLog.getVehicle().getUser().getId(),
-                    NotificationTargetRole.RESIDENT,
-                    NotificationType.VEHICLE_EXIT,
-                    "출차 완료",
-                    "차량(" + parkingLog.getVehicleNumber() + ")이 정산 완료되어 출차하였습니다.",
-                    "/parking/vehicle",
-                    parkingLog.getParkingId()
-            );
+            parkingLog.getHousehold().getUsers().stream()
+                    .filter(u -> u.getRole() == User.UserRole.RESIDENT)
+                    .forEach(u -> notificationPublisher.publish(
+                            u.getId(),
+                            NotificationTargetRole.RESIDENT,
+                            NotificationType.VEHICLE_EXIT,
+                            "출차 완료",
+                            "차량(" + parkingLog.getVehicleNumber() + ")이 출차하였습니다.",
+                            "/parking/vehicle",
+                            parkingLog.getParkingId()
+                    ));
             return;
         }
+
 
         // 방문/수동 차량은 티켓으로 커버 가능해야 출차
         int applied = parkingLog.getAppliedMinutes() != null
                 ? parkingLog.getAppliedMinutes() : 0;
 
         if (applied < totalMinutes) {
-            // ✅ 알림 — ⑦ 티켓 부족 출차 불가
+            // publishAsync — 별도 스레드에서 실행되므로 롤백 영향 없음
+
             parkingLog.getHousehold().getUsers().stream()
                     .filter(u -> u.getRole() == User.UserRole.RESIDENT)
                     .forEach(u -> notificationPublisher.publish(
@@ -116,6 +120,8 @@ public class StaffExitService {
                             "/parking/ticket",
                             parkingLog.getParkingId()
                     ));
+
+            // ✅ 알림 먼저 커밋되도록 flush 후 예외 throw
             throw new ParkingException("티켓이 부족합니다. 티켓을 먼저 등록해주세요.");
         }
 

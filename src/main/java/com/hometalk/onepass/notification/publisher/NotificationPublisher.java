@@ -7,6 +7,7 @@ import com.hometalk.onepass.notification.event.NotificationEvent;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
