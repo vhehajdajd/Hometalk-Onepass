@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class HomeController {
@@ -33,7 +34,22 @@ public class HomeController {
             model.addAttribute("userRole", "GUEST");
         }
 
+        // SecurityConfig에서 붙여 보낸 alert 쿼리 값을 홈 토스트 메시지로 변환한다.
+        model.addAttribute("authAlert", getAuthAlertMessage(alert));
         return "home";
+    }
+
+    // alert 파라미터 값을 그대로 화면에 노출하지 않고, 허용된 메시지만 내려준다.
+    private String getAuthAlertMessage(String alert) {
+        if ("loginRequired".equals(alert)) {
+            return "로그인이 필요한 서비스입니다.";
+        }
+
+        if ("accessDenied".equals(alert)) {
+            return "접근 권한이 없는 페이지입니다.";
+        }
+
+        return "";
     }
 
     @GetMapping("/service/{module}")
@@ -66,23 +82,5 @@ public class HomeController {
             case "schedule"  -> "redirect:/schedule";
             default          -> "redirect:/home";
         };
-    }
-}
-        // SecurityConfig에서 붙여 보낸 alert 쿼리 값을 홈 토스트 메시지로 변환한다.
-        model.addAttribute("authAlert", getAuthAlertMessage(alert));
-        return "home";
-    }
-
-    // alert 파라미터 값을 그대로 화면에 노출하지 않고, 허용된 메시지만 내려준다.
-    private String getAuthAlertMessage(String alert) {
-        if ("loginRequired".equals(alert)) {
-            return "로그인이 필요한 서비스입니다.";
-        }
-
-        if ("accessDenied".equals(alert)) {
-            return "접근 권한이 없는 페이지입니다.";
-        }
-
-        return "";
     }
 }
