@@ -158,7 +158,7 @@ public class ReservationService {
 
             reservation.adminCancel(reason);
 
-/*            // 사용자 알림
+            // 사용자 알림
             notificationPublisher.publish(
                     reservation.getUser().getId(),
                     NotificationTargetRole.RESIDENT,
@@ -167,7 +167,7 @@ public class ReservationService {
                     "관리자에 의해 예약이 취소되었습니다. 사유: " + reason,
                     "/reservation/my",
                     reservation.getId()
-            );*/
+            );
 
         } else {
             // 일반 사용자 취소
