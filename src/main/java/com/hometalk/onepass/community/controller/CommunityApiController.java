@@ -4,8 +4,8 @@ import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.community.enums.MarketStatus;
+import com.hometalk.onepass.community.enums.TradeStatus;
 import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
-import com.hometalk.onepass.community.repository.TagRepository;
 import com.hometalk.onepass.community.service.PostActionService;
 import com.hometalk.onepass.community.service.PostService;
 import jakarta.persistence.EntityManager;
@@ -18,11 +18,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("/api/resident")
 @RequiredArgsConstructor
-public class PostActionController {
+public class CommunityApiController {
 
     private final PostActionService postActionService;
     private final PostService postService;
@@ -30,39 +31,44 @@ public class PostActionController {
     @PersistenceContext
     private EntityManager entityManager;
 
-    // 상단 고정
-    @PostMapping("/{postId}/pin")
-    public ResponseEntity<Void> togglePin(@PathVariable Long postId,
-                                          Authentication authentication) {
+    // 나눔 상태 변경
+    @PostMapping("/{postId}/status")
+    public ResponseEntity<Void> updateMarketStatus(@PathVariable Long postId,
+                                                   @RequestBody java.util.Map<String, String> request,
+                                                   Authentication authentication) {
 
         CustomUserDetails user = getLoginCustomUser(authentication);
 
-        postActionService.togglePin(postId, user);
+        MarketStatus marketStatus = MarketStatus.valueOf(request.get("marketStatus"));
+        postActionService.updateMarketStatus(postId, user, marketStatus);
+
         return ResponseEntity.ok().build();
     }
 
-    // 숨김 처리
-    @PostMapping("/{postId}/hide")
-    public ResponseEntity<Void> hidePost(@PathVariable Long postId,
-                                         Authentication authentication) {
-
+    // 거래 상태 변경
+    @PostMapping("/{postId}/trade/status")
+    public ResponseEntity<Void> updateTradeStatus(
+            @PathVariable Long postId,
+            @RequestBody Map<String, String> request,
+            Authentication authentication
+    ) {
         CustomUserDetails user = getLoginCustomUser(authentication);
 
-        postActionService.hidePost(postId, user);
+        String value = request.get("tradeStatus");
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("tradeStatus 값이 없습니다.");
+        }
+        TradeStatus status = TradeStatus.valueOf(value);
+        postActionService.updateTradeStatus(postId, user, status);
         return ResponseEntity.ok().build();
     }
 
-    // 숨김 해제
-    @PostMapping("/{postId}/unhide")
-    public ResponseEntity<Void> unhidePost(@PathVariable Long postId,
-                                           Authentication authentication) {
-        CustomUserDetails user = getLoginCustomUser(authentication);
-        postActionService.unhidePost(postId, user);
-        return ResponseEntity.ok().build();
+    // 태그 자동완성
+    @GetMapping("/tags/search")
+    public ResponseEntity<List<String>> searchTags(@RequestParam String keyword) {
+        List<String> suggestions = postService.searchTags(keyword);
+        return ResponseEntity.ok(suggestions);
     }
-
-
-
 
     // 사용자 연동
     private CustomUserDetails getLoginCustomUser(Authentication authentication) {

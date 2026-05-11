@@ -17,6 +17,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (postForm) {
         postForm.addEventListener('submit', (e) => {
+            const categorySelect = document.querySelector('.category-select');
+            const tradeBox = document.getElementById('tradeBox');
+            const tradeType = document.querySelector('select[name="tradeType"]');
+            if (categorySelect && tradeBox) {
+                const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+                const categoryCode = selectedOption.dataset.code;
+
+                const isTrade = categoryCode === 'TRADE';
+
+                if (isTrade) {
+                    if (!tradeType || !tradeType.value) {
+                        alert("거래 유형을 선택해주세요.");
+                        tradeType?.focus();
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
             if (quill) {
                 const htmlContent = quill.root.innerHTML;
                 if (htmlContent === '<p><br></p>' || htmlContent.trim() === '') {
@@ -43,6 +61,32 @@ document.addEventListener('DOMContentLoaded', () => {
     if (titleInput) {
         titleInput.addEventListener('input', updateCharCount);
         document.getElementById('charCount').innerText = titleInput.value.length;
+    }
+
+    // 카테고리 변경 → 거래박스 제어
+    const categorySelect = document.querySelector('.category-select');
+    const tradeBox = document.getElementById('tradeBox');
+    if (!categorySelect || !tradeBox) return;
+
+    function onCategoryChange() {
+        const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+        const categoryCode = selectedOption.dataset.code?.toLowerCase();
+
+        const isTrade = categoryCode === 'trade';
+
+        if (tradeBox) {
+            tradeBox.style.display = isTrade ? 'block' : 'none';
+        }
+        const tradeType = document.querySelector('select[name="tradeType"]');
+
+        if (!isTrade && tradeType) {
+            tradeType.value = "";
+        }
+    }
+
+    if (categorySelect && tradeBox) {
+        categorySelect.addEventListener('change', onCategoryChange);
+        onCategoryChange();
     }
 
     // 3. 임시저장 목록 모달 열기
@@ -495,7 +539,7 @@ function updateStatus(postId, status) {
     const token = document.querySelector('meta[name="_csrf"]')?.content;
     const header = document.querySelector('meta[name="_csrf_header"]')?.content;
 
-    fetch(`/hometop/api/posts/${postId}/status`, {
+    fetch(`/hometop/api/resident/${postId}/status`, {
         method: 'POST',
         headers: {
             "Content-Type": "application/json",
@@ -513,12 +557,38 @@ function updateStatus(postId, status) {
     });
 }
 
+function updateTradeStatus(postId, status) {
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    fetch(`/hometop/api/resident/${postId}/trade/status`, {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+            [header]: token
+        },
+        body: JSON.stringify({
+            tradeStatus: status
+        })
+    })
+        .then(res => {
+        if (res.ok) {
+            alert("거래 상태가 변경되었습니다.");
+            location.reload();
+        } else {
+            alert("변경 실패");
+        }
+    })
+        .catch(err => console.error("Error:", err));
+}
+
 /* ================================================
     [6] 태그
 =================================================== */
 const tagInput = document.querySelector('#tagInput');
 const tagList = document.querySelector('#tag-list');
 const hiddenTags = document.querySelector('#hidden-tags');
+const tagMsgContainer = document.querySelector('#tag-message-container');
 let tags = window.initialTags || [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -528,54 +598,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-if (tagInput) {
-    tagInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const tagName = tagInput.value.trim();
-
-            if (tagName.length > 5) {
-                alert("태그는 최대 5자까지만 입력 가능합니다.");
-                return;
-            }
-
-            if (tagName && !tags.includes(tagName)) {
-                tags.push(tagName);
-                renderTags();
-            }
-            tagInput.value = '';
-            return false;
-        }
-    });
-}
-
-function renderTags() {
-    if (!tagList || !hiddenTags) return;
-
-    tagList.innerHTML = '';
-    hiddenTags.innerHTML = '';
-
-    tags.forEach((tag, index) => {
-        const span = document.createElement('span');
-        span.className = 'tag-badge';
-        span.innerHTML = `${tag} <i class="remove-tag" onclick="removeTag(${index})">&times;</i>`;
-        tagList.appendChild(span);
-
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'tags';
-        input.value = tag;
-        hiddenTags.appendChild(input);
-    });
-}
-
-function removeTag(index) {
-    tags.splice(index, 1);
-    renderTags();
-}
-
 /* ================================================
-    [7] 태그 자동완성 (Auto-complete)
+    [6-1] 태그 자동완성
 =================================================== */
 const suggestions = document.getElementById('tagSuggestions');
 
@@ -592,7 +616,7 @@ if (tagInput) {
             return;
         }
 
-        fetch(`/hometop/api/posts/tags/search?keyword=${encodeURIComponent(keyword)}`)
+        fetch(`/hometop/api/resident/tags/search?keyword=${encodeURIComponent(keyword)}`)
             .then(res => res.json())
             .then(data => {
             if (data && data.length > 0) {
@@ -629,4 +653,71 @@ function selectTag(name) {
         suggestions.style.display = 'none';
         tagInput.focus();
     }
+}
+
+/* ================================================
+    [6-2] 태그 제한 로직 (엔터 시 실행)
+=================================================== */
+function showTagMessage(message) {
+    if (!tagMsgContainer) return;
+    tagMsgContainer.innerHTML = `
+        <div style="color: #ff4d4f; font-size: 0.82rem; font-weight: 600;
+                    display: flex; align-items: center; gap: 4px; animation: fadeIn 0.3s;">
+            <span>⚠️</span> ${message}
+        </div>`;
+
+    setTimeout(() => {
+        tagMsgContainer.innerHTML = '';
+    }, 2500);
+}
+
+if (tagInput) {
+    tagInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const tagName = tagInput.value.trim();
+
+            if (tagName.length > 5) {
+                showTagMessage("태그는 최대 5자까지만 입력 가능합니다.");
+                return;
+            }
+            if (tags.length >= 5) {
+                showTagMessage("태그는 최대 5개까지만 등록 가능합니다.");
+                tagInput.value = '';
+                return;
+            }
+
+            if (tagName && !tags.includes(tagName)) {
+                tags.push(tagName);
+                renderTags();
+            }
+            tagInput.value = '';
+            return false;
+        }
+    });
+}
+
+function renderTags() {
+    if (!tagList || !hiddenTags) return;
+
+    tagList.innerHTML = '';
+    hiddenTags.innerHTML = '';
+
+    tags.forEach((tag, index) => {
+        const span = document.createElement('span');
+        span.className = 'tag-badge';
+        span.innerHTML = `${tag} <i class="remove-tag" onclick="removeTag(${index})">&times;</i>`;
+        tagList.appendChild(span);
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'tags';
+        input.value = tag;
+        hiddenTags.appendChild(input);
+    });
+}
+
+function removeTag(index) {
+    tags.splice(index, 1);
+    renderTags();
 }

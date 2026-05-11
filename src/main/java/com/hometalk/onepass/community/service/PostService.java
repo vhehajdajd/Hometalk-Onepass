@@ -8,7 +8,9 @@ import com.hometalk.onepass.community.dto.response.PostListResponse;
 import com.hometalk.onepass.community.dto.response.PostResponseDTO;
 import com.hometalk.onepass.community.dto.response.PostUserRsDTO;
 import com.hometalk.onepass.community.entity.*;
+import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.enums.PostStatus;
+import com.hometalk.onepass.community.enums.TradeStatus;
 import com.hometalk.onepass.community.exception.InvalidBoardCodeException;
 import com.hometalk.onepass.community.exception.PostNotFoundException;
 import com.hometalk.onepass.community.repository.BoardRepository;
@@ -70,6 +72,18 @@ public class PostService {
             // [CASE: 신규] ID가 없으면 새로 생성
             post = dto.toEntity(category, board, writer);
             post = postRepository.save(post);
+
+            // 거래 게시글
+            if ("trade".equalsIgnoreCase(category.getCode())) {
+                if (dto.getTradeType() == null) {
+                    throw new IllegalArgumentException("거래 유형은 필수입니다.");
+                }
+                post.updateTrade(dto.getTradeType(), TradeStatus.SELLING);
+            }
+            // 나눔 게시글
+            if ("share".equalsIgnoreCase(category.getCode())) {
+                post.updateMarketStatus(MarketStatus.SHARED);
+            }
         }
 
         // 태그

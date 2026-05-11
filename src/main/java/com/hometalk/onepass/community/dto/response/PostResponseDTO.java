@@ -51,6 +51,12 @@ public class PostResponseDTO {
     private String marketStatus;                // 로직용: "SHARED", "SOLD"
     private String marketStatusDescription;     // 표시용: "나눔중", "완료"
 
+    // 3. 거래 게시글 상태
+    private String tradeType;                   // 로직용: "BUY", "SELL"
+    private String tradeTypeDescription;        // 표시용: "구매", "판매"
+    private String tradeStatus;                 // 로직용: "SELLING", "RESERVED", "COMPLETED"
+    private String tradeStatusDescription;      // 표시용: "거래중", "예약중", "완료"
+
     // Entity -> DTO 변환 생성자
     public PostResponseDTO(Post post) {
         this.id = post.getId();
@@ -99,9 +105,35 @@ public class PostResponseDTO {
         this.postStatusDescription = post.getPostStatus().getDescription();
 
         // 나눔 게시글 상태
-        if (post.getMarketStatus() != null) {
+        if ("share".equalsIgnoreCase(post.getCategory().getCode())
+                && post.getMarketStatus() != null
+                && !post.isPinned()) {
+
             this.marketStatus = post.getMarketStatus().name();
             this.marketStatusDescription = post.getMarketStatus().getDescription();
+
+        } else {
+            this.marketStatus = null;
+            this.marketStatusDescription = null;
+        }
+
+        // 거래 게시글 상태
+        if ("trade".equalsIgnoreCase(post.getCategory().getCode())
+                && post.getTradeType() != null
+                && post.getTradeStatus() != null
+                && !post.isPinned()) {
+
+            this.tradeType = post.getTradeType().name();
+            this.tradeTypeDescription = post.getTradeType().getDescription();
+
+            this.tradeStatus = post.getTradeStatus().name();
+            this.tradeStatusDescription = post.getTradeStatus().getDescription();
+
+        } else {
+            this.tradeType = null;
+            this.tradeTypeDescription = null;
+            this.tradeStatus = null;
+            this.tradeStatusDescription = null;
         }
 
     }

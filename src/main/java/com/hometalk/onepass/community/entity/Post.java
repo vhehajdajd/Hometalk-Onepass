@@ -5,6 +5,8 @@ import com.hometalk.onepass.common.entity.BaseSoftDeleteEntity;
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
 import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.enums.PostStatus;
+import com.hometalk.onepass.community.enums.TradeStatus;
+import com.hometalk.onepass.community.enums.TradeType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -78,6 +80,14 @@ public class Post extends BaseSoftDeleteEntity {
     @Enumerated(EnumType.STRING)
     private MarketStatus marketStatus;
 
+    @Column(length = 20)
+    @Enumerated(EnumType.STRING)
+    private TradeType tradeType;
+
+    @Column(length = 20)
+    @Enumerated(EnumType.STRING)
+    private TradeStatus tradeStatus;
+
     // 변경 method
     public void update(String title, String content, Category category, PostStatus status) {
         this.title = title;
@@ -111,5 +121,12 @@ public class Post extends BaseSoftDeleteEntity {
     }
     public void updateStatus(PostStatus status) {
         this.postStatus = status;
+    }
+    public void updateTrade(TradeType tradeType, TradeStatus tradeStatus) {
+        this.tradeType = tradeType;
+        this.tradeStatus = tradeStatus;
+    }
+    public void updateTradeStatus(TradeStatus tradeStatus) {
+        this.tradeStatus = tradeStatus;
     }
 }

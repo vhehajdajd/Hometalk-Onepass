@@ -144,6 +144,14 @@
     border-color: var(--main-navy);
     box-shadow: 0 0 0 3px rgba(3, 33, 84, 0.05);
 }
+#tradeBox {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.trade-select {
+    width: 120px;
+}
 
 /* 글자수 제한 표시 */
 .char-limit {
