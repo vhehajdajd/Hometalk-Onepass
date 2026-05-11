@@ -11,6 +11,8 @@ import com.hometalk.onepass.inquiry.entity.Inquiry;
 import com.hometalk.onepass.inquiry.entity.InquiryAttachment;
 import com.hometalk.onepass.inquiry.repository.InquiryAttachmentRepository;
 import com.hometalk.onepass.inquiry.repository.InquiryRepository;
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+import com.hometalk.onepass.notification.entity.NotificationType;
 import com.hometalk.onepass.notification.publisher.NotificationPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -95,6 +97,16 @@ public class InquiryService {
             }
         }
 
+// ✅ 알림 추가 — 전체 관리자에게 문의 접수 알림
+        notificationPublisher.publishToAll(
+                NotificationTargetRole.ADMIN,
+                NotificationType.INQUIRY_RECEIVED,
+                "새로운 문의 접수",
+                "새로운 문의가 접수되었습니다.",
+                "/inquiries/detail/" + inquiry.getId()
+
+        );
+
         return inquiry.getId();
     }
 
@@ -158,6 +170,19 @@ public class InquiryService {
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "답변할 문의글이 없습니다."));
 
         inquiry.updateAnswer(answer);
+
+// ✅ 알림 추가 — 문의 작성자에게 답변 알림
+        if (inquiry.getUser() != null) {
+            notificationPublisher.publish(
+                    inquiry.getUser().getId(),
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.INQUIRY_STATUS,
+                    "문의 답변 등록",
+                    "문의하신 글에 답변이 달렸습니다.",
+                    "/inquiries/detail/" + inquiry.getId(),
+                    inquiry.getId()
+            );
+        }
     }
 
     public Page<InquiryDto> findAll(Long userId, boolean isAdmin, Pageable pageable) {
