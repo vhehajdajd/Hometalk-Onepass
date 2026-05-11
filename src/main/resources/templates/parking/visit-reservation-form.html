@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('방문 차량 예약')}"></head>
-<link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
-<link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
+<head>
+  <th:block th:replace="~{fragments/head :: head('방문 차량 예약')}"></th:block>
+  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+  <link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
+</head>
 <body>
 
 <div class="main-layout" style="display: flex; min-height: 100vh;">
@@ -10,7 +12,7 @@
 
   <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
 
-    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'parking', 'reservationRegister', 'reservationRegisterForm'} })}"></div>
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${paths})}"></div>
 
     <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
 
@@ -23,7 +25,7 @@
           <label for="vehicleNumber">차량 번호</label>
           <input type="text" id="vehicleNumber" name="vehicleNumber"
                  placeholder="예) 123가4567" maxlength="10"
-                 th:value="${reservation?.vehicleNumber}">
+                 th:value="${reservation != null ? reservation.vehicleNumber : ''}">
           <span class="error-msg" id="vehicleNumberError"></span>
         </div>
 
@@ -31,12 +33,12 @@
           <label for="purpose">방문 목적</label>
           <input type="text" id="purpose" name="purpose"
                  placeholder="방문 목적을 입력하세요."
-                 th:value="${reservation?.purpose}">
+                 th:value="${reservation != null ? reservation.purpose : ''}">
           <span class="error-msg" id="purposeError"></span>
         </div>
 
         <div class="form-group">
-          <label>방문 시각</label>
+          <label for="year">방문 시각</label>
           <div class="datetime-group">
             <select id="year">
               <option value="">년</option>
@@ -64,7 +66,8 @@
             </select>
             <select id="minute">
               <option value="">분</option>
-              <option th:each="min : ${minutes}" th:value="${min}" th:text="${min}"
+              <option th:each="min : ${minutes}" th:value="${min}"
+                      th:text="${min}"
                       th:selected="${reservation != null and reservation.reservedAt.minute == min}">
               </option>
             </select>
@@ -74,12 +77,12 @@
 
         <div class="form-actions">
           <button type="button"
-                  th:onclick="'location.href=\'' + @{/parking/visit} + '\''">취소</button>
+                  th:onclick="|location.href='@{/parking/visit}'|">취소</button>
           <button type="button" id="submitBtn" disabled
-                  th:text="${reservation != null} ? '수정' : '등록'"
-                  onclick="submitForm()">
-          </button>
+                  onclick="submitForm()"
+                  th:text="${reservation != null} ? '수정' : '등록'">등록</button>
         </div>
+
       </div>
     </main>
 
@@ -92,9 +95,9 @@
   const csrfToken = document.querySelector('meta[name="_csrf"]').content;
   const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
   const contextPath = /*[[@{/}]]*/ '/';
-  const vehicleNumberRegex = /^\d{2,3}[가-힣]\d{4}$/;
+  const vehicleNumberRegex = new RegExp('^\\d{2,3}[가-힣]\\d{4}$');
 
-  const reservationId = [[${reservation != null ? reservation.reservationId : null}]];
+  const reservationId = /*[[${reservation != null ? reservation.reservationId : 'null'}]]*/ null;
   const isUpdate = reservationId !== null;
 
   const vehicleNumberInput = document.getElementById('vehicleNumber');
@@ -104,93 +107,105 @@
   const datetimeError = document.getElementById('datetimeError');
 
   vehicleNumberInput.addEventListener('input', () => {
-      const value = vehicleNumberInput.value.replace(/\s/g, '');
-      if (value && !vehicleNumberRegex.test(value)) {
-          vehicleNumberError.textContent = '올바른 차량 번호 형식이 아닙니다. (예: 123가4567)';
-      } else {
-          vehicleNumberError.textContent = '';
-      }
-      checkSubmitBtn();
+    const value = vehicleNumberInput.value.replace(/\s/g, '');
+    if (value && !vehicleNumberRegex.test(value)) {
+      vehicleNumberError.textContent = '올바른 차량 번호 형식이 아닙니다. (예: 123가4567)';
+    } else {
+      vehicleNumberError.textContent = '';
+    }
+    checkSubmitBtn();
   });
 
   purposeInput.addEventListener('input', () => {
-      if (purposeInput.value.trim() === '') {
-          purposeError.textContent = '방문 목적을 입력해주세요.';
-      } else {
-          purposeError.textContent = '';
-      }
-      checkSubmitBtn();
+    if (purposeInput.value.trim() === '') {
+      purposeError.textContent = '방문 목적을 입력해주세요.';
+    } else {
+      purposeError.textContent = '';
+    }
+    checkSubmitBtn();
   });
 
   ['year', 'month', 'day', 'hour', 'minute'].forEach(id => {
-      document.getElementById(id).addEventListener('change', checkSubmitBtn);
+    document.getElementById(id).addEventListener('change', checkSubmitBtn);
   });
 
   function checkSubmitBtn() {
-      const vehicleNumber = vehicleNumberInput.value.replace(/\s/g, '');
-      const purpose = purposeInput.value.trim();
-      const year = document.getElementById('year').value;
-      const month = document.getElementById('month').value;
-      const day = document.getElementById('day').value;
-      const hour = document.getElementById('hour').value;
-      const minute = document.getElementById('minute').value;
+    const vehicleNumber = vehicleNumberInput.value.replace(/\s/g, '');
+    const purpose = purposeInput.value.trim();
+    const year = document.getElementById('year').value;
+    const month = document.getElementById('month').value;
+    const day = document.getElementById('day').value;
+    const hour = document.getElementById('hour').value;
+    const minute = document.getElementById('minute').value;
 
-      const isValidNumber = vehicleNumberRegex.test(vehicleNumber);
-      const isValidPurpose = purpose !== '';
-      const isValidDatetime = year && month && day && hour && minute;
+    const isValidNumber = vehicleNumberRegex.test(vehicleNumber);
+    const isValidPurpose = purpose !== '';
+    const isValidDatetime =
+            year !== '' &&
+            month !== '' &&
+            day !== '' &&
+            hour !== '' &&
+            minute !== '';
 
-      document.getElementById('submitBtn').disabled =
-              !(isValidNumber && isValidPurpose && isValidDatetime);
+    document.getElementById('submitBtn').disabled =
+            !(isValidNumber && isValidPurpose && isValidDatetime);
   }
 
   function submitForm() {
-      const year = document.getElementById('year').value;
-      const month = String(document.getElementById('month').value).padStart(2, '0');
-      const day = String(document.getElementById('day').value).padStart(2, '0');
-      const hour = String(document.getElementById('hour').value).padStart(2, '0');
-      const minute = String(document.getElementById('minute').value).padStart(2, '0');
+    const year = document.getElementById('year').value;
+    const month = String(document.getElementById('month').value).padStart(2, '0');
+    const day = String(document.getElementById('day').value).padStart(2, '0');
+    const hour = String(document.getElementById('hour').value).padStart(2, '0');
+    const minute = String(document.getElementById('minute').value).padStart(2, '0');
 
-      const reservedAt = `${year}-${month}-${day}T${hour}:${minute}:00`;
-      const now = new Date();
-      const selectedDate = new Date(reservedAt);
+    const selectedDate = new Date(
+            Number(year),
+            Number(month) - 1,
+            Number(day),
+            Number(hour),
+            Number(minute)
+    );
+    const now = new Date();
 
-      if (selectedDate <= now) {
-          datetimeError.textContent = '방문 예정 시각은 현재 이후여야 합니다.';
-          return;
-      }
+    if (selectedDate <= now) {
+      datetimeError.textContent = '방문 예정 시각은 현재 이후여야 합니다.';
+      return;
+    }
 
-      datetimeError.textContent = '';
+    datetimeError.textContent = '';
 
-      const url = isUpdate
-              ? `${contextPath}parking/visit/update/${reservationId}`
-              : `${contextPath}parking/visit/register`;
+    const reservedAt = `${year}-${month}-${day}T${hour}:${minute}:00`;
 
-      fetch(url, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              [csrfHeader]: csrfToken
-          },
-          body: JSON.stringify({
-              vehicleNumber: vehicleNumberInput.value.replace(/\s/g, ''),
-              purpose: purposeInput.value.trim(),
-              reservedAt: reservedAt
-          })
+    const url = isUpdate
+            ? `${contextPath}parking/visit/update/${reservationId}`
+            : `${contextPath}parking/visit/register`;
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        [csrfHeader]: csrfToken
+      },
+      body: JSON.stringify({
+        vehicleNumber: vehicleNumberInput.value.replace(/\s/g, ''),
+        purpose: purposeInput.value.trim(),
+        reservedAt: reservedAt
       })
-      .then(async res => {
-          if (!res.ok) {
-              const msg = await res.text();
-              throw new Error(msg || '서버 오류');
-          }
-          location.href = `${contextPath}parking/visit`;
-      })
-      .catch(err => {
-          console.error(err);
-          alert('처리 중 오류가 발생했습니다.');
-      });
+    })
+            .then(async res => {
+              if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || '서버 오류');
+              }
+              location.href = `${contextPath}parking/visit`;
+            })
+            .catch(err => {
+              console.error(err);
+              alert('처리 중 오류가 발생했습니다.');
+            });
   }
 
-  window.onload = checkSubmitBtn;
+  window.addEventListener('DOMContentLoaded', checkSubmitBtn);
 </script>
 
 </body>
