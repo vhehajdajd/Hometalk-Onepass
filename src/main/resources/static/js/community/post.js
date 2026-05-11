@@ -2,6 +2,8 @@
     [1] 페이지 초기화 & 이벤트 바인딩
 =================================================== */
 let quill;
+let isSubmitting = false;
+
 /* 안전장치로 DOMContentLoaded로 묶음 */
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -24,8 +26,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 document.getElementById('content').value = htmlContent;
             }
+            isSubmitting = true;
         });
     }
+
+    window.addEventListener('beforeunload', (event) => {
+        const editorElement = document.getElementById('editor');
+        if (editorElement && !isSubmitting) {
+            event.preventDefault();
+            event.returnValue = '';
+        }
+    });
 
     // 제목 글자 수 카운트 (기존 로직)
     const titleInput = document.getElementById('title');
@@ -355,7 +366,11 @@ function submitPost() {
 =================================================== */
 // 취소 버튼 컨펌
 function confirmCancel() {
-    return confirm("작성 중인 내용을 중단하고 목록으로 돌아가시겠습니까?\n(임시저장된 내용은 보존됩니다.)");
+    const result = confirm("작성 중인 내용을 중단하고 목록으로 돌아가시겠습니까?\n(임시저장된 내용은 보존됩니다.)");
+    if(result) {
+        isSubmitting = true;
+    }
+    return result;
 }
 
 // 게시글 삭제 (Soft Delete)
@@ -519,8 +534,8 @@ if (tagInput) {
             e.preventDefault();
             const tagName = tagInput.value.trim();
 
-            if (tagName.length > 15) {
-                alert("태그는 최대 20자까지만 입력 가능합니다.");
+            if (tagName.length > 5) {
+                alert("태그는 최대 5자까지만 입력 가능합니다.");
                 return;
             }
 
@@ -541,13 +556,11 @@ function renderTags() {
     hiddenTags.innerHTML = '';
 
     tags.forEach((tag, index) => {
-        // 1. 화면 표시용 배지 생성
         const span = document.createElement('span');
         span.className = 'tag-badge';
         span.innerHTML = `${tag} <i class="remove-tag" onclick="removeTag(${index})">&times;</i>`;
         tagList.appendChild(span);
 
-        // 2. 서버 전송용 hidden input 생성 (name="tags"로 맞춰야 DTO로 들어감)
         const input = document.createElement('input');
         input.type = 'hidden';
         input.name = 'tags';
@@ -559,4 +572,61 @@ function renderTags() {
 function removeTag(index) {
     tags.splice(index, 1);
     renderTags();
+}
+
+/* ================================================
+    [7] 태그 자동완성 (Auto-complete)
+=================================================== */
+const suggestions = document.getElementById('tagSuggestions');
+
+if (tagInput) {
+    // 1. 입력 시 자동완성 목록 조회
+    tagInput.addEventListener('keyup', (e) => {
+        // 엔터키일 때는 자동완성 로직 건너뛰기 (기존 keydown 로직이 처리)
+        if (e.key === 'Enter') return;
+
+        const keyword = tagInput.value.trim();
+
+        if (keyword.length < 1) {
+            if (suggestions) suggestions.style.display = 'none';
+            return;
+        }
+
+        fetch(`/hometop/api/posts/tags/search?keyword=${encodeURIComponent(keyword)}`)
+            .then(res => res.json())
+            .then(data => {
+            if (data && data.length > 0) {
+                // 데이터가 있을 경우 목록 생성
+                suggestions.innerHTML = data.map(name =>
+                `<li style="cursor:pointer; padding:8px 12px; border-bottom:1px solid #eee;"
+                     onclick="selectTag('${name}')">${name}</li>`
+                ).join('');
+                suggestions.style.display = 'block';
+            } else {
+                suggestions.style.display = 'none';
+            }
+        })
+            .catch(err => console.error("태그 검색 에러:", err));
+    });
+
+    // 2. 입력창 외부 클릭 시 목록 닫기
+    document.addEventListener('click', (e) => {
+        if (e.target !== tagInput && e.target !== suggestions) {
+            if (suggestions) suggestions.style.display = 'none';
+        }
+    });
+}
+
+// 3. 자동완성 목록에서 태그 선택 시
+function selectTag(name) {
+    if (tagInput && suggestions) {
+        // 이미 추가된 태그인지 확인 (기존 tags 배열 활용)
+        if (!tags.includes(name)) {
+            tags.push(name);
+            renderTags();
+        }
+        tagInput.value = '';
+        suggestions.style.display = 'none';
+        tagInput.focus();
+    }
 }

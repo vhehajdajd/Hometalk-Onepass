@@ -78,10 +78,14 @@ public class PostService {
             if (tagName == null) continue;
             String cleanTag = tagName.trim();
             if (cleanTag.isEmpty()) continue;
+            if (cleanTag.length() > 5) {
+                cleanTag = cleanTag.substring(0, 5);
+            }
+            String finalTagName = cleanTag;
             Tag tag = tagRepository.findByName(cleanTag)
                     .orElseGet(() -> tagRepository.save(
                             Tag.builder()
-                                    .name(cleanTag)
+                                    .name(finalTagName)
                                     .build()
                     ));
             PostTag postTag = PostTag.builder()
@@ -96,7 +100,7 @@ public class PostService {
     // Read
     public Page<PostListResponse> searchPosts(Long boardId, Long categoryId, String searchType, String keyword, int page) {
         PostStatus status = PostStatus.ACTIVE;
-        Pageable pageable = PageRequest.of(page, 10);
+        Pageable pageable = PageRequest.of(page, 15);
 
         // 1. 보드 엔티티 조회 (검색 메서드 파라미터가 Board 객체이므로 필요)
         Board board = boardRepository.findById(boardId)
@@ -192,14 +196,19 @@ public class PostService {
 
     // 태그
     public List<String> getTagsByBoardId(Long boardId) {
-        return tagRepository.findAllTagNamesByBoardId(boardId);
+        return tagRepository.findTop10TagNamesByBoardId(boardId, PageRequest.of(0, 10));
     }
 
     public List<String> getTagsByPostId(Long postId) {
         return postRepository.findTagsByPostId(postId);
     }
 
+    public List<String> searchTags(String keyword) {
+        if (keyword == null || keyword.length() < 1) return List.of();
+        return tagRepository.findTop5ByNameStartingWith(keyword, PageRequest.of(0, 5));
+    }
 
+    // 사용자 연동
     @Transactional(readOnly = true)
     public List<CommunityPostResponseDTO> getRecentPosts() {
         List<Post> posts = postRepository

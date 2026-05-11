@@ -5,7 +5,9 @@ import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
+import com.hometalk.onepass.community.repository.TagRepository;
 import com.hometalk.onepass.community.service.PostActionService;
+import com.hometalk.onepass.community.service.PostService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import java.util.List;
 public class PostActionController {
 
     private final PostActionService postActionService;
+    private final PostService postService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -68,6 +71,15 @@ public class PostActionController {
         return ResponseEntity.ok().build();
     }
 
+    // 태그 자동완성 API 추가
+    @GetMapping("/tags/search")
+    public ResponseEntity<List<String>> searchTags(@RequestParam String keyword) {
+        List<String> suggestions = postService.searchTags(keyword);
+        return ResponseEntity.ok(suggestions);
+    }
+
+
+    // 사용자 연동
     private CustomUserDetails getLoginCustomUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new UnauthorizedAccessException("로그인이 필요합니다.");
