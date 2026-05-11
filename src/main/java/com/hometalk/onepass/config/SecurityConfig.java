@@ -77,7 +77,6 @@ public class SecurityConfig {
                                 "/api/admin/**",
                                 "/community/admin/**",
                                 "/api/posts/**",
-                                "/api/facility/**",
                                 "/billing/admin/**",
                                 "/billing/api/billing/admin/**",
                                 "/api/billing/admin/**",
@@ -108,8 +107,10 @@ public class SecurityConfig {
                                 "/api/inquiry/**",
                                 "/complaints/**",
                                 "/api/complaints/**",
-                                "/api/complaint/**"
-                        ).hasAnyRole("RESIDENT", "ADMIN")
+                                "/api/complaint/**",
+                                "/api/facility/**",
+                                "/api/resident/**"
+                                ).hasAnyRole("RESIDENT", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/schedule/write", "/schedule/write/repeat").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/schedule/api/*/edit").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/schedule/api/**").hasRole("ADMIN")
