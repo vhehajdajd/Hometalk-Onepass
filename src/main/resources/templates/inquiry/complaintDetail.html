@@ -93,7 +93,7 @@
                     </div>
                 </div>
 
-                <div th:if="${complaint.isAdmin}" class="admin-answer-form mt-xl pt-lg">
+                <div th:if="${complaint != null and complaint.isAdmin}" class="admin-answer-form mt-xl pt-lg">
                     <h3 class="sub-title" style="margin-top: 20px;">관리자 답변 등록</h3>
 
                     <div class="mt-sm">

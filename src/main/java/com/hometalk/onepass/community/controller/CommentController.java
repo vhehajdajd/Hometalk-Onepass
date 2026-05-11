@@ -37,13 +37,12 @@ public class CommentController {
                               Authentication authentication) {
 
         Long userId = getLoginUserId(authentication);
-
         commentService.saveComment(postId, userId, commentRqDTO);
 
-        redirectAttributes.addFlashAttribute("successMessage", "댓글이 등록되었습니다.");
+        redirectAttributes.addFlashAttribute("message", "댓글이 등록되었습니다.");
         log.info("입력된 댓글 내용: {}", commentRqDTO.getContent());
 
-        return String.format("redirect:/community/%s/%s/%d", boardCode, categoryCode, postId);
+        return String.format("redirect:/community/%s/%s/%d#comment-section", boardCode, categoryCode, postId);
     }
 
     @PostMapping("/{commentId}/edit")
@@ -73,7 +72,7 @@ public class CommentController {
 
         commentService.deleteComment(commentId, userId);
 
-        redirectAttributes.addFlashAttribute("successMessage", "댓글이 삭제되었습니다.");
+        redirectAttributes.addFlashAttribute("message", "댓글이 삭제되었습니다.");
         return String.format("redirect:/community/%s/%s/%d", boardCode, categoryCode, postId);
     }
 

@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -69,12 +70,27 @@ public class ReservationController {
      */
     @PatchMapping("/{id}/cancel")
     public void cancel(@PathVariable("id") Long id,
+                       @RequestBody(required = false) Map<String, String> body,
                        Authentication authentication) {
+
         if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
             throw new RuntimeException("인증 정보가 없습니다.");
         }
+
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        reservationService.cancel(id, userDetails.getUserId(), userDetails.getRole());
+
+        String reason = null;
+
+        if (body != null) {
+            reason = body.get("reason");
+        }
+
+        reservationService.cancel(
+                id,
+                userDetails.getUserId(),
+                userDetails.getRole(),
+                reason
+        );
     }
 
 

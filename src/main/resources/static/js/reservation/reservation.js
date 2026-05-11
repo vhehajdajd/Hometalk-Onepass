@@ -118,23 +118,49 @@ function prevStep(step) {
 
 // 5. 예약 취소 [공통]
 async function confirmCancel(id, isAdmin = false) {
-    const msg = isAdmin ? "해당 예약을 강제로 취소하시겠습니까?" : "예약을 취소하시겠습니까?";
-    if (!confirm(msg)) return;
+
+    let reason = null;
+
+    // 관리자 강제취소 시 사유 입력
+    if (isAdmin) {
+        reason = prompt("취소 사유를 입력해주세요.");
+
+        if (!reason || !reason.trim()) {
+            alert("취소 사유를 입력해야 합니다.");
+            return;
+        }
+    } else {
+        const ok = confirm("예약을 취소하시겠습니까?");
+        if (!ok) return;
+    }
 
     try {
+
         const response = await fetch(`/hometop/api/reservations/${id}/cancel`, {
             method: 'PATCH',
-            headers: getCsrfHeaders()
+            headers: getCsrfHeaders(),
+            body: JSON.stringify({
+                reason: reason
+            })
         });
 
         if (response.ok) {
-            alert(isAdmin ? "취소되었습니다." : "예약이 취소되었습니다.");
+
+            alert(isAdmin ? "예약이 강제 취소되었습니다." : "예약이 취소되었습니다.");
+
             location.reload();
+
         } else {
+
             const errorMsg = await response.text();
+
             alert("실패: " + (errorMsg || response.status));
         }
+
     } catch (error) {
+
+        console.error(error);
+
         alert("서버 통신 중 오류가 발생했습니다.");
     }
 }

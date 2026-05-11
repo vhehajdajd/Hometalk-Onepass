@@ -28,7 +28,7 @@ public class SignUpService {
     @Transactional
     public void signUp(SignUpDTO dto) {
         validateLoginIdAvailable(dto.getLoginId());
-        validateEmailAvailable(dto.getEmail());
+        // validateEmailAvailable(dto.getEmail());
 
         // 1. Household (세대 정보) 생성 및 저장
         // 세대 정보는 여러 유저가 공유할 수 있으나, 가입 시점에 생성하는 로직으로 작성합니다.

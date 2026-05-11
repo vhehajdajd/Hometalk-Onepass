@@ -262,6 +262,7 @@ public class PostController {
     public String postDetail(@PathVariable String boardCode,
                              @PathVariable String categoryCode,
                              @PathVariable Long id,
+                             @RequestParam(value = "page", defaultValue = "1") int page,
                              HttpSession session,
                              Model model,
                              Authentication authentication) {
@@ -290,6 +291,8 @@ public class PostController {
 
         model.addAttribute("boardCode", boardCode);
         model.addAttribute("currentCategoryCode", categoryCode);
+
+        model.addAttribute("currentPage", page);
 
         model.addAttribute("comments", commentService.findAllByPostId(id));
         model.addAttribute("postTags", postService.getTagsByPostId(id));

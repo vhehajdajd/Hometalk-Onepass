@@ -33,7 +33,24 @@ body.auth-status-page {
 }
 
 body.auth-login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 0;
     background: #9EBFDB;
+}
+
+body.auth-login-page .auth-container {
+    margin: 0 auto;
+}
+
+body.auth-register-page {
+    background: #9EBFDB;
+}
+
+body.auth-register-page .auth-input {
+    border-color: #888888;
 }
 
 .auth-container,
@@ -106,6 +123,7 @@ body.auth-login-page {
     color: var(--auth-main);
     font-size: 14px;
     font-weight: 600;
+    text-align: left;
 }
 
 .auth-input {

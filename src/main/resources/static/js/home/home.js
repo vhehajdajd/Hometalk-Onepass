@@ -1,21 +1,5 @@
 const CTX = '';
 
-function isAdmin() {
-  return window.USER_ROLE === 'ADMIN';
-}
-
-function getServiceUrls() {
-  return {
-    notice:    CTX + '/hometop/notice',
-    schedule:  CTX + '/hometop/schedule',
-    billing:   isAdmin() ? CTX + '/hometop/billing/admin/unpaid' : CTX + '/hometop/billing',
-    parking:   isAdmin() ? CTX + '/hometop/admin/vehicle/approval' : CTX + '/hometop/parking/visit',
-    community: CTX + '/hometop/community/square/all',
-    civil:     CTX + '/hometop/inquiries/list',
-    facility:  isAdmin() ? CTX + '/hometop/reservation/admin/status' : CTX + '/hometop/reservation/apply'
-  };
-}
-
 const API_ENDPOINTS = {
   notice:    CTX + '/hometop/notice/api/detail',
   schedule:  CTX + '/hometop/schedule/api/calendar',
@@ -44,14 +28,17 @@ function goCommunity(boardCode) {
     setTimeout(function () {
       location.href = CTX + '/hometop/auth?redirectURL=' + encodeURIComponent(destination);
     }, 1200);
-  } else if (window.USER_ROLE === 'MEMBER') {
-    showToast('승인이 필요한 회원입니다.');
-  } else {
-    location.href = destination;
+    return;
   }
+  if (window.USER_ROLE === 'MEMBER') {
+    showToast('승인이 필요한 회원입니다.');
+    return;
+  }
+  location.href = destination;
 }
 
 async function initHome() {
+  showAuthAlert();
   await Promise.allSettled([
     loadSection(API_ENDPOINTS.notice,    renderNotices,   'notice-list',    '공지사항'),
     loadSection(API_ENDPOINTS.schedule,  renderSchedule,  'schedule-list',  '일정'),
@@ -59,7 +46,6 @@ async function initHome() {
   ]);
 }
 
-// 서버가 내려준 인증/권한 안내 문구가 있을 때 토스트 UI 출력
 function showAuthAlert() {
   if (window.AUTH_ALERT) {
     showToast(window.AUTH_ALERT);
@@ -85,23 +71,23 @@ function showErrorState(elId, label, url, renderFn) {
   const retryFnName = '_retry_' + elId.replace(/-/g, '_');
   window[retryFnName] = function () {
     el.innerHTML =
-      '<li><div class="skeleton-wrap">' +
+        '<li><div class="skeleton-wrap">' +
         '<div class="skeleton-line long"></div>' +
         '<div class="skeleton-line medium"></div>' +
-      '</div></li>';
+        '</div></li>';
     loadSection(url, renderFn, elId, label);
   };
 
   el.innerHTML =
-    '<li class="error-state">' +
+      '<li class="error-state">' +
       '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<circle cx="12" cy="12" r="10"/>' +
-        '<line x1="12" y1="8" x2="12" y2="12"/>' +
-        '<line x1="12" y1="16" x2="12.01" y2="16"/>' +
+      '<circle cx="12" cy="12" r="10"/>' +
+      '<line x1="12" y1="8" x2="12" y2="12"/>' +
+      '<line x1="12" y1="16" x2="12.01" y2="16"/>' +
       '</svg>' +
       '<p>' + escHtml(label) + ' 정보를 불러오지 못했습니다.</p>' +
       '<button class="retry-btn" onclick="' + retryFnName + '()">다시 시도</button>' +
-    '</li>';
+      '</li>';
 }
 
 function renderNotices(list) {
@@ -118,11 +104,11 @@ function renderNotices(list) {
     const badgeTxt = BADGE_LABEL[badgeKey] || '공지';
     const title = n.title.length > 10 ? n.title.slice(0, 10) + '.....' : n.title;
     return (
-      '<li class="notice-item" onclick="goService(\'notice\')">' +
+        '<li class="notice-item" onclick="goService(\'notice\')">' +
         '<span class="badge badge-' + badgeKey + '">' + badgeTxt + '</span>' +
         '<span class="notice-title">' + pin + escHtml(title) + '</span>' +
         '<span class="notice-date">' + formatDate(n.createdAt) + '</span>' +
-      '</li>'
+        '</li>'
     );
   }).join('');
 }
@@ -132,29 +118,29 @@ function renderSchedule(list) {
   if (!el) return;
   if (!list || list.length === 0) {
     el.innerHTML =
-      '<li class="schedule-empty">' +
+        '<li class="schedule-empty">' +
         '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
-          '<rect x="3" y="4" width="18" height="18" rx="2"/>' +
-          '<line x1="16" y1="2" x2="16" y2="6"/>' +
-          '<line x1="8" y1="2" x2="8" y2="6"/>' +
-          '<line x1="3" y1="10" x2="21" y2="10"/>' +
+        '<rect x="3" y="4" width="18" height="18" rx="2"/>' +
+        '<line x1="16" y1="2" x2="16" y2="6"/>' +
+        '<line x1="8" y1="2" x2="8" y2="6"/>' +
+        '<line x1="3" y1="10" x2="21" y2="10"/>' +
         '</svg>' +
         '<p>오늘 등록된 일정이 없습니다.</p>' +
         '<p class="sub">편안한 하루 보내세요!</p>' +
-      '</li>';
+        '</li>';
     return;
   }
   el.innerHTML = list.map(function (s) {
     const dotClass = 'dot-' + String(s.badge || 'DEFAULT').toUpperCase();
     const timeStr  = formatTimeRange(s.startAt, s.endAt);
     return (
-      '<li class="schedule-item" onclick="goService(\'schedule\')">' +
+        '<li class="schedule-item" onclick="goService(\'schedule\')">' +
         '<span class="schedule-dot ' + dotClass + '"></span>' +
         '<div class="schedule-info">' +
-          '<span class="schedule-title">' + escHtml(s.title) + '</span>' +
-          (timeStr ? '<span class="schedule-time">' + timeStr + '</span>' : '') +
+        '<span class="schedule-title">' + escHtml(s.title) + '</span>' +
+        (timeStr ? '<span class="schedule-time">' + timeStr + '</span>' : '') +
         '</div>' +
-      '</li>'
+        '</li>'
     );
   }).join('');
 }
@@ -162,6 +148,13 @@ function renderSchedule(list) {
 function renderCommunity(list) {
   const el = document.getElementById('community-list');
   if (!el) return;
+
+  const loginPrompt = document.getElementById('login-prompt');
+
+  if (!window.IS_LOGGED_IN && loginPrompt) {
+    loginPrompt.style.display = 'flex';
+  }
+
   if (!list || list.length === 0) {
     el.innerHTML = '<li class="community-empty">최신 게시글이 없습니다.</li>';
     return;
@@ -171,10 +164,10 @@ function renderCommunity(list) {
     const category  = escHtml(c.categoryName || '일반');
     const title = c.title.length > 10 ? c.title.slice(0, 10) + '.....' : c.title;
     return (
-      '<li class="community-item" onclick="goCommunity(\'' + boardCode + '\')">' +
+        '<li class="community-item" onclick="goCommunity(\'' + boardCode + '\')">' +
         '<span class="community-cat">[' + category + ']</span>' +
         '<span class="community-title">' + escHtml(title) + '</span>' +
-      '</li>'
+        '</li>'
     );
   }).join('');
 }
@@ -193,8 +186,8 @@ function formatDate(isoStr) {
   const d = new Date(isoStr);
   if (isNaN(d.getTime())) return '';
   return d.getFullYear() + '.' +
-    String(d.getMonth() + 1).padStart(2, '0') + '.' +
-    String(d.getDate()).padStart(2, '0');
+      String(d.getMonth() + 1).padStart(2, '0') + '.' +
+      String(d.getDate()).padStart(2, '0');
 }
 
 function formatTime(isoStr) {
@@ -202,7 +195,7 @@ function formatTime(isoStr) {
   const d = new Date(isoStr);
   if (isNaN(d.getTime())) return '';
   return String(d.getHours()).padStart(2, '0') + ':' +
-    String(d.getMinutes()).padStart(2, '0');
+      String(d.getMinutes()).padStart(2, '0');
 }
 
 function formatTimeRange(startAt, endAt) {
@@ -215,11 +208,11 @@ function formatTimeRange(startAt, endAt) {
 function escHtml(str) {
   if (!str) return '';
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
 }
 
 document.addEventListener('DOMContentLoaded', initHome);

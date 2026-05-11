@@ -33,7 +33,7 @@ public class User extends BaseSoftDeleteEntity {
     @Column(name = "nickname", length = 30)
     private String nickname;
 
-    @Column(name = "email", nullable = false, unique = true, length = 100)
+    @Column(name = "email", nullable = false, length = 100)
     private String email;
 
     @Column(name = "phone_number", length = 20)
