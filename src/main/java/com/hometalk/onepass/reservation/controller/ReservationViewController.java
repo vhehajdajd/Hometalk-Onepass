@@ -65,12 +65,23 @@ public class ReservationViewController {
     public String cancelReservation(@PathVariable Long id,
                                     @RequestHeader(value = "Referer", required = false) String referer,
                                     Authentication authentication) {
+
         if (authentication == null) return "redirect:/auth";
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        reservationService.cancel(id, userDetails.getUserId(), userDetails.getRole());
+
+        CustomUserDetails userDetails =
+                (CustomUserDetails) authentication.getPrincipal();
+
+        reservationService.cancel(
+                id,
+                userDetails.getUserId(),
+                userDetails.getRole(),
+                null
+        );
+
         if (referer != null) {
             return "redirect:" + referer;
         }
+
         return "redirect:/reservation/my";
     }
 

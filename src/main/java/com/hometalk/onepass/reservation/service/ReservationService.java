@@ -132,7 +132,11 @@ public class ReservationService {
     }
 
     @Transactional
-    public void cancel(Long reservationId, Long currentUserId, User.UserRole currentUserRole) {
+    public void cancel(Long reservationId,
+                       Long currentUserId,
+                       User.UserRole currentUserRole,
+                       String reason) {
+
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("해당 예약을 찾을 수 없습니다."));
 
@@ -145,7 +149,31 @@ public class ReservationService {
             throw new RuntimeException("취소 권한이 없습니다.");
         }
 
-        reservation.cancel();
+        // 관리자 취소
+        if (currentUserRole.equals(User.UserRole.ADMIN)) {
+
+            if (reason == null || reason.trim().isEmpty()) {
+                throw new RuntimeException("취소 사유를 입력해주세요.");
+            }
+
+            reservation.adminCancel(reason);
+
+            // 사용자 알림
+            notificationPublisher.publish(
+                    reservation.getUser().getId(),
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.RESERVATION_CANCELLED,
+                    "예약이 취소되었습니다.",
+                    "관리자에 의해 예약이 취소되었습니다. 사유: " + reason,
+                    "/reservation/my",
+                    reservation.getId()
+            );
+
+        } else {
+            // 일반 사용자 취소
+            reservation.cancel();
+        }
+
         reservationRepository.save(reservation);
     }
 

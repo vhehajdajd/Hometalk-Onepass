@@ -1,4 +1,4 @@
-package com.hometalk.onepass.admin.controller;
+package com.hometalk.onepass.inquiry.controller;
 
 import com.hometalk.onepass.inquiry.dto.InquiryDto;
 import com.hometalk.onepass.inquiry.service.InquiryService;

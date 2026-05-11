@@ -30,16 +30,17 @@ public class InquiryPageController {
                            Authentication authentication,
                            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/auth";
+        }
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
+
         Long userId = null;
-        boolean isAdmin = false;
 
-        if (authentication != null && authentication.isAuthenticated()) {
-            try {
-                isAdmin = authentication.getAuthorities().stream()
-                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
-            } catch (Exception e) {
-
-            }
+        if (!isAdmin) {
+            userId = inquiryService.getLoginUserId(authentication);
         }
 
         Page<InquiryDto> inquiries = inquiryService.findAll(userId, isAdmin, pageable);
@@ -79,5 +80,23 @@ public class InquiryPageController {
         InquiryDto inquiryDto = inquiryService.getInquiryDetail(id, authentication);
         model.addAttribute("inquiry", inquiryDto);
         return "inquiry/inquiryDetail";
+    }
+
+    @GetMapping("/my")
+    public String myInquiryListPage(Model model,
+                                    Authentication authentication,
+                                    @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/auth";
+        }
+
+        Long userId = inquiryService.getLoginUserId(authentication);
+
+        Page<InquiryDto> paging = inquiryService.findAll(userId, false, pageable);
+
+        model.addAttribute("paging", paging != null ? paging : Page.empty(pageable));
+
+        return "inquiry/MyInquiryList";
     }
 }

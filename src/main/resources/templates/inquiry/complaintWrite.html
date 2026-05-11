@@ -28,11 +28,11 @@
                     <div class="flex gap-md mb-md">
                         <div class="form-group category-group">
                             <label for="category" class="form-label">분류</label>
-                            <select name="category" id="category" class="input-field select-field">
+                            <select name="category" id="category" class="input-field select-field category-select">
                                 <option value="시설/기술">시설/기술</option>
                                 <option value="환경/위생">환경/위생</option>
                                 <option value="보안/안전">보안/안전</option>
-                                <option value="기타민원   ">기타민원</option>
+                                <option value="기타민원">기타민원</option>
                             </select>
                         </div>
 
@@ -80,6 +80,36 @@
 </div>
 
 <script th:inline="javascript">
+    const categorySelect = document.getElementById('category');
+
+    function updateCategoryColor() {
+        if (!categorySelect) return;
+
+        categorySelect.classList.remove(
+            'facility',
+            'clean',
+            'security',
+            'etc'
+        );
+
+        switch (categorySelect.value) {
+            case '시설/기술':
+                categorySelect.classList.add('facility');
+                break;
+            case '환경/위생':
+                categorySelect.classList.add('clean');
+                break;
+            case '보안/안전':
+                categorySelect.classList.add('security');
+                break;
+            default:
+                categorySelect.classList.add('etc');
+        }
+    }
+
+    categorySelect.addEventListener('change', updateCategoryColor);
+    updateCategoryColor();
+
     const csrfHeader = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
     const csrfToken = /*[[${_csrf.token}]]*/ '';
 
