@@ -42,6 +42,8 @@ body.auth-login-page {
 }
 
 body.auth-login-page .auth-container {
+    width: min(450px, calc(100% - 32px));
+    min-width: min(450px, calc(100% - 32px));
     margin: 0 auto;
 }
 
@@ -55,13 +57,29 @@ body.auth-register-page .auth-input {
 
 .auth-container,
 .auth-status-box {
-    width: min(400px, calc(100% - 32px));
+    position: relative;
+    width: min(500px, calc(100% - 32px));
+    min-width: min(500px, calc(100% - 32px));
     margin: 48px auto 20px;
     padding: 30px;
     border: 1px solid var(--auth-border);
     border-radius: 4px;
     background: var(--auth-white);
     text-align: center;
+}
+
+.auth-back-link {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    color: #888888;
+    font-size: 18px;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.auth-back-link:hover {
+    color: #666666;
 }
 
 .auth-status-box {
@@ -189,6 +207,11 @@ body.auth-register-page .auth-input {
     opacity: .88;
 }
 
+.auth-btn:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
 .auth-btn-block {
     width: 100%;
 }
@@ -232,6 +255,11 @@ body.auth-register-page .auth-input {
 
 .auth-message-error {
     color: var(--auth-point);
+}
+
+.auth-email-timer {
+    color: var(--auth-muted);
+    text-align: left;
 }
 
 .id-check-row,

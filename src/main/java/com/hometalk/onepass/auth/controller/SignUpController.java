@@ -2,12 +2,19 @@ package com.hometalk.onepass.auth.controller;
 
 import com.hometalk.onepass.auth.dto.SignUpDTO;
 import com.hometalk.onepass.auth.dto.SocialSignUpDTO;
+import com.hometalk.onepass.auth.config.CustomOAuth2User;
+import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.service.EmailVerificationService;
 import com.hometalk.onepass.auth.service.SignUpService;
 import com.hometalk.onepass.auth.service.SocialSignUpService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -152,14 +159,49 @@ public class SignUpController {
      * 소셜 가입 완료 처리
      */
     @PostMapping("/social")
-    public String registerSocialUser(@ModelAttribute("socialSignUpDTO") SocialSignUpDTO dto) {
+    public String registerSocialUser(@ModelAttribute("socialSignUpDTO") SocialSignUpDTO dto,
+                                     HttpServletRequest request) {
 
         log.info("소셜 회원가입 시도: email={}, platform={}", dto.getEmail(), dto.getPlatform());
 
         // 서비스 메서드 호출
-        socialSignUpService.socialSignUp(dto);
+        User user = socialSignUpService.socialSignUp(dto);
+        replaceAuthenticationWithServiceUser(user, dto, request);
 
-        return "redirect:/dashboard";
+        return "redirect:/auth/approval/pending";
+    }
+
+    private void replaceAuthenticationWithServiceUser(User user, SocialSignUpDTO dto, HttpServletRequest request) {
+        OAuth2User currentOAuth2User = SecurityContextHolder.getContext().getAuthentication() != null
+                && SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof OAuth2User principal
+                ? principal
+                : null;
+
+        Long householdId = user.getHousehold() != null ? user.getHousehold().getId() : null;
+        String postNum = user.getHousehold() != null ? user.getHousehold().getPostNum() : null;
+        String rememberMeUsername = "SOCIAL:" + dto.getPlatform().toUpperCase() + ":" + dto.getPlatformId();
+
+        CustomOAuth2User principal = new CustomOAuth2User(
+                user.getId(),
+                householdId,
+                postNum,
+                user.getName(),
+                user.getNickname(),
+                user.getRole(),
+                user.getStatus(),
+                user.isApprovalNoticeShown(),
+                rememberMeUsername,
+                null,
+                currentOAuth2User != null ? currentOAuth2User.getAttributes() : Map.of()
+        );
+
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                principal,
+                null,
+                principal.getAuthorities()
+        );
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
 

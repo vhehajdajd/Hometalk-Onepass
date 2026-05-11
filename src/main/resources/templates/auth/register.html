@@ -9,6 +9,7 @@
 <body class="auth-page auth-register-page">
 
 <div class="auth-container">
+    <a class="auth-back-link" th:href="@{/auth}" aria-label="로그인 화면으로 돌아가기">&larr;</a>
     <h1 class="auth-title">회원가입</h1>
     <p class="auth-description">서비스 이용을 위해 추가 정보를 입력해주세요.</p>
 
@@ -22,12 +23,13 @@
                 <label for="email">이메일</label>
                 <div class="email-check-row">
                     <input class="auth-input" placeholder="example@hometalk.com" required th:field="*{email}" type="email">
-                    <button class="auth-btn" id="send-email-code-btn" type="button" onclick="sendEmailVerificationCode()">인증 발송</button>
+                    <button class="auth-btn" id="send-email-code-btn" type="button" onclick="sendEmailVerificationCode()">인증 메일 발송</button>
                 </div>
                 <div class="email-check-row email-code-row" id="email-code-row" style="display: none;">
                     <input class="auth-input" id="emailVerificationCode" inputmode="numeric" maxlength="6" placeholder="인증 코드 6자리" type="text">
                     <button class="auth-btn" type="button" onclick="verifyEmailCode()">인증 확인</button>
                 </div>
+                <p id="email-timer" class="auth-message auth-email-timer" style="display: none;"></p>
                 <p id="email-check-msg" class="auth-message auth-message-error"
                    th:text="${signupError}"></p>
                 <input type="hidden" id="isEmailVerified" value="false">
@@ -122,6 +124,9 @@
 
 <script src="//t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script th:inline="javascript">
+    let emailTimerInterval = null;
+    const EMAIL_TIMER_SECONDS = 5 * 60;
+    const EMAIL_SEND_BUTTON_TEXT = "인증 메일 발송";
 
     // 1. 카카오 주소 API 관련 함수
     function execDaumPostcode() {
@@ -204,8 +209,10 @@
                 const emailMsg = document.getElementById('email-check-msg');
                 const emailCodeInput = document.getElementById('emailVerificationCode');
                 if (isEmailVerified) isEmailVerified.value = "false";
-                if (emailCodeRow) emailCodeRow.style.display = "none";
-                if (emailCodeInput) emailCodeInput.value = "";
+                if (!emailTimerInterval) {
+                    if (emailCodeRow) emailCodeRow.style.display = "none";
+                    if (emailCodeInput) emailCodeInput.value = "";
+                }
                 if (emailMsg) {
                     emailMsg.innerText = "";
                     emailMsg.className = "auth-message";
@@ -215,6 +222,11 @@
     });
 
     async function sendEmailVerificationCode() {
+        const sendButton = document.getElementById('send-email-code-btn');
+        if (sendButton && sendButton.disabled) {
+            return;
+        }
+
         const email = document.getElementById('email').value.trim();
         const isEmailVerified = document.getElementById('isEmailVerified');
         const emailCodeRow = document.getElementById('email-code-row');
@@ -228,6 +240,7 @@
         if (isEmailVerified) isEmailVerified.value = "false";
         if (emailCodeRow) emailCodeRow.style.display = "flex";
         if (emailCodeInput) emailCodeInput.focus();
+        setEmailSendButtonLocked(true);
         setEmailMessage("인증 코드를 입력해주세요.", true);
 
         const sendEmailCodeUrl = /*[[@{/auth/register/email/send}]]*/ '/auth/register/email/send';
@@ -249,10 +262,14 @@
             }
 
             if (isEmailVerified) isEmailVerified.value = "false";
+            alert("인증메일이 발송되었습니다.");
+            startEmailTimer(EMAIL_TIMER_SECONDS);
             setEmailMessage(data.message, true);
         } catch (error) {
             console.error("Error:", error);
             if (isEmailVerified) isEmailVerified.value = "false";
+            setEmailSendButtonLocked(false);
+            stopEmailTimer();
             setEmailMessage(error.message, false);
         }
     }
@@ -284,6 +301,7 @@
             }
 
             isEmailVerified.value = "true";
+            stopEmailTimer();
             setEmailMessage(data.message, true);
         } catch (error) {
             console.error("Error:", error);
@@ -300,6 +318,63 @@
         msgElement.className = success
             ? "auth-message auth-message-success"
             : "auth-message auth-message-error";
+    }
+
+    function startEmailTimer(totalSeconds) {
+        const timerElement = document.getElementById('email-timer');
+        if (!timerElement) return;
+
+        stopEmailTimer();
+
+        let remainingSeconds = totalSeconds;
+        timerElement.style.display = "block";
+        renderEmailTimer(timerElement, remainingSeconds);
+
+        emailTimerInterval = setInterval(function() {
+            remainingSeconds -= 1;
+
+            if (remainingSeconds <= 0) {
+                stopEmailTimer();
+                setEmailMessage("인증 시간이 만료되었습니다. 인증 메일을 다시 발송해주세요.", false);
+                const isEmailVerified = document.getElementById('isEmailVerified');
+                if (isEmailVerified) isEmailVerified.value = "false";
+                return;
+            }
+
+            renderEmailTimer(timerElement, remainingSeconds);
+        }, 1000);
+    }
+
+    function renderEmailTimer(timerElement, remainingSeconds) {
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = String(remainingSeconds % 60).padStart(2, '0');
+        timerElement.innerText = "인증 유효시간 " + minutes + ":" + seconds;
+        setEmailSendButtonLocked(true, minutes + ":" + seconds);
+    }
+
+    function stopEmailTimer() {
+        if (emailTimerInterval) {
+            clearInterval(emailTimerInterval);
+            emailTimerInterval = null;
+        }
+
+        const timerElement = document.getElementById('email-timer');
+        if (timerElement) {
+            timerElement.style.display = "none";
+            timerElement.innerText = "";
+        }
+
+        setEmailSendButtonLocked(false);
+    }
+
+    function setEmailSendButtonLocked(locked, remainingText) {
+        const sendButton = document.getElementById('send-email-code-btn');
+        if (!sendButton) return;
+
+        sendButton.disabled = locked;
+        sendButton.innerText = locked && remainingText
+            ? "재발송 " + remainingText
+            : EMAIL_SEND_BUTTON_TEXT;
     }
 
     // 3. 아이디 중복 확인 함수 (비동기)

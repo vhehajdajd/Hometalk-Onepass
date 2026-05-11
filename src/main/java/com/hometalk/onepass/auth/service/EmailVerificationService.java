@@ -30,6 +30,16 @@ public class EmailVerificationService {
 
     public void sendCode(String email, HttpSession session) {
         String normalizedEmail = normalizeEmail(email);
+        Object verified = session.getAttribute(VERIFIED_ATTR);
+        Object expiresAt = session.getAttribute(EXPIRES_AT_ATTR);
+        if (!Boolean.TRUE.equals(verified)
+                && expiresAt instanceof Instant expires
+                && Instant.now().isBefore(expires)) {
+            long remainingSeconds = Duration.between(Instant.now(), expires).toSeconds();
+            throw new IllegalArgumentException("인증 메일은 5분에 한 번만 발송할 수 있습니다. "
+                    + Math.max(1, remainingSeconds) + "초 후 다시 시도해 주세요.");
+        }
+
         String code = String.format("%06d", secureRandom.nextInt(1_000_000));
 
         session.setAttribute(EMAIL_ATTR, normalizedEmail);
