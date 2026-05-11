@@ -96,14 +96,14 @@ public class InquiryService {
             }
         }
 
-/*        // 전체 관리자에게 문의 접수 알림
+        // 전체 관리자에게 문의 접수 알림
         notificationPublisher.publishToAll(
                 NotificationTargetRole.ADMIN,
                 NotificationType.INQUIRY_RECEIVED,
                 "새로운 문의 접수",
                 "새로운 문의가 접수되었습니다.",
                 "/inquiries/detail/" + inquiry.getId()
-        );*/
+        );
 
         return inquiry.getId();
     }
@@ -162,7 +162,7 @@ public class InquiryService {
         inquiry.updateAnswer(answer);
 
         // 문의 작성자에게 답변 알림
-/*        if (inquiry.getUser() != null) {
+        if (inquiry.getUser() != null) {
             notificationPublisher.publish(
                     inquiry.getUser().getId(),
                     NotificationTargetRole.RESIDENT,
@@ -172,7 +172,7 @@ public class InquiryService {
                     "/inquiries/detail/" + inquiry.getId(),
                     inquiry.getId()
             );
-        }*/
+        }
     }
 
     public Page<InquiryDto> findAll(Long userId, boolean isAdmin, Pageable pageable) {
