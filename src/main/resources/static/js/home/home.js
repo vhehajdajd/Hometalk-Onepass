@@ -149,12 +149,6 @@ function renderCommunity(list) {
   const el = document.getElementById('community-list');
   if (!el) return;
 
-  const loginPrompt = document.getElementById('login-prompt');
-
-  if (!window.IS_LOGGED_IN && loginPrompt) {
-    loginPrompt.style.display = 'flex';
-  }
-
   if (!list || list.length === 0) {
     el.innerHTML = '<li class="community-empty">최신 게시글이 없습니다.</li>';
     return;
