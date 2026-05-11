@@ -97,9 +97,10 @@ public class ReservationController {
     // 캘린더 전용
     @GetMapping("/calendar")
     public List<ReservationCalendarDto> calendar(
+            @RequestParam Long facilityId,
             @RequestParam int year,
             @RequestParam int month
     ) {
-        return reservationService.getCalendar(year, month);
+        return reservationService.getCalendar(facilityId, year, month);
     }
 }

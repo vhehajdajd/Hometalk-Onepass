@@ -44,14 +44,18 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @EntityGraph(attributePaths = {"facility"})
     List<Reservation> findByUserIdOrderByIdDesc(Long userId);
 
+    @EntityGraph(attributePaths = {"user", "facility"})
     @Query("""
-        SELECT r FROM Reservation r
-        WHERE r.reservationTime.startTime 
-        BETWEEN :start AND :end
-        AND r.status != com.hometalk.onepass.reservation.entity.ReservationStatus.CANCELED
-        """)
-    List<Reservation> findByMonthRange(@Param("start") LocalDateTime start,
-                                       @Param("end") LocalDateTime end);
+            SELECT r FROM Reservation r
+            WHERE r.facility.id = :facilityId
+            AND r.reservationTime.startTime BETWEEN :start AND :end
+            AND r.status != com.hometalk.onepass.reservation.entity.ReservationStatus.CANCELED
+            """)
+    List<Reservation> findByFacilityIdAndMonthRange(
+            @Param("facilityId") Long facilityId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
 
     @EntityGraph(attributePaths = {"facility"})
     List<Reservation> findTop5ByUser_IdOrderByIdDesc(Long userId);

@@ -104,8 +104,8 @@ function initCalendar() {
                 return;
             }
 
-            const currentView = calendar ? calendar.view : info.view;
-            const viewDate = currentView.currentStart;
+            const viewDate = new Date(info.start);
+            viewDate.setDate(viewDate.getDate() + 10);
 
             const year = viewDate.getFullYear();
             const month = viewDate.getMonth() + 1;
@@ -115,57 +115,55 @@ function initCalendar() {
 
             fetch(url)
                 .then(res => {
-                if (!res.ok) {
-                    throw new Error('예약 데이터 조회 실패');
-                }
-
-                return res.json();
-            })
-                .then(data => {
-                const filteredData = Array.isArray(data)
-                    ? data.filter(r => {
-                    const s = String(r.badge || r.status || '').trim().toUpperCase();
-                    return s !== 'CANCEL' && s !== 'CANCELED';
-                })
-                    : [];
-
-                const events = filteredData.map(r => {
-                    const currentStatus = r.badge || r.status || 'PENDING';
-                    const eventColor = getStatusColor(currentStatus);
-
-                    const startTime = r.startAt ? r.startAt.substring(11, 16) : '';
-                    const endTime = r.endAt ? r.endAt.substring(11, 16) : '';
-
-                    let displayName = r.title || '예약';
-
-                    const nameMatch = displayName.match(/\((.*?)\)/);
-                    if (nameMatch) {
-                        displayName = nameMatch[1];
+                    if (!res.ok) {
+                        throw new Error('예약 데이터 조회 실패');
                     }
+                return res.json();
+                })
+                .then(data => {
+                    const filteredData = Array.isArray(data)
+                        ? data.filter(r => {
+                        const s = String(r.badge || r.status || '').trim().toUpperCase();
+                        return s !== 'CANCEL' && s !== 'CANCELED';
+                    })
+                        : [];
 
-                    const finalTitle = `[${startTime}~${endTime}] ${displayName}`;
+                    const events = filteredData.map(r => {
+                        const currentStatus = r.badge || r.status || 'PENDING';
+                        const eventColor = getStatusColor(currentStatus);
 
-                    return {
-                        id: r.id,
-                        title: finalTitle,
-                        start: r.startAt,
-                        end: r.endAt,
-                        backgroundColor: eventColor,
-                        borderColor: eventColor,
-                        textColor: '#444444',
-                        display: 'block',
-                        extendedProps: {
-                            status: currentStatus
+                        const startTime = r.startAt ? r.startAt.substring(11, 16) : '';
+                        const endTime = r.endAt ? r.endAt.substring(11, 16) : '';
+
+                        let displayName = r.title || '예약';
+
+                        const nameMatch = displayName.match(/\((.*?)\)/);
+                        if (nameMatch) {
+                            displayName = nameMatch[1];
                         }
-                    };
-                });
 
-                successCallback(events);
-            })
+                        const finalTitle = `[${startTime}~${endTime}] ${displayName}`;
+
+                        return {
+                            id: r.id,
+                            title: finalTitle,
+                            start: r.startAt,
+                            end: r.endAt,
+                            backgroundColor: eventColor,
+                            borderColor: eventColor,
+                            textColor: '#444444',
+                            display: 'block',
+                            extendedProps: {
+                                status: currentStatus
+                            }
+                        };
+                    });
+                    successCallback(events);
+                })
                 .catch(err => {
                 console.error("데이터 로드 실패:", err);
                 failureCallback(err);
-            });
+                });
         }
     });
 
