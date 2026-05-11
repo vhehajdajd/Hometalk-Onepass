@@ -230,8 +230,7 @@
         if (emailCodeInput) emailCodeInput.focus();
         setEmailMessage("인증 코드를 입력해주세요.", true);
 
-        /*
-        const sendEmailCodeUrl = / *[[@{/auth/register/email/send}]]* / '/auth/register/email/send';
+        const sendEmailCodeUrl = /*[[@{/auth/register/email/send}]]*/ '/auth/register/email/send';
 
         try {
             setEmailMessage("인증 코드를 발송 중입니다.", false);
@@ -256,7 +255,6 @@
             if (isEmailVerified) isEmailVerified.value = "false";
             setEmailMessage(error.message, false);
         }
-        */
     }
 
     async function verifyEmailCode() {
@@ -269,11 +267,7 @@
             return;
         }
 
-        isEmailVerified.value = "true";
-        setEmailMessage("이메일 인증이 완료되었습니다.", true);
-
-        /*
-        const verifyEmailCodeUrl = / *[[@{/auth/register/email/verify}]]* / '/auth/register/email/verify';
+        const verifyEmailCodeUrl = /*[[@{/auth/register/email/verify}]]*/ '/auth/register/email/verify';
 
         try {
             const response = await fetch(verifyEmailCodeUrl, {
@@ -296,7 +290,6 @@
             isEmailVerified.value = "false";
             setEmailMessage(error.message, false);
         }
-        */
     }
 
     function setEmailMessage(message, success) {
@@ -355,17 +348,15 @@
 
         if (currentStep === "1") {
             const isIdChecked = document.getElementById('isIdChecked').value;
-            // const isEmailVerified = document.getElementById('isEmailVerified').value;
+            const isEmailVerified = document.getElementById('isEmailVerified').value;
             const pw1 = document.getElementById('pw1').value;
             const pw2 = document.getElementById('pw2').value;
 
-            /*
             if (isEmailVerified !== "true") {
                 alert("이메일 인증을 완료해 주세요.");
                 document.getElementById('email').focus();
                 return false;
             }
-            */
 
             // 중복 확인 여부 체크
             if (isIdChecked !== "true") {

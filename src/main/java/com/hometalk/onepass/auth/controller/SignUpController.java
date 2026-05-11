@@ -50,7 +50,7 @@ public class SignUpController {
             try {
                 signUpService.validateLoginIdAvailable(signUpDTO.getLoginId());
                 // signUpService.validateEmailAvailable(signUpDTO.getEmail());
-                // emailVerificationService.assertVerified(signUpDTO.getEmail(), session);
+                emailVerificationService.assertVerified(signUpDTO.getEmail(), session);
             } catch (IllegalArgumentException e) {
                 model.addAttribute("step", 1);
                 model.addAttribute("signupError", e.getMessage());
@@ -68,7 +68,7 @@ public class SignUpController {
 
         if ("complete".equals(action)) {
             try {
-                // emailVerificationService.assertVerified(signUpDTO.getEmail(), session);
+                emailVerificationService.assertVerified(signUpDTO.getEmail(), session);
                 // 최종 서비스 로직 호출 (회원가입 처리)
                 signUpService.signUp(signUpDTO);
                 emailVerificationService.clear(session);
