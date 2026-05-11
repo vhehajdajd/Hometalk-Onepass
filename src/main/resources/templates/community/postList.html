@@ -109,9 +109,24 @@
                             </tbody>
                         </table>
 
-                        <div th:if="${#lists.isEmpty(posts)}" class="no-data text-muted">
-                            <p class="sub-title" >게시글이 없습니다.<br>새 게시글을 작성해보세요!</p>
-                            <p th:if="${not #strings.isEmpty(keyword)}" class="text-muted">검색 결과와 일치하는 게시글이 없습니다.</p>
+                        <div th:if="${posts.isEmpty()}" class="no-data text-muted">
+                            <div th:if="${keyword != null and !keyword.isEmpty()}">
+                                <p class="sub-title">
+                                    '<span th:text="${keyword}" class="text-primary"></span>'에 대한 검색 결과가 없습니다.
+                                </p>
+                                <p>단어의 철자가 정확한지 확인관 후 다시 검색해 보세요.</p>
+                                <a th:href="@{/community/{boardCode}/all(boardCode=${boardCode})}" class="btn btn-outline-secondary btn-sm mt-3">
+                                    전체 목록으로 돌아가기
+                                </a>
+                            </div>
+
+                            <div th:unless="${keyword != null and !keyword.isEmpty()}">
+                                <p class="sub-title">등록된 게시글이 없습니다.</p>
+                                <p>이 게시판의 첫 번째 주인공이 되어보세요!</p>
+                                <a th:href="@{/community/{code}/write(code=${boardCode})}" class="btn btn-primary btn-sm mt-3">
+                                    새 게시글 작성하기
+                                </a>
+                            </div>
                         </div>
                     </div>
 

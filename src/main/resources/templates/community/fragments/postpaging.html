@@ -2,16 +2,22 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
 <div th:fragment="pagination(page, boardCode, categoryCode)">
-    <div class="pagination-container">
+    <div class="pagination-container"
+         th:with="
+            pageSize = 10,
+            currentPage = ${page.number + 1},
+            startPage = ${((currentPage - 1) / pageSize) * pageSize + 1},
+            endPage = ${(page.totalPages == 0) ? 1 : (startPage + pageSize - 1 < page.totalPages ? startPage + pageSize - 1 : page.totalPages)}
+         ">
         <div class="left-wing"></div>
 
         <nav aria-label="Page navigation" class="pagination-nav" th:if="${!page.isEmpty()}">
             <ul class="pagination">
 
-                <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+                <li class="page-item" th:classappend="${startPage <= 1} ? 'disabled'">
                     <a class="page-link"
-                       th:href="${page.hasPrevious()}
-                               ? @{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${page.number})}
+                       th:href="${startPage > 1}
+                               ? @{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${startPage - 1})}
                                : '#'"
                        aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
@@ -19,18 +25,18 @@
                 </li>
 
                 <li class="page-item"
-                    th:each="pageNumber : ${#numbers.sequence(1, page.totalPages)}"
-                    th:classappend="${pageNumber == page.number + 1} ? 'active'">
+                    th:each="pageNumber : ${#numbers.sequence(startPage, endPage)}"
+                    th:classappend="${pageNumber == currentPage} ? 'active'">
                     <a class="page-link"
                        th:href="@{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${pageNumber})}"
                        th:text="${pageNumber}">
                     </a>
                 </li>
 
-                <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+                <li class="page-item" th:classappend="${endPage >= page.totalPages} ? 'disabled'">
                     <a class="page-link"
-                       th:href="${page.hasNext()}
-                          ? @{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${page.number + 2})}
+                       th:href="${endPage < page.totalPages}
+                          ? @{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${endPage + 1})}
                           : '#'"
                        aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
