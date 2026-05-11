@@ -97,8 +97,8 @@
   const contextPath = /*[[@{/}]]*/ '/';
   const vehicleNumberRegex = new RegExp('^\\d{2,3}[가-힣]\\d{4}$');
 
-  const reservationId = /*[[${reservation != null ? reservation.reservationId : 'null'}]]*/ null;
-  const isUpdate = reservationId !== null;
+  const reservationId = /*[[${reservation != null ? reservation.reservationId : null}]]*/ null;
+  const isUpdate = reservationId !== null && reservationId !== 'null';
 
   const vehicleNumberInput = document.getElementById('vehicleNumber');
   const vehicleNumberError = document.getElementById('vehicleNumberError');
