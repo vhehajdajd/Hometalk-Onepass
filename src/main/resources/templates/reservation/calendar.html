@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='전체 예약 현황')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
@@ -12,7 +14,16 @@
     <div class="main-wrapper">
         <!-- 상단 메뉴 -->
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'reservation'} })}"></div>
-        <div th:replace="~{fragments/headerCategoryMenu :: reservation}"></div>
+
+        <!-- 관리자 메뉴 -->
+        <div sec:authorize="hasRole('ADMIN')"
+             th:replace="~{fragments/headerCategoryMenu :: reservationAdmin}">
+        </div>
+
+        <!-- 일반 회원 메뉴 -->
+        <div sec:authorize="!hasRole('ADMIN')"
+             th:replace="~{fragments/headerCategoryMenu :: reservation}">
+        </div>
 
         <!-- 메인 콘텐츠 -->
         <div class="dashboard-content">
@@ -25,7 +36,7 @@
                     </div>
 
                     <!-- 오른쪽: 예약 신청하기 버튼 -->
-                    <div class="action-wrapper"> <!-- 기존 .action-wrapper 활용 -->
+                    <div class="action-wrapper" sec:authorize="!hasRole('ADMIN')">
                         <a th:href="@{/reservation/apply}" class="btn btn-primary btn-apply-lg">
                             + 예약 신청
                         </a>

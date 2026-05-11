@@ -270,7 +270,7 @@
 
 .select-field {
     cursor: pointer;
-    background-image: url("data:image/svg+xml,..."); /
+    background-image: url("data:image/svg+xml,...");
 }
 
 .textarea-field {
@@ -292,4 +292,119 @@
     font-size: 14px;
     color: #64748b;
     line-height: 1.5;
+}
+
+/*민원 write 페이지 카테고리 색상*/
+.category-select {
+    font-weight: 600;
+    border: none;
+}
+
+/* 시설/기술 - 파랑 */
+.category-select.facility {
+    background-color: #dbeafe !important;
+    color: #2563eb !important;
+}
+
+/* 환경/위생 - 초록 */
+.category-select.clean {
+    background-color: #dcfce7 !important;
+    color: #16a34a !important;
+}
+
+/* 보안/안전 - 보라 */
+.category-select.security {
+    background-color: #ede9fe !important;
+    color: #7c3aed !important;
+}
+
+/* 기타민원 - 회색 */
+.category-select.etc {
+    background-color: #f3f4f6 !important;
+    color: #6b7280 !important;
+}
+
+
+/* 민원 list 페이지 카테고리 색상 변경*/
+.badge.facility {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+.badge.clean {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.badge.security {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.badge.etc {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+/*문의 list 카테고리*/
+
+.badge.service {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+.badge.reservation {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.badge.facility {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.badge.payment {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.badge.account {
+    background-color: #ede9fe;
+    color: #7c3aed;
+}
+
+.badge.etc {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+/*문의 글작성 카테고리*/
+.category-select.service {
+    background-color: #dbeafe !important;
+    color: #2563eb !important;
+}
+
+.category-select.reservation {
+    background-color: #dcfce7 !important;
+    color: #16a34a !important;
+}
+
+.category-select.facility {
+    background-color: #fee2e2 !important;
+    color: #dc2626 !important;
+}
+
+.category-select.payment {
+    background-color: #fef3c7 !important;
+    color: #d97706 !important;
+}
+
+.category-select.account {
+    background-color: #ede9fe !important;
+    color: #7c3aed !important;
+}
+
+.category-select.etc {
+    background-color: #f3f4f6 !important;
+    color: #6b7280 !important;
 }

@@ -134,4 +134,6 @@ public class ComplaintController {
     public void complete(@PathVariable Long id, Authentication authentication) {
         complaintService.complete(id, authentication);
     }
+
+
 }
