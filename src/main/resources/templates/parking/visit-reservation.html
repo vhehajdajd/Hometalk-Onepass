@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('방문 차량 예약')}"></head>
-<link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
-<link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
-<body>
+<head>
+    <th:block th:replace="~{fragments/head :: head('방문 차량 예약')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+    <link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
+</head>
 
 <div class="main-layout" style="display: flex; min-height: 100vh;">
 

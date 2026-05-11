@@ -27,9 +27,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class StaffExitService {
 
-    private final ParkingLogRepository parkingLogRepository;
+    private final ParkingLogRepository    parkingLogRepository;
     private final ParkingTicketRepository parkingTicketRepository;
-    private final NotificationPublisher notificationPublisher;
+    private final NotificationPublisher   notificationPublisher;
 
     @Transactional(readOnly = true)
     public List<ParkingLogResponse> search(String keyword) {
@@ -76,69 +76,77 @@ public class StaffExitService {
         int totalMinutes = (int) Duration.between(
                 parkingLog.getEntryTime(), LocalDateTime.now()).toMinutes();
 
-        // 10분 이내는 무료 출차
+        // 10분 이내 무료 출차
         if (totalMinutes <= 10) {
             parkingLog.exit(totalMinutes, totalMinutes);
             return;
         }
 
-        // 입주자 차량은 티켓 체크 없이 바로 출차
+        // 입주자 차량 — 티켓 체크 없이 바로 출차
         if (parkingLog.getEntryType() == ParkingLog.EntryType.NORMAL) {
             parkingLog.exit(totalMinutes, totalMinutes);
 
-            // ✅ 알림 — ⑤ 입주자 출차
-            parkingLog.getHousehold().getUsers().stream()
+            List<Long> residentUserIds = parkingLog.getHousehold().getUsers().stream()
                     .filter(u -> u.getRole() == User.UserRole.RESIDENT)
-                    .forEach(u -> notificationPublisher.publish(
-                            u.getId(),
-                            NotificationTargetRole.RESIDENT,
-                            NotificationType.VEHICLE_EXIT,
-                            "출차 완료",
-                            "차량(" + parkingLog.getVehicleNumber() + ")이 출차하였습니다.",
-                            "/parking/vehicle",
-                            parkingLog.getParkingId()
-                    ));
+                    .map(User::getId)
+                    .toList();
+            String vehicleNumber = parkingLog.getVehicleNumber();
+            Long pId = parkingLog.getParkingId();
+
+            residentUserIds.forEach(userId -> notificationPublisher.publish(
+                    userId,
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.VEHICLE_EXIT,
+                    "출차 완료",
+                    "차량(" + vehicleNumber + ")이 출차하였습니다.",
+                    "/parking/vehicle",
+                    pId
+            ));
             return;
         }
 
-
-        // 방문/수동 차량은 티켓으로 커버 가능해야 출차
+        // 방문/수동 차량 — 티켓 체크
         int applied = parkingLog.getAppliedMinutes() != null
                 ? parkingLog.getAppliedMinutes() : 0;
 
         if (applied < totalMinutes) {
-            // publishAsync — 별도 스레드에서 실행되므로 롤백 영향 없음
-
-            parkingLog.getHousehold().getUsers().stream()
+            List<Long> residentUserIds = parkingLog.getHousehold().getUsers().stream()
                     .filter(u -> u.getRole() == User.UserRole.RESIDENT)
-                    .forEach(u -> notificationPublisher.publish(
-                            u.getId(),
-                            NotificationTargetRole.RESIDENT,
-                            NotificationType.VEHICLE_TICKET_SHORTAGE,
-                            "티켓 부족",
-                            "티켓이 부족하여 출차할 수 없습니다. 티켓을 적용해 주세요.",
-                            "/parking/ticket",
-                            parkingLog.getParkingId()
-                    ));
+                    .map(User::getId)
+                    .toList();
+            Long pId = parkingLog.getParkingId();
 
-            // ✅ 알림 먼저 커밋되도록 flush 후 예외 throw
+            residentUserIds.forEach(userId -> notificationPublisher.publish(
+                    userId,
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.VEHICLE_TICKET_SHORTAGE,
+                    "티켓 부족",
+                    "티켓이 부족하여 출차할 수 없습니다. 티켓을 적용해 주세요.",
+                    "/parking/ticket",
+                    pId
+            ));
+
             throw new ParkingException("티켓이 부족합니다. 티켓을 먼저 등록해주세요.");
         }
 
         parkingLog.exit(totalMinutes, Math.min(applied, totalMinutes));
 
-        // ✅ 알림 — ⑥ 예약 방문객 출차
-        parkingLog.getHousehold().getUsers().stream()
+        List<Long> residentUserIds = parkingLog.getHousehold().getUsers().stream()
                 .filter(u -> u.getRole() == User.UserRole.RESIDENT)
-                .forEach(u -> notificationPublisher.publish(
-                        u.getId(),
-                        NotificationTargetRole.RESIDENT,
-                        NotificationType.VEHICLE_VISITOR_EXIT,
-                        "방문 차량 출차",
-                        "방문 차량(" + parkingLog.getVehicleNumber() + ")이 출차하였습니다.",
-                        "/parking/vehicle",
-                        parkingLog.getParkingId()
-                ));
+                .map(User::getId)
+                .toList();
+        String vehicleNumber = parkingLog.getVehicleNumber();
+        Long pId = parkingLog.getParkingId();
+
+        residentUserIds.forEach(userId -> notificationPublisher.publish(
+                userId,
+                NotificationTargetRole.RESIDENT,
+                NotificationType.VEHICLE_VISITOR_EXIT,
+                "방문 차량 출차",
+                "방문 차량(" + vehicleNumber + ")이 출차하였습니다.",
+                "/parking/vehicle",
+                pId
+        ));
     }
 
     @Transactional

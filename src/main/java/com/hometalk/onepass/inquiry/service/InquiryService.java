@@ -104,7 +104,6 @@ public class InquiryService {
                 "새로운 문의 접수",
                 "새로운 문의가 접수되었습니다.",
                 "/inquiries/detail/" + inquiry.getId()
-
         );
 
         return inquiry.getId();

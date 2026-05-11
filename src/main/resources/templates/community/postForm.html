@@ -79,10 +79,11 @@
                             <label class="form-label">태그 입력</label>
                             <div class="tag-container">
                                 <div id="tag-list"></div>
-                                <input type="text" id="tagInput" />
+                                <input type="text" id="tagInput" maxlength="5" placeholder="태그"/>
+                                <ul id="tagSuggestions" class="suggestion-list" style="display:none;"></ul>
                             </div>
-                            <div class="tag-help-text">
-                                태그를 입력 후 Enter를 누르세요
+                            <div class="tag-help-text" style="margin-top: 8px; font-size: 0.85rem; color: #64748b;">
+                                태그를 입력 후 Enter를 누르거나 목록에서 선택하세요. (최대 5자)
                             </div>
                             <div id="hidden-tags"></div>
                         </div>

@@ -6,7 +6,7 @@
     <title>회원가입 - Home Talk One Pass</title>
     <link rel="stylesheet" th:href="@{/css/auth/auth.css}">
 </head>
-<body class="auth-page">
+<body class="auth-page auth-register-page">
 
 <div class="auth-container">
     <h1 class="auth-title">회원가입</h1>
@@ -24,7 +24,7 @@
                     <input class="auth-input" placeholder="example@hometalk.com" required th:field="*{email}" type="email">
                     <button class="auth-btn" id="send-email-code-btn" type="button" onclick="sendEmailVerificationCode()">인증 발송</button>
                 </div>
-                <div class="email-check-row email-code-row">
+                <div class="email-check-row email-code-row" id="email-code-row" style="display: none;">
                     <input class="auth-input" id="emailVerificationCode" inputmode="numeric" maxlength="6" placeholder="인증 코드 6자리" type="text">
                     <button class="auth-btn" type="button" onclick="verifyEmailCode()">인증 확인</button>
                 </div>
@@ -165,6 +165,7 @@
         const msg = document.getElementById('match-msg');
         const loginIdInput = document.getElementById('loginId');
         const emailInput = document.getElementById('email');
+        const emailCodeRow = document.getElementById('email-code-row');
 
         // 비밀번호 실시간 일치 확인
         if (pw1 && pw2 && msg) {
@@ -201,7 +202,10 @@
             emailInput.addEventListener('input', function() {
                 const isEmailVerified = document.getElementById('isEmailVerified');
                 const emailMsg = document.getElementById('email-check-msg');
+                const emailCodeInput = document.getElementById('emailVerificationCode');
                 if (isEmailVerified) isEmailVerified.value = "false";
+                if (emailCodeRow) emailCodeRow.style.display = "none";
+                if (emailCodeInput) emailCodeInput.value = "";
                 if (emailMsg) {
                     emailMsg.innerText = "";
                     emailMsg.className = "auth-message";
@@ -212,14 +216,22 @@
 
     async function sendEmailVerificationCode() {
         const email = document.getElementById('email').value.trim();
-        const msgElement = document.getElementById('email-check-msg');
         const isEmailVerified = document.getElementById('isEmailVerified');
-        const sendEmailCodeUrl = /*[[@{/auth/register/email/send}]]*/ '/auth/register/email/send';
+        const emailCodeRow = document.getElementById('email-code-row');
+        const emailCodeInput = document.getElementById('emailVerificationCode');
 
         if (!email) {
             alert("이메일을 입력해주세요.");
             return;
         }
+
+        if (isEmailVerified) isEmailVerified.value = "false";
+        if (emailCodeRow) emailCodeRow.style.display = "flex";
+        if (emailCodeInput) emailCodeInput.focus();
+        setEmailMessage("인증 코드를 입력해주세요.", true);
+
+        /*
+        const sendEmailCodeUrl = / *[[@{/auth/register/email/send}]]* / '/auth/register/email/send';
 
         try {
             setEmailMessage("인증 코드를 발송 중입니다.", false);
@@ -244,18 +256,24 @@
             if (isEmailVerified) isEmailVerified.value = "false";
             setEmailMessage(error.message, false);
         }
+        */
     }
 
     async function verifyEmailCode() {
         const email = document.getElementById('email').value.trim();
         const code = document.getElementById('emailVerificationCode').value.trim();
         const isEmailVerified = document.getElementById('isEmailVerified');
-        const verifyEmailCodeUrl = /*[[@{/auth/register/email/verify}]]*/ '/auth/register/email/verify';
 
         if (!email || !code) {
             alert("이메일과 인증 코드를 입력해주세요.");
             return;
         }
+
+        isEmailVerified.value = "true";
+        setEmailMessage("이메일 인증이 완료되었습니다.", true);
+
+        /*
+        const verifyEmailCodeUrl = / *[[@{/auth/register/email/verify}]]* / '/auth/register/email/verify';
 
         try {
             const response = await fetch(verifyEmailCodeUrl, {
@@ -278,6 +296,7 @@
             isEmailVerified.value = "false";
             setEmailMessage(error.message, false);
         }
+        */
     }
 
     function setEmailMessage(message, success) {
@@ -336,15 +355,17 @@
 
         if (currentStep === "1") {
             const isIdChecked = document.getElementById('isIdChecked').value;
-            const isEmailVerified = document.getElementById('isEmailVerified').value;
+            // const isEmailVerified = document.getElementById('isEmailVerified').value;
             const pw1 = document.getElementById('pw1').value;
             const pw2 = document.getElementById('pw2').value;
 
+            /*
             if (isEmailVerified !== "true") {
                 alert("이메일 인증을 완료해 주세요.");
                 document.getElementById('email').focus();
                 return false;
             }
+            */
 
             // 중복 확인 여부 체크
             if (isIdChecked !== "true") {
