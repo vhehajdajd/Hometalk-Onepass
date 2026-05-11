@@ -62,7 +62,10 @@ public class SecurityConfig {
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
-                                "/uploads/**"
+                                "/uploads/**",
+                                "/notice/api/detail",
+                                "/schedule/api/calendar",
+                                "/api/community/recent"
                         ).permitAll()
 
                         // 2. 승인 상태 안내 페이지는 로그인 사용자만 접근
