@@ -23,7 +23,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
     boolean existsByVehicleNumber(String vehicleNumber);
 
-    // 퀵서치 - 공백 제거 후 끝 4자리 비교 (APPROVED만)
+    boolean existsByVehicleNumberAndDeletedAtIsNull(String vehicleNumber);
+
     @Query("""
         SELECT v FROM Vehicle v
         JOIN FETCH v.household h
@@ -34,7 +35,6 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
         """)
     List<Vehicle> findApprovedByLast4(@Param("last4") String last4);
 
-    // 입주자 차량 목록 전체 (APPROVED)
     List<Vehicle> findAllByStatusAndDeletedAtIsNull(Vehicle.VehicleStatus status);
 
     @Query("SELECT v FROM Vehicle v JOIN FETCH v.household JOIN FETCH v.user WHERE v.status = :status AND v.deletedAt IS NULL")
