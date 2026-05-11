@@ -49,10 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.addEventListener('beforeunload', (event) => {
+        if (isSubmitting) return;
         const editorElement = document.getElementById('editor');
-        if (editorElement && !isSubmitting) {
-            event.preventDefault();
-            event.returnValue = '';
+        if (editorElement) {
+            const hasContent = quill && quill.root.innerText.trim().length > 0;
+            if (hasContent) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
         }
     });
 
@@ -255,16 +259,15 @@ function saveTemp() {
     }
 
     if (confirm("임시저장하시겠습니까?")) {
+        isSubmitting = true;
         const contentInput = document.getElementById('content');
-        if (quill && contentInput) {
+        if (typeof quill !== 'undefined' && contentInput) {
             contentInput.value = quill.root.innerHTML;
         }
 
         const form = document.getElementById('postForm');
         const formData = new FormData(form);
-
-        const pathSegments = window.location.pathname.split('/');
-        const boardCode = pathSegments[3];
+        const boardCode = window.location.pathname.split('/')[3];
 
         const token = document.querySelector('meta[name="_csrf"]')?.content;
         const header = document.querySelector('meta[name="_csrf_header"]')?.content;
@@ -281,21 +284,38 @@ function saveTemp() {
             .then(data => {
                 if (data.id) {
                     alert(data.message);
-                    let idInput = document.querySelector('input[name="id"]');
-                    if (!idInput) {
-                        idInput = document.createElement('input');
-                        idInput.type = 'hidden';
-                        idInput.name = 'id';
-                        form.appendChild(idInput);
-                    }
-                    idInput.value = data.id;
+                    ensureIdInput(form, data.id);
+                    updateTempCount(boardCode);
                 }
+                isSubmitting = false;
             })
             .catch(err => {
+                isSubmitting = false;
                 console.error("임시저장 에러:", err);
                 alert("임시저장 중 오류가 발생했습니다.");
             });
     }
+}
+
+function updateTempCount(boardCode) {
+    fetch(`/hometop/community/${boardCode}/temp-count`)
+        .then(res => res.text())
+        .then(count => {
+        const display = document.getElementById('temp-count-display');
+        if (display) display.innerText = count;
+    })
+        .catch(err => console.error("카운트 업데이트 실패:", err));
+}
+
+function ensureIdInput(form, id) {
+    let idInput = form.querySelector('input[name="id"]');
+    if (!idInput) {
+        idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'id';
+        form.appendChild(idInput);
+    }
+    idInput.value = id;
 }
 
 // 날짜 포맷팅
@@ -331,7 +351,7 @@ function loadTempList(boardCode) {
                 listArea.innerHTML = '<li class="no-data">임시저장된 글이 없습니다.</li>';
             } else {
                 const html = data.map(post => `
-                        <li onclick="location.href='/hometop/community/${boardCode}/edit/${post.id}'" style="cursor:pointer;">
+                        <li onclick="isSubmitting=true; location.href='/hometop/community/${boardCode}/edit/${post.id}'" style="cursor:pointer;">
                             <div>
                                 <span class="temp-category">[${post.categoryName || '미지정'}]</span>
                                 <span class="temp-title">${post.title || '제목 없음'}</span>
@@ -386,7 +406,14 @@ function deleteTempPost(event, id, boardCode) {
 // 임시저장한 글을 등록 후 목록에서 지우기
 // 게시글 등록 버튼 클릭 시
 function submitPost() {
-    const formData = new FormData(document.getElementById('postForm'));
+    const form = document.getElementById('postForm');
+    if (!form) return;
+    const formData = new FormData(form);
+    const boardCode = window.location.pathname.split('/')[3];
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    isSubmitting = true;
 
     fetch(`/hometop/community/${boardCode}/save`, {
         method: 'POST',

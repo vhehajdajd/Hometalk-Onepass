@@ -93,8 +93,8 @@ public class PostController {
 
         addLayoutAttributes(board, null, model, true, authentication);
         model.addAttribute("post", new PostRequestDTO());
-
-        int tempCount = postService.getTempPostCount(boardCode);
+        Long userId = getLoginUserId(authentication);
+        int tempCount = postService.getTempPostCount(boardCode, userId);
         model.addAttribute("tempCount", tempCount);
 
         return "community/postForm";
@@ -122,8 +122,8 @@ public class PostController {
             redirectAttributes.addFlashAttribute("errorMessage", "존재하지 않거나 삭제된 게시글입니다.");
             return "redirect:/community/square/all";
         }
-
-        int tempCount = postService.getTempPostCount(boardCode);
+        Long userId = getLoginUserId(authentication);
+        int tempCount = postService.getTempPostCount(boardCode, userId);
         model.addAttribute("tempCount", tempCount);
 
         return "community/postForm";
@@ -221,6 +221,14 @@ public class PostController {
                 "id", id,
                 "message", "게시글이 임시저장되었습니다."
         ));
+    }
+
+    @GetMapping("/{boardCode}/temp-count")
+    @ResponseBody
+    public int getTempCount(@PathVariable String boardCode, Authentication authentication) {
+        if (authentication == null) return 0;
+        Long userId = getLoginUserId(authentication);
+        return postService.getTempPostCount(boardCode, userId);
     }
 
     @GetMapping("/{boardCode}/temp-list")

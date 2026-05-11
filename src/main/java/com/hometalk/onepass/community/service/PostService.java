@@ -159,8 +159,8 @@ public class PostService {
 
     // 임시저장글 개수
     @Transactional(readOnly = true)
-    public int getTempPostCount(String boardCode) {
-        return postRepository.countByBoardCodeAndPostStatus(boardCode, PostStatus.DRAFT);
+    public int getTempPostCount(String boardCode, Long writerId) {
+        return postRepository.countByBoardCodeAndPostStatusAndWriterId(boardCode, PostStatus.DRAFT, writerId);
     }
 
     // Update
