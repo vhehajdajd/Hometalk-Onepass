@@ -38,7 +38,15 @@
                     <tbody th:if="${paging != null}">
                     <tr th:each="list : ${paging.content}">
                         <td>
-                            <span class="badge category-badge" th:text="${list.category}">시설/기술</span>
+                            <span class="badge category-badge"
+                                  th:text="${list.category}"
+                                  th:classappend="
+                                    ${list.category == '시설/기술'} ? 'facility' :
+                                    (${list.category == '환경/위생'} ? 'clean' :
+                                    (${list.category == '보안/안전'} ? 'security' :
+                                    'etc'))">
+                                시설/기술
+                            </span>
                         </td>
 
                         <td class="title-cell">
@@ -125,6 +133,7 @@
                 </div>
             </main>
         </div>
+
         <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
 </div>

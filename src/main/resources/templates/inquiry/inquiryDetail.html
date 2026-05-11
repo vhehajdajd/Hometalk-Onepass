@@ -33,19 +33,34 @@
                 </div>
 
                 <div class="post-content">
-                    <div class="content-body" th:utext="${inquiry.content}" style="min-height: 200px; white-space: pre-wrap;">문의 내용</div>
+                    <div class="content-body"
+                         th:text="${inquiry.content}"
+                         style="min-height: 200px; white-space: pre-wrap;">
+                        문의 내용
+                    </div>
 
-                    <div th:if="${inquiry.attachments != null and not #lists.isEmpty(inquiry.attachments)}" class="attachments mt-lg" style="margin-top: 30px;">
+                    <div th:if="${inquiry.attachments != null and not #lists.isEmpty(inquiry.attachments)}"
+                         class="attachments mt-lg"
+                         style="margin-top: 30px;">
+
                         <p class="sub-title">📎 첨부파일</p>
-                        <ul class="attachment-list mt-sm">
-                            <li th:each="file : ${inquiry.attachments}">
-                                <a th:href="@{/inquiries/download(fileName=${file.storedFileName})}"
+
+                        <div class="attachment-list mt-sm">
+                            <div th:each="file : ${inquiry.attachments}" class="attachment-item">
+
+                                <img th:src="@{/api/inquiries/file/display(fileName=${file.storedFileName})}"
+                                     class="img-preview mb-xs"
+                                     style="max-width: 200px; display: block; margin-bottom: 8px;">
+
+                                <a th:href="@{/api/inquiries/file/download(fileName=${file.storedFileName}, originName=${file.originFileName})}"
                                    th:text="${file.originFileName}"
-                                   class="text-small" style="color: var(--color-sub); text-decoration: underline;">
+                                   class="text-small"
+                                   style="color: var(--color-sub); text-decoration: underline; word-break: break-all;">
                                     파일명
                                 </a>
-                            </li>
-                        </ul>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -54,12 +69,16 @@
                     <p th:text="${inquiry.answer}" class="answer-box mt-sm">답변 내용</p>
                 </div>
 
-                <div class="admin-only admin-answer-form mt-xl pt-lg">
+                <div th:if="${inquiry.isAdmin}" class="admin-answer-form mt-xl pt-lg">
                     <h3 class="sub-title" style="margin-top: 20px;">관리자 답변 등록</h3>
                     <form th:action="@{/api/inquiries/{id}/respond(id=${inquiry.id})}" method="post" class="mt-sm">
                         <textarea id="adminResponse" name="answer" rows="5" class="input-field" placeholder="여기에 답변을 입력하세요..."></textarea>
                         <div class="flex-end mt-sm">
-                            <button type="button" class="btn btn-primary" th:onclick="submitResponse([[${inquiry.id}]])">답변 저장하기</button>
+                            <button type="button"
+                                    class="btn btn-primary"
+                                    th:onclick="'submitResponse(' + ${inquiry.id} + ')'">
+                                답변 저장하기
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -67,8 +86,13 @@
                 <div class="post-footer flex-between mt-lg pt-lg">
                     <a th:href="@{/inquiries/list}" class="btn btn-outline">목록으로</a>
 
-                    <div class="auth-buttons flex" style="gap: var(--spacing-sm);">
-                        <button type="button" class="btn btn-danger-outline" th:onclick="|confirmDelete(${inquiry.id})|">삭제</button>
+                    <div th:if="${inquiry.canEdit}" class="auth-buttons flex" style="gap: var(--spacing-sm);">
+                        <button type="button"
+                                class="btn btn-danger-outline"
+                                id="deleteBtn"
+                                th:data-id="${inquiry.id}">
+                            삭제
+                        </button>
                     </div>
                 </div>
             </main>
@@ -78,17 +102,48 @@
 </div>
 
 <script th:inline="javascript">
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function () {
+            const id = this.dataset.id;
+            confirmDelete(id);
+        });
+    }
+
     function confirmDelete(id) {
-        if (confirm("정말로 이 문의글을 삭제하시겠습니까?")) {
-            fetch(`/hometop/api/inquiries/${id}`, {
-                method: 'DELETE'
-            })
+        if (!confirm("정말로 이 문의글을 삭제하시겠습니까?")) {
+            return;
         }
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        fetch('/hometop/api/inquiries/' + id, {
+            method: 'DELETE',
+            headers: csrfToken && csrfHeader ? {
+                [csrfHeader]: csrfToken
+            } : {},
+            credentials: 'same-origin'
+        })
+            .then(response => {
+            if (!response.ok) {
+                throw new Error("삭제 실패");
+            }
+
+            alert("문의글이 삭제되었습니다.");
+            location.href = "/hometop/inquiries/list";
+        })
+            .catch(error => {
+            console.error(error);
+            alert("삭제 중 오류가 발생했습니다.");
+        });
     }
 
     async function submitResponse(id) {
         const answerText = document.getElementById('adminResponse').value;
-        if(!answerText.trim()) {
+
+        if (!answerText.trim()) {
             alert("답변 내용을 입력해주세요.");
             return;
         }
@@ -97,23 +152,25 @@
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
 
         try {
-            const response = await fetch(`/hometop/api/inquiries/${id}/respond`, {
+            const response = await fetch('/hometop/api/inquiries/' + id + '/respond', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    ...(csrfHeader && {[csrfHeader]: csrfToken})
+                    ...(csrfToken && csrfHeader ? { [csrfHeader]: csrfToken } : {})
                 },
-                body: JSON.stringify({ "answer": answerText })
+                body: JSON.stringify({ answer: answerText }),
+                credentials: 'same-origin'
             });
 
             if (response.ok) {
                 alert("답변이 등록되었습니다.");
-                location.reload(); // 새로고침하여 답변 확인
+                location.reload();
             } else {
                 alert("답변 등록에 실패했습니다.");
             }
         } catch (error) {
             console.error("Error:", error);
+            alert("답변 등록 중 오류가 발생했습니다.");
         }
     }
 </script>

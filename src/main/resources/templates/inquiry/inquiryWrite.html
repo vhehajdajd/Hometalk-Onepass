@@ -19,11 +19,15 @@
                     <div class="flex gap-md mb-md">
                         <div class="form-group" style="flex: 0 0 150px;">
                             <label for="category" class="form-label">분류</label>
-                            <select name="category" id="category" class="input-field select-field">
-                                <option value="시설/기술">시설/기술</option>
-                                <option value="환경/위생">환경/위생</option>
-                                <option value="보안/안전">보안/안전</option>
-                                <option value="기타문의">기타문의</option>
+                            <select name="category"
+                                    id="category"
+                                    class="input-field select-field category-select">
+                                <option value="서비스 문의">서비스 문의</option>
+                                <option value="예약 문의">예약 문의</option>
+                                <option value="시설 이용">시설 이용</option>
+                                <option value="관리비 / 결제">관리비 / 결제</option>
+                                <option value="계정 / 출입">계정 / 출입</option>
+                                <option value="기타 문의">기타 문의</option>
                             </select>
                         </div>
 
@@ -68,6 +72,53 @@
 </div>
 
 <script th:inline="javascript">
+        // 카테고리 색상 변경
+        const categorySelect = document.getElementById('category');
+
+        function updateCategoryColor() {
+
+            if (!categorySelect) return;
+
+            categorySelect.classList.remove(
+                'service',
+                'reservation',
+                'facility',
+                'payment',
+                'account',
+                'etc'
+            );
+
+            switch (categorySelect.value) {
+
+                case '서비스 문의':
+                    categorySelect.classList.add('service');
+                    break;
+
+                case '예약 문의':
+                    categorySelect.classList.add('reservation');
+                    break;
+
+                case '시설 이용':
+                    categorySelect.classList.add('facility');
+                    break;
+
+                case '관리비 / 결제':
+                    categorySelect.classList.add('payment');
+                    break;
+
+                case '계정 / 출입':
+                    categorySelect.classList.add('account');
+                    break;
+
+                default:
+                    categorySelect.classList.add('etc');
+            }
+        }
+
+        categorySelect.addEventListener('change', updateCategoryColor);
+
+        updateCategoryColor();
+
     // 1. 선택된 파일들을 담을 보관함
     let selectedFiles = [];
 

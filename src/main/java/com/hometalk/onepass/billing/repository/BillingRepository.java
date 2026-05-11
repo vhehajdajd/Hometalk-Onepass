@@ -25,6 +25,20 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
     Long sumTotalAmountByBillingMonthAndStatus(@Param("billingMonth") String billingMonth
             , @Param("status") BillingStatus status);
 
+    // 필터 기준 전체 건수 (납부율 분모용, 중복제거)
+    @Query("""
+    SELECT COUNT(DISTINCT b.household.id) FROM Billing b
+    WHERE (:dong     IS NULL OR b.household.dong = :dong)
+      AND (:yearFrom IS NULL OR b.billingMonth  >= :yearFrom)
+      AND (:yearTo   IS NULL OR b.billingMonth  <= :yearTo)
+      AND (:month    IS NULL OR b.billingMonth   = :month)
+    """)
+    long countTotalWithFilter(
+            @Param("dong")     String dong,
+            @Param("yearFrom") String yearFrom,
+            @Param("yearTo")   String yearTo,
+            @Param("month")    String month
+    );
 
     // ─────────────────────────────────────────────────────────
     // 입주민 목록 (필터 + 페이징)
@@ -160,9 +174,9 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
     """)
     long countDistinctOverdueHouseholds(@Param("overdueBefore") String overdueBefore);
 
-    // 필터 기준 납부완료 세대 수
+    // 필터 기준 납부완료 세대 수 (중복 제거)
     @Query("""
-    SELECT COUNT(b) FROM Billing b
+    SELECT COUNT(DISTINCT b.household.id) FROM Billing b
     WHERE (:dong     IS NULL OR b.household.dong = :dong)
       AND (:yearFrom IS NULL OR b.billingMonth  >= :yearFrom)
       AND (:yearTo   IS NULL OR b.billingMonth  <= :yearTo)
@@ -176,9 +190,9 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             @Param("month")    String month
     );
 
-    // 필터 기준 미납 세대 수
+    // 필터 기준 미납 세대 수 (중복 제거)
     @Query("""
-    SELECT COUNT(b) FROM Billing b
+    SELECT COUNT(DISTINCT b.household.id) FROM Billing b
     WHERE (:dong     IS NULL OR b.household.dong = :dong)
       AND (:yearFrom IS NULL OR b.billingMonth  >= :yearFrom)
       AND (:yearTo   IS NULL OR b.billingMonth  <= :yearTo)

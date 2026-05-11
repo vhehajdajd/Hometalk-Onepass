@@ -77,18 +77,23 @@ public class StaffEntryService {
                         ParkingLog.EntryType.RESERVATION);
                 parkingLogRepository.save(log);
 
-                // ✅ 알림 — ④ 예약 방문객 입차 (입주자에게 알림)
-                reservation.getHousehold().getUsers().stream()
+                // 트랜잭션 안에서 userId 미리 추출
+                List<Long> residentUserIds = reservation.getHousehold().getUsers().stream()
                         .filter(u -> u.getRole() == User.UserRole.RESIDENT)
-                        .forEach(u -> notificationPublisher.publish(
-                                u.getId(),
-                                NotificationTargetRole.RESIDENT,
-                                NotificationType.VEHICLE_VISITOR_ENTRY,
-                                "방문 차량 입차",
-                                "예약하신 방문 차량(" + reservation.getVehicleNumber() + ")이 도착하여 입차했습니다.",
-                                "/parking/vehicle",
-                                reservation.getReservationId()
-                        ));
+                        .map(User::getId)
+                        .toList();
+                String vehicleNum = reservation.getVehicleNumber();
+                Long reservationId = reservation.getReservationId();
+
+                residentUserIds.forEach(userId -> notificationPublisher.publish(
+                        userId,
+                        NotificationTargetRole.RESIDENT,
+                        NotificationType.VEHICLE_VISITOR_ENTRY,
+                        "방문 차량 입차",
+                        "예약하신 방문 차량(" + vehicleNum + ")이 도착하여 입차했습니다.",
+                        "/parking/vehicle",
+                        reservationId
+                ));
             }
 
             case RESIDENT -> {
@@ -110,15 +115,19 @@ public class StaffEntryService {
                         ParkingLog.EntryType.NORMAL);
                 parkingLogRepository.save(log);
 
-                // ✅ 알림 — ③ 입주자 차량 입차
+                // 입주자 본인에게 알림
+                Long userId = vehicle.getUser().getId();
+                String vehicleNum = vehicle.getVehicleNumber();
+                Long vehicleId = vehicle.getVehicleId();
+
                 notificationPublisher.publish(
-                        vehicle.getUser().getId(),
+                        userId,
                         NotificationTargetRole.RESIDENT,
                         NotificationType.VEHICLE_ENTRY,
                         "입주자 입차",
-                        "입주자 차량(" + vehicle.getVehicleNumber() + ")이 입차했습니다.",
+                        "입주자 차량(" + vehicleNum + ")이 입차했습니다.",
                         "/parking/vehicle",
-                        vehicle.getVehicleId()
+                        vehicleId
                 );
             }
         }

@@ -51,7 +51,7 @@ public class VehicleServiceImpl implements VehicleService {
         Household household = user.getHousehold();
 
         String vehicleNumber = request.getVehicleNumber().replace(" ", "");
-        if (vehicleRepository.existsByVehicleNumber(vehicleNumber)) {
+        if (vehicleRepository.existsByVehicleNumberAndDeletedAtIsNull(vehicleNumber)) {
             throw new ParkingException("이미 등록된 차량 번호입니다.");
         }
 
@@ -163,7 +163,6 @@ public class VehicleServiceImpl implements VehicleService {
         VehicleApproval approval = vehicleApprovalRepository.findById(approvalId)
                 .orElseThrow(() -> new ParkingException("승인 이력을 찾을 수 없습니다."));
 
-        // 중복 차량 번호 체크
         String vehicleNumber = approval.getVehicle().getVehicleNumber();
         vehicleRepository.findByVehicleNumber(vehicleNumber)
                 .ifPresent(v -> {

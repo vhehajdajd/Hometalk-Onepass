@@ -2,6 +2,7 @@ package com.hometalk.onepass.notification.event;
 
 import com.hometalk.onepass.notification.dto.NotificationResponse;
 import com.hometalk.onepass.notification.entity.Notification;
+import com.hometalk.onepass.notification.entity.NotificationType;
 import com.hometalk.onepass.notification.service.NotificationService;
 import com.hometalk.onepass.notification.service.SseEmitterManager;
 
@@ -16,17 +17,24 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class NotificationEventListener {
 
-    private final NotificationService  notificationService;
-    private final SseEmitterManager    sseEmitterManager;
+    private final NotificationService notificationService;
+    private final SseEmitterManager   sseEmitterManager;
 
-    // @TransactionalEventListener: DB 커밋 성공 후에만 실행
-    // @Async: SSE 전송 실패가 메인 트랜잭션에 영향 없음
     @Async("notificationExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleNotificationEvent(NotificationEvent event) {
-        Notification saved = notificationService.save(event);
+    public void handleAfterCommit(NotificationEvent event) {
+        sendNotification(event);
+    }
 
-        // 중복 skip된 경우 SSE 전송 안 함
+    @Async("notificationExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
+    public void handleAfterRollback(NotificationEvent event) {
+        if (event.getType() != NotificationType.VEHICLE_TICKET_SHORTAGE) return;
+        sendNotification(event);
+    }
+
+    private void sendNotification(NotificationEvent event) {
+        Notification saved = notificationService.save(event);
         if (saved == null) return;
 
         NotificationResponse response = new NotificationResponse(
