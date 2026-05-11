@@ -49,8 +49,8 @@ public class SignUpController {
         if ("next".equals(action)) {
             try {
                 signUpService.validateLoginIdAvailable(signUpDTO.getLoginId());
-                signUpService.validateEmailAvailable(signUpDTO.getEmail());
-                emailVerificationService.assertVerified(signUpDTO.getEmail(), session);
+                // signUpService.validateEmailAvailable(signUpDTO.getEmail());
+                // emailVerificationService.assertVerified(signUpDTO.getEmail(), session);
             } catch (IllegalArgumentException e) {
                 model.addAttribute("step", 1);
                 model.addAttribute("signupError", e.getMessage());
@@ -68,7 +68,7 @@ public class SignUpController {
 
         if ("complete".equals(action)) {
             try {
-                emailVerificationService.assertVerified(signUpDTO.getEmail(), session);
+                // emailVerificationService.assertVerified(signUpDTO.getEmail(), session);
                 // 최종 서비스 로직 호출 (회원가입 처리)
                 signUpService.signUp(signUpDTO);
                 emailVerificationService.clear(session);
@@ -90,7 +90,7 @@ public class SignUpController {
             HttpSession session
     ) {
         try {
-            signUpService.validateEmailAvailable(email);
+            // signUpService.validateEmailAvailable(email);
             emailVerificationService.sendCode(email, session);
             return ResponseEntity.ok(Map.of("message", "인증 코드가 이메일로 발송되었습니다."));
         } catch (IllegalArgumentException e) {
