@@ -173,7 +173,7 @@
 <div class="modal-overlay" id="scheduleDetailModal" onclick="if(event.target===this) closeScheduleModal()">
     <div class="modal-box">
         <div class="modal-header">
-            <span>일정 상세</span>
+            <span>오늘의 일정</span>
             <button class="modal-close" onclick="closeScheduleModal()">✕</button>
         </div>
         <div class="modal-body">
@@ -236,17 +236,38 @@
         if (!s) return;
         document.getElementById('modalTitle').textContent = s.title;
         document.getElementById('modalBadge').textContent = s.badge ? (BADGE_LABEL[s.badge] || s.badge) : '-';
-        document.getElementById('modalStart').textContent = formatDateTime(s.startAt);
+
         var endRow = document.getElementById('modalEndRow');
         if (s.endAt) {
-            document.getElementById('modalEnd').textContent = formatDateTime(s.endAt);
-            endRow.style.display = '';
+            var startDateStr = s.startAt.substring(0, 10);
+            var endDateStr   = s.endAt.substring(0, 10);
+            var endD = new Date(s.endAt);
+            var endTimeStr = pad(endD.getHours()) + ':' + pad(endD.getMinutes());
+
+            if (startDateStr === endDateStr) {
+                // 같은 날 → 시작 날짜+시간 ~ 종료시간
+                document.getElementById('modalStart').innerHTML = formatDateTime(s.startAt) + ' ~ ' + endTimeStr;
+                endRow.style.display = 'none';
+            } else {
+                // 다른 날 → 시작 날짜+시작시간 ~ 종료시간, 종료는 날짜만
+                document.getElementById('modalStart').innerHTML = formatDateTime(s.startAt) + ' ~ ' + endTimeStr;
+                document.getElementById('modalEnd').textContent = endDateStr;
+                endRow.style.display = '';
+            }
         } else {
+            document.getElementById('modalStart').innerHTML = formatDateTime(s.startAt);
             endRow.style.display = 'none';
         }
-        document.getElementById('modalInfoRow').style.display     = 'none';
-        document.getElementById('modalLocationRow').style.display = 'none';
-        document.getElementById('modalNoticeRow').style.display   = 'none';
+
+        document.getElementById('modalInfo').textContent = s.info || '-';
+        document.getElementById('modalInfoRow').style.display = s.info ? '' : 'none';
+        document.getElementById('modalLocation').textContent = s.location || '-';
+        document.getElementById('modalLocationRow').style.display = s.location ? '' : 'none';
+        document.getElementById('modalNoticeRow').style.display = s.noticeId ? '' : 'none';
+        if (s.noticeId) {
+            document.getElementById('modalNoticeLink').href = contextPath + 'notice/' + s.noticeId;
+        }
+
         document.getElementById('scheduleDetailModal').style.display = 'flex';
     }
     function closeScheduleModal() {
@@ -271,8 +292,11 @@
             var badge   = s.badge || 'DEFAULT';
             var timeStr = formatTime(s.startAt);
             if (s.endAt) timeStr += ' ~ ' + formatTime(s.endAt);
+            var badgeHtml = (badge && badge !== 'DEFAULT')
+                ? '<span class="today-schedule-badge ' + badge + '">' + badgeLabel(s.badge) + '</span>'
+                : '';
             return '<div class="today-schedule-item">' +
-                '<span class="today-schedule-badge ' + badge + '">' + badgeLabel(s.badge) + '</span>' +
+                badgeHtml +
                 '<span class="today-schedule-title">' + s.title + '</span>' +
                 '<span class="today-schedule-time">' + timeStr + '</span>' +
             '</div>';
@@ -320,8 +344,11 @@
             var badge   = s.badge || 'DEFAULT';
             var timeStr = formatTime(s.startAt);
             if (s.endAt) timeStr += ' ~ ' + formatTime(s.endAt);
+            var badgeHtml = (badge && badge !== 'DEFAULT')
+                ? '<span class="today-schedule-badge ' + badge + '">' + badgeLabel(s.badge) + '</span>'
+                : '';
             return '<div class="today-schedule-item" style="cursor:pointer;" onclick="openScheduleModal(' + s.id + ')">' +
-                '<span class="today-schedule-badge ' + badge + '">' + badgeLabel(s.badge) + '</span>' +
+                badgeHtml +
                 '<span class="today-schedule-title">' + s.title + '</span>' +
                 '<span class="today-schedule-time">' + timeStr + '</span></div>';
         }).join('');
@@ -535,6 +562,14 @@
         .then(function(res) { return res.json(); })
         .then(function(data) { renderComplaint(data, 'complaintList', 'complaints/detail'); })
         .catch(function() { document.getElementById('complaintList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
+
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+    function formatDateTime(str) {
+        if (!str) return '-';
+        var d = new Date(str);
+        return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
+               '&nbsp;&nbsp;' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
 </script>
 </body>
 </html>
