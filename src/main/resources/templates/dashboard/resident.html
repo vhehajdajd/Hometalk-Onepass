@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('대시보드')}"></head>
+<link rel="stylesheet" th:href="@{/css/home/home.css}">
+
 <style>
     /* ── 일정 모달 ── */
     .modal-overlay {
@@ -55,6 +57,17 @@
     <div class="main-wrapper">
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='home')}"></div>
         <div th:replace="~{fragments/headerCategoryMenu :: home}"></div>
+
+        <section class="banner">
+            <img th:src="@{/images/banner.png}" alt="포레스트 리움 단지 전경"
+                 onerror="this.style.display='none'" />
+            <div class="banner-overlay">
+                <div class="banner-text">
+                    <h1>안녕하세요,<br>HomeTalk OnePass입니다.</h1>
+                    <p>포레스트 리움 단지 내 소식과 정보를<br>편리하게 이용하세요.</p>
+                </div>
+            </div>
+        </section>
 
         <div class="dashboard-content">
             <div class="dashboard-grid">
@@ -315,10 +328,11 @@
         var el = document.getElementById('communityList');
         if (!data || !data.length) { el.innerHTML = '<div class="loading">게시글이 없습니다.</div>'; return; }
         el.innerHTML = data.map(function(c) {
-            var boardCode = c.boardCode || 'square';
-            var postId    = c.postId || c.id;
+            var boardCode    = c.boardCode || 'square';
+            var postId       = c.postId || c.id;
+            var categoryCode = (c.categoryCode || '').toLowerCase();
             return '<a class="community-item" href="' + contextPath + 'community/' + boardCode + '/' + c.categoryCode + '/' + postId + '">' +
-                '<span class="community-badge">' + c.categoryName + '</span>' +
+                '<span class="community-badge list-category ' + categoryCode + '">' + c.categoryName + '</span>' +
                 '<span class="community-title">' + c.title + '</span></a>';
         }).join('');
     }
