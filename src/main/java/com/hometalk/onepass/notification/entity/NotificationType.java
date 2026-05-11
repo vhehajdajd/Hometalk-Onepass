@@ -39,6 +39,7 @@ public enum NotificationType {
     // ─── 시설예약 ───
     RESERVATION_CONFIRMED("예약", "📅", 1, 0), // 해당 입주민, 예약 확정. expireDays 3→1
     RESERVATION_REMINDER ("예약", "📅", 1, 0), // 해당 입주민, 예약 1시간 전 알림
+    RESERVATION_CANCELLED ("예약", "❌", 7, 0), // 해당 입주민, 관리자 강제취소 + 취소 사유 포함
 
     // ─── 주차 ───
     VEHICLE_APPROVED        ("주차", "🚗", 7, 0), // 해당 입주민, 차량 등록 승인
