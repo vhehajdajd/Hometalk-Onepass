@@ -41,7 +41,7 @@
                                 <th>관리</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody th:if="${not #lists.isEmpty(reservations.content)}">
                             <tr th:each="res : ${reservations}">
                                 <td th:text="${res.facilityName}">시설명</td>
                                 <td th:text="${res.userName}">예약자</td>
@@ -67,11 +67,43 @@
                                     </div>
                                 </td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(reservations)}">
+                        </tbody>
+                        <tbody th:if="${#lists.isEmpty(reservations.content)}">
+                            <tr>
                                 <td colspan="5" class="text-muted" style="padding: 60px 0;">현재 등록된 예약 내역이 없습니다.</td>
                             </tr>
                         </tbody>
                     </table>
+
+                    <div class="pagination-container"
+                         th:if="${reservations.totalPages > 0}"
+                         th:with="pageSize = 10,
+                                  currentPage = ${reservations.number + 1},
+                                  startPage = ${((currentPage - 1) / pageSize) * pageSize + 1},
+                                  endPage = ${(reservations.totalPages == 0) ? 1 : (startPage + pageSize - 1 < reservations.totalPages ? startPage + pageSize - 1 : reservations.totalPages)}
+                                 ">
+                        <div class="left-wing"></div>
+
+                        <nav aria-label="Page navigation" class="pagination-nav">
+                            <ul class="pagination">
+                                <li class="page-item" th:classappend="${startPage <= 1} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/reservation/admin/status(page=${startPage - 2})}">&laquo;</a>
+                                </li>
+                                <li class="page-item"
+                                    th:each="pageNumber : ${#numbers.sequence(startPage, endPage)}"
+                                    th:classappend="${pageNumber == currentPage} ? 'active'">
+                                    <a class="page-link" th:href="@{/reservation/admin/status(page=${pageNumber - 1})}" th:text="${pageNumber}"></a>
+                                </li>
+                                <li class="page-item" th:classappend="${endPage >= reservations.totalPages} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/reservation/admin/status(page=${endPage})}">&raquo;</a>
+                                </li>
+                            </ul>
+                        </nav>
+
+                        <div class="action-wrapper">
+                            <a th:href="@{/reservation/admin/facilities}" class="btn btn-primary">시설 등록</a>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>

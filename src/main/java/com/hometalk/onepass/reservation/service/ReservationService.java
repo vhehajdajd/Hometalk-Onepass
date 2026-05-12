@@ -15,6 +15,10 @@ import com.hometalk.onepass.reservation.entity.ReservationStatus;
 import com.hometalk.onepass.reservation.entity.ReservationTime;
 import com.hometalk.onepass.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -205,14 +209,22 @@ public class ReservationService {
         }
     }
 
-    public List<ReservationResponseDto> findAllWithDetails() {
-        return reservationRepository.findAll()
-                .stream()
-                .sorted((r1, r2) -> r2.getId().compareTo(r1.getId()))
-                .map(ReservationResponseDto::fromEntity)
-                .collect(Collectors.toList());
+    public Page<ReservationResponseDto> findAllWithDetails(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return reservationRepository.findAll(pageable)
+                .map(ReservationResponseDto::fromEntity);
     }
 
+    public Page<ReservationResponseDto> findByUserId(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        return reservationRepository.findByUserIdOrderByIdDesc(userId, pageable)
+                .map(ReservationResponseDto::fromEntity);
+    }
+
+
+
+    // 캘린더
     public List<ReservationCalendarDto> getCalendar(Long facilityId, int year, int month) {
         LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
         LocalDateTime end = start.plusMonths(1).minusSeconds(1);
@@ -223,13 +235,7 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-    public List<ReservationResponseDto> findByUserId(Long userId) {
-        return reservationRepository.findByUserIdOrderByIdDesc(userId)
-                .stream()
-                .map(ReservationResponseDto::fromEntity)
-                .collect(Collectors.toList());
-    }
-
+    // Top5 요약
     public List<ReservationResponseDto> findMyRecent(Long userId) {
         return reservationRepository.findTop5ByUser_IdOrderByIdDesc(userId)
                 .stream()
@@ -237,10 +243,12 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
+    //
     public List<ReservationResponseDto> findAdminRecent() {
         return reservationRepository.findTop10ByOrderByIdDesc()
                 .stream()
                 .map(ReservationResponseDto::fromEntity)
                 .collect(Collectors.toList());
+
     }
 }

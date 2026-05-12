@@ -297,15 +297,23 @@ function approveReservation(id) {
 }
 
 // [사용자] 이용 종료
-async function finishUsage(id) {
+async function finishUsage(event, id) {
+    const btn = event.currentTarget || event.target;
+
     if (!confirm("지금 이용을 종료하시겠습니까?\n종료 시 남은 시간은 다른 분들이 예약할 수 있도록 개방됩니다.")) {
         return;
     }
 
     try {
+        btn.disabled = true;
+        const originalText = btn.innerText;
+        btn.innerText = "처리 중...";
         const response = await fetch(`/hometop/api/reservations/${id}/finish`, {
             method: 'PATCH',
-            headers: getCsrfHeaders()
+            headers: {
+                ...getCsrfHeaders(),
+                'Content-Type': 'application/json'
+            }
         });
 
         if (response.ok) {
@@ -316,10 +324,14 @@ async function finishUsage(id) {
         } else {
             const errorText = await response.text();
             showNotice(errorText || "이용 종료 처리 중 오류가 발생했습니다.", "error");
+            btn.disabled = false;
+            btn.innerText = originalText;
         }
     } catch (error) {
         console.error("Error:", error);
         showNotice("서버와 통신 중 오류가 발생했습니다.", "error");
+        btn.disabled = false;
+        if(typeof originalText !== 'undefined') btn.innerText = originalText;
     }
 }
 

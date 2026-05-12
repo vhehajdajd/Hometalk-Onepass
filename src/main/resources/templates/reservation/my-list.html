@@ -58,7 +58,7 @@
                                                    && (now.isAfter(res.startTime) || now.isEqual(res.startTime))
                                                    && now.isBefore(res.endTime)}"
                                             class="btn btn-primary btn-sm"
-                                            th:onclick="|finishUsage('${res.id}')|">
+                                            th:onclick="|finishUsage(event, '${res.id}')|">
                                         이용 종료
                                     </button>
 
@@ -71,6 +71,42 @@
                             </tr>
                         </tbody>
                     </table>
+
+                    <div class="pagination-container"
+                         th:if="${reservations.totalPages > 0}"
+                         th:with="pageSize = 10,
+                                  currentPage = ${reservations.number + 1},
+                                  startPage = ${((currentPage - 1) / pageSize) * pageSize + 1},
+                                  endPage = ${(reservations.totalPages == 0) ? 1 : (startPage + pageSize - 1 < reservations.totalPages ? startPage + pageSize - 1 : reservations.totalPages)}
+                                 ">
+                        <div class="left-wing"></div>
+
+                        <nav aria-label="Page navigation" class="pagination-nav">
+                            <ul class="pagination">
+                                <li class="page-item" th:classappend="${startPage <= 1} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/reservation/my(page=${startPage - 2})}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+
+                                <li class="page-item"
+                                    th:each="pageNumber : ${#numbers.sequence(startPage, endPage)}"
+                                    th:classappend="${pageNumber == currentPage} ? 'active'">
+                                    <a class="page-link" th:href="@{/reservation/my(page=${pageNumber - 1})}" th:text="${pageNumber}"></a>
+                                </li>
+
+                                <li class="page-item" th:classappend="${endPage >= reservations.totalPages} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/reservation/my(page=${endPage})}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                        <div class="action-wrapper">
+                            <a th:href="@{/reservation/apply}" class="btn btn-primary">시설 예약</a>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="summary-card" th:if="${#lists.isEmpty(reservations)}">

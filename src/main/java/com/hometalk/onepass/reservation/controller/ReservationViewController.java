@@ -7,6 +7,7 @@ import com.hometalk.onepass.facility.service.FacilityService;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,7 +40,8 @@ public class ReservationViewController {
        [입주민] 내 예약 목록
      */
     @GetMapping("/my")
-    public String myReservations(Model model, Authentication authentication) {
+    public String myReservations(Model model, Authentication authentication,
+                                 @RequestParam(defaultValue = "0") int page) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/auth";
         }
@@ -54,8 +56,8 @@ public class ReservationViewController {
             return "redirect:/auth";
         }
 
-        List<ReservationResponseDto> myRes = reservationService.findByUserId(userId);
-        model.addAttribute("reservations", myRes);
+        Page<ReservationResponseDto> myResPage = reservationService.findByUserId(userId, page, 10);
+        model.addAttribute("reservations", myResPage);
         return "reservation/my-list";
     }
 
@@ -103,11 +105,13 @@ public class ReservationViewController {
     */
     @GetMapping("/admin/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public String manageStatus(Model model, Authentication authentication) {
+    public String manageStatus(Model model, Authentication authentication,
+                               @RequestParam(defaultValue = "0") int page) {
         if (authentication == null) return "redirect:/auth";
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Page<ReservationResponseDto> adminResPage = reservationService.findAllWithDetails(page, 10);
         model.addAttribute("adminName", userDetails.getName());
-        model.addAttribute("reservations", reservationService.findAllWithDetails());
+        model.addAttribute("reservations", adminResPage);
         return "reservation/admin/reservation-status";
     }
 
