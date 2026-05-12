@@ -161,8 +161,8 @@
     fetch(`${contextPath}staff/vehicle/search?keyword=${keyword}`)
             .then(async res => {
               if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || '서버 오류');
+                const data = await res.json();
+                throw new Error(data.message || '서버 오류');
               }
               return res.json();
             })
@@ -213,7 +213,7 @@
             })
             .catch(err => {
               console.error(err);
-              document.getElementById('searchError').textContent = '조회 중 오류가 발생했습니다.';
+              document.getElementById('searchError').textContent = err.message || '조회 중 오류가 발생했습니다.';
             });
   }
 

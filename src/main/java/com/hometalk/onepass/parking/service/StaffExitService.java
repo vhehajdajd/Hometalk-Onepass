@@ -149,6 +149,26 @@ public class StaffExitService {
         ));
     }
 
+    @Transactional(readOnly = true)
+    public void sendTicketShortageNotification(Long parkingId) {
+        ParkingLog parkingLog = parkingLogRepository.findById(parkingId)
+                .orElseThrow(() -> new ParkingException("주차 기록을 찾을 수 없습니다."));
+
+        if (parkingLog.getHousehold() == null) return;
+
+        parkingLog.getHousehold().getUsers().stream()
+                .filter(u -> u.getRole() == User.UserRole.RESIDENT)
+                .forEach(u -> notificationPublisher.publishAsync(
+                        u.getId(),
+                        NotificationTargetRole.RESIDENT,
+                        NotificationType.VEHICLE_TICKET_SHORTAGE,
+                        "티켓 부족",
+                        "티켓이 부족하여 출차할 수 없습니다. 티켓을 적용해 주세요.",
+                        "/parking/ticket",
+                        parkingLog.getParkingId()
+                ));
+    }
+
     @Transactional
     public void forceExit(Long parkingId) {
         ParkingLog parkingLog = parkingLogRepository.findByIdWithLock(parkingId)

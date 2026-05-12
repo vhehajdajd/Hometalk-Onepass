@@ -166,4 +166,24 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
         log.info("티켓 취소 - parkingId: {}, 타입: {}, 복구분: {}",
                 request.getParkingId(), ticketType, totalCancelMinutes);
     }
+    @Transactional(readOnly = true)
+    public List<ParkingSearchResponse> getMyParkedVehicles(Long householdId) {
+        Household household = householdRepository.findById(householdId)
+                .orElseThrow(() -> new ParkingException("세대를 찾을 수 없습니다."));
+
+        LocalDate today = LocalDate.now();
+        List<ParkingTicket> tickets = parkingTicketRepository
+                .findByHouseholdAndIssueYearAndIssueMonth(
+                        household, today.getYear(), today.getMonthValue());
+
+        List<ParkingLog> logs = parkingLogRepository.findByStatus(ParkingLog.ParkingStatus.PARKED);
+
+        return logs.stream()
+                .filter(log -> log.getEntryType() != ParkingLog.EntryType.NORMAL)
+                .filter(log -> log.getEntryType() == ParkingLog.EntryType.MANUAL ||
+                        (log.getHousehold() != null && log.getHousehold().getId().equals(householdId)))
+                .map(log -> new ParkingSearchResponse(
+                        log, tickets, ticketUsageRepository.findByParkingLog(log)))
+                .collect(Collectors.toList());
+    }
 }

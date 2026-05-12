@@ -40,6 +40,18 @@ public class StaffEntryService {
         String last4 = keyword.replace(" ", "");
         if (last4.length() != 4) return List.of();
 
+        // 이미 주차 중인 차량 체크
+        List<String> parkedNumbers = parkingLogRepository
+                .findByStatus(ParkingLog.ParkingStatus.PARKED)
+                .stream().map(ParkingLog::getVehicleNumber).toList();
+
+        boolean alreadyParked = parkedNumbers.stream()
+                .anyMatch(n -> n.replace(" ", "").endsWith(last4));
+
+        if (alreadyParked) {
+            throw new ParkingException("이미 입차된 차량입니다.");
+        }
+
         List<VehicleSearchResult> results = new ArrayList<>();
         vehicleRepository.findApprovedByLast4(last4)
                 .stream().map(VehicleSearchResult::ofResident).forEach(results::add);
@@ -76,6 +88,8 @@ public class StaffEntryService {
                         reservation.getHousehold(), reservation, null,
                         ParkingLog.EntryType.RESERVATION);
                 parkingLogRepository.save(log);
+
+                reservation.enter();
 
                 // 트랜잭션 안에서 userId 미리 추출
                 List<Long> residentUserIds = reservation.getHousehold().getUsers().stream()
