@@ -148,7 +148,6 @@
     gap: 10px;
     margin-top: 15px;
 }
-.time-radio { display: none; }
 .time-chip {
     padding: 12px 0;
     border: 1px solid var(--border-color);
@@ -158,11 +157,18 @@
     font-weight: 600;
     cursor: pointer;
     background: white;
+    transition: all 0.2s ease;
 }
-.time-radio:checked + .time-chip {
-    background-color: var(--color-main);
-    color: white;
+.time-chip.active {
+    background-color: var(--color-main) !important;
+    color: white !important;
+    border-color: var(--color-main) !important;
+    box-shadow: 0 2px 8px rgba(3, 33, 84, 0.2);
+}
+
+.time-chip:hover:not(.active) {
     border-color: var(--color-main);
+    background-color: rgba(3, 33, 84, 0.05);
 }
 
 .bg-light {
@@ -171,6 +177,27 @@
     border-radius: var(--radius);
     display: flex;
     justify-content: center;
+}
+
+/* 시간 선택 안내 박스 스타일 */
+.info-guide-box {
+    background-color: #f0f7ff;
+    border-left: 4px solid var(--color-main);
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.guide-text {
+    font-size: 14px;
+    color: #1e293b;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.guide-text strong {
+    color: var(--color-main);
+    font-weight: 700;
 }
 
 /* =========================
@@ -408,3 +435,121 @@
     background-color: #f3f4f6 !important;
     color: #6b7280 !important;
 }
+
+/* 알림 박스 스타일 */
+.alert-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    border-radius: var(--radius);
+    animation: slideDown 0.5s ease-out;
+}
+
+.alert-success {
+    background-color: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.alert-danger {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.alert-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.alert-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.5;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 대시보드 전체 컨테이너 */
+.res-dashboard-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+/* 개별 카드 스타일 */
+.res-stat-card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 14px 18px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f1f3f5;
+    transition: all 0.2s ease;
+}
+.res-stat-info {
+    display: flex;
+    flex-direction: column;
+}
+/* 카드 상단: 레이블과 아이콘 */
+.res-stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.res-stat-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666;
+}
+
+.res-stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+/* 카드 하단: 메인 숫자 */
+.res-stat-value {
+    color: #495057;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.res-stat-unit {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #adb5bd;
+    margin-left: 4px;
+}
+
+/* 상태별 포인트 컬러 */
+.res-pending { border-top: 4px solid #FFD8A8; }
+.res-pending .res-stat-icon { background: #FFF4E6; color: #FD7E14; }
+.res-pending .res-stat-label { color: #868E96; }
+
+.res-active { border-top: 4px solid #B2F2BB; }
+.res-active .res-stat-icon { background: #EBFBEE; color: #40C057; }
+.res-active .res-stat-label { color: #868E96; }
+
+.res-total { border-top: 4px solid #A5D8FF; }
+.res-total .res-stat-icon { background: #E7F5FF; color: #228BE6; }
+.res-total .res-stat-label { color: #868E96; }

@@ -19,7 +19,7 @@ import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    int countByBoardCodeAndPostStatus(String boardCode, PostStatus status);
+    int countByBoardCodeAndPostStatusAndWriterId(String boardCode, PostStatus status, Long writerId);
 
 
     // --- [사용자용 조회] : @SQLRestriction ("deleted_at IS NULL") 자동 적용 ---

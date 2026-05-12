@@ -1,9 +1,12 @@
 package com.hometalk.onepass.reservation.entity;
 
 import com.hometalk.onepass.auth.entity.User;
+import com.hometalk.onepass.common.entity.BaseTimeEntity;
 import com.hometalk.onepass.facility.entity.Facility;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -11,7 +14,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Table(name = "kjh_reservation")
-public class Reservation {
+public class Reservation extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,8 +34,13 @@ public class Reservation {
     @Embedded
     private ReservationTime reservationTime;
 
+    // 예약 종료 시간
+    @Column(name = "actual_end_time")
+    private LocalDateTime actualEndTime;
+
     // 예약 상태
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private ReservationStatus status;
 
     // 관리자 취소 사유
@@ -66,5 +74,28 @@ public class Reservation {
 
         this.status = ReservationStatus.CANCELED;
         this.cancelReason = reason;
+    }
+
+    public void updateEndTime(LocalDateTime newEndTime) {
+        if (this.reservationTime != null) {
+            this.reservationTime = new ReservationTime(this.reservationTime.getStartTime(), newEndTime);
+        }
+    }
+
+    public LocalDateTime getStartTime() {
+        return this.reservationTime != null ? this.reservationTime.getStartTime() : null;
+    }
+
+    public LocalDateTime getEndTime() {
+        return this.reservationTime != null ? this.reservationTime.getEndTime() : null;
+    }
+
+    // 이용 종료 상태로 변경
+    public void finish() {
+        if (this.status != ReservationStatus.CONFIRMED) {
+            throw new RuntimeException("확정된 예약 상태에서만 이용 종료가 가능합니다.");
+        }
+        this.status = ReservationStatus.FINISHED;
+        this.actualEndTime = LocalDateTime.now();
     }
 }

@@ -86,14 +86,29 @@
                                         </span>
                                     </td>
                                     <td class="title-cell">
+                                        <!-- 나눔 -->
                                         <th:block th:if="${post.marketStatus != null and post.marketStatus != ''}">
                                             <span th:classappend="${'badge-' + post.marketStatus.toLowerCase()}"
                                                   class="badge status-badge-inline"
                                                   th:text="${post.marketStatusDescription}">
                                             </span>
                                         </th:block>
+                                        <!-- 거래 -->
+                                        <th:block th:if="${post.tradeStatus != null}">
+                                            <span th:classappend="${'badge-' + post.tradeStatus.toLowerCase()}"
+                                                  class="badge status-badge-inline"
+                                                  th:text="${post.tradeStatusDescription}">
+                                            </span>
+                                        </th:block>
+                                        <th:block th:if="${post.tradeType != null}">
+                                            <span th:if="${post.tradeType == 'SELL'}"
+                                                  class="trade-type">[판매]</span>
+                                            <span th:if="${post.tradeType == 'BUY'}"
+                                                  class="trade-type">[구매]</span>
+                                        </th:block>
+
                                         <a th:href="@{/community/{bCode}/{cCode}/{id}(bCode=${board.code}, cCode=${categoryCode}, id=${post.id})}"
-                                           th:text="${post.title}"></a> <span th:if="${post.commentCount > 0}"
+                                           th:text="${post.title}">제목</a> <span th:if="${post.commentCount > 0}"
                                               th:text="'[' + ${post.commentCount} + ']'"
                                               class="text-small comment-count-inline"></span>
                                         <span th:if="${post.hasImage}" class="img-icon-grey"><i class="fa-regular fa-image"></i>️</span>

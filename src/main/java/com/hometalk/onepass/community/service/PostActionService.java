@@ -7,6 +7,7 @@ import com.hometalk.onepass.community.entity.Category;
 import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.entity.Post;
 import com.hometalk.onepass.community.enums.PostStatus;
+import com.hometalk.onepass.community.enums.TradeStatus;
 import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
 import com.hometalk.onepass.community.repository.CategoryRepository;
 import com.hometalk.onepass.community.repository.PostRepository;
@@ -27,14 +28,25 @@ public class PostActionService {
         if (user == null) {
             throw new UnauthorizedAccessException("로그인이 필요합니다.");
         }
-
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
-
         if (!post.getWriter().getId().equals(user.getUserId())) {
             throw new UnauthorizedAccessException("작성자만 상태 변경 가능합니다.");
         }
         post.updateMarketStatus(status);
+    }
+
+    @Transactional
+    public void updateTradeStatus(Long postId, CustomUserDetails user, TradeStatus status) {
+        if (user == null) {
+            throw new UnauthorizedAccessException("로그인이 필요합니다.");
+        }
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
+        if (!post.getWriter().getId().equals(user.getUserId())) {
+            throw new UnauthorizedAccessException("작성자만 상태 변경 가능합니다.");
+        }
+        post.updateTradeStatus(status);
     }
 
     @Transactional

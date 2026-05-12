@@ -18,6 +18,7 @@ public class FacilityResponseDto {
     private String closeTime;
 
     private OperationTime operationTime;
+    private Integer maxReservationTime;
 
     public static FacilityResponseDto from(Facility entity) {
         return FacilityResponseDto.builder()
@@ -29,6 +30,7 @@ public class FacilityResponseDto {
                 .openTime(entity.getOperationTime().getOpenTime().toString())
                 .closeTime(entity.getOperationTime().getCloseTime().toString())
                 .operationTime(entity.getOperationTime())
+                .maxReservationTime(entity.getMaxReservationTime())
                 .build();
     }
 }

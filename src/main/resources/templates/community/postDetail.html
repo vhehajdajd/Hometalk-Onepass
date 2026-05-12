@@ -49,10 +49,17 @@
                                         'background-color:' + ${post.categoryBgColor} + '; color:' + ${post.categoryTextColor} + ';' : ''">
                             카테고리
                         </span>
+
                         <th:block th:if="${post.categoryCode == 'share' and post.marketStatus != null and post.marketStatus != '' and !post.pinned}">
                                             <span th:classappend="${'badge-' + post.marketStatus.toLowerCase()}"
                                                   class="badge status-badge-inline"
                                                   th:text="${post.marketStatusDescription}">
+                                            </span>
+                        </th:block>
+                        <th:block th:if="${post.categoryCode == 'trade' and post.tradeStatus != null and post.tradeStatus != '' and !post.pinned}">
+                                            <span th:classappend="${'badge-' + post.tradeStatus.toLowerCase()}"
+                                                  class="badge status-badge-inline"
+                                                  th:text="${post.tradeStatusDescription}">
                                             </span>
                         </th:block>
 
@@ -78,13 +85,21 @@
                             <span class="date" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span>
                             <span class="views">조회수 <span th:text="${post.viewCount}">0</span></span>
 
-                            <div th:if="${post.categoryCode == 'share' and post.editable and post.marketStatus != null and !post.pinned}"
-                                 class="writer-only-tools" style="display: inline-block; margin-left: 5px;">
-                                <select th:onchange="|updateStatus(${post.id}, this.value)|" class="status-select">
-                                    <option th:selected="${post.marketStatus == 'SHARED'}" value="SHARED">나눔중</option>
-                                    <option th:selected="${post.marketStatus == 'RESERVED'}" value="RESERVED">예약중</option>
-                                    <option th:selected="${post.marketStatus == 'COMPLETED'}" value="COMPLETED">나눔완료</option>
-                                </select>
+                            <div class="writer-only-tools" style="display: inline-block; margin-left: 5px;">
+                                <th:block th:if="${post.categoryCode == 'share' and post.editable and post.marketStatus != null and !post.pinned}">
+                                    <select th:onchange="|updateStatus(${post.id}, this.value)|" class="status-select">
+                                        <option th:selected="${post.marketStatus == 'SHARED'}" value="SHARED">나눔중</option>
+                                        <option th:selected="${post.marketStatus == 'RESERVED'}" value="RESERVED">예약중</option>
+                                        <option th:selected="${post.marketStatus == 'COMPLETED'}" value="COMPLETED">나눔완료</option>
+                                    </select>
+                                </th:block>
+                                <th:block th:if="${post.categoryCode == 'trade' and post.tradeStatus != null and post.editable and !post.pinned}">
+                                    <select th:onchange="|updateTradeStatus(${post.id}, this.value)|" class="status-select">
+                                        <option th:selected="${post.tradeStatus == 'SELLING'}" value="SELLING">거래중</option>
+                                        <option th:selected="${post.tradeStatus == 'RESERVED'}" value="RESERVED">예약중</option>
+                                        <option th:selected="${post.tradeStatus == 'COMPLETED'}" value="COMPLETED">완료</option>
+                                    </select>
+                                </th:block>
                             </div>
                         </div>
                     </div>

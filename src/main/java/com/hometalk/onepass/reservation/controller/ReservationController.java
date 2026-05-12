@@ -93,13 +93,33 @@ public class ReservationController {
         );
     }
 
+    /*
+        이용 종료
+     */
+    @PatchMapping("/{id}/finish")
+    public ResponseEntity<?> finish(@PathVariable Long id,
+                                    Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("인증 정보가 없습니다.");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        try {
+            reservationService.finishUsage(id, userDetails.getUserId());
+            return ResponseEntity.ok().body("이용 종료 처리가 완료되었습니다.");
+        } catch (Exception e) {
+            // 실패 시 에러 메시지 반환 (showNotice에서 이 메시지를 출력하게 됨)
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 
     // 캘린더 전용
     @GetMapping("/calendar")
     public List<ReservationCalendarDto> calendar(
+            @RequestParam Long facilityId,
             @RequestParam int year,
             @RequestParam int month
     ) {
-        return reservationService.getCalendar(year, month);
+        return reservationService.getCalendar(facilityId, year, month);
     }
 }

@@ -193,10 +193,20 @@
     border: 1px solid #B2F5EA;
 }
 
+/* 완료 */
 .badge-completed {
     background-color: #EDF2F7;
     color: #718096;
     border: 1px solid #E2E8F0;
+}
+
+.trade-type { font-weight: 700; margin-right: 6px; }
+
+/* 거래중 */
+.badge-selling {
+    background-color: #EBF8FF;
+    color: #3182CE;
+    border: 1px solid #BEE3F8;
 }
 
 

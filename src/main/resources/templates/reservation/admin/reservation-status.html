@@ -30,62 +30,146 @@
                     </div>
                 </div>
 
+                <div class="res-dashboard-stats">
+                    <div class="res-stat-card res-pending">
+                        <div class="res-stat-info">
+                            <span class="res-stat-label">승인 대기</span>
+                            <div>
+                                <span class="res-stat-value" th:text="${pendingCount}">0</span>
+                                <span class="res-stat-unit">건</span>
+                            </div>
+                        </div>
+                        <div class="res-stat-icon"><i class="fas fa-clock"></i></div>
+                    </div>
+
+                    <div class="res-stat-card res-active">
+                        <div class="res-stat-info">
+                            <span class="res-stat-label">현재 이용 중</span>
+                            <div>
+                                <span class="res-stat-value" th:text="${activeCount}">0</span>
+                                <span class="res-stat-unit">건</span>
+                            </div>
+                        </div>
+                        <div class="res-stat-icon"><i class="fas fa-running"></i></div>
+                    </div>
+
+                    <div class="res-stat-card res-total">
+                        <div class="res-stat-info">
+                            <span class="res-stat-label">오늘 전체 예약</span>
+                            <div>
+                                <span class="res-stat-value" th:text="${todayTotalCount}">0</span>
+                                <span class="res-stat-unit">건</span>
+                            </div>
+                        </div>
+                        <div class="res-stat-icon"><i class="fas fa-calendar-check"></i></div>
+                    </div>
+                </div>
+
+                <div class="filter-section flex-between mb-md" style="align-items: center;">
+                    <h3 class="m-0" style="font-size: 1.1rem; color: #444;">상세 내역</h3>
+
+                    <form th:action="@{/reservation/admin/status}" method="get" id="filterForm">
+                        <input type="hidden" name="page" value="0">
+
+                        <select name="status" class="form-select" onchange="this.form.submit()"
+                                style="padding: 6px 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; cursor: pointer;">
+                            <option value="">전체 상태 보기</option>
+                            <option th:each="s : ${statuses}"
+                                    th:value="${s}"
+                                    th:text="${s.title}"
+                                    th:selected="${s == selectedStatus}">
+                            </option>
+                        </select>
+                    </form>
+                </div>
+
                 <div class="summary-card">
                     <table class="table">
                         <thead>
                             <tr>
                                 <th>시설명</th>
                                 <th>예약자</th>
-                                <th>예약 시간</th>
+                                <th>예약 시간 / 신청일 / 취소일</th>
                                 <th>상태</th>
                                 <th>관리</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr th:each="res : ${reservations}">
+                        <tbody th:if="${not #lists.isEmpty(reservations.content)}">
+                            <tr th:each="res : ${reservations.content}">
                                 <td th:text="${res.facilityName}">시설명</td>
                                 <td th:text="${res.userName}">예약자</td>
-                                <td th:text="${#temporals.format(res.startTime, 'MM/dd HH:mm') + ' ~ ' + #temporals.format(res.endTime, 'HH:mm')}">시간</td>
                                 <td>
-                                   <span class="status-badge"
-                                         th:classappend="${res.status.name() == 'CANCELED' ? 'status-canceled' :
-                                                     (res.status.name() == 'PENDING' ? 'status-pending' : 'status-active')}"
-                                         th:text="${res.status.name() == 'CANCELED' ? '취소됨' :
-                                               (res.status.name() == 'PENDING' ? '승인대기' : '예약완료')}">상태</span>
+                                    <div th:text="${#temporals.format(res.startTime, 'MM/dd HH:mm') + ' ~ ' + #temporals.format(res.endTime, 'HH:mm')}">시간</div>
+
+                                    <div style="font-size: 0.75rem; color: #999;">
+                                        <span th:if="${res.status?.toString() == 'CANCELED' and res.updatedAt != null}"
+                                              th:text="|취소일: ${#temporals.format(res.updatedAt, 'MM/dd HH:mm')}|">
+                                        </span>
+
+                                        <span th:if="${res.status?.toString() != 'CANCELED' and res.createdAt != null}"
+                                              th:text="|신청일: ${#temporals.format(res.createdAt, 'MM/dd HH:mm')}|">
+                                        </span>
+                                    </div>
                                 </td>
                                 <td>
-                                    <div class="flex-center gap-md">
+                                   <span class="status-badge"
+                                         th:classappend="${res.status?.toString() == 'CANCELED' ? 'status-canceled' :
+                                                         (res.status?.toString() == 'PENDING' ? 'status-pending' :
+                                                         (res.status?.toString() == 'FINISHED' ? 'status-finished' : 'status-active'))}">
 
-                                        <button th:if="${res.status.name() == 'PENDING'}"
-                                                type="button"
-                                                class="btn btn-primary"
-                                                th:onclick="'approveReservation(' + ${res.id} + ')'">
-                                            승인
-                                        </button>
-
-                                        <button th:if="${res.status.name() == 'PENDING'}"
-                                                type="button"
-                                                class="btn btn-point"
-                                                th:onclick="'confirmAdminCancel(' + ${res.id} + ')'">
-                                            강제취소
-                                        </button>
-
-                                        <span th:if="${res.status.name() == 'CONFIRMED'}" class="txt-done">
-            승인완료
-        </span>
-
-                                        <span th:if="${res.status.name() == 'CANCELED' or res.status.name() == 'CANCEL'}" class="txt-cancel">
-            취소됨
-        </span>
-
+                                         <th:block th:if="${res.status?.toString() == 'CANCELED'}">취소됨</th:block>
+                                         <th:block th:if="${res.status?.toString() == 'PENDING'}">승인대기</th:block>
+                                         <th:block th:if="${res.status?.toString() == 'FINISHED'}">이용종료</th:block>
+                                         <th:block th:if="${res.status?.toString() == 'CONFIRMED'}">예약확정</th:block>
+                                   </span>
+                                </td>
+                                <td>
+                                    <div class="flex-center gap-md" th:if="${res.status?.toString() == 'PENDING'}">
+                                        <button type="button" class="btn btn-primary btn-sm"
+                                                th:onclick="|approveReservation('${res.id}')|">승인</button>
+                                        <button type="button" class="btn btn-point btn-sm"
+                                                th:onclick="|confirmAdminCancel('${res.id}')|">강제취소</button>
                                     </div>
                                 </td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(reservations)}">
+                        </tbody>
+                        <tbody th:if="${#lists.isEmpty(reservations.content)}">
+                            <tr>
                                 <td colspan="5" class="text-muted" style="padding: 60px 0;">현재 등록된 예약 내역이 없습니다.</td>
                             </tr>
                         </tbody>
                     </table>
+
+                    <div class="pagination-container"
+                         th:if="${reservations.totalPages > 0}"
+                         th:with="pageSize = 10,
+                                  currentPage = ${reservations.number + 1},
+                                  startPage = ${((currentPage - 1) / pageSize) * pageSize + 1},
+                                  endPage = ${(reservations.totalPages == 0) ? 1 : (startPage + pageSize - 1 < reservations.totalPages ? startPage + pageSize - 1 : reservations.totalPages)}
+                                 ">
+                        <div class="left-wing"></div>
+
+                        <nav aria-label="Page navigation" class="pagination-nav">
+                            <ul class="pagination">
+                                <li class="page-item" th:classappend="${startPage <= 1} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/reservation/admin/status(page=${startPage - 2}, status=${selectedStatus != null ? selectedStatus : ''})}">&laquo;</a>
+                                </li>
+                                <li class="page-item"
+                                    th:each="pageNumber : ${#numbers.sequence(startPage, endPage)}"
+                                    th:classappend="${pageNumber == currentPage} ? 'active'">
+                                    <a class="page-link" th:href="@{/reservation/admin/status(page=${pageNumber - 1}, status=${selectedStatus != null ? selectedStatus : ''})}"
+                                       th:text="${pageNumber}"></a>
+                                </li>
+                                <li class="page-item" th:classappend="${endPage >= reservations.totalPages} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/reservation/admin/status(page=${endPage}, status=${selectedStatus != null ? selectedStatus : ''})}">&raquo;</a>
+                                </li>
+                            </ul>
+                        </nav>
+
+                        <div class="action-wrapper">
+                            <a th:href="@{/reservation/admin/facilities}" class="btn btn-primary">시설 등록</a>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>

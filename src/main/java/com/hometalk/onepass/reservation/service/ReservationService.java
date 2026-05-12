@@ -15,12 +15,18 @@ import com.hometalk.onepass.reservation.entity.ReservationStatus;
 import com.hometalk.onepass.reservation.entity.ReservationTime;
 import com.hometalk.onepass.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -177,31 +183,79 @@ public class ReservationService {
         reservationRepository.save(reservation);
     }
 
-    public List<ReservationResponseDto> findAllWithDetails() {
-        return reservationRepository.findAll()
-                .stream()
-                .sorted((r1, r2) -> r2.getId().compareTo(r1.getId()))
-                .map(ReservationResponseDto::fromEntity)
-                .collect(Collectors.toList());
+    @Transactional
+    public void finishUsage(Long id, Long currentUserId) {
+        Reservation res = reservationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("예약 내역을 찾을 수 없습니다."));
+        if (!res.getUser().getId().equals(currentUserId)) {
+            throw new RuntimeException("본인의 예약만 종료할 수 있습니다.");
+        }
+        if (res.getStatus() != ReservationStatus.CONFIRMED) {
+            throw new RuntimeException("현재 이용 중인(확정된) 예약만 종료할 수 있습니다.");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+//        if (now.plusMinutes(5).isBefore(res.getStartTime())) {
+//            throw new RuntimeException("이용 시작 후에만 종료할 수 있습니다.");
+//        }
+
+        res.finish();
+
+        LocalDateTime newEndTime = now.getMinute() == 0
+                ? now.withSecond(0).withNano(0)
+                : now.plusHours(1).withMinute(0).withSecond(0).withNano(0);
+
+        if (newEndTime.isBefore(res.getEndTime())) {
+            res.updateEndTime(newEndTime);
+        }
     }
 
-    public List<ReservationCalendarDto> getCalendar(int year, int month) {
+    public Page<ReservationResponseDto> findByUserId(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        return reservationRepository.findByUserIdOrderByIdDesc(userId, pageable)
+                .map(ReservationResponseDto::fromEntity);
+    }
+
+    // 관리자 통계 데이터
+    @Transactional(readOnly = true)
+    public Map<String, Long> getAdminDashboardStats() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay(); // 오늘 00:00:00
+        LocalDateTime endOfDay = now.toLocalDate().atTime(23, 59, 59); // 오늘 23:59:59
+        Map<String, Long> stats = new HashMap<>();
+
+        // 1. 승인 대기 건수
+        stats.put("pendingCount", reservationRepository.countByStatus(ReservationStatus.PENDING));
+        // 2. 현재 이용 중 건수 (확정 상태 + 현재 시간이 시작/종료 사이)
+        stats.put("activeCount", reservationRepository.countActiveReservations(now));
+        // 3. 오늘 전체 예약 건수
+        stats.put("todayTotalCount", reservationRepository.countTodayReservations(startOfDay, endOfDay));
+
+        return stats;
+    }
+
+    public Page<ReservationResponseDto> findAllFiltered(ReservationStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return reservationRepository.findAllByStatus(status, pageable)
+                .map(ReservationResponseDto::fromEntity);
+    }
+
+
+
+    // 캘린더
+    public List<ReservationCalendarDto> getCalendar(Long facilityId, int year, int month) {
         LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
         LocalDateTime end = start.plusMonths(1).minusSeconds(1);
 
-        return reservationRepository.findByMonthRange(start, end)
+        return reservationRepository.findByFacilityIdAndMonthRange(facilityId, start, end)
                 .stream()
                 .map(ReservationCalendarDto::from)
                 .collect(Collectors.toList());
     }
 
-    public List<ReservationResponseDto> findByUserId(Long userId) {
-        return reservationRepository.findByUserIdOrderByIdDesc(userId)
-                .stream()
-                .map(ReservationResponseDto::fromEntity)
-                .collect(Collectors.toList());
-    }
-
+    // Top5 요약
     public List<ReservationResponseDto> findMyRecent(Long userId) {
         return reservationRepository.findTop5ByUser_IdOrderByIdDesc(userId)
                 .stream()
@@ -209,10 +263,12 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
+    //
     public List<ReservationResponseDto> findAdminRecent() {
         return reservationRepository.findTop10ByOrderByIdDesc()
                 .stream()
                 .map(ReservationResponseDto::fromEntity)
                 .collect(Collectors.toList());
+
     }
 }

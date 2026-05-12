@@ -33,6 +33,11 @@ public class PostListResponse {
     private String marketStatus;
     private String marketStatusDescription;
 
+    private String tradeType;
+    private String tradeTypeDescription;
+    private String tradeStatus;
+    private String tradeStatusDescription;
+
     private List<String> tags;
 
     public PostListResponse(Post post) {
@@ -72,6 +77,25 @@ public class PostListResponse {
         } else {
             this.marketStatus = null;
             this.marketStatusDescription = null;
+        }
+
+        // 거래 게시판 상태
+        if ("trade".equalsIgnoreCase(post.getCategory().getCode())
+                && post.getTradeType() != null
+                && post.getTradeStatus() != null
+                && !post.isPinned()) {
+
+            this.tradeType = post.getTradeType().name();
+            this.tradeTypeDescription = post.getTradeType().getDescription();
+
+            this.tradeStatus = post.getTradeStatus().name();
+            this.tradeStatusDescription = post.getTradeStatus().getDescription();
+
+        } else {
+            this.tradeType = null;
+            this.tradeTypeDescription = null;
+            this.tradeStatus = null;
+            this.tradeStatusDescription = null;
         }
     }
 

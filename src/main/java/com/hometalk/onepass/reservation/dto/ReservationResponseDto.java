@@ -14,7 +14,11 @@ public class ReservationResponseDto {
     private String userName;      // 💡 관리자 페이지의 핵심 데이터
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private LocalDateTime actualEndTime;
     private ReservationStatus status;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static ReservationResponseDto fromEntity(Reservation reservation) {
         ReservationResponseDto dto = new ReservationResponseDto();
@@ -34,7 +38,10 @@ public class ReservationResponseDto {
             dto.setEndTime(reservation.getReservationTime().getEndTime());
         }
 
+        dto.setActualEndTime(reservation.getActualEndTime());
         dto.setStatus(reservation.getStatus());
+        dto.setCreatedAt(reservation.getCreatedAt());
+        dto.setUpdatedAt(reservation.getUpdatedAt());
         return dto;
     }
 }
