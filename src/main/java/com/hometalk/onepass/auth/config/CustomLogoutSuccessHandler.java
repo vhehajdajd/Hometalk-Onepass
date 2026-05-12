@@ -50,7 +50,7 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
             }
         }
 
-        response.sendRedirect(request.getContextPath() + "/home");
+        response.sendRedirect(request.getContextPath() + "/home?alert=logout");
     }
 
     private void redirectToKakaoLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -60,6 +60,7 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
         String logoutRedirectUri = UriComponentsBuilder.fromUriString(getBaseUrl(request))
                 .path(request.getContextPath())
                 .path("/home")
+                .queryParam("alert", "logout")
                 .build()
                 .toUriString();
 

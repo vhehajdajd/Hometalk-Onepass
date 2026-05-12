@@ -47,6 +47,9 @@ public class HomeController {
         if ("accessDenied".equals(alert)) {
             return "접근 권한이 없는 페이지입니다.";
         }
+        if ("logout".equals(alert)) {
+            return "로그아웃되었습니다.";
+        }
         return "";
     }
 

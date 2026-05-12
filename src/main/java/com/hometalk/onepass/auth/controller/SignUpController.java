@@ -3,6 +3,7 @@ package com.hometalk.onepass.auth.controller;
 import com.hometalk.onepass.auth.dto.SignUpDTO;
 import com.hometalk.onepass.auth.dto.SocialSignUpDTO;
 import com.hometalk.onepass.auth.config.CustomOAuth2User;
+import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.service.EmailVerificationService;
 import com.hometalk.onepass.auth.service.SignUpService;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -22,6 +24,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Controller
@@ -37,11 +40,29 @@ public class SignUpController {
     public String Resister(Model model) {
         // step = 1로 초기값 설정
         model.addAttribute("step", 1);
+        model.addAttribute("editMode", false);
 
         // 2. 타임리프 th:object와 연결될 빈 DTO 객체 전달
         model.addAttribute("signUpDTO", new SignUpDTO());
 
         return "auth/register";
+    }
+
+    @GetMapping("/edit")
+    public String editRejectedRegistration(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                           Model model) {
+        if (userDetails == null) {
+            return "redirect:/auth";
+        }
+
+        try {
+            model.addAttribute("step", 1);
+            model.addAttribute("editMode", true);
+            model.addAttribute("signUpDTO", signUpService.getRejectedSignUpForm(userDetails.getUserId()));
+            return "auth/register";
+        } catch (IllegalArgumentException e) {
+            return "redirect:/auth/approval/rejected";
+        }
     }
 
 
@@ -87,6 +108,68 @@ public class SignUpController {
             }
         }
 
+        return "auth/register";
+    }
+
+    @PostMapping("/edit")
+    public String updateRejectedRegistration(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @ModelAttribute("signUpDTO") SignUpDTO signUpDTO,
+            @RequestParam(required = false, defaultValue = "next") String action,
+            @RequestParam(defaultValue = "1") int currentStep,
+            HttpSession session,
+            HttpServletRequest request,
+            Model model
+    ) {
+        if (userDetails == null) {
+            return "redirect:/auth";
+        }
+
+        if ("next".equals(action)) {
+            try {
+                SignUpDTO currentDto = signUpService.getRejectedSignUpForm(userDetails.getUserId());
+                signUpService.validateLoginIdAvailableForUser(signUpDTO.getLoginId(), userDetails.getUserId());
+                if (!Objects.equals(currentDto.getEmail(), signUpDTO.getEmail())) {
+                    emailVerificationService.assertVerified(signUpDTO.getEmail(), session);
+                }
+            } catch (IllegalArgumentException e) {
+                model.addAttribute("step", 1);
+                model.addAttribute("editMode", true);
+                model.addAttribute("signupError", e.getMessage());
+                return "auth/register";
+            }
+
+            model.addAttribute("step", currentStep + 1);
+            model.addAttribute("editMode", true);
+            return "auth/register";
+        }
+
+        if ("prev".equals(action)) {
+            model.addAttribute("step", currentStep - 1);
+            model.addAttribute("editMode", true);
+            return "auth/register";
+        }
+
+        if ("complete".equals(action)) {
+            try {
+                SignUpDTO currentDto = signUpService.getRejectedSignUpForm(userDetails.getUserId());
+                if (!Objects.equals(currentDto.getEmail(), signUpDTO.getEmail())) {
+                    emailVerificationService.assertVerified(signUpDTO.getEmail(), session);
+                }
+
+                User user = signUpService.updateRejectedSignUp(userDetails.getUserId(), signUpDTO);
+                emailVerificationService.clear(session);
+                replaceAuthenticationWithLocalUser(user, request);
+                return "redirect:/auth/approval/pending";
+            } catch (IllegalArgumentException e) {
+                model.addAttribute("step", 1);
+                model.addAttribute("editMode", true);
+                model.addAttribute("signupError", e.getMessage());
+                return "auth/register";
+            }
+        }
+
+        model.addAttribute("editMode", true);
         return "auth/register";
     }
 
@@ -193,6 +276,32 @@ public class SignUpController {
                 rememberMeUsername,
                 null,
                 currentOAuth2User != null ? currentOAuth2User.getAttributes() : Map.of()
+        );
+
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                principal,
+                null,
+                principal.getAuthorities()
+        );
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private void replaceAuthenticationWithLocalUser(User user, HttpServletRequest request) {
+        Long householdId = user.getHousehold() != null ? user.getHousehold().getId() : null;
+        String postNum = user.getHousehold() != null ? user.getHousehold().getPostNum() : null;
+
+        CustomUserDetails principal = new CustomUserDetails(
+                user.getId(),
+                householdId,
+                postNum,
+                user.getName(),
+                user.getRole(),
+                user.getStatus(),
+                user.isApprovalNoticeShown(),
+                user.getLocalAccount().getLoginId(),
+                user.getLocalAccount().getPasswordHash(),
+                user.getNickname()
         );
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
