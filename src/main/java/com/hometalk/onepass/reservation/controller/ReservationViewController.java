@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -124,9 +125,17 @@ public class ReservationViewController {
     @PostMapping("/admin/facilities/register")
     @PreAuthorize("hasRole('ADMIN')")
     public String registerFacility(@ModelAttribute FacilityRequestDto dto,
-                                   @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) {
+                                   @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+                                   RedirectAttributes redirectAttributes) {
         // 1. 서비스 호출해서 저장
-        facilityService.register(dto);
+        try {
+            facilityService.register(dto);
+            redirectAttributes.addFlashAttribute("message", "새 시설이 성공적으로 등록되었습니다.");
+            redirectAttributes.addFlashAttribute("status", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "등록 중 오류가 발생했습니다: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("status", "error");
+        }
         // 2. 관리 목록 페이지로 리다이렉트
         return "redirect:/reservation/admin/list";
     }
@@ -145,7 +154,8 @@ public class ReservationViewController {
     @PostMapping("/admin/facilities/update/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public String updateFacility(@PathVariable Long id,
-                                 @ModelAttribute FacilityRequestDto dto) {
+                                 @ModelAttribute FacilityRequestDto dto,
+                                 RedirectAttributes redirectAttributes) {
         facilityService.update(id, dto);
         return "redirect:/reservation/admin/list";
     }
@@ -153,9 +163,11 @@ public class ReservationViewController {
     // 시설 삭제
     @PostMapping("/admin/facilities/{id}/delete")
     @PreAuthorize("hasRole('ADMIN')")
-    public String deleteFacility(@PathVariable Long id) {
+    public String deleteFacility(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         // 1. 서비스 호출해서 DB 데이터 삭제
         facilityService.delete(id);
+        redirectAttributes.addFlashAttribute("message", "시설이 삭제되었습니다.");
+        redirectAttributes.addFlashAttribute("status", "success");
         // 2. 삭제 후 다시 관리 목록 페이지
         return "redirect:/reservation/admin/list";
     }

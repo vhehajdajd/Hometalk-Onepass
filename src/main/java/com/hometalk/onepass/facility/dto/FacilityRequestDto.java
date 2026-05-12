@@ -1,5 +1,7 @@
 package com.hometalk.onepass.facility.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 
 @Getter
@@ -14,4 +16,7 @@ public class FacilityRequestDto {
     private String imagePath;   // 서버 저장용 이미지 경로
     private String openTime;    // 운영 시작 ("09:00")
     private String closeTime;   // 운영 종료 ("22:00")
+
+    @NonNull @Min(1) @Max(24)
+    private Integer maxReservationTime;
 }

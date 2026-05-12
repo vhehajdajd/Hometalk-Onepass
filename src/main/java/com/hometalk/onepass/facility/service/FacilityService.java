@@ -26,7 +26,7 @@ public class FacilityService {
     }
 
     /*
-     * 시설 등록: String 시간을 LocalTime으로 파싱하여 저장합니다.
+     * 시설 등록
      */
     @Transactional
     public Long register(FacilityRequestDto dto) {
@@ -41,6 +41,7 @@ public class FacilityService {
                 .iconType(dto.getIconType())
                 .imagePath(dto.getImagePath())
                 .operationTime(opTime)
+                .maxReservationTime(dto.getMaxReservationTime())
                 .build();
 
         return facilityRepository.save(facility).getId();
@@ -79,6 +80,10 @@ public class FacilityService {
                 .closeTime(LocalTime.parse(dto.getCloseTime()))
                 .build();
 
-        facility.updateInfo(dto.getName(), dto.getLocation(), dto.getIconType(), imagePath, opTime);
+        facility.updateInfo(dto.getName(),
+                dto.getLocation(),
+                dto.getIconType(),
+                imagePath, opTime,
+                dto.getMaxReservationTime());
     }
 }

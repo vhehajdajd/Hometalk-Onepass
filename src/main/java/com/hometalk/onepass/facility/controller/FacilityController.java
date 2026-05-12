@@ -4,6 +4,7 @@ import com.hometalk.onepass.facility.dto.FacilityRequestDto; // DTO 사용
 import com.hometalk.onepass.facility.dto.FacilityResponseDto;
 import com.hometalk.onepass.facility.entity.Facility;
 import com.hometalk.onepass.facility.service.FacilityService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +21,7 @@ public class FacilityController {
      * 시설 등록 (DTO 기반)
      */
     @PostMapping
-    public Long register(@RequestBody FacilityRequestDto dto) { // Facility 대신 DTO를 받습니다.
+    public Long register(@Valid @RequestBody FacilityRequestDto dto) { // Facility 대신 DTO를 받습니다.
         return facilityService.register(dto);
     }
 
