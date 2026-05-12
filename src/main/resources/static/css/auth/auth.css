@@ -42,11 +42,17 @@ body.auth-login-page {
 }
 
 body.auth-login-page .auth-container {
+    width: 320px;
     margin: 0 auto;
 }
 
 body.auth-register-page {
     background: #9EBFDB;
+}
+
+body.auth-register-page .auth-container {
+    width: clamp(350px, 25vw, 720px);
+    max-width: calc(100% - 34px);
 }
 
 body.auth-register-page .auth-input {
@@ -55,7 +61,9 @@ body.auth-register-page .auth-input {
 
 .auth-container,
 .auth-status-box {
-    width: min(400px, calc(100% - 32px));
+    position: relative;
+    width: min(500px, calc(100% - 32px));
+    min-width: min(500px, calc(100% - 32px));
     margin: 48px auto 20px;
     padding: 30px;
     border: 1px solid var(--auth-border);
@@ -64,10 +72,28 @@ body.auth-register-page .auth-input {
     text-align: center;
 }
 
+.auth-back-link {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    color: #888888;
+    font-size: 24px;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.auth-back-link:hover {
+    color: #666666;
+}
+
 .auth-status-box {
     width: min(420px, calc(100% - 32px));
     margin: 0;
     padding: 32px;
+}
+
+body.auth-status-page .auth-status-box {
+    background: #d9d9d9;
 }
 
 .auth-logo {
@@ -144,7 +170,7 @@ body.auth-register-page .auth-input {
 .login-form .auth-input,
 .remember-row,
 .auth-btn-fixed {
-    width: 250px;
+    width: 300px;
 }
 
 .login-form .auth-input {
@@ -187,6 +213,11 @@ body.auth-register-page .auth-input {
 
 .auth-btn:hover {
     opacity: .88;
+}
+
+.auth-btn:disabled {
+    cursor: not-allowed;
+    opacity: .55;
 }
 
 .auth-btn-block {
@@ -234,6 +265,11 @@ body.auth-register-page .auth-input {
     color: var(--auth-point);
 }
 
+.auth-email-timer {
+    color: var(--auth-muted);
+    text-align: left;
+}
+
 .id-check-row,
 .email-check-row,
 .address-group {
@@ -279,6 +315,10 @@ body.auth-register-page .auth-input {
     font-size: 15px;
 }
 
+.auth-status-action {
+    margin-bottom: 10px;
+}
+
 .auth-status-approved .auth-title {
     color: #1f7a3a;
 }
@@ -296,7 +336,7 @@ body.auth-register-page .auth-input {
     .login-form .auth-input,
     .remember-row,
     .auth-btn-fixed {
-        width: 100%;
+        width: 80%;
     }
 
     .auth-row,
@@ -311,5 +351,11 @@ body.auth-register-page .auth-input {
     .address-group .auth-btn {
         flex-basis: auto;
         width: 100%;
+    }
+}
+
+@media (max-width: 650px) {
+    body.auth-register-page .auth-container {
+        width: calc(100% - 34px);
     }
 }

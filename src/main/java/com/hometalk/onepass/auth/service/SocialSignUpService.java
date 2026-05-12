@@ -9,6 +9,7 @@ import com.hometalk.onepass.auth.repository.SocialAccountRepository;
 import com.hometalk.onepass.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -19,7 +20,8 @@ public class SocialSignUpService {
     private final UserRepository userRepository;
     private final SocialAccountRepository socialAccountRepository;
 
-    public void socialSignUp(SocialSignUpDTO dto) {
+    @Transactional
+    public User socialSignUp(SocialSignUpDTO dto) {
 
         // 1. Household (세대 정보) 생성 및 저장
         Household household = Household.builder()
@@ -54,5 +56,7 @@ public class SocialSignUpService {
                 .build();
 
         socialAccountRepository.save(socialAccount);
+
+        return savedUser;
     }
 }

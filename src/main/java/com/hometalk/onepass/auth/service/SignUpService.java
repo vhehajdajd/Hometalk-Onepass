@@ -62,6 +62,74 @@ public class SignUpService {
         localAccountRepository.save(localAccount);
     }
 
+    @Transactional
+    public SignUpDTO getRejectedSignUpForm(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        if (user.getStatus() != User.UserStatus.REJECTED) {
+            throw new IllegalArgumentException("거절된 회원만 정보를 수정할 수 있습니다.");
+        }
+
+        LocalAccount localAccount = user.getLocalAccount();
+        if (localAccount == null) {
+            throw new IllegalArgumentException("소셜 가입 사용자는 이 화면에서 계정 정보를 수정할 수 없습니다.");
+        }
+
+        SignUpDTO dto = new SignUpDTO();
+        dto.setName(user.getName());
+        dto.setEmail(user.getEmail());
+        dto.setNickname(user.getNickname());
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setLoginId(localAccount.getLoginId());
+
+        Household household = user.getHousehold();
+        if (household != null) {
+            dto.setPostNum(household.getPostNum());
+            dto.setBuildingName(household.getBuildingName());
+            dto.setDong(household.getDong());
+            dto.setHo(household.getHo());
+        }
+
+        return dto;
+    }
+
+    @Transactional
+    public User updateRejectedSignUp(Long userId, SignUpDTO dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        if (user.getStatus() != User.UserStatus.REJECTED) {
+            throw new IllegalArgumentException("거절된 회원만 정보를 수정할 수 있습니다.");
+        }
+
+        LocalAccount localAccount = user.getLocalAccount();
+        if (localAccount == null) {
+            throw new IllegalArgumentException("소셜 가입 사용자는 이 화면에서 계정 정보를 수정할 수 없습니다.");
+        }
+
+        validateLoginIdAvailableForUser(dto.getLoginId(), userId);
+
+        Household household = Household.builder()
+                .postNum(dto.getPostNum())
+                .buildingName(dto.getBuildingName())
+                .dong(dto.getDong())
+                .ho(dto.getHo())
+                .build();
+        Household savedHousehold = householdRepository.save(household);
+
+        user.updateProfile(dto.getName(), dto.getNickname(), dto.getEmail(), dto.getPhoneNumber());
+        user.assignHousehold(savedHousehold);
+        user.resubmitForApproval();
+        localAccount.changeLoginId(dto.getLoginId());
+
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            localAccount.changePassword(bcryptPasswordEncoder.encode(dto.getPassword()));
+        }
+
+        return user;
+    }
+
     public void validateLoginIdAvailable(String loginId) {
         if (loginId == null || loginId.trim().isEmpty()) {
             throw new IllegalArgumentException("아이디를 입력해 주세요.");
@@ -70,6 +138,18 @@ public class SignUpService {
         if (localAccountRepository.existsByLoginId(loginId.trim())) {
             throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
         }
+    }
+
+    public void validateLoginIdAvailableForUser(String loginId, Long userId) {
+        if (loginId == null || loginId.trim().isEmpty()) {
+            throw new IllegalArgumentException("아이디를 입력해 주세요.");
+        }
+
+        localAccountRepository.findByLoginId(loginId.trim())
+                .filter(account -> !account.getUserId().equals(userId))
+                .ifPresent(account -> {
+                    throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
+                });
     }
 
     public void validateEmailAvailable(String email) {

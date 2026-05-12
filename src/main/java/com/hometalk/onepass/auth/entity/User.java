@@ -103,6 +103,18 @@ public class User extends BaseSoftDeleteEntity {
         this.status = UserStatus.REJECTED;
     }
 
+    public void resubmitForApproval() {
+        this.status = UserStatus.PENDING;
+        this.approvalNoticeShown = false;
+    }
+
+    public void updateProfile(String name, String nickname, String email, String phoneNumber) {
+        this.name = name;
+        this.nickname = nickname;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+    }
+
     public void markApprovalNoticeShown() {
         this.approvalNoticeShown = true;
     }
