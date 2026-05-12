@@ -348,10 +348,10 @@
             var badge   = s.badge || 'DEFAULT';
             var timeStr = formatTime(s.startAt);
             if (s.endAt) timeStr += ' ~ ' + formatTime(s.endAt);
-            return '<div class="today-schedule-item" style="cursor:pointer;" onclick="openScheduleModal(' + s.id + ')">' +
+            return '<div class="today-schedule-item" style="cursor:pointer; flex-direction:row; align-items:center; gap:8px;" onclick="openScheduleModal(' + s.id + ')">' +
                 '<span class="today-schedule-badge ' + badge + '">' + badgeLabel(s.badge) + '</span>' +
                 '<span class="today-schedule-title">' + s.title + '</span>' +
-                '<span class="today-schedule-time">' + timeStr + '</span></div>';
+                '<span class="today-schedule-time" style="margin-left:auto;">' + timeStr + '</span></div>';
         }).join('');
     }
 
