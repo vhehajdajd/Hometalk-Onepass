@@ -296,6 +296,33 @@ function approveReservation(id) {
         });
 }
 
+// [사용자] 이용 종료
+async function finishUsage(id) {
+    if (!confirm("지금 이용을 종료하시겠습니까?\n종료 시 남은 시간은 다른 분들이 예약할 수 있도록 개방됩니다.")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/hometop/api/reservations/${id}/finish`, {
+            method: 'PATCH',
+            headers: getCsrfHeaders()
+        });
+
+        if (response.ok) {
+            showNotice("이용 종료 처리가 완료되었습니다.");
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            const errorText = await response.text();
+            showNotice(errorText || "이용 종료 처리 중 오류가 발생했습니다.", "error");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        showNotice("서버와 통신 중 오류가 발생했습니다.", "error");
+    }
+}
+
 // 알림 메시지
 function showNotice(message, type = 'success') {
     const existingBox = document.querySelector('.alert-box');

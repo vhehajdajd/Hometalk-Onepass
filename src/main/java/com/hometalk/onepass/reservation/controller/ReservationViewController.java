@@ -65,23 +65,24 @@ public class ReservationViewController {
     @PostMapping("/cancel/{id}")
     public String cancelReservation(@PathVariable Long id,
                                     @RequestHeader(value = "Referer", required = false) String referer,
-                                    Authentication authentication) {
+                                    Authentication authentication,
+                                    RedirectAttributes redirectAttributes) {
 
         if (authentication == null) return "redirect:/auth";
 
         CustomUserDetails userDetails =
                 (CustomUserDetails) authentication.getPrincipal();
 
-        reservationService.cancel(
-                id,
-                userDetails.getUserId(),
-                userDetails.getRole(),
-                null
-        );
-
-        if (referer != null) {
-            return "redirect:" + referer;
+        try {
+            reservationService.cancel(id, userDetails.getUserId(), userDetails.getRole(), null);
+            redirectAttributes.addFlashAttribute("message", "예약 취소가 완료되었습니다.");
+            redirectAttributes.addFlashAttribute("status", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "취소 중 오류가 발생했습니다: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("status", "error");
         }
+
+        if (referer != null) return "redirect:" + referer;
 
         return "redirect:/reservation/my";
     }
@@ -156,7 +157,14 @@ public class ReservationViewController {
     public String updateFacility(@PathVariable Long id,
                                  @ModelAttribute FacilityRequestDto dto,
                                  RedirectAttributes redirectAttributes) {
-        facilityService.update(id, dto);
+        try {
+            facilityService.update(id, dto);
+            redirectAttributes.addFlashAttribute("message", "시설 정보가 수정되었습니다.");
+            redirectAttributes.addFlashAttribute("status", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "수정 중 오류가 발생했습니다.");
+            redirectAttributes.addFlashAttribute("status", "error");
+        }
         return "redirect:/reservation/admin/list";
     }
 

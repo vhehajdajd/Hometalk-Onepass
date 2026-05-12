@@ -177,6 +177,34 @@ public class ReservationService {
         reservationRepository.save(reservation);
     }
 
+    @Transactional
+    public void finishUsage(Long id, Long currentUserId) {
+        Reservation res = reservationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("예약 내역을 찾을 수 없습니다."));
+        if (!res.getUser().getId().equals(currentUserId)) {
+            throw new RuntimeException("본인의 예약만 종료할 수 있습니다.");
+        }
+        if (res.getStatus() != ReservationStatus.CONFIRMED) {
+            throw new RuntimeException("현재 이용 중인(확정된) 예약만 종료할 수 있습니다.");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+//        if (now.plusMinutes(5).isBefore(res.getStartTime())) {
+//            throw new RuntimeException("이용 시작 후에만 종료할 수 있습니다.");
+//        }
+
+        res.finish();
+
+        LocalDateTime newEndTime = now.getMinute() == 0
+                ? now.withSecond(0).withNano(0)
+                : now.plusHours(1).withMinute(0).withSecond(0).withNano(0);
+
+        if (newEndTime.isBefore(res.getEndTime())) {
+            res.updateEndTime(newEndTime);
+        }
+    }
+
     public List<ReservationResponseDto> findAllWithDetails() {
         return reservationRepository.findAll()
                 .stream()
