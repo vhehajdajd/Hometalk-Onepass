@@ -1,6 +1,7 @@
 package com.hometalk.onepass.reservation.entity;
 
 import com.hometalk.onepass.auth.entity.User;
+import com.hometalk.onepass.common.entity.BaseTimeEntity;
 import com.hometalk.onepass.facility.entity.Facility;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Table(name = "kjh_reservation")
-public class Reservation {
+public class Reservation extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +33,10 @@ public class Reservation {
     // 예약 시간
     @Embedded
     private ReservationTime reservationTime;
+
+    // 예약 종료 시간
+    @Column(name = "actual_end_time")
+    private LocalDateTime actualEndTime;
 
     // 예약 상태
     @Enumerated(EnumType.STRING)
@@ -91,5 +96,6 @@ public class Reservation {
             throw new RuntimeException("확정된 예약 상태에서만 이용 종료가 가능합니다.");
         }
         this.status = ReservationStatus.FINISHED;
+        this.actualEndTime = LocalDateTime.now();
     }
 }

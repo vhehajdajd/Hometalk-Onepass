@@ -5,6 +5,8 @@ import com.hometalk.onepass.facility.dto.FacilityRequestDto;
 import com.hometalk.onepass.facility.dto.FacilityResponseDto;
 import com.hometalk.onepass.facility.service.FacilityService;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
+import com.hometalk.onepass.reservation.entity.Reservation;
+import com.hometalk.onepass.reservation.entity.ReservationStatus;
 import com.hometalk.onepass.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -56,7 +59,7 @@ public class ReservationViewController {
             return "redirect:/auth";
         }
 
-        Page<ReservationResponseDto> myResPage = reservationService.findByUserId(userId, page, 10);
+        Page<ReservationResponseDto> myResPage = reservationService.findByUserId(userId, page, 15);
         model.addAttribute("reservations", myResPage);
         return "reservation/my-list";
     }
@@ -106,16 +109,20 @@ public class ReservationViewController {
     @GetMapping("/admin/status")
     @PreAuthorize("hasRole('ADMIN')")
     public String manageStatus(Model model, Authentication authentication,
+                               @RequestParam(required = false) ReservationStatus status,
                                @RequestParam(defaultValue = "0") int page) {
         if (authentication == null) return "redirect:/auth";
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        Page<ReservationResponseDto> adminResPage = reservationService.findAllWithDetails(page, 10);
+        Page<ReservationResponseDto> adminResPage = reservationService.findAllFiltered(status, page, 15);
+        Map<String, Long> stats = reservationService.getAdminDashboardStats();
+
+        model.addAttribute("selectedStatus", status); // 현재 선택된 필터 유지용
+        model.addAttribute("statuses", ReservationStatus.values()); // 드롭다운 목록용
+        model.addAllAttributes(stats);
         model.addAttribute("adminName", userDetails.getName());
         model.addAttribute("reservations", adminResPage);
         return "reservation/admin/reservation-status";
     }
-
-
 
     // 시설 등록 폼
     @GetMapping("/admin/facilities")

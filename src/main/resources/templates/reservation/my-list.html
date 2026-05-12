@@ -62,11 +62,19 @@
                                         이용 종료
                                     </button>
 
-                                    <button th:if="${res.status?.toString() == 'PENDING' || (res.status?.toString() == 'CONFIRMED' && now.isBefore(res.startTime))}"
+                                    <button th:if="${res.status?.toString() == 'PENDING' || (res.status?.toString() == 'CONFIRMED'
+                                                   && now.isBefore(res.startTime.minusHours(1)))}"
                                             class="btn btn-outline-danger btn-sm"
                                             th:onclick="|confirmCancel('${res.id}')|">
                                         예약 취소
                                     </button>
+
+                                    <span th:if="${res.status?.toString() == 'CONFIRMED'
+                                                   && now.isAfter(res.startTime.minusHours(1))
+                                                   && now.isBefore(res.startTime)}"
+                                          class="text-muted text-small">
+                                        취소 불가(임박)
+                                    </span>
                                 </td>
                             </tr>
                         </tbody>

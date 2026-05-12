@@ -30,22 +30,87 @@
                     </div>
                 </div>
 
+                <div class="res-dashboard-stats">
+                    <div class="res-stat-card res-pending">
+                        <div class="res-stat-info">
+                            <span class="res-stat-label">승인 대기</span>
+                            <div>
+                                <span class="res-stat-value" th:text="${pendingCount}">0</span>
+                                <span class="res-stat-unit">건</span>
+                            </div>
+                        </div>
+                        <div class="res-stat-icon"><i class="fas fa-clock"></i></div>
+                    </div>
+
+                    <div class="res-stat-card res-active">
+                        <div class="res-stat-info">
+                            <span class="res-stat-label">현재 이용 중</span>
+                            <div>
+                                <span class="res-stat-value" th:text="${activeCount}">0</span>
+                                <span class="res-stat-unit">건</span>
+                            </div>
+                        </div>
+                        <div class="res-stat-icon"><i class="fas fa-running"></i></div>
+                    </div>
+
+                    <div class="res-stat-card res-total">
+                        <div class="res-stat-info">
+                            <span class="res-stat-label">오늘 전체 예약</span>
+                            <div>
+                                <span class="res-stat-value" th:text="${todayTotalCount}">0</span>
+                                <span class="res-stat-unit">건</span>
+                            </div>
+                        </div>
+                        <div class="res-stat-icon"><i class="fas fa-calendar-check"></i></div>
+                    </div>
+                </div>
+
+                <div class="filter-section flex-between mb-md" style="align-items: center;">
+                    <h3 class="m-0" style="font-size: 1.1rem; color: #444;">상세 내역</h3>
+
+                    <form th:action="@{/reservation/admin/status}" method="get" id="filterForm">
+                        <input type="hidden" name="page" value="0">
+
+                        <select name="status" class="form-select" onchange="this.form.submit()"
+                                style="padding: 6px 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; cursor: pointer;">
+                            <option value="">전체 상태 보기</option>
+                            <option th:each="s : ${statuses}"
+                                    th:value="${s}"
+                                    th:text="${s.title}"
+                                    th:selected="${s == selectedStatus}">
+                            </option>
+                        </select>
+                    </form>
+                </div>
+
                 <div class="summary-card">
                     <table class="table">
                         <thead>
                             <tr>
                                 <th>시설명</th>
                                 <th>예약자</th>
-                                <th>예약 시간</th>
+                                <th>예약 시간 / 신청일 / 취소일</th>
                                 <th>상태</th>
                                 <th>관리</th>
                             </tr>
                         </thead>
                         <tbody th:if="${not #lists.isEmpty(reservations.content)}">
-                            <tr th:each="res : ${reservations}">
+                            <tr th:each="res : ${reservations.content}">
                                 <td th:text="${res.facilityName}">시설명</td>
                                 <td th:text="${res.userName}">예약자</td>
-                                <td th:text="${#temporals.format(res.startTime, 'MM/dd HH:mm') + ' ~ ' + #temporals.format(res.endTime, 'HH:mm')}">시간</td>
+                                <td>
+                                    <div th:text="${#temporals.format(res.startTime, 'MM/dd HH:mm') + ' ~ ' + #temporals.format(res.endTime, 'HH:mm')}">시간</div>
+
+                                    <div style="font-size: 0.75rem; color: #999;">
+                                        <span th:if="${res.status?.toString() == 'CANCELED' and res.updatedAt != null}"
+                                              th:text="|취소일: ${#temporals.format(res.updatedAt, 'MM/dd HH:mm')}|">
+                                        </span>
+
+                                        <span th:if="${res.status?.toString() != 'CANCELED' and res.createdAt != null}"
+                                              th:text="|신청일: ${#temporals.format(res.createdAt, 'MM/dd HH:mm')}|">
+                                        </span>
+                                    </div>
+                                </td>
                                 <td>
                                    <span class="status-badge"
                                          th:classappend="${res.status?.toString() == 'CANCELED' ? 'status-canceled' :
@@ -87,15 +152,16 @@
                         <nav aria-label="Page navigation" class="pagination-nav">
                             <ul class="pagination">
                                 <li class="page-item" th:classappend="${startPage <= 1} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/reservation/admin/status(page=${startPage - 2})}">&laquo;</a>
+                                    <a class="page-link" th:href="@{/reservation/admin/status(page=${startPage - 2}, status=${selectedStatus != null ? selectedStatus : ''})}">&laquo;</a>
                                 </li>
                                 <li class="page-item"
                                     th:each="pageNumber : ${#numbers.sequence(startPage, endPage)}"
                                     th:classappend="${pageNumber == currentPage} ? 'active'">
-                                    <a class="page-link" th:href="@{/reservation/admin/status(page=${pageNumber - 1})}" th:text="${pageNumber}"></a>
+                                    <a class="page-link" th:href="@{/reservation/admin/status(page=${pageNumber - 1}, status=${selectedStatus != null ? selectedStatus : ''})}"
+                                       th:text="${pageNumber}"></a>
                                 </li>
                                 <li class="page-item" th:classappend="${endPage >= reservations.totalPages} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/reservation/admin/status(page=${endPage})}">&raquo;</a>
+                                    <a class="page-link" th:href="@{/reservation/admin/status(page=${endPage}, status=${selectedStatus != null ? selectedStatus : ''})}">&raquo;</a>
                                 </li>
                             </ul>
                         </nav>

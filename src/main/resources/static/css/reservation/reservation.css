@@ -478,3 +478,78 @@
     from { opacity: 0; transform: translateY(-20px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* 대시보드 전체 컨테이너 */
+.res-dashboard-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+/* 개별 카드 스타일 */
+.res-stat-card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 14px 18px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f1f3f5;
+    transition: all 0.2s ease;
+}
+.res-stat-info {
+    display: flex;
+    flex-direction: column;
+}
+/* 카드 상단: 레이블과 아이콘 */
+.res-stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.res-stat-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666;
+}
+
+.res-stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+/* 카드 하단: 메인 숫자 */
+.res-stat-value {
+    color: #495057;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.res-stat-unit {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #adb5bd;
+    margin-left: 4px;
+}
+
+/* 상태별 포인트 컬러 */
+.res-pending { border-top: 4px solid #FFD8A8; }
+.res-pending .res-stat-icon { background: #FFF4E6; color: #FD7E14; }
+.res-pending .res-stat-label { color: #868E96; }
+
+.res-active { border-top: 4px solid #B2F2BB; }
+.res-active .res-stat-icon { background: #EBFBEE; color: #40C057; }
+.res-active .res-stat-label { color: #868E96; }
+
+.res-total { border-top: 4px solid #A5D8FF; }
+.res-total .res-stat-icon { background: #E7F5FF; color: #228BE6; }
+.res-total .res-stat-label { color: #868E96; }

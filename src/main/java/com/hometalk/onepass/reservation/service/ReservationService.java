@@ -24,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -209,16 +211,34 @@ public class ReservationService {
         }
     }
 
-    public Page<ReservationResponseDto> findAllWithDetails(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        return reservationRepository.findAll(pageable)
-                .map(ReservationResponseDto::fromEntity);
-    }
-
     public Page<ReservationResponseDto> findByUserId(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
         return reservationRepository.findByUserIdOrderByIdDesc(userId, pageable)
+                .map(ReservationResponseDto::fromEntity);
+    }
+
+    // 관리자 통계 데이터
+    @Transactional(readOnly = true)
+    public Map<String, Long> getAdminDashboardStats() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay(); // 오늘 00:00:00
+        LocalDateTime endOfDay = now.toLocalDate().atTime(23, 59, 59); // 오늘 23:59:59
+        Map<String, Long> stats = new HashMap<>();
+
+        // 1. 승인 대기 건수
+        stats.put("pendingCount", reservationRepository.countByStatus(ReservationStatus.PENDING));
+        // 2. 현재 이용 중 건수 (확정 상태 + 현재 시간이 시작/종료 사이)
+        stats.put("activeCount", reservationRepository.countActiveReservations(now));
+        // 3. 오늘 전체 예약 건수
+        stats.put("todayTotalCount", reservationRepository.countTodayReservations(startOfDay, endOfDay));
+
+        return stats;
+    }
+
+    public Page<ReservationResponseDto> findAllFiltered(ReservationStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return reservationRepository.findAllByStatus(status, pageable)
                 .map(ReservationResponseDto::fromEntity);
     }
 

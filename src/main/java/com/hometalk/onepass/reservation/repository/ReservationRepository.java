@@ -90,4 +90,24 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Transactional
     @Query("DELETE FROM Reservation r WHERE r.status = :status AND r.reservationTime.endTime < :dateTime")
     void bulkDeleteByStatusAndEndTime(@Param("status") ReservationStatus status, @Param("dateTime") LocalDateTime dateTime);
+
+    // 1. 상태별 예약 개수 (승인대기 건수 등 조회용)
+    long countByStatus(ReservationStatus status);
+
+    // 2. 오늘 날짜의 전체 예약 개수
+    @Query("SELECT COUNT(r) FROM Reservation r " +
+            "WHERE r.reservationTime.startTime BETWEEN :start AND :end")
+    long countTodayReservations(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    // 3. 현재 실제로 시설을 이용 중인 건수 (상태가 CONFIRMED이고 현재 시간이 시작~종료 사이인 경우)
+    @Query("SELECT COUNT(r) FROM Reservation r " +
+            "WHERE r.status = 'CONFIRMED' " +
+            "AND :now BETWEEN r.reservationTime.startTime AND r.reservationTime.endTime")
+    long countActiveReservations(@Param("now") LocalDateTime now);
+
+    // 상태 필터가 있을 때와 없을 때를 모두 처리하는 쿼리
+    @Query("SELECT r FROM Reservation r " +
+            "WHERE (:status IS NULL OR r.status = :status) " +
+            "ORDER BY r.id DESC")
+    Page<Reservation> findAllByStatus(@Param("status") ReservationStatus status, Pageable pageable);
 }
