@@ -1,32 +1,16 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('수동 입차')}"></head>
+<link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
 <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
 <link rel="stylesheet" th:href="@{/css/parking/parking-staff.css}">
 <body>
-<!-- ════════ 상단 네브바 ════════ -->
-<nav class="staff-navbar">
-  <a th:href="@{/staff/entry}" class="staff-logo">
-    <svg width="72" height="52" viewBox="0 0 90 64">
-      <circle cx="22" cy="8" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
-      <circle cx="45" cy="4" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
-      <circle cx="68" cy="8" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
-      <path d="M22,10 Q30,19 36,16 Q40,14 45,6 Q50,14 54,16 Q60,19 68,10 L68,19 M22,10 L22,19"
-            fill="none" stroke="#3a5fcd" stroke-width="1.2" stroke-linecap="round"/>
-      <text x="45" y="38" text-anchor="middle" fill="#032154" font-size="14" letter-spacing="4" font-weight="300">FOREST</text>
-      <line x1="10" y1="45" x2="80" y2="45" stroke="#E2E8F0" stroke-width="0.5"/>
-      <text x="45" y="60" text-anchor="middle" fill="#032154" font-size="15" letter-spacing="3" font-weight="700">LIUM</text>
-    </svg>
-  </a>
-  <a th:href="@{/auth/logout}" class="staff-logout-btn">로그아웃</a>
-</nav>
 
-<div class="main-layout">
-  <!-- 2. 오른쪽 영역 -->
-  <div class="main-wrapper">
+<div class="main-layout" style="display:flex; min-height:100vh;">
 
-    <!-- 상단 카테고리 메뉴 -->
-    <div th:replace="~{fragments/headerCategoryMenu :: staffParking}"></div>
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='manualEntry')}"></div>
+
+  <div class="main-wrapper" style="flex:1; min-width:0; display:flex; flex-direction:column;">
 
     <!-- 본문 -->
     <main class="content">
@@ -45,7 +29,7 @@
           <span class="error-msg" id="purposeTypeError"></span>
         </div>
 
-        <!-- 방문 세대 (선택사항) -->
+        <!-- 방문 세대 -->
         <div class="form-group">
           <label>방문 세대 <span style="font-size:12px;color:#999">(모를 경우 생략 가능)</span></label>
           <div class="household-group">
@@ -58,12 +42,7 @@
         <!-- 차량 번호 -->
         <div class="form-group">
           <label for="vehicleNumber">차량 번호</label>
-          <input
-                  type="text"
-                  id="vehicleNumber"
-                  placeholder="예) 000가 0000"
-                  maxlength="10"
-          >
+          <input type="text" id="vehicleNumber" placeholder="예) 000가 0000" maxlength="10">
           <span class="error-msg" id="vehicleNumberError"></span>
         </div>
 
@@ -76,6 +55,7 @@
       </div>
     </main>
     <footer th:replace="~{fragments/footer :: footer}"></footer>
+
   </div>
 </div>
 
@@ -88,7 +68,6 @@
   const typeBtns = document.querySelectorAll('.type-btn');
   const purposeTypeInput = document.getElementById('purposeType');
 
-  // 방문 종류 선택
   typeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       typeBtns.forEach(b => b.classList.remove('active'));
@@ -102,13 +81,9 @@
   document.getElementById('dong').addEventListener('input', checkSubmitBtn);
   document.getElementById('ho').addEventListener('input', checkSubmitBtn);
 
-  // 차량 번호 실시간 검증
   document.getElementById('vehicleNumber').addEventListener('input', () => {
-    const value = document.getElementById('vehicleNumber').value
-            .replace(/\s/g, '')
-            .toUpperCase();
+    const value = document.getElementById('vehicleNumber').value.replace(/\s/g, '').toUpperCase();
     document.getElementById('vehicleNumber').value = value;
-
     const error = document.getElementById('vehicleNumberError');
     if (value && !vehicleNumberRegex.test(value)) {
       error.textContent = '올바른 차량 번호 형식이 아닙니다. (예: 123가4567)';
@@ -118,22 +93,16 @@
     checkSubmitBtn();
   });
 
-  // 제출 버튼 활성화 체크
   function checkSubmitBtn() {
     const purposeType = purposeTypeInput.value;
     const vehicleNumber = document.getElementById('vehicleNumber').value.replace(/\s/g, '');
-    const isValidNumber = vehicleNumberRegex.test(vehicleNumber);
-
-    document.getElementById('submitBtn').disabled =
-            !(purposeType && isValidNumber);
+    document.getElementById('submitBtn').disabled = !(purposeType && vehicleNumberRegex.test(vehicleNumber));
   }
 
-  // 취소 버튼
   function goBack() {
     location.href = `${contextPath}staff/entry`;
   }
 
-  // 수동 입차 처리
   function processManualEntry() {
     const btn = document.getElementById('submitBtn');
     const purposeType = purposeTypeInput.value;
@@ -141,47 +110,19 @@
     const ho = document.getElementById('ho').value.trim();
     const vehicleNumber = document.getElementById('vehicleNumber').value.replace(/\s/g, '');
 
-    if (!purposeType) {
-      document.getElementById('purposeTypeError').textContent = '방문 종류를 선택해주세요.';
-      return;
-    }
-
-    if ((dong && !ho) || (!dong && ho)) {
-      document.getElementById('householdError').textContent = '동과 호수를 모두 입력해주세요.';
-      return;
-    }
+    if (!purposeType) { document.getElementById('purposeTypeError').textContent = '방문 종류를 선택해주세요.'; return; }
+    if ((dong && !ho) || (!dong && ho)) { document.getElementById('householdError').textContent = '동과 호수를 모두 입력해주세요.'; return; }
     document.getElementById('householdError').textContent = '';
-
     btn.disabled = true;
 
     fetch(`${contextPath}staff/vehicle/manual-entry`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        [csrfHeader]: csrfToken
-      },
-      body: JSON.stringify({
-        purposeType: purposeType,
-        dong: dong || null,
-        ho: ho || null,
-        vehicleNumber: vehicleNumber
-      })
+      headers: { 'Content-Type': 'application/json', [csrfHeader]: csrfToken },
+      body: JSON.stringify({ purposeType, dong: dong || null, ho: ho || null, vehicleNumber })
     })
-      .then(async res => {
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.message || '서버 오류');
-        }
-        alert('수동 입차 처리가 완료되었습니다.');
-        location.href = `${contextPath}staff/entry`;
-      })
-      .catch(err => {
-        console.error(err);
-        alert(err.message || '입차 처리 중 오류가 발생했습니다.');
-      })
-      .finally(() => {
-        btn.disabled = false;
-      });
+      .then(async res => { if (!res.ok) { const data = await res.json(); throw new Error(data.message || '서버 오류'); } alert('수동 입차 처리가 완료되었습니다.'); location.href = `${contextPath}staff/entry`; })
+      .catch(err => { console.error(err); alert(err.message || '입차 처리 중 오류가 발생했습니다.'); })
+      .finally(() => { btn.disabled = false; });
   }
 </script>
 

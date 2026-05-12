@@ -65,6 +65,16 @@
            th:classappend="${currentPage == 'userApproval'} ? ' active' : ''">회원 승인</a>
     </nav>
 
+    <!-- ── 메뉴 (경비) ── -->
+    <nav class="sidebar-menu" sec:authorize="hasRole('STAFF')">
+        <a class="sidebar-item" th:href="@{/staff/entry}"
+           th:classappend="${currentPage == 'parking'} ? ' active' : ''">입차</a>
+        <a class="sidebar-item" th:href="@{/staff/manual-entry}"
+           th:classappend="${currentPage == 'manualEntry'} ? ' active' : ''">수동 입차</a>
+        <a class="sidebar-item" th:href="@{/staff/exit}"
+           th:classappend="${currentPage == 'exit'} ? ' active' : ''">출차</a>
+    </nav>
+
     <!-- ── 하단 ── -->
     <div class="s-bottom">
         <div class="s-phone">

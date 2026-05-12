@@ -9,36 +9,18 @@
   <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
   <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
   <link rel="stylesheet" th:href="@{/css/parking/parking-staff.css}">
-  <!--✅ 알림 추가 -->
   <meta name="ctx" th:content="@{/}">
   <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
   <script th:src="@{/js/notification/notification-sse.js}"></script>
   <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
 <body>
-<!-- ════════ 상단 네브바 ════════ -->
-<nav class="staff-navbar">
-  <a th:href="@{/staff/entry}" class="staff-logo">
-    <svg width="72" height="52" viewBox="0 0 90 64">
-      <circle cx="22" cy="8" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
-      <circle cx="45" cy="4" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
-      <circle cx="68" cy="8" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
-      <path d="M22,10 Q30,19 36,16 Q40,14 45,6 Q50,14 54,16 Q60,19 68,10 L68,19 M22,10 L22,19"
-            fill="none" stroke="#3a5fcd" stroke-width="1.2" stroke-linecap="round"/>
-      <text x="45" y="38" text-anchor="middle" fill="#032154" font-size="14" letter-spacing="4" font-weight="300">FOREST</text>
-      <line x1="10" y1="45" x2="80" y2="45" stroke="#E2E8F0" stroke-width="0.5"/>
-      <text x="45" y="60" text-anchor="middle" fill="#032154" font-size="15" letter-spacing="3" font-weight="700">LIUM</text>
-    </svg>
-  </a>
-  <a th:href="@{/auth/logout}" class="staff-logout-btn">로그아웃</a>
-</nav>
 
-<div class="main-layout">
-  <!-- 2. 오른쪽 영역 -->
-  <div class="main-wrapper">
+<div class="main-layout" style="display:flex; min-height:100vh;">
 
-    <!-- 상단 카테고리 메뉴 -->
-    <div th:replace="~{fragments/headerCategoryMenu :: staffParking}"></div>
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='exit')}"></div>
+
+  <div class="main-wrapper" style="flex:1; min-width:0; display:flex; flex-direction:column;">
 
     <!-- 본문 -->
     <main class="content">
@@ -51,12 +33,7 @@
           <div class="form-group">
             <label for="vehicleNumber">차량 번호</label>
             <div class="search-group">
-              <input
-                      type="text"
-                      id="vehicleNumber"
-                      placeholder="차량 번호 4자리 입력"
-                      maxlength="4"
-              >
+              <input type="text" id="vehicleNumber" placeholder="차량 번호 4자리 입력" maxlength="4">
               <button type="button" onclick="searchVehicle()">조회</button>
             </div>
             <span class="error-msg" id="searchError"></span>
@@ -87,9 +64,7 @@
               </tr>
               </thead>
               <tbody id="visitList">
-              <tr>
-                <td colspan="6" class="pk-empty">주차 중인 방문 차량이 없습니다.</td>
-              </tr>
+              <tr><td colspan="6" class="pk-empty">주차 중인 방문 차량이 없습니다.</td></tr>
               </tbody>
             </table>
           </div>
@@ -107,9 +82,7 @@
               </tr>
               </thead>
               <tbody id="residentList">
-              <tr>
-                <td colspan="6" class="pk-empty">주차 중인 입주자 차량이 없습니다.</td>
-              </tr>
+              <tr><td colspan="6" class="pk-empty">주차 중인 입주자 차량이 없습니다.</td></tr>
               </tbody>
             </table>
           </div>
@@ -118,6 +91,7 @@
       </div>
     </main>
     <footer th:replace="~{fragments/footer :: footer}"></footer>
+
   </div>
 </div>
 
@@ -130,19 +104,14 @@
   function postFetch(url, body) {
     return fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        [csrfHeader]: csrfToken
-      },
+      headers: { 'Content-Type': 'application/json', [csrfHeader]: csrfToken },
       body: JSON.stringify(body)
     });
   }
 
   function switchTab(type, e) {
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    tabBtns.forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     e.currentTarget.classList.add('active');
-
     if (type === 'visit') {
       document.getElementById('visitTab').style.display = 'block';
       document.getElementById('residentTab').style.display = 'none';
@@ -164,249 +133,124 @@
   function searchVehicle() {
     const keyword = document.getElementById('vehicleNumber').value.trim();
     const searchError = document.getElementById('searchError');
-
-    if (keyword.length !== 4) {
-      searchError.textContent = '차량 번호 4자리를 입력해주세요.';
-      return;
-    }
+    if (keyword.length !== 4) { searchError.textContent = '차량 번호 4자리를 입력해주세요.'; return; }
     searchError.textContent = '';
 
     fetch(`${contextPath}staff/exit/search?keyword=${keyword}`)
-            .then(async res => {
-              if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || '서버 오류');
-              }
-              return res.json();
-            })
-            .then(data => {
-              const searchResult = document.getElementById('searchResult');
-              searchResult.innerHTML = '';
-
-              if (data.length === 0) {
-                searchResult.innerHTML = '<p>조회된 차량이 없습니다.</p>';
-                return;
-              }
-
-              data.forEach(vehicle => {
-                const div = document.createElement('div');
-                div.classList.add('result-item');
-
-                if (vehicle.canExit) {
-                  div.innerHTML = `
-                          <p>*결과 : ${vehicle.household} ${vehicle.purpose ?? '-'} 차량입니다.</p>
-                          <ul>
-                              <li>주차 시간 : ${vehicle.parkingTime}</li>
-                              <li>등록 티켓 : ${vehicle.ticketInfo}</li>
-                              <li>판정 : <span style="color:var(--color-sub)">[출차 가능]</span></li>
-                          </ul>
-                          <button type="button" class="pk-btn pk-btn-primary"
-                                  onclick="processExit(${vehicle.parkingId}, this)">출차 처리</button>
-                      `;
-                } else {
-                  div.innerHTML = `
-                          <p>*결과 : ${vehicle.household} ${vehicle.purpose ?? '-'} 차량입니다.</p>
-                          <ul>
-                              <li>주차 시간 : ${vehicle.parkingTime}</li>
-                              <li>등록 티켓 : ${vehicle.ticketInfo}</li>
-                              <li>판정 : <span style="color:var(--color-btn-point)">[출차 불가 - ${vehicle.householdConfirmed ? '티켓 부족' : '세대 미확인'}]</span></li>
-                          </ul>
-                          ${vehicle.householdConfirmed
-                          ? `<button type="button" class="pk-btn pk-btn-secondary"
-                                         onclick="sendNotification(${vehicle.parkingId}, this)">알림 보내기</button>`
-                          : ''}
-                          <button type="button" class="pk-btn pk-btn-point"
-                                  onclick="forceExit(${vehicle.parkingId}, this)">현장 결제 후 강제 출차</button>
-                      `;
-                }
-
-                searchResult.appendChild(div);
-              });
-            })
-            .catch(err => {
-              console.error(err);
-              document.getElementById('searchError').textContent = '조회 중 오류가 발생했습니다.';
-            });
+      .then(async res => { if (!res.ok) throw new Error(await res.text() || '서버 오류'); return res.json(); })
+      .then(data => {
+        const searchResult = document.getElementById('searchResult');
+        searchResult.innerHTML = '';
+        if (data.length === 0) { searchResult.innerHTML = '<p>조회된 차량이 없습니다.</p>'; return; }
+        data.forEach(vehicle => {
+          const div = document.createElement('div');
+          div.classList.add('result-item');
+          if (vehicle.canExit) {
+            div.innerHTML = `
+              <p>*결과 : ${vehicle.household} ${vehicle.purpose ?? '-'} 차량입니다.</p>
+              <ul>
+                <li>주차 시간 : ${vehicle.parkingTime}</li>
+                <li>등록 티켓 : ${vehicle.ticketInfo}</li>
+                <li>판정 : <span style="color:var(--color-sub)">[출차 가능]</span></li>
+              </ul>
+              <button type="button" class="pk-btn pk-btn-primary" onclick="processExit(${vehicle.parkingId}, this)">출차 처리</button>`;
+          } else {
+            div.innerHTML = `
+              <p>*결과 : ${vehicle.household} ${vehicle.purpose ?? '-'} 차량입니다.</p>
+              <ul>
+                <li>주차 시간 : ${vehicle.parkingTime}</li>
+                <li>등록 티켓 : ${vehicle.ticketInfo}</li>
+                <li>판정 : <span style="color:var(--color-btn-point)">[출차 불가 - ${vehicle.householdConfirmed ? '티켓 부족' : '세대 미확인'}]</span></li>
+              </ul>
+              ${vehicle.householdConfirmed ? `<button type="button" class="pk-btn pk-btn-secondary" onclick="sendNotification(${vehicle.parkingId}, this)">알림 보내기</button>` : ''}
+              <button type="button" class="pk-btn pk-btn-point" onclick="forceExit(${vehicle.parkingId}, this)">현장 결제 후 강제 출차</button>`;
+          }
+          searchResult.appendChild(div);
+        });
+      })
+      .catch(err => { console.error(err); document.getElementById('searchError').textContent = '조회 중 오류가 발생했습니다.'; });
   }
 
   function processExit(parkingId, btn) {
     if (isProcessing) return;
     if (!confirm('출차 처리하시겠습니까?')) return;
-
-    isProcessing = true;
-    btn.disabled = true;
-
-    postFetch(`${contextPath}staff/exit/process`, { parkingId: parkingId })
-            .then(async res => {
-              if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || '서버 오류');
-              }
-              alert('출차 처리가 완료되었습니다.');
-              document.getElementById('vehicleNumber').value = '';
-              document.getElementById('searchResult').innerHTML = '';
-              loadParkingList();
-            })
-            .catch(err => {
-              console.error(err);
-              alert('출차 처리 중 오류가 발생했습니다: ' + err.message);
-            })
-            .finally(() => {
-              isProcessing = false;
-              btn.disabled = false;
-            });
+    isProcessing = true; btn.disabled = true;
+    postFetch(`${contextPath}staff/exit/process`, { parkingId })
+      .then(async res => { if (!res.ok) throw new Error(await res.text() || '서버 오류'); alert('출차 처리가 완료되었습니다.'); document.getElementById('vehicleNumber').value = ''; document.getElementById('searchResult').innerHTML = ''; loadParkingList(); })
+      .catch(err => { console.error(err); alert('출차 처리 중 오류가 발생했습니다: ' + err.message); })
+      .finally(() => { isProcessing = false; btn.disabled = false; });
   }
 
   function forceExit(parkingId, btn) {
     if (isProcessing) return;
     if (!confirm('현장 결제 완료 후 강제 출차 처리하시겠습니까?')) return;
-
-    isProcessing = true;
-    btn.disabled = true;
-
-    postFetch(`${contextPath}staff/exit/force`, { parkingId: parkingId })
-            .then(async res => {
-              if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || '서버 오류');
-              }
-              alert('강제 출차 처리가 완료되었습니다.');
-              document.getElementById('vehicleNumber').value = '';
-              document.getElementById('searchResult').innerHTML = '';
-              loadParkingList();
-            })
-            .catch(err => {
-              console.error(err);
-              alert('강제 출차 처리 중 오류가 발생했습니다: ' + err.message);
-            })
-            .finally(() => {
-              isProcessing = false;
-              btn.disabled = false;
-            });
+    isProcessing = true; btn.disabled = true;
+    postFetch(`${contextPath}staff/exit/force`, { parkingId })
+      .then(async res => { if (!res.ok) throw new Error(await res.text() || '서버 오류'); alert('강제 출차 처리가 완료되었습니다.'); document.getElementById('vehicleNumber').value = ''; document.getElementById('searchResult').innerHTML = ''; loadParkingList(); })
+      .catch(err => { console.error(err); alert('강제 출차 처리 중 오류가 발생했습니다: ' + err.message); })
+      .finally(() => { isProcessing = false; btn.disabled = false; });
   }
 
   function sendNotification(parkingId, btn) {
     if (isProcessing) return;
-
-    isProcessing = true;
-    btn.disabled = true;
-
-    postFetch(`${contextPath}staff/exit/notify`, { parkingId: parkingId })
-            .then(async res => {
-              if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || '서버 오류');
-              }
-              alert('알림이 발송되었습니다.');
-            })
-            .catch(err => {
-              console.error(err);
-              alert('알림 발송 중 오류가 발생했습니다.');
-            })
-            .finally(() => {
-              isProcessing = false;
-              btn.disabled = false;
-            });
+    isProcessing = true; btn.disabled = true;
+    postFetch(`${contextPath}staff/exit/notify`, { parkingId })
+      .then(async res => { if (!res.ok) throw new Error(await res.text() || '서버 오류'); alert('알림이 발송되었습니다.'); })
+      .catch(err => { console.error(err); alert('알림 발송 중 오류가 발생했습니다.'); })
+      .finally(() => { isProcessing = false; btn.disabled = false; });
   }
 
   function loadParkingList() {
     const visitList = document.getElementById('visitList');
     const residentList = document.getElementById('residentList');
-
     visitList.innerHTML = '<tr><td colspan="6">로딩 중...</td></tr>';
     residentList.innerHTML = '<tr><td colspan="6">로딩 중...</td></tr>';
 
     fetch(`${contextPath}staff/exit/list/visit`)
-            .then(async res => {
-              if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || '서버 오류');
-              }
-              return res.json();
-            })
-            .then(data => {
-              visitList.innerHTML = '';
-              if (data.length === 0) {
-                visitList.innerHTML = '<tr><td colspan="6" class="pk-empty">주차 중인 방문 차량이 없습니다.</td></tr>';
-                return;
-              }
-              data.forEach(vehicle => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                      <td>${vehicle.vehicleNumber}</td>
-                      <td>${vehicle.household}</td>
-                      <td>${vehicle.purpose ?? '-'}</td>
-                      <td>${vehicle.entryTime}</td>
-                      <td>${vehicle.canExit
-                        ? '<span style="color:var(--color-sub)">출차 가능</span>'
-                        : '<span style="color:var(--color-btn-point)">출차 불가</span>'
-                }</td>
-                      <td>
-                          ${vehicle.canExit
-                        ? `<button type="button" class="pk-btn pk-btn-primary"
-                                         onclick="processExit(${vehicle.parkingId}, this)">출차</button>`
-                        : `${vehicle.householdConfirmed
-                                ? `<button type="button" class="pk-btn pk-btn-secondary"
-                                             onclick="sendNotification(${vehicle.parkingId}, this)">알림 보내기</button>`
-                                : ''}
-                                 <button type="button" class="pk-btn pk-btn-point"
-                                         onclick="forceExit(${vehicle.parkingId}, this)">강제 출차</button>`
-                }
-                      </td>
-                  `;
-                visitList.appendChild(row);
-              });
-            })
-            .catch(err => {
-              console.error(err);
-              visitList.innerHTML = '<tr><td colspan="6">데이터 조회 중 오류가 발생했습니다.</td></tr>';
-            });
+      .then(async res => { if (!res.ok) throw new Error(await res.text() || '서버 오류'); return res.json(); })
+      .then(data => {
+        visitList.innerHTML = '';
+        if (data.length === 0) { visitList.innerHTML = '<tr><td colspan="6" class="pk-empty">주차 중인 방문 차량이 없습니다.</td></tr>'; return; }
+        data.forEach(vehicle => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${vehicle.vehicleNumber}</td>
+            <td>${vehicle.household}</td>
+            <td>${vehicle.purpose ?? '-'}</td>
+            <td>${vehicle.entryTime}</td>
+            <td>${vehicle.canExit ? '<span style="color:var(--color-sub)">출차 가능</span>' : '<span style="color:var(--color-btn-point)">출차 불가</span>'}</td>
+            <td>${vehicle.canExit
+              ? `<button type="button" class="pk-btn pk-btn-primary" onclick="processExit(${vehicle.parkingId}, this)">출차</button>`
+              : `${vehicle.householdConfirmed ? `<button type="button" class="pk-btn pk-btn-secondary" onclick="sendNotification(${vehicle.parkingId}, this)">알림 보내기</button>` : ''}
+                 <button type="button" class="pk-btn pk-btn-point" onclick="forceExit(${vehicle.parkingId}, this)">강제 출차</button>`}
+            </td>`;
+          visitList.appendChild(row);
+        });
+      })
+      .catch(err => { console.error(err); visitList.innerHTML = '<tr><td colspan="6">데이터 조회 중 오류가 발생했습니다.</td></tr>'; });
 
     fetch(`${contextPath}staff/exit/list/resident`)
-            .then(async res => {
-              if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || '서버 오류');
-              }
-              return res.json();
-            })
-            .then(data => {
-              residentList.innerHTML = '';
-              if (data.length === 0) {
-                residentList.innerHTML = '<tr><td colspan="6" class="pk-empty">주차 중인 입주자 차량이 없습니다.</td></tr>';
-                return;
-              }
-              data.forEach(vehicle => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                      <td>${vehicle.vehicleNumber}</td>
-                      <td>${vehicle.household}</td>
-                      <td>${vehicle.userName ?? '-'}</td>
-                      <td>${vehicle.entryTime}</td>
-                      <td>${vehicle.canExit
-                        ? '<span style="color:var(--color-sub)">출차 가능</span>'
-                        : '<span style="color:var(--color-btn-point)">출차 불가</span>'
-                }</td>
-                      <td>
-                          ${vehicle.canExit
-                        ? `<button type="button" class="pk-btn pk-btn-primary"
-                                         onclick="processExit(${vehicle.parkingId}, this)">출차</button>`
-                        : `${vehicle.householdConfirmed
-                                ? `<button type="button" class="pk-btn pk-btn-secondary"
-                                             onclick="sendNotification(${vehicle.parkingId}, this)">알림 보내기</button>`
-                                : ''}
-                                 <button type="button" class="pk-btn pk-btn-point"
-                                         onclick="forceExit(${vehicle.parkingId}, this)">강제 출차</button>`
-                }
-                      </td>
-                  `;
-                residentList.appendChild(row);
-              });
-            })
-            .catch(err => {
-              console.error(err);
-              residentList.innerHTML = '<tr><td colspan="6">데이터 조회 중 오류가 발생했습니다.</td></tr>';
-            });
+      .then(async res => { if (!res.ok) throw new Error(await res.text() || '서버 오류'); return res.json(); })
+      .then(data => {
+        residentList.innerHTML = '';
+        if (data.length === 0) { residentList.innerHTML = '<tr><td colspan="6" class="pk-empty">주차 중인 입주자 차량이 없습니다.</td></tr>'; return; }
+        data.forEach(vehicle => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${vehicle.vehicleNumber}</td>
+            <td>${vehicle.household}</td>
+            <td>${vehicle.userName ?? '-'}</td>
+            <td>${vehicle.entryTime}</td>
+            <td>${vehicle.canExit ? '<span style="color:var(--color-sub)">출차 가능</span>' : '<span style="color:var(--color-btn-point)">출차 불가</span>'}</td>
+            <td>${vehicle.canExit
+              ? `<button type="button" class="pk-btn pk-btn-primary" onclick="processExit(${vehicle.parkingId}, this)">출차</button>`
+              : `${vehicle.householdConfirmed ? `<button type="button" class="pk-btn pk-btn-secondary" onclick="sendNotification(${vehicle.parkingId}, this)">알림 보내기</button>` : ''}
+                 <button type="button" class="pk-btn pk-btn-point" onclick="forceExit(${vehicle.parkingId}, this)">강제 출차</button>`}
+            </td>`;
+          residentList.appendChild(row);
+        });
+      })
+      .catch(err => { console.error(err); residentList.innerHTML = '<tr><td colspan="6">데이터 조회 중 오류가 발생했습니다.</td></tr>'; });
   }
 
   loadParkingList();
