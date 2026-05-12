@@ -108,6 +108,9 @@ public class Post extends BaseSoftDeleteEntity {
     public void softDelete() {
         super.softDelete();     // 부모 deletedAt 설정 실행
         this.postStatus = PostStatus.DELETED;
+        if (this.comments != null) {
+            this.comments.clear();
+        }
     }
 
     // 조회수
