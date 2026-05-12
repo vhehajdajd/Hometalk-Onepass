@@ -9,39 +9,18 @@
   <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
   <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
   <link rel="stylesheet" th:href="@{/css/parking/parking-staff.css}">
-  <!--✅ 알림 추가 -->
   <meta name="ctx" th:content="@{/}">
   <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
   <script th:src="@{/js/notification/notification-sse.js}"></script>
   <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
 <body>
-<!-- ════════ 상단 네브바 ════════ -->
-<nav class="staff-navbar">
-  <a th:href="@{/staff/entry}" class="staff-logo">
-    <svg width="72" height="52" viewBox="0 0 90 64">
-      <circle cx="22" cy="8" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
-      <circle cx="45" cy="4" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
-      <circle cx="68" cy="8" r="1.5" fill="none" stroke="#3a5fcd" stroke-width="1.2"/>
-      <path d="M22,10 Q30,19 36,16 Q40,14 45,6 Q50,14 54,16 Q60,19 68,10 L68,19 M22,10 L22,19"
-            fill="none" stroke="#3a5fcd" stroke-width="1.2" stroke-linecap="round"/>
-      <text x="45" y="38" text-anchor="middle" fill="#032154" font-size="14" letter-spacing="4" font-weight="300">FOREST</text>
-      <line x1="10" y1="45" x2="80" y2="45" stroke="#E2E8F0" stroke-width="0.5"/>
-      <text x="45" y="60" text-anchor="middle" fill="#032154" font-size="15" letter-spacing="3" font-weight="700">LIUM</text>
-    </svg>
-  </a>
-  <a th:href="@{/auth/logout}" class="staff-logout-btn">로그아웃</a>
-</nav>
 
-<div class="main-layout">
-  <div class="main-wrapper">
+<div class="main-layout" style="display:flex; min-height:100vh;">
 
-<div class="main-layout">
-  <!-- 2. 오른쪽 영역 -->
-  <div class="main-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
-    <!-- 상단 카테고리 메뉴 -->
-    <div th:replace="~{fragments/headerCategoryMenu :: staffParking}"></div>
+  <div class="main-wrapper" style="flex:1; min-width:0; display:flex; flex-direction:column;">
 
     <!-- 본문 -->
     <main class="content">
@@ -120,9 +99,12 @@
 
       </div>
     </main>
-    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+
   </div>
+
 </div>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 
 <script th:inline="javascript">
   const contextPath = /*[[@{/}]]*/ '/';
@@ -237,29 +219,29 @@
   }
 
   function processEntry(id, type, btn) {
-      if (isProcessing) return;
-      isProcessing = true;
-      btn.disabled = true;
+    if (isProcessing) return;
+    isProcessing = true;
+    btn.disabled = true;
 
-      postFetch(`${contextPath}staff/vehicle/entry`, { id: id, type: type })
-              .then(async res => {
-                  if (!res.ok) {
-                      const data = await res.json();
-                      throw new Error(data.message || '서버 오류');
-                  }
-                  alert('입차 처리가 완료되었습니다.');
-                  document.getElementById('vehicleNumber').value = '';
-                  document.getElementById('searchResult').innerHTML = '';
-                  loadTodayList();
-              })
-              .catch(err => {
-                  console.error(err);
-                  alert(err.message || '입차 처리 중 오류가 발생했습니다.');
-              })
-              .finally(() => {
-                  isProcessing = false;
-                  btn.disabled = false;
-              });
+    postFetch(`${contextPath}staff/vehicle/entry`, { id: id, type: type })
+            .then(async res => {
+              if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.message || '서버 오류');
+              }
+              alert('입차 처리가 완료되었습니다.');
+              document.getElementById('vehicleNumber').value = '';
+              document.getElementById('searchResult').innerHTML = '';
+              loadTodayList();
+            })
+            .catch(err => {
+              console.error(err);
+              alert(err.message || '입차 처리 중 오류가 발생했습니다.');
+            })
+            .finally(() => {
+              isProcessing = false;
+              btn.disabled = false;
+            });
   }
 
   function loadTodayList() {

@@ -1,6 +1,5 @@
 package com.hometalk.onepass.parking.controller;
 
-import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.parking.dto.request.EntryRequest;
 import com.hometalk.onepass.parking.dto.request.ManualEntryRequest;
 import com.hometalk.onepass.parking.dto.response.VehicleSearchResult;
@@ -10,7 +9,6 @@ import com.hometalk.onepass.parking.service.StaffEntryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.format.DateTimeFormatter;
@@ -50,10 +48,9 @@ public class StaffEntryController {
     // POST /staff/vehicle/manual-entry
     @PostMapping("/vehicle/manual-entry")
     public ResponseEntity<Void> processManualEntry(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody @Valid ManualEntryRequest request) {
+            @RequestBody @Valid ManualEntryRequest request) {  // @AuthenticationPrincipal 제거
 
-        staffEntryService.processManualEntry(request, userDetails.getPostNum());
+        staffEntryService.processManualEntry(request);  // postNum 제거
         return ResponseEntity.ok().build();
     }
 
