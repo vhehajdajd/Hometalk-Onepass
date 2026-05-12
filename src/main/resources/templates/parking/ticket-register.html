@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+l<!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('차량 티켓 등록')}"></head>
 <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
@@ -20,7 +20,7 @@
     <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
 
     <!-- 본문 -->
-    <main class="content">
+    <main class="content" style="flex:1;">
       <div class="container">
         <h2 class="page-title">차량 티켓 등록</h2>
 
@@ -147,6 +147,7 @@
       </div>
     </main>
 
+    <!-- 하단 푸터 -->
     <footer th:replace="~{fragments/footer :: footer}"></footer>
 
   </div>

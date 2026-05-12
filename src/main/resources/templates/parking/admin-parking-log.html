@@ -29,7 +29,7 @@
     <div th:replace="~{fragments/headerCategoryMenu :: parkingAdmin}"></div>
 
     <!-- 본문 -->
-    <main class="content">
+    <main class="content" style="flex:1;">
       <div class="container">
         <h2 class="page-title">전체 주차 기록 조회</h2>
 
@@ -94,9 +94,9 @@
 
       </div>
     </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
   </div>
 </div>
-<footer th:replace="~{fragments/footer :: footer}"></footer>
 
 <script th:inline="javascript">
   const contextPath = /*[[@{/}]]*/ '/';

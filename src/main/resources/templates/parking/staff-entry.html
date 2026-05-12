@@ -16,14 +16,13 @@
 </head>
 <body>
 
-<div class="main-layout" style="display:flex; min-height:100vh;">
+<div class="main-layout">
 
   <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
-  <div class="main-wrapper" style="flex:1; min-width:0; display:flex; flex-direction:column;">
+  <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
 
-    <!-- 본문 -->
-    <main class="content">
+    <main class="content" style="flex:1;">
       <div class="container">
 
         <!-- 입차 처리 퀵서치 -->
@@ -100,11 +99,11 @@
       </div>
     </main>
 
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
 
   </div>
 
 </div>
-<footer th:replace="~{fragments/footer :: footer}"></footer>
 
 <script th:inline="javascript">
   const contextPath = /*[[@{/}]]*/ '/';

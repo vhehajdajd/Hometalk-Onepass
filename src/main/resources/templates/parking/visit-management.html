@@ -18,8 +18,9 @@
         <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
 
         <!-- 본문 컨텐츠 -->
-        <div class="container">
-            <h2 class="page-title">방문 차량 관리</h2>
+        <main class="content" style="flex:1;">
+            <div class="container">
+                <h2 class="page-title">방문 차량 관리</h2>
 
                 <!-- 안내 멘트 -->
                 <div style="background-color: #f0f5ff; border: 1px solid #d0dff8; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #3C6ABC; display: flex; align-items: flex-start; gap: 8px;">
@@ -34,31 +35,27 @@
                     </span>
                 </div>
 
-            <!-- 차량 번호 검색 -->
-            <div class="form-group">
-                <label for="vehicleNumber">차량 번호</label>
-                <div class="search-group">
-                    <input
-                            type="text"
-                            id="vehicleNumber"
-                            placeholder="차량 번호 4자리 입력"
-                            maxlength="4"
-                    >
-                    <button type="button" id="searchBtn" onclick="searchVehicle()">조회</button>
+                <!-- 차량 번호 검색 -->
+                <div class="form-group">
+                    <label for="vehicleNumber">차량 번호</label>
+                    <div class="search-group">
+                        <input type="text" id="vehicleNumber" placeholder="차량 번호 4자리 입력" maxlength="4">
+                        <button type="button" id="searchBtn" onclick="searchVehicle()">조회</button>
+                    </div>
+                    <span class="error-msg" id="searchError"></span>
                 </div>
-                <span class="error-msg" id="searchError"></span>
-            </div>
 
-            <!-- 검색 결과 리스트 -->
-            <div id="searchResult" style="display:none;">
-                <ul id="vehicleList"></ul>
-            </div>
+                <!-- 검색 결과 리스트 -->
+                <div id="searchResult" style="display:none;">
+                    <ul id="vehicleList"></ul>
+                </div>
 
-            <!-- 입차 등록 버튼 -->
-            <div class="form-actions" id="registerBtnBox" style="display:none;">
-                <button type="button" id="registerBtn" disabled onclick="registerVehicle()">내 방문자로 등록</button>
+                <!-- 입차 등록 버튼 -->
+                <div class="form-actions" id="registerBtnBox" style="display:none;">
+                    <button type="button" id="registerBtn" disabled onclick="registerVehicle()">내 방문자로 등록</button>
+                </div>
             </div>
-        </div>
+        </main>
 
         <!-- 하단 푸터 삽입 -->
         <footer th:replace="~{fragments/footer :: footer}"></footer>

@@ -6,14 +6,13 @@
 <link rel="stylesheet" th:href="@{/css/parking/parking-staff.css}">
 <body>
 
-<div class="main-layout" style="display:flex; min-height:100vh;">
+<div class="main-layout">
 
   <div th:replace="~{fragments/sidebar :: sidebar(currentPage='manualEntry')}"></div>
 
-  <div class="main-wrapper" style="flex:1; min-width:0; display:flex; flex-direction:column;">
+  <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
 
-    <!-- 본문 -->
-    <main class="content">
+    <main class="content" style="flex:1;">
       <div class="container">
         <h2 class="page-title">수동 입차</h2>
 
@@ -54,9 +53,11 @@
 
       </div>
     </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
   </div>
 </div>
-<footer th:replace="~{fragments/footer :: footer}"></footer>
 
 <script th:inline="javascript">
   const contextPath = /*[[@{/}]]*/ '/';
