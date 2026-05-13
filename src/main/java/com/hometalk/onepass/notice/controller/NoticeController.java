@@ -280,4 +280,29 @@ public class NoticeController {
         List<NoticeListResponseDto> notices = noticeService.getRecentNotices(5);
         return ResponseEntity.ok(notices);
     }
+
+    @PostMapping("/draft")
+    @ResponseBody
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> saveDraft(
+            @ModelAttribute NoticeRequestDto noticeRequestDto,
+            @RequestParam(required = false) List<MultipartFile> files) {
+        Long noticeId = noticeService.createNotice(noticeRequestDto, files);
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", noticeId);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/{id}/draft")
+    @ResponseBody
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> updateDraft(
+            @PathVariable Long id,
+            @ModelAttribute NoticeRequestDto noticeRequestDto,
+            @RequestParam(required = false) List<MultipartFile> files) {
+        noticeService.updateNotice(id, noticeRequestDto, files);
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", id);
+        return ResponseEntity.ok(result);
+    }
 }
