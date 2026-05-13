@@ -46,17 +46,17 @@ public class DataInitializer implements CommandLineRunner {
 
             // 관리자 계정 v2
             createDummySet("admin", "1234", "관리자", "어드민", "admin@hometop.com", "010-1111-2222",
-                    "112233", "포레스트 리움", "0", "0",
+                    "223344 ", "포레스트 리움", "0", "0",
                     User.UserRole.ADMIN, User.UserStatus.APPROVED);
 
             // 거주자 계정 v2
             createDummySet("resident", "1234", "홍길동", "길동", "gildong@hometop.com", "010-2222-3333",
-                    "112233", "프레스트 리움", "101동", "1101호",
+                    "223344", "프레스트 리움", "101동", "1101호",
                     User.UserRole.RESIDENT, User.UserStatus.APPROVED);
 
             // 스태프 계정 v2
             createDummySet("staff", "1234", "김철수", "철수", "chulsoo@hometop.com", "010-5555-6666",
-                    "112233", "포레스트 리움", "0", "0",
+                    "223344", "포레스트 리움", "0", "0",
                     User.UserRole.MEMBER, User.UserStatus.APPROVED);
 
 

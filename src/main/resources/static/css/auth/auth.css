@@ -226,12 +226,12 @@ body.auth-status-page .auth-status-box {
 
 .auth-btn-outline-danger {
     border-color: var(--auth-point);
-    background: var(--auth-white);
-    color: var(--auth-point);
+    background: var(--auth-point);
+    color: var(--auth-white);
 }
 
 .auth-btn-outline-danger:hover {
-    background: #fff6f5;
+    background: var(--auth-point-hover);
     opacity: 1;
 }
 
