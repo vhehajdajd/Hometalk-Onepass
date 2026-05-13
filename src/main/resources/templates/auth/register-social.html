@@ -8,10 +8,10 @@
 </head>
 <body class="auth-page auth-register-page">
 <div class="auth-container">
-    <h1 class="auth-title">가입을 환영합니다</h1>
-    <p class="auth-description">서비스 이용을 위해 추가 정보를 입력해주세요.</p>
+    <h1 class="auth-title" th:text="${editMode == true} ? '가입 정보 수정' : '가입을 환영합니다'">가입을 환영합니다</h1>
+    <p class="auth-description" th:text="${editMode == true} ? '승인 재요청을 위해 정보를 수정해주세요.' : '서비스 이용을 위해 추가 정보를 입력해주세요.'">서비스 이용을 위해 추가 정보를 입력해주세요.</p>
     <hr class="auth-divider">
-    <form class="auth-form" th:action="@{/auth/register/social}" th:object="${socialSignUpDTO}" method="post">
+    <form class="auth-form" th:action="${editMode == true} ? @{/auth/register/edit} : @{/auth/register/social}" th:object="${socialSignUpDTO}" method="post">
 
         <!-- 소셜 로그인 단계에서 이미 확보한 값이라 사용자 수정 없이 hidden 으로 유지한다. -->
         <input type="hidden" th:field="*{email}">
@@ -56,7 +56,9 @@
             <input class="auth-input" type="text" th:field="*{ho}" placeholder="호를 입력하세요 (ex 201호 -> 201)">
         </div>
 
-        <button class="auth-btn auth-btn-block" type="submit">가입 완료</button>
+        <p class="auth-message auth-message-error" th:if="${signupError}" th:text="${signupError}"></p>
+
+        <button class="auth-btn auth-btn-block" type="submit" th:text="${editMode == true} ? '수정 완료' : '가입 완료'">가입 완료</button>
     </form>
 </div>
 

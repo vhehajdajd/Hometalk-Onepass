@@ -56,6 +56,12 @@ public class SignUpController {
         }
 
         try {
+            if (isSocialUser(userDetails)) {
+                model.addAttribute("editMode", true);
+                model.addAttribute("socialSignUpDTO", socialSignUpService.getRejectedSocialSignUpForm(userDetails.getUserId()));
+                return "auth/register-social";
+            }
+
             model.addAttribute("step", 1);
             model.addAttribute("editMode", true);
             model.addAttribute("signUpDTO", signUpService.getRejectedSignUpForm(userDetails.getUserId()));
@@ -115,6 +121,7 @@ public class SignUpController {
     public String updateRejectedRegistration(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @ModelAttribute("signUpDTO") SignUpDTO signUpDTO,
+            @ModelAttribute("socialSignUpDTO") SocialSignUpDTO socialSignUpDTO,
             @RequestParam(required = false, defaultValue = "next") String action,
             @RequestParam(defaultValue = "1") int currentStep,
             HttpSession session,
@@ -123,6 +130,18 @@ public class SignUpController {
     ) {
         if (userDetails == null) {
             return "redirect:/auth";
+        }
+
+        if (isSocialUser(userDetails)) {
+            try {
+                User user = socialSignUpService.updateRejectedSocialSignUp(userDetails.getUserId(), socialSignUpDTO);
+                replaceAuthenticationWithServiceUser(user, socialSignUpDTO, request);
+                return "redirect:/auth/approval/pending";
+            } catch (IllegalArgumentException e) {
+                model.addAttribute("editMode", true);
+                model.addAttribute("signupError", e.getMessage());
+                return "auth/register-social";
+            }
         }
 
         if ("next".equals(action)) {
@@ -311,6 +330,11 @@ public class SignUpController {
         );
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private boolean isSocialUser(CustomUserDetails userDetails) {
+        return userDetails instanceof CustomOAuth2User
+                || (userDetails.getUsername() != null && userDetails.getUsername().startsWith("SOCIAL:"));
     }
 
 
