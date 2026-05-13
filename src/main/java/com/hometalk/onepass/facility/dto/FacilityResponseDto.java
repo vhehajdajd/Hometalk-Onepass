@@ -13,6 +13,7 @@ public class FacilityResponseDto {
     private String location;
     private String iconType;
     private String imagePath;
+    private int maxCapacity;
 
     private String openTime;
     private String closeTime;
@@ -27,6 +28,7 @@ public class FacilityResponseDto {
                 .location(entity.getLocation())
                 .iconType(entity.getIconType())
                 .imagePath(entity.getImagePath())
+                .maxCapacity(entity.getMaxCapacity())
                 .openTime(entity.getOperationTime().getOpenTime().toString())
                 .closeTime(entity.getOperationTime().getCloseTime().toString())
                 .operationTime(entity.getOperationTime())

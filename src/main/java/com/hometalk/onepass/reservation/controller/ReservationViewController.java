@@ -4,6 +4,7 @@ import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.facility.dto.FacilityRequestDto;
 import com.hometalk.onepass.facility.dto.FacilityResponseDto;
 import com.hometalk.onepass.facility.service.FacilityService;
+import com.hometalk.onepass.reservation.dto.ReservationRequestDto;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.entity.Reservation;
 import com.hometalk.onepass.reservation.entity.ReservationStatus;
@@ -34,9 +35,30 @@ public class ReservationViewController {
        [입주민] 예약 신청 화면
      */
     @GetMapping("/apply")
-    public String showApplyForm(Model model) {
+    public String showApplyForm(Model model, Authentication authentication) {
         model.addAttribute("facilities", facilityService.findAll());
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            Long userId = userDetails.getUserId();
+        }
         return "reservation/reservation";
+    }
+
+    // 예약 등록 처리
+    @PostMapping("/register")
+    public String registerReservation(@ModelAttribute ReservationRequestDto dto,
+                                      Authentication authentication,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            reservationService.register(dto, userDetails.getUserId());
+            redirectAttributes.addFlashAttribute("message", "예약이 완료되었습니다.");
+            return "redirect:/reservation/my";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+            redirectAttributes.addFlashAttribute("status", "error");
+            return "redirect:/reservation/apply";
+        }
     }
 
     /*
@@ -83,13 +105,11 @@ public class ReservationViewController {
             redirectAttributes.addFlashAttribute("message", "예약 취소가 완료되었습니다.");
             redirectAttributes.addFlashAttribute("status", "success");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "취소 중 오류가 발생했습니다: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
             redirectAttributes.addFlashAttribute("status", "error");
         }
 
-        if (referer != null) return "redirect:" + referer;
-
-        return "redirect:/reservation/my";
+        return (referer != null) ? "redirect:" + referer : "redirect:/reservation/my";
     }
 
     /*

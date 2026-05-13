@@ -16,11 +16,13 @@ public class Facility {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
+
     private String location;
+
     private String iconType;    // 디자인 가이드 아이콘
     private String imagePath;   // 시설 전경 사진
+    private int maxCapacity;    // 시설별 최대 인원
 
     @Embedded
     private OperationTime operationTime; // LocalTime 기반 운영 시간
@@ -31,12 +33,13 @@ public class Facility {
     private Integer maxReservationTime;
 
 
-    public void updateInfo(String name, String location, String iconType, String imagePath,
+    public void updateInfo(String name, String location, String iconType, String imagePath, int maxCapacity,
                            OperationTime operationTime, Integer maxReservationTime) {
         this.name = name;
         this.location = location;
         this.iconType = iconType;
         this.imagePath = imagePath;
+        this.maxCapacity = maxCapacity;
         this.operationTime = operationTime;
         this.maxReservationTime = maxReservationTime;
     }

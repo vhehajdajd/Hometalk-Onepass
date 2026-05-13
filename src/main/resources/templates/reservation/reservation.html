@@ -34,9 +34,13 @@
                    th:data-name="${f.name}"
                    th:data-id="${f.id}"
                    th:data-max-time="${f.maxReservationTime}"
+                   th:data-max-capacity="${f.maxCapacity}"
                    onclick="handleFacilityClick(this)"> <!-- 함수 호출 방식을 변경 -->
 
                 <strong th:text="${f.name}">시설명</strong>
+                <p class="capacity-info" style="font-size: 12px; color: var(--color-main);">
+                  <i class="fas fa-users"></i> 총 정원: <span th:text="${f.maxCapacity}">0</span>명
+                </p>
                 <p class="time-info" style="font-size: 12px; color: gray;">
                   운영: <span th:text="${f.operationTime?.formattedOpenTime}">09:00</span>
                   ~ <span th:text="${f.operationTime?.formattedCloseTime}">22:00</span>
@@ -54,7 +58,9 @@
           <div id="step2" class="step-section">
             <label class="form-label mb-md">2. 날짜를 선택해주세요 (<span id="selected-facility-name" style="color:var(--color-btn-point)"></span>)</label>
             <div class="summary-card">
-              <input type="date" id="resDate" class="input-field" onchange="selectDate(this.value)">
+              <input type="date" id="resDate" class="input-field"
+                     onclick="this.showPicker()"
+                     oninput="selectDate(this.value)">
             </div>
             <div class="btn-group bg-light">
               <button type="button" class="btn btn-outline" onclick="prevStep(1)">이전으로</button>
@@ -83,11 +89,16 @@
                          th:data-hour="${hour}"
                          onclick="handleTimeClick(this)">
                     <div class="time-chip" th:text="${#numbers.formatInteger(hour, 2) + ':00'}">00:00</div>
+                    <small class="capacity-status" th:id="|cap-${hour}|">
+                      <i class="fas fa-user-friends" style="font-size: 10px;"></i>
+                      <span class="count-text">조회 중...</span>
+                    </small>
                   </label>
                 </th:block>
               </div>
               <div class="btn-area flex-center gap-md mt-xl">
-                <button type="button" class="btn btn-outline" onclick="prevStep(2)">이전</button>
+                <button type="button" class="btn btn-outline"
+                        onclick="document.getElementById('resDate').value=''; prevStep(2);">이전</button>
                 <button type="button" class="btn btn-primary" onclick="submitReservation()">최종 예약 신청</button>
               </div>
             </div>

@@ -78,7 +78,13 @@ public class Reservation extends BaseTimeEntity {
 
     public void updateEndTime(LocalDateTime newEndTime) {
         if (this.reservationTime != null) {
-            this.reservationTime = new ReservationTime(this.reservationTime.getStartTime(), newEndTime);
+            if (newEndTime.isBefore(this.reservationTime.getStartTime())) {
+                return;
+            }
+            this.reservationTime = ReservationTime.builder()
+                    .startTime(this.reservationTime.getStartTime())
+                    .endTime(newEndTime)
+                    .build();
         }
     }
 

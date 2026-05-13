@@ -11,6 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -53,6 +55,51 @@ public class ReservationController {
     @GetMapping
     public List<ReservationResponseDto> list() {
         return reservationService.findAll();
+    }
+
+    /*
+        특정 시설의 특정 날짜 시간대별 예약 현황(인원수) 조회
+     */
+    @GetMapping("/capacity")
+    public ResponseEntity<Map<Integer, Integer>> getCapacity(
+            @RequestParam Long facilityId,
+            @RequestParam String date) {
+        java.time.LocalDate localDate = java.time.LocalDate.parse(date);
+        Map<Integer, Integer> capacityMap = reservationService.getHourlyCapacity(facilityId, localDate);
+
+        return ResponseEntity.ok(capacityMap);
+    }
+
+    @GetMapping("/user-booked-times")
+    public ResponseEntity<List<Integer>> getUserBookedTimes(@RequestParam String date,
+                                                            Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            return ResponseEntity.status(401).build();
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        java.time.LocalDate localDate = java.time.LocalDate.parse(date);
+        List<Integer> bookedHours = reservationService.getUserReservedHours(userDetails.getUserId(), localDate);
+        return ResponseEntity.ok(bookedHours);
+    }
+
+    /*
+       특정 시설에 대해 현재 '이용 종료/취소됨' 상태가 아닌 예약이 있는지 확인
+     */
+    @GetMapping("/check-active/{facilityId}")
+    public ResponseEntity<?> checkActiveReservation(@PathVariable Long facilityId,
+                                                    Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            return ResponseEntity.status(401).body("인증 정보가 없습니다.");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        boolean hasActive = reservationService.hasActiveReservation(userDetails.getUserId(), facilityId);
+        if (hasActive) {
+            return ResponseEntity.ok(Map.of(
+                    "hasActive", true,
+                    "message", "해당 시설에 이미 예약 또는 이용 중인 내역이 존재합니다. 이용 종료 후 다시 예약해주세요."
+            ));
+        }
+        return ResponseEntity.ok(Map.of("hasActive", false));
     }
 
     /*
@@ -107,7 +154,6 @@ public class ReservationController {
             reservationService.finishUsage(id, userDetails.getUserId());
             return ResponseEntity.ok().body("이용 종료 처리가 완료되었습니다.");
         } catch (Exception e) {
-            // 실패 시 에러 메시지 반환 (showNotice에서 이 메시지를 출력하게 됨)
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
