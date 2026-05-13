@@ -37,6 +37,7 @@
             <tr>
               <th>ID</th>
               <th>시설명</th>
+              <th>최대 정원</th>
               <th>아이콘/운영시간</th>
               <th>최대 예약 시간</th>
               <th>관리</th>
@@ -46,6 +47,11 @@
             <tr th:each="facility : ${facilities}">
               <td th:text="${facility.id}">1</td>
               <td th:text="${facility.name}">헬스장</td>
+              <td>
+                <span class="status-badge" style="background-color: #f1f5f9; color: #475569; padding: 4px 8px;">
+                   <i class="fas fa-users"></i> [[${facility.maxCapacity}]]명
+                </span>
+              </td>
               <td>
                 <span th:text="${facility.iconType}">DUMBBELL</span> |
                 <span th:text="|${facility.openTime} ~ ${facility.closeTime}|">09:00 ~ 22:00</span>
@@ -64,7 +70,7 @@
               </td>
             </tr>
             <tr th:if="${#lists.isEmpty(facilities)}">
-              <td colspan="5" style="text-align: center; padding: 50px 0; color: #94a3b8;">등록된 시설이 없습니다.</td>
+              <td colspan="6" style="text-align: center; padding: 50px 0; color: #94a3b8;">등록된 시설이 없습니다.</td>
             </tr>
           </tbody>
         </table>

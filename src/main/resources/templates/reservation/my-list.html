@@ -25,7 +25,7 @@
                     </div>
                 </div>
 
-                <div class="summary-card" style="padding: 0; overflow-x: auto;" th:if="${not #lists.isEmpty(reservations)}">
+                <div class="summary-card" style="padding: 0; overflow-x: auto;" th:if="${not reservations.empty}">
                     <table class="table">
                         <thead>
                             <tr>
@@ -114,13 +114,14 @@
                             <a th:href="@{/reservation/apply}" class="btn btn-primary">시설 예약</a>
                         </div>
                     </div>
-
                 </div>
 
-                <div class="summary-card" th:if="${#lists.isEmpty(reservations)}">
-                    <div class="flex-center flex-direction-column" style="padding: 60px 0;">
-                        <p class="text-muted mb-md">아직 예약한 내역이 없습니다.</p>
-                        <a th:href="@{/reservation/apply}" class="btn btn-primary">시설 예약하러 가기</a>
+                <div class="summary-card" th:if="${reservations.empty}">
+                    <div class="flex-center flex-direction-column" style="padding: 100px 0; gap: 20px;">
+                        <p class="text-muted" style="margin: 0; font-size: 1.1rem;">아직 예약한 내역이 없습니다.</p>
+                        <a th:href="@{/reservation/apply}" class="btn btn-primary" style="width: fit-content;">
+                            시설 예약하러 가기
+                        </a>
                     </div>
                 </div>
             </main>

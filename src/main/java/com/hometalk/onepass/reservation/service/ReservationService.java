@@ -64,21 +64,22 @@ public class ReservationService {
         LocalDateTime endOfDay = targetDate.atTime(23, 59, 59);
 
         boolean alreadyReservedToday = reservationRepository.existsByUserIdAndOverlapTime(
-                user.getId(), facility.getId(), startOfDay, endOfDay
+                user.getId(), facility.getId(), start.toLocalDate().atStartOfDay(), start.toLocalDate().atTime(23, 59, 59)
         );
 
         if (alreadyReservedToday) {
             throw new RuntimeException("해당 시설은 하루에 한 번만 예약 가능합니다.");
         }
 
-        List<Reservation> conflicting = reservationRepository.findConflictingReservations(
-                facility.getId(), start, end
+        List<ReservationStatus> activeStatuses = List.of(ReservationStatus.CONFIRMED, ReservationStatus.PENDING);
+        long currentReservedCount = reservationRepository.countCurrentReservations(
+                facility.getId(), start, end, activeStatuses
         );
-
-        if (!conflicting.isEmpty()) {
-            throw new RuntimeException("해당 시간대에 이미 예약 또는 승인대기 예약이 존재합니다.");
+        if (currentReservedCount >= facility.getMaxCapacity()) {
+            throw new RuntimeException("해당 시간대는 이미 정원이 초과되었습니다. (최대 " + facility.getMaxCapacity() + "명)");
         }
 
+        // 예약 저장
         Reservation reservation = Reservation.builder()
                 .facility(facility)
                 .user(user)
@@ -195,18 +196,13 @@ public class ReservationService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-
-//        if (now.plusMinutes(5).isBefore(res.getStartTime())) {
-//            throw new RuntimeException("이용 시작 후에만 종료할 수 있습니다.");
-//        }
-
         res.finish();
 
         LocalDateTime newEndTime = now.getMinute() == 0
                 ? now.withSecond(0).withNano(0)
                 : now.plusHours(1).withMinute(0).withSecond(0).withNano(0);
 
-        if (newEndTime.isBefore(res.getEndTime())) {
+        if (newEndTime.isBefore(res.getReservationTime().getEndTime())) {
             res.updateEndTime(newEndTime);
         }
     }
@@ -270,5 +266,22 @@ public class ReservationService {
                 .map(ReservationResponseDto::fromEntity)
                 .collect(Collectors.toList());
 
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Integer, Integer> getHourlyCapacity(Long facilityId, LocalDate date) {
+        // 해당 시설의 해당 날짜에 포함된 '승인된' 혹은 '대기중'인 예약 리스트
+        List<Reservation> reservations = reservationRepository.findByFacilityIdAndReservationDate(facilityId, date);
+        Map<Integer, Integer> hourlyMap = new HashMap<>();
+        for (Reservation res : reservations) {
+            int start = res.getStartTime().getHour();
+            int end = res.getEndTime().getHour();
+
+            // 예약된 시간대 인원수 누적
+            for (int i = start; i < end; i++) {
+                hourlyMap.put(i, hourlyMap.getOrDefault(i, 0) + 1);
+            }
+        }
+        return hourlyMap;
     }
 }

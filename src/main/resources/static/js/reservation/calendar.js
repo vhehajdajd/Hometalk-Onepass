@@ -132,6 +132,12 @@ function initCalendar() {
                         const currentStatus = r.badge || r.status || 'PENDING';
                         const eventColor = getStatusColor(currentStatus);
 
+                        let textColor = '#444444'; // 기본값
+                        if (currentStatus === 'FINISHED') textColor = '#2D4F49';
+                        if (currentStatus === 'COMPLETED') textColor = '#2B4562';
+                        if (currentStatus === 'PENDING' || currentStatus === 'WAITING' || currentStatus === '0') textColor = '#5F5817';
+                        if (currentStatus === 'CONFIRMED' || currentStatus === '1') textColor = '#37474F';
+
                         const startTime = r.startAt ? r.startAt.substring(11, 16) : '';
                         const endTime = r.endAt ? r.endAt.substring(11, 16) : '';
 
@@ -151,7 +157,7 @@ function initCalendar() {
                             end: r.endAt,
                             backgroundColor: eventColor,
                             borderColor: eventColor,
-                            textColor: '#444444',
+                            textColor: textColor,
                             display: 'block',
                             extendedProps: {
                                 status: currentStatus
@@ -186,15 +192,21 @@ function getStatusColor(status) {
         case 'PENDING':
         case 'WAITING':
         case '0':
-            return '#FFE5B4';
+            return '#FFF9C4';
 
         case 'CANCELED':
         case 'CANCEL':
-            return '#F0F0F0';
+            return '#EEEEEE';
+
+        case 'COMPLETED':
+            return '#D1E9FF';
+
+        case 'FINISHED':
+            return '#C1F0E8';
 
         default:
             console.warn("정의되지 않은 상태값입니다:", s);
-            return '#E5E4E2';
+            return '#F5F5F5';
     }
 }
 
