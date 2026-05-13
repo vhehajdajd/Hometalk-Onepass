@@ -32,10 +32,10 @@ spring:
       max-request-size: 10MB
 
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    host: smtp.gmail.com
+    port: 587
+    username: hometalkonepass@gmail.com
+    password: pymn jnjv iykl spaz
     properties:
       mail:
         smtp:

@@ -116,7 +116,7 @@ public class StaffExitService {
                     .toList();
             Long pId = parkingLog.getParkingId();
 
-            residentUserIds.forEach(userId -> notificationPublisher.publish(
+            residentUserIds.forEach(userId -> notificationPublisher.publishAsync(
                     userId,
                     NotificationTargetRole.RESIDENT,
                     NotificationType.VEHICLE_TICKET_SHORTAGE,
@@ -138,7 +138,7 @@ public class StaffExitService {
         String vehicleNumber = parkingLog.getVehicleNumber();
         Long pId = parkingLog.getParkingId();
 
-        residentUserIds.forEach(userId -> notificationPublisher.publish(
+        residentUserIds.forEach(userId -> notificationPublisher.publishAsync(
                 userId,
                 NotificationTargetRole.RESIDENT,
                 NotificationType.VEHICLE_VISITOR_EXIT,

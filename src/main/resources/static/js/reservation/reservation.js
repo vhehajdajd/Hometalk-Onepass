@@ -18,6 +18,8 @@ function selectFacility(name, usageTime, id) {
     nextStep(2);
 }
 
+let currentFacilityMaxCapacity = 0;
+
 // 2. 날짜 선택
 function selectDate(val) {
     if (!val) return;
@@ -30,6 +32,8 @@ function selectDate(val) {
     document.getElementById('display-date-text').innerText = formattedDate;
     // 오늘인 경우 지난 시간 숨기기
     filterAvailableTimes(val);
+    const facilityId = document.getElementById('hidden-facility-id').value;
+    updateCapacityInfo(facilityId, val);
     nextStep(3);
 }
 function filterAvailableTimes(selectedDateStr) {
@@ -79,19 +83,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// 3. 시간 표시 (이용 단위 시간 반영)
-/* function updateTimeDisplay(val) {
-    document.getElementById('display-time').innerText = val;
-    const usageTime = parseInt(document.getElementById('selected-facility-usage-time').value) || 1;
-    let hour = parseInt(val.split(':')[0]);
-    let endHour = hour + usageTime;
-    document.getElementById('end-time').innerText = (endHour).toString().padStart(2, '0') + ":00";
+async function updateCapacityInfo(facilityId, date) {
+    try {
+        const response = await fetch(`/hometop/api/reservations/capacity?facilityId=${facilityId}&date=${date}`);
+        const bookedData = await response.json();
 
-    document.querySelectorAll('.time-chip').forEach(chip => chip.classList.remove('active'));
-    if (event && event.target && event.target.nextElementSibling) {
-        event.target.nextElementSibling.classList.add('active');
+        const timeChips = document.querySelectorAll('.time-chip-wrapper');
+
+        timeChips.forEach(chip => {
+            const hour = chip.getAttribute('data-hour');
+            const bookedCount = bookedData[hour] || 0;
+            const remaining = currentFacilityMaxCapacity - bookedCount;
+
+            const capElement = document.getElementById(`cap-${hour}`);
+            if (capElement) {
+                if (remaining <= 0) {
+                    capElement.innerText = "예약 마감";
+                    capElement.style.color = "red";
+                    chip.classList.add('is-full'); // CSS에서 클릭 방지용 클래스
+                } else {
+                    capElement.innerText = `${bookedCount}/${currentFacilityMaxCapacity}`;
+                    capElement.style.color = "var(--color-sub)";
+                    chip.classList.remove('is-full');
+                }
+            }
+        });
+    } catch (error) {
+        console.error("인원 정보 조회 실패:", error);
     }
-} */
+}
 
 let selectedHours = [];
 
@@ -100,6 +120,7 @@ function handleFacilityClick(element) {
     const id = element.getAttribute('data-id');
     // 서버에서 가져온 최대 예약 시간을 가져옴 (없으면 기본 1시간)
     const maxTime = parseInt(element.getAttribute('data-max-time')) || 1;
+    currentFacilityMaxCapacity = parseInt(element.getAttribute('data-max-capacity')) || 1;
 
     document.getElementById('hidden-facility-id').value = id;
     document.getElementById('hidden-facility').value = name;
@@ -109,9 +130,20 @@ function handleFacilityClick(element) {
 }
 
 function handleTimeClick(element) {
+    if (element.classList.contains('is-full')) {
+        showNotice("이미 정원이 초과된 시간대입니다.", "error");
+        return;
+    }
     const hour = parseInt(element.getAttribute('data-hour'));
     const maxAllowed = parseInt(document.getElementById('selected-facility-usage-time').value);
     const guideElement = document.querySelector('.guide-text');
+
+    if (selectedHours.includes(hour)) {
+        selectedHours = [];
+        if(guideElement) guideElement.innerHTML = `원하시는 시간대의 <strong>시작 시간</strong>과 <strong>종료 시간</strong>을 클릭해 주세요.`;
+        renderTimeSelection();
+        return;
+    }
 
     // 1. 이미 선택된 시간이 하나도 없거나, 선택을 새로 시작할 때
     if (selectedHours.length === 0 || selectedHours.length >= 2) {
@@ -133,6 +165,13 @@ function handleTimeClick(element) {
         // 사이의 모든 시간을 배열에 추가 (연속 선택)
         selectedHours = [];
         for (let i = start; i <= end; i++) {
+            const chip = document.querySelector(`.time-chip-wrapper[data-hour="${i}"]`);
+            if (chip && chip.classList.contains('is-full')) {
+                showNotice("선택하신 범위에 이미 예약이 꽉 찬 시간이 포함되어 있습니다.", "error");
+                selectedHours = []; // 선택 초기화
+                renderTimeSelection();
+                return;
+            }
             selectedHours.push(i);
         }
         if(guideElement) guideElement.innerHTML = `원하시는 시간대의 <strong>시작 시간</strong>과 <strong>종료 시간</strong>을 클릭해 주세요.`;
@@ -145,8 +184,8 @@ function renderTimeSelection() {
     const chips = document.querySelectorAll('.time-chip-wrapper');
 
     if (selectedHours.length === 0) {
-        document.getElementById('display-time').innerText = "--:00";
-        document.getElementById('end-time').innerText = "--:00";
+        document.getElementById('display-time').innerText = "00:00";
+        document.getElementById('end-time').innerText = "00:00";
         chips.forEach(chip => chip.querySelector('.time-chip').classList.remove('active'));
         return;
     }
@@ -180,6 +219,12 @@ function nextStep(step) {
     window.scrollTo(0, 0);
 }
 function prevStep(step) {
+    if(step === 2) {
+        document.getElementById('resDate').value = '';
+        document.getElementById('display-time').innerText = "00:00";
+        document.getElementById('end-time').innerText = "00:00";
+        selectedHours = [];
+    }
     document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
     document.getElementById('step' + step).classList.add('active');
 }

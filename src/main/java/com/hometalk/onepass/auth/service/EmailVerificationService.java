@@ -1,11 +1,13 @@
 package com.hometalk.onepass.auth.service;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -30,6 +32,16 @@ public class EmailVerificationService {
 
     public void sendCode(String email, HttpSession session) {
         String normalizedEmail = normalizeEmail(email);
+        Object verified = session.getAttribute(VERIFIED_ATTR);
+        Object expiresAt = session.getAttribute(EXPIRES_AT_ATTR);
+        if (!Boolean.TRUE.equals(verified)
+                && expiresAt instanceof Instant expires
+                && Instant.now().isBefore(expires)) {
+            long remainingSeconds = Duration.between(Instant.now(), expires).toSeconds();
+            throw new IllegalArgumentException("인증 메일은 5분에 한 번만 발송할 수 있습니다. "
+                    + Math.max(1, remainingSeconds) + "초 후 다시 시도해 주세요.");
+        }
+
         String code = String.format("%06d", secureRandom.nextInt(1_000_000));
 
         session.setAttribute(EMAIL_ATTR, normalizedEmail);
@@ -37,22 +49,24 @@ public class EmailVerificationService {
         session.setAttribute(EXPIRES_AT_ATTR, Instant.now().plus(CODE_TTL));
         session.setAttribute(VERIFIED_ATTR, false);
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        if (from != null && !from.isBlank()) {
-            message.setFrom(from);
-        }
-        message.setTo(normalizedEmail);
-        message.setSubject("[Home Talk One Pass] 이메일 인증 코드");
-        message.setText("""
-                Home Talk One Pass 회원가입 이메일 인증 코드입니다.
-
-                인증 코드: %s
-                유효 시간: 5분
-                """.formatted(code));
-
         try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            if (from != null && !from.isBlank()) {
+                helper.setFrom(from);
+            }
+            helper.setTo(normalizedEmail);
+            helper.setSubject("[Home Talk One Pass] 이메일 인증 코드");
+            helper.setText("""
+                    <div style="font-family: Arial, sans-serif; color: #222; line-height: 1.6;">
+                        <p>Home Talk One Pass 회원가입 이메일 인증 코드입니다.</p>
+                        <p>본 메일은 5분동안 유효합니다.</p>
+                        <p style="margin-top: 20px;">인증 코드</p>
+                        <p style="margin: 0; color: #4073C9; font-size: 28px; font-weight: 700; letter-spacing: 3px;">%s</p>
+                    </div>
+                    """.formatted(code), true);
             mailSender.send(message);
-        } catch (MailException e) {
+        } catch (MessagingException | MailException e) {
             clear(session);
             throw new IllegalStateException("인증 메일 발송에 실패했습니다. 메일 설정을 확인해 주세요.", e);
         }

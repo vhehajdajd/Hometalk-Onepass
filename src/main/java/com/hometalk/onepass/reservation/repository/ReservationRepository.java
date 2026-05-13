@@ -12,23 +12,15 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
-    @Query("""
-            SELECT r FROM Reservation r 
-            WHERE r.facility.id = :facilityId 
-            AND r.status != com.hometalk.onepass.reservation.entity.ReservationStatus.CANCELED
-            AND r.reservationTime.startTime < :end 
-            AND r.reservationTime.endTime > :start
-            """)
-    List<Reservation> findConflictingReservations(@Param("facilityId") Long facilityId,
-                                                  @Param("start") LocalDateTime start,
-                                                  @Param("end") LocalDateTime end);
-
+    // 하루 1회 제한
     @Query("""
         SELECT COUNT(r) > 0 FROM Reservation r 
         WHERE r.user.id = :userId 
@@ -110,4 +102,30 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             "WHERE (:status IS NULL OR r.status = :status) " +
             "ORDER BY r.id DESC")
     Page<Reservation> findAllByStatus(@Param("status") ReservationStatus status, Pageable pageable);
+
+    // -- 중복 예약 방지
+    // 특정 시설의 특정 시간대에 이미 예약 확정된 인원수 계산
+    @Query("""
+            SELECT COUNT(r) FROM Reservation r 
+            WHERE r.facility.id = :facilityId 
+            AND r.reservationTime.startTime < :end 
+            AND r.reservationTime.endTime > :start
+            AND r.status IN :activeStatuses
+            """)
+    long countCurrentReservations(
+            @Param("facilityId") Long facilityId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            @Param("activeStatuses") Collection<ReservationStatus> activeStatuses
+    );
+
+    // 특정 시설 + 특정 날짜 + 취소되지 않은 예약 조회
+    @Query("SELECT r FROM Reservation r " +
+            "WHERE r.facility.id = :facilityId " +
+            "AND FUNCTION('DATE', r.reservationTime.startTime) = :reservationDate " +
+            "AND r.status <> 'CANCELED'")
+    List<Reservation> findByFacilityIdAndReservationDate(
+            @Param("facilityId") Long facilityId,
+            @Param("reservationDate") LocalDate reservationDate
+    );
 }

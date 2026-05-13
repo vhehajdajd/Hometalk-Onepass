@@ -170,6 +170,16 @@
     border-color: var(--color-main);
     background-color: rgba(3, 33, 84, 0.05);
 }
+.time-chip-wrapper.is-full {
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.time-chip-wrapper.is-full .time-chip {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+}
 
 .bg-light {
     background-color: #f8fafc;
@@ -553,3 +563,12 @@
 .res-total { border-top: 4px solid #A5D8FF; }
 .res-total .res-stat-icon { background: #E7F5FF; color: #228BE6; }
 .res-total .res-stat-label { color: #868E96; }
+
+
+.flex-direction-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 가로 중앙 정렬 */
+    justify-content: center; /* 세로 중앙 정렬 */
+    text-align: center;
+}

@@ -42,6 +42,12 @@
                                        placeholder="예: 테니스장 A코트" required>
                             </div>
                             <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label class="form-label">수용 인원 (명)</label>
+                                <input type="number" name="maxCapacity" class="input-field"
+                                       th:value="${facility?.maxCapacity ?: 1}"
+                                       min="1" required>
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
                                 <label class="form-label">대표 아이콘</label>
                                 <select class="input-field select-field" name="iconType">
                                     <option value="DUMBBELL" th:selected="${facility != null and facility.iconType == 'DUMBBELL'}">🏋️ 헬스/운동</option>

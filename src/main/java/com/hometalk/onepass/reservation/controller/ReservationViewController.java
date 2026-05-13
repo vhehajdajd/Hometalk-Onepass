@@ -83,13 +83,11 @@ public class ReservationViewController {
             redirectAttributes.addFlashAttribute("message", "예약 취소가 완료되었습니다.");
             redirectAttributes.addFlashAttribute("status", "success");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "취소 중 오류가 발생했습니다: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
             redirectAttributes.addFlashAttribute("status", "error");
         }
 
-        if (referer != null) return "redirect:" + referer;
-
-        return "redirect:/reservation/my";
+        return (referer != null) ? "redirect:" + referer : "redirect:/reservation/my";
     }
 
     /*

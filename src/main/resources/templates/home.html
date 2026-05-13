@@ -8,8 +8,11 @@
     <meta name="ctx" th:content="@{/}">
     <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-    <script th:src="@{/js/notification/notification-sse.js}"></script>
-    <script th:src="@{/js/notification/notification-bell.js}"></script>
+
+    <th:block th:if="${isLoggedIn}">
+        <script th:src="@{/js/notification/notification-sse.js}"></script>
+        <script th:src="@{/js/notification/notification-bell.js}"></script>
+    </th:block>
     <title>홈 | Forest Lium</title>
     <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
     <link rel="stylesheet" th:href="@{/css/home/home.css}">
@@ -36,7 +39,6 @@
             background: white;
             border-bottom: 1px solid #E2E8F0;
         ">
-            <!-- 버튼 -->
             <div style="display: flex; align-items: center; gap: 12px;">
                 <th:block th:if="${#authorization.expression('isAuthenticated()')}">
                     <a th:href="@{/notification}" class="nav-btn">

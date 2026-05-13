@@ -42,10 +42,10 @@ public class FacilityController {
     }
 
     /*
-     * 시설 정보 수정 (DTO 활용)
+     * 시설 정보 수정
      */
     @PatchMapping("/{id}")
-    public void update(@PathVariable Long id, @RequestBody FacilityRequestDto dto) {
+    public void update(@PathVariable Long id,@Valid @RequestBody FacilityRequestDto dto) {
         facilityService.update(id, dto);
     }
 

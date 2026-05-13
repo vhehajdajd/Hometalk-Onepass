@@ -85,7 +85,7 @@ public class StaffEntryService {
                 String vehicleNum = reservation.getVehicleNumber();
                 Long reservationId = reservation.getReservationId();
 
-                residentUserIds.forEach(userId -> notificationPublisher.publish(
+                residentUserIds.forEach(userId -> notificationPublisher.publishAsync(
                         userId,
                         NotificationTargetRole.RESIDENT,
                         NotificationType.VEHICLE_VISITOR_ENTRY,
@@ -120,7 +120,7 @@ public class StaffEntryService {
                 String vehicleNum = vehicle.getVehicleNumber();
                 Long vehicleId = vehicle.getVehicleId();
 
-                notificationPublisher.publish(
+                notificationPublisher.publishAsync(
                         userId,
                         NotificationTargetRole.RESIDENT,
                         NotificationType.VEHICLE_ENTRY,
@@ -134,12 +134,12 @@ public class StaffEntryService {
     }
 
     @Transactional
-    public void processManualEntry(ManualEntryRequest request, String postNum) {
+    public void processManualEntry(ManualEntryRequest request) {
         Household household = null;
 
         if (hasText(request.getDong()) && hasText(request.getHo())) {
-            household = householdRepository.findByPostNumAndDongAndHo(
-                            postNum, request.getDong(), request.getHo())
+            household = householdRepository.findByDongAndHo(
+                            request.getDong() + "동", request.getHo() + "호")
                     .orElse(null);
         }
 

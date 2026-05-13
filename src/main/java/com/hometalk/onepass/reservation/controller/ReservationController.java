@@ -56,6 +56,19 @@ public class ReservationController {
     }
 
     /*
+        특정 시설의 특정 날짜 시간대별 예약 현황(인원수) 조회
+     */
+    @GetMapping("/capacity")
+    public ResponseEntity<Map<Integer, Integer>> getCapacity(
+            @RequestParam Long facilityId,
+            @RequestParam String date) {
+        java.time.LocalDate localDate = java.time.LocalDate.parse(date);
+        Map<Integer, Integer> capacityMap = reservationService.getHourlyCapacity(facilityId, localDate);
+
+        return ResponseEntity.ok(capacityMap);
+    }
+
+    /*
         예약 승인 [관리자]
      */
     @PostMapping("/{id}/approve")

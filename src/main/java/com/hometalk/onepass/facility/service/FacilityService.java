@@ -40,6 +40,7 @@ public class FacilityService {
                 .location(dto.getLocation())
                 .iconType(dto.getIconType())
                 .imagePath(dto.getImagePath())
+                .maxCapacity(dto.getMaxCapacity())
                 .operationTime(opTime)
                 .maxReservationTime(dto.getMaxReservationTime())
                 .build();
@@ -83,7 +84,9 @@ public class FacilityService {
         facility.updateInfo(dto.getName(),
                 dto.getLocation(),
                 dto.getIconType(),
-                imagePath, opTime,
+                imagePath,
+                dto.getMaxCapacity(),
+                opTime,
                 dto.getMaxReservationTime());
     }
 }

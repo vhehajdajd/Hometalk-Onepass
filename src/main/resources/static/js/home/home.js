@@ -210,3 +210,4 @@ function escHtml(str) {
 }
 
 document.addEventListener('DOMContentLoaded', initHome);
+

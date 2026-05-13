@@ -177,7 +177,8 @@ public class SecurityConfig {
                         // 카카오 사용자는 외부 로그아웃까지 이어서 처리한다.
                         .logoutSuccessHandler(customLogoutSuccessHandler)
                         .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID", RememberMeConfig.REMEMBER_ME_PARAMETER)
                 )
                 .rememberMe(rememberMe -> rememberMe
                         .key(RememberMeConfig.REMEMBER_ME_KEY)
