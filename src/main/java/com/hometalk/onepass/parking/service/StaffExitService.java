@@ -69,9 +69,6 @@ public class StaffExitService {
         if (parkingLog.getStatus() != ParkingLog.ParkingStatus.PARKED) {
             throw new ParkingException("이미 출차된 차량입니다.");
         }
-        if (parkingLog.getHousehold() == null) {
-            throw new ParkingException("세대 미확인 차량입니다. 강제 출차 처리해주세요.");
-        }
 
         int totalMinutes = (int) Duration.between(
                 parkingLog.getEntryTime(), LocalDateTime.now()).toMinutes();
@@ -80,6 +77,10 @@ public class StaffExitService {
         if (totalMinutes <= 10) {
             parkingLog.exit(totalMinutes, totalMinutes);
             return;
+        }
+        // 10분 초과 시 세대 확인
+        if (parkingLog.getHousehold() == null) {
+            throw new ParkingException("세대 미확인 차량입니다. 강제 출차 처리해주세요.");
         }
 
         // 입주자 차량 — 티켓 체크 없이 바로 출차
