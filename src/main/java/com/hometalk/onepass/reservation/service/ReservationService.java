@@ -60,15 +60,16 @@ public class ReservationService {
             throw new RuntimeException("예약은 최대 1주일 이내만 가능합니다.");
         }
 
+        if (this.hasActiveReservation(user.getId(), facility.getId())) {
+            throw new RuntimeException("해당 시설에 이미 예약 또는 이용 중인 내역이 있습니다. 종료 후 다시 예약해주세요.");
+        }
+
         LocalDateTime startOfDay = targetDate.atStartOfDay();
         LocalDateTime endOfDay = targetDate.atTime(23, 59, 59);
 
-        boolean alreadyReservedToday = reservationRepository.existsByUserIdAndOverlapTime(
-                user.getId(), facility.getId(), start.toLocalDate().atStartOfDay(), start.toLocalDate().atTime(23, 59, 59)
-        );
-
-        if (alreadyReservedToday) {
-            throw new RuntimeException("해당 시설은 하루에 한 번만 예약 가능합니다.");
+        boolean isTimeOverlapped = reservationRepository.existsOverlapReservation(user.getId(), start, end);
+        if (isTimeOverlapped) {
+            throw new RuntimeException("선택하신 시간대에 이미 다른 시설 예약이 존재합니다.");
         }
 
         List<ReservationStatus> activeStatuses = List.of(ReservationStatus.CONFIRMED, ReservationStatus.PENDING);
@@ -88,6 +89,10 @@ public class ReservationService {
                 .build();
 
         return reservationRepository.save(reservation).getId();
+    }
+    // '이용 종료/취소' 상태가 아닌 예약 확인
+    public boolean hasActiveReservation(Long userId, Long facilityId) {
+        return reservationRepository.existsActiveReservation(userId, facilityId);
     }
 
     public ReservationResponseDto findOne(Long id, Long currentUserId, User.UserRole currentUserRole) {
@@ -283,5 +288,25 @@ public class ReservationService {
             }
         }
         return hourlyMap;
+    }
+
+    /*
+        다른 시설 예약 시간 비활성화
+     */
+    @Transactional(readOnly = true)
+    public List<Integer> getUserReservedHours(Long userId, LocalDate date) {
+        List<Reservation> userReservations = reservationRepository.findByUserIdAndReservationDate(userId, date);
+
+        return userReservations.stream()
+                .filter(res -> res.getStatus() != ReservationStatus.CANCELED)
+                .flatMap(res -> {
+                    int start = res.getReservationTime().getStartTime().getHour();
+                    int end = res.getReservationTime().getEndTime().getHour();
+
+                    return java.util.stream.IntStream.range(start, end).boxed();
+                })
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
     }
 }

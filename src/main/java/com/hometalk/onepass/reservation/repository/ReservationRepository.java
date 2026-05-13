@@ -20,20 +20,6 @@ import java.util.List;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
-    // 하루 1회 제한
-    @Query("""
-        SELECT COUNT(r) > 0 FROM Reservation r 
-        WHERE r.user.id = :userId 
-        AND r.facility.id = :facilityId
-        AND r.status != com.hometalk.onepass.reservation.entity.ReservationStatus.CANCELED
-        AND r.reservationTime.startTime < :end 
-        AND r.reservationTime.endTime > :start
-        """)
-    boolean existsByUserIdAndOverlapTime(@Param("userId") Long userId,
-                                         @Param("facilityId") Long facilityId,
-                                         @Param("start") LocalDateTime start,
-                                         @Param("end") LocalDateTime end);
-
     // 전체 조회
     @Override
     @EntityGraph(attributePaths = {"user", "facility"})
@@ -103,8 +89,32 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             "ORDER BY r.id DESC")
     Page<Reservation> findAllByStatus(@Param("status") ReservationStatus status, Pageable pageable);
 
+
     // -- 중복 예약 방지
-    // 특정 시설의 특정 시간대에 이미 예약 확정된 인원수 계산
+    // 동일 시간대 타 시설 예약 불가 - 한 사용자가 특정 시간대에 어떤 시설이든 예약이 있는지 확인 (중복 시간대 예약 방지)
+    @Query("""
+            SELECT COUNT(r) > 0 FROM Reservation r 
+            WHERE r.user.id = :userId 
+            AND r.status IN (com.hometalk.onepass.reservation.entity.ReservationStatus.CONFIRMED, 
+                             com.hometalk.onepass.reservation.entity.ReservationStatus.PENDING)
+            AND r.reservationTime.startTime < :end 
+            AND r.reservationTime.endTime > :start
+            """)
+    boolean existsOverlapReservation(@Param("userId") Long userId,
+                                     @Param("start") LocalDateTime start,
+                                     @Param("end") LocalDateTime end);
+
+    // 시설별 한 번 예약 - 특정 사용자가 특정 시설에 대해 아직 '종료'되지 않은 예약이 있는지 확인
+    @Query("""
+            SELECT COUNT(r) > 0 FROM Reservation r
+            WHERE r.user.id = :userId
+            AND r.facility.id = :facilityId
+            AND r.status IN (com.hometalk.onepass.reservation.entity.ReservationStatus.CONFIRMED, 
+                             com.hometalk.onepass.reservation.entity.ReservationStatus.PENDING)
+            """)
+    boolean existsActiveReservation(@Param("userId") Long userId, @Param("facilityId") Long facilityId);
+
+    // 정원 마감 - 특정 시설의 특정 시간대에 이미 예약 확정된 인원수 계산
     @Query("""
             SELECT COUNT(r) FROM Reservation r 
             WHERE r.facility.id = :facilityId 
@@ -119,13 +129,19 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("activeStatuses") Collection<ReservationStatus> activeStatuses
     );
 
-    // 특정 시설 + 특정 날짜 + 취소되지 않은 예약 조회
+    // 시설별 타임라인 - 특정 시설 + 특정 날짜 + 취소되지 않은 예약 조회
     @Query("SELECT r FROM Reservation r " +
             "WHERE r.facility.id = :facilityId " +
             "AND FUNCTION('DATE', r.reservationTime.startTime) = :reservationDate " +
             "AND r.status <> 'CANCELED'")
-    List<Reservation> findByFacilityIdAndReservationDate(
-            @Param("facilityId") Long facilityId,
-            @Param("reservationDate") LocalDate reservationDate
-    );
+    List<Reservation> findByFacilityIdAndReservationDate(@Param("facilityId") Long facilityId,
+                                                         @Param("reservationDate") LocalDate reservationDate);
+
+    // 타 시설 예약 시간 비활성화
+    @Query("SELECT r FROM Reservation r " +
+            "WHERE r.user.id = :userId " +
+            "AND FUNCTION('DATE', r.reservationTime.startTime) = :reservationDate " +
+            "AND r.status NOT IN (com.hometalk.onepass.reservation.entity.ReservationStatus.CANCELED)")
+    List<Reservation> findByUserIdAndReservationDate(@Param("userId") Long userId,
+                                                     @Param("reservationDate") LocalDate reservationDate);
 }
