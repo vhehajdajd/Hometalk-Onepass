@@ -340,17 +340,49 @@
         document.getElementById('charCount').innerText = this.value.length;
     });
 
-    // ── 첨부파일 목록 표시 ───────────────────────────────────────────────────
+    // ── 첨부파일 누적 선택 ───────────────────────────────────────────────────
+    var selectedFiles = [];
+
     document.getElementById('file').addEventListener('change', function() {
+        var newFiles = Array.from(this.files);
+        newFiles.forEach(function(newFile) {
+            // 중복 파일 제외
+            var isDuplicate = selectedFiles.some(function(f) {
+                return f.name === newFile.name && f.size === newFile.size;
+            });
+            if (!isDuplicate) selectedFiles.push(newFile);
+        });
+
+        renderFileList();
+
+        // DataTransfer로 input에 누적 파일 반영
+        var dt = new DataTransfer();
+        selectedFiles.forEach(function(f) { dt.items.add(f); });
+        document.getElementById('file').files = dt.files;
+    });
+
+    function renderFileList() {
         var container = document.getElementById('fileNames');
         container.innerHTML = '';
-        Array.from(this.files).forEach(function(f) {
+        selectedFiles.forEach(function(f, index) {
             var div = document.createElement('div');
             div.className = 'file-item';
-            div.textContent = '📎 ' + f.name;
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.gap = '8px';
+            div.innerHTML = '📎 ' + f.name +
+                '<button type="button" style="background:none; border:none; cursor:pointer; color:#aaa; font-size:12px;" onclick="removeFile(' + index + ')">✕</button>';
             container.appendChild(div);
         });
-    });
+    }
+
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        var dt = new DataTransfer();
+        selectedFiles.forEach(function(f) { dt.items.add(f); });
+        document.getElementById('file').files = dt.files;
+        renderFileList();
+    }
 
     // ── hidden 입력값 수집 ───────────────────────────────────────────────────
     function collectScheduleData() {

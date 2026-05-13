@@ -104,21 +104,32 @@ public class ScheduleService {
     @Transactional(readOnly = true)
     public ScheduleDetailResponseDto getScheduleByNotice(Notice notice) {
         return scheduleRepository.findFirstByNotice(notice)
-                .map(schedule -> new ScheduleDetailResponseDto(
-                        schedule.getId(),
-                        schedule.getNotice() != null ? schedule.getNotice().getId() : null,
-                        schedule.getTitle(),
-                        schedule.getInfo(),
-                        schedule.getLocation(),
-                        schedule.getReferenceUrl(),
-                        schedule.getStartAt(),
-                        schedule.getEndAt(),
-                        schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
-                        (String) null,
-                        (LocalDateTime) null,
-                        (Long) null,
-                        (LocalDateTime) null
-                ))
+                .map(schedule -> {
+                    LocalDateTime repeatGroupStartAt = null;
+                    if (schedule.getRepeatGroupId() != null) {
+                        repeatGroupStartAt = scheduleRepository
+                                .findByRepeatGroupId(schedule.getRepeatGroupId())
+                                .stream()
+                                .map(Schedule::getStartAt)
+                                .min(LocalDateTime::compareTo)
+                                .orElse(schedule.getStartAt());
+                    }
+                    return new ScheduleDetailResponseDto(
+                            schedule.getId(),
+                            schedule.getNotice() != null ? schedule.getNotice().getId() : null,
+                            schedule.getTitle(),
+                            schedule.getInfo(),
+                            schedule.getLocation(),
+                            schedule.getReferenceUrl(),
+                            schedule.getStartAt(),
+                            schedule.getEndAt(),
+                            schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
+                            schedule.getRepeatType() != null ? schedule.getRepeatType().name() : null,
+                            schedule.getRepeatEndAt(),
+                            schedule.getRepeatGroupId(),
+                            repeatGroupStartAt
+                    );
+                })
                 .orElse(null);
     }
 
@@ -190,6 +201,7 @@ public class ScheduleService {
                 .orElseThrow(() -> new ScheduleNotFoundException(id));
 
         if (schedule.getRepeatGroupId() != null) {
+            Notice notice = schedule.getNotice(); // 추가
             List<Schedule> group = scheduleRepository.findByRepeatGroupId(schedule.getRepeatGroupId());
             group.sort(Comparator.comparing(Schedule::getStartAt));
             scheduleRepository.deleteAll(group);
@@ -203,11 +215,44 @@ public class ScheduleService {
 
             dto.setStartAt(newStart);
             dto.setRepeatGroupId(schedule.getRepeatGroupId());
-            createRepeatSchedule(dto);
+
+            // notice 연동 처리 추가
+            if (notice != null) {
+                createRepeatScheduleWithNotice(
+                        notice,
+                        dto.getTitle(),
+                        dto.getStartAt(),
+                        dto.getEndAt(),
+                        dto.getInfo(),
+                        dto.getLocation(),
+                        dto.getReferenceUrl(),
+                        dto.getRepeatType() != null ? dto.getRepeatType() : RepeatType.WEEKLY,
+                        dto.getRepeatEndAt()
+                );
+            } else {
+                createRepeatSchedule(dto);
+            }
         } else if (dto.getRepeatType() != null && dto.getRepeatType() != RepeatType.NONE) {
+            Notice notice = schedule.getNotice(); // 기존 notice 저장
             scheduleRepository.delete(schedule);
             dto.setRepeatGroupId(System.currentTimeMillis());
-            createRepeatSchedule(dto);
+            // notice가 있으면 notice 연동 반복일정 생성
+            if (notice != null) {
+                String noticeUrl = notice.getId() != null ? dto.getReferenceUrl() : null;
+                createRepeatScheduleWithNotice(
+                        notice,
+                        dto.getTitle(),
+                        dto.getStartAt(),
+                        dto.getEndAt(),
+                        dto.getInfo(),
+                        dto.getLocation(),
+                        noticeUrl,
+                        dto.getRepeatType(),
+                        dto.getRepeatEndAt()
+                );
+            } else {
+                createRepeatSchedule(dto);
+            }
         } else {
             schedule.update(
                     dto.getTitle(),
