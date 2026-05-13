@@ -266,11 +266,10 @@ l<!DOCTYPE html>
       });
   }
 
-  function refreshCurrentVehicle() {
-    const keyword = document.getElementById('vehicleNumber').value.trim();
+function refreshCurrentVehicle() {
     const currentParkingId = selectedParkingId;
 
-    fetch(`${contextPath}parking/ticket/search?keyword=${keyword}`)
+    fetch(`${contextPath}parking/ticket/my-vehicles`)
       .then(res => res.json())
       .then(data => {
         const current = data.find(v => v.parkingId === currentParkingId);
@@ -541,7 +540,11 @@ async function loadMyVehicles() {
                 const div = document.createElement('div');
                 div.classList.add('result-item');
                 div.style.cursor = 'pointer';
-                div.innerHTML = `<p style="margin:0;"><strong>${vehicle.vehicleNumber}</strong> &nbsp;|&nbsp; 입차 ${vehicle.entryTime}</p>`;
+                div.innerHTML = `<p style="margin:0;">
+                <strong>${vehicle.vehicleNumber}</strong>
+                &nbsp;|&nbsp; 입차 ${vehicle.entryTime}
+                ${vehicle.unregistered ? '&nbsp;|&nbsp; <span style="color:var(--color-btn-point);">미등록 차량</span>' : ''}
+            </p>`;
                 div.addEventListener('click', () => {
                     document.getElementById('vehicleSelectBox').style.display = 'none';
                     renderTicketUI(vehicle);

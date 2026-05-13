@@ -69,9 +69,11 @@ public class StaffEntryService {
                         .orElseThrow(() -> new ParkingException("예약 정보를 찾을 수 없습니다."));
 
                 if (reservation.getStatus() != VisitReservation.ReservationStatus.RESERVED
-                        && reservation.getStatus() != VisitReservation.ReservationStatus.PENDING_CONFIRM) {
+                        && reservation.getStatus() != VisitReservation.ReservationStatus.PENDING_CONFIRM
+                        && reservation.getStatus() != VisitReservation.ReservationStatus.ENTERED) {
                     throw new ParkingException("입차 처리할 수 없는 예약 상태입니다.");
                 }
+
 
                 LocalDateTime reservedAt = reservation.getReservedAt();
                 LocalDateTime now = LocalDateTime.now();
@@ -89,7 +91,9 @@ public class StaffEntryService {
                         ParkingLog.EntryType.RESERVATION);
                 parkingLogRepository.save(log);
 
-                reservation.enter();
+                if (reservation.getStatus() != VisitReservation.ReservationStatus.ENTERED) {
+                    reservation.enter();
+                }
 
                 // 트랜잭션 안에서 userId 미리 추출
                 List<Long> residentUserIds = reservation.getHousehold().getUsers().stream()

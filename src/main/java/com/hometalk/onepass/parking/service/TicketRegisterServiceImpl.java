@@ -180,7 +180,7 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
 
         return logs.stream()
                 .filter(log -> log.getEntryType() != ParkingLog.EntryType.NORMAL)
-                .filter(log -> log.getEntryType() == ParkingLog.EntryType.MANUAL ||
+                .filter(log -> log.getEntryType() == ParkingLog.EntryType.MANUAL && log.getHousehold() != null ||
                         (log.getHousehold() != null && log.getHousehold().getId().equals(householdId)))
                 .map(log -> new ParkingSearchResponse(
                         log, tickets, ticketUsageRepository.findByParkingLog(log)))
