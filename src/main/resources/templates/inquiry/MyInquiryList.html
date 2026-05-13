@@ -34,15 +34,15 @@
                     <tbody>
                     <tr th:each="my : ${paging.content}">
                         <td>
-    <span class="badge category-badge"
-          th:text="${my.category}"
-          th:classappend="
-            ${my.category == '시설/기술'} ? 'facility' :
-            (${my.category == '환경/위생'} ? 'clean' :
-            (${my.category == '보안/안전'} ? 'security' :
-            'etc'))">
-        카테고리
-    </span>
+                            <span class="badge category-badge"
+                                  th:text="${my.category}"
+                                  th:classappend="
+                                    ${my.category == '시설/기술'} ? 'facility' :
+                                    (${my.category == '환경/위생'} ? 'clean' :
+                                    (${my.category == '보안/안전'} ? 'security' :
+                                    'etc'))">
+                                카테고리
+                            </span>
                         </td>
 
                         <td class="title-cell" style="text-align: left; padding-left: 20px;">
@@ -113,9 +113,8 @@
                     </div>
                 </div>
             </main>
-
-            <footer th:replace="~{fragments/footer :: footer}"></footer>
         </div>
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
 </div>
 </body>
