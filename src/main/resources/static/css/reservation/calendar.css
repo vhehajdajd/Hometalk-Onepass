@@ -68,77 +68,163 @@
 }
 
 /* =========================
-   3. CALENDAR WRAPPER (둥글게)
+   CALENDAR CONTAINER
 ========================= */
 #calendar-container {
-    background: #ffffff;
-    padding: 25px;
+    background: #fff;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
     border-radius: 16px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
 }
 
-/* FullCalendar 내부 스타일 복구 및 강화 */
-.fc .fc-toolbar-title {
-    font-size: 1.5rem !important;
+/* =========================
+   TOOLBAR
+========================= */
+#calendar-container .fc .fc-toolbar {
+    margin-bottom: 20px;
+}
+
+#calendar-container .fc .fc-toolbar-title {
+    font-size: 1.35rem;
     font-weight: 700;
-    color: var(--color-main);
+    color: #0f172a;
+    letter-spacing: -0.02em;
 }
 
-/* 상단 이동 버튼들 */
-.fc .fc-button-primary {
-    background-color: #fff !important;
-    border-color: var(--border-color) !important;
-    color: var(--color-text) !important;
-    border-radius: 8px !important;
+/* 버튼 */
+#calendar-container .fc .fc-button-primary {
+    background: #fff;
+    border: 1px solid #dbe2ea;
+    color: #475569;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    box-shadow: none;
+    transition: all 0.15s ease;
+}
+
+/* active */
+#calendar-container .fc .fc-button-primary.fc-button-active {
+    background-color: #edf2f7;
+    border-color: #d8e1eb;
+    color: #0f172a;
+    box-shadow: none;
+}
+
+/* activce hover */
+#calendar-container .fc .fc-button-primary.fc-button-active:hover {
+    background-color: #e2e8f0;
+    border-color: #cbd5e1;
+}
+
+/* hover */
+#calendar-container .fc .fc-button-primary:hover {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+    color: #334155;
+}
+
+/* focus 제거 */
+#calendar-container .fc .fc-button-primary:focus {
+    box-shadow: none;
+}
+
+/* =========================
+   HEADER
+========================= */
+#calendar-container .fc-theme-standard th {
+    border-color: #e5e7eb;
+}
+
+#calendar-container .fc-col-header-cell {
+    background: #f8fafc;
+    padding: 12px 0;
+}
+
+#calendar-container .fc-col-header-cell-cushion {
+    text-decoration: none;
+    color: #64748b;
+    font-size: 0.88rem;
     font-weight: 600;
 }
 
-.fc .fc-button-primary:hover {
-    background-color: var(--color-bg-white-btn) !important;
+/* =========================
+   DAY CELL
+========================= */
+
+#calendar-container .fc-theme-standard td {
+    border-color: #eef2f7;
 }
 
-.fc .fc-button-active {
-    background-color: var(--color-main) !important;
-    border-color: var(--color-main) !important;
-    color: #fff !important;
+#calendar-container .fc-daygrid-day {
+    transition: background-color 0.15s ease;
 }
 
-/* 요일 헤더 스타일 */
-.fc-col-header-cell {
-    background: #f8fafc;
-    padding: 12px 0 !important;
-    color: #64748b;
-    border-bottom: 1px solid var(--border-color) !important;
+/* 셀 hover */
+#calendar-container .fc-daygrid-day:hover {
+    background: #fafafa;
 }
 
 /* 날짜 숫자 */
-.fc-daygrid-day-number {
-    font-size: 13px;
+#calendar-container .fc-daygrid-day-number {
+    padding: 8px 10px;
+    font-size: 0.92rem;
     font-weight: 600;
-    padding: 8px !important;
+    color: #334155;
+    text-decoration: none;
 }
 
-/* 오늘 날짜 강조 */
-.fc-day-today {
-    background: #eff6ff !important;
+/* 오늘 셀 */
+#calendar-container .fc-day-today {
+    background: #eff6ff;
 }
 
-.fc-event {
-    border: none !important;
-    box-shadow: none !important;
-    color: #444 !important;
+/* 오늘 숫자 */
+#calendar-container .fc-day-today .fc-daygrid-day-number {
+    color: var(--color-btn-point);
+    font-weight: 700;
 }
 
-/* 캘린더 날짜 숫자 크기 조절 */
-.fc-daygrid-day-number {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    color: var(--color-main) !important;
-    padding: 8px !important;
-    text-decoration: none !important;
+/* =========================
+   EVENT
+========================= */
+
+/* 이벤트 wrapper */
+#calendar-container .fc-h-event,
+.fc-v-event {
+    background: transparent;
+    border: none;
 }
 
-.fc-day-today .fc-daygrid-day-number {
-    color: var(--color-btn-point) !important;
+/* 이벤트 본체 */
+#calendar-container .fc-event-main {
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-shadow: none;
+    transition:
+    transform 0.12s ease,
+    filter 0.12s ease;
+}
+
+/* 이벤트 hover */
+#calendar-container .fc-event:hover .fc-event-main {
+    filter: brightness(0.98);
+}
+
+/* =========================
+   MORE LINK
+========================= */
+
+#calendar-container .fc-daygrid-more-link {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
 }
