@@ -69,9 +69,6 @@ public class StaffExitService {
         if (parkingLog.getStatus() != ParkingLog.ParkingStatus.PARKED) {
             throw new ParkingException("이미 출차된 차량입니다.");
         }
-        if (parkingLog.getHousehold() == null) {
-            throw new ParkingException("세대 미확인 차량입니다. 강제 출차 처리해주세요.");
-        }
 
         int totalMinutes = (int) Duration.between(
                 parkingLog.getEntryTime(), LocalDateTime.now()).toMinutes();
@@ -80,6 +77,10 @@ public class StaffExitService {
         if (totalMinutes <= 10) {
             parkingLog.exit(totalMinutes, totalMinutes);
             return;
+        }
+        // 10분 초과 시 세대 확인
+        if (parkingLog.getHousehold() == null) {
+            throw new ParkingException("세대 미확인 차량입니다. 강제 출차 처리해주세요.");
         }
 
         // 입주자 차량 — 티켓 체크 없이 바로 출차
@@ -147,6 +148,26 @@ public class StaffExitService {
                 "/parking/vehicle",
                 pId
         ));
+    }
+
+    @Transactional(readOnly = true)
+    public void sendTicketShortageNotification(Long parkingId) {
+        ParkingLog parkingLog = parkingLogRepository.findById(parkingId)
+                .orElseThrow(() -> new ParkingException("주차 기록을 찾을 수 없습니다."));
+
+        if (parkingLog.getHousehold() == null) return;
+
+        parkingLog.getHousehold().getUsers().stream()
+                .filter(u -> u.getRole() == User.UserRole.RESIDENT)
+                .forEach(u -> notificationPublisher.publishAsync(
+                        u.getId(),
+                        NotificationTargetRole.RESIDENT,
+                        NotificationType.VEHICLE_TICKET_SHORTAGE,
+                        "티켓 부족",
+                        "티켓이 부족하여 출차할 수 없습니다. 티켓을 적용해 주세요.",
+                        "/parking/ticket",
+                        parkingLog.getParkingId()
+                ));
     }
 
     @Transactional

@@ -16,14 +16,13 @@
 </head>
 <body>
 
-<div class="main-layout" style="display:flex; min-height:100vh;">
+<div class="main-layout">
 
   <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
-  <div class="main-wrapper" style="flex:1; min-width:0; display:flex; flex-direction:column;">
+  <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
 
-    <!-- 본문 -->
-    <main class="content">
+    <main class="content" style="flex:1;">
       <div class="container">
 
         <!-- 입차 처리 퀵서치 -->
@@ -100,11 +99,11 @@
       </div>
     </main>
 
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
 
   </div>
 
 </div>
-<footer th:replace="~{fragments/footer :: footer}"></footer>
 
 <script th:inline="javascript">
   const contextPath = /*[[@{/}]]*/ '/';
@@ -162,8 +161,8 @@
     fetch(`${contextPath}staff/vehicle/search?keyword=${keyword}`)
             .then(async res => {
               if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || '서버 오류');
+                const data = await res.json();
+                throw new Error(data.message || '서버 오류');
               }
               return res.json();
             })
@@ -214,7 +213,7 @@
             })
             .catch(err => {
               console.error(err);
-              document.getElementById('searchError').textContent = '조회 중 오류가 발생했습니다.';
+              document.getElementById('searchError').textContent = err.message || '조회 중 오류가 발생했습니다.';
             });
   }
 

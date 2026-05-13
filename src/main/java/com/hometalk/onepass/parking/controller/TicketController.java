@@ -69,4 +69,12 @@ public class TicketController {
         ticketRegisterService.cancelTicket(request, householdId);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/ticket/my-vehicles")
+    @ResponseBody
+    public ResponseEntity<List<ParkingSearchResponse>> getMyParkedVehicles(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long householdId = userDetails.getHouseholdId();
+        return ResponseEntity.ok(ticketRegisterService.getMyParkedVehicles(householdId));
+    }
 }

@@ -40,6 +40,18 @@ public class StaffEntryService {
         String last4 = keyword.replace(" ", "");
         if (last4.length() != 4) return List.of();
 
+        // 이미 주차 중인 차량 체크
+        List<String> parkedNumbers = parkingLogRepository
+                .findByStatus(ParkingLog.ParkingStatus.PARKED)
+                .stream().map(ParkingLog::getVehicleNumber).toList();
+
+        boolean alreadyParked = parkedNumbers.stream()
+                .anyMatch(n -> n.replace(" ", "").endsWith(last4));
+
+        if (alreadyParked) {
+            throw new ParkingException("이미 입차된 차량입니다.");
+        }
+
         List<VehicleSearchResult> results = new ArrayList<>();
         vehicleRepository.findApprovedByLast4(last4)
                 .stream().map(VehicleSearchResult::ofResident).forEach(results::add);
@@ -57,9 +69,11 @@ public class StaffEntryService {
                         .orElseThrow(() -> new ParkingException("예약 정보를 찾을 수 없습니다."));
 
                 if (reservation.getStatus() != VisitReservation.ReservationStatus.RESERVED
-                        && reservation.getStatus() != VisitReservation.ReservationStatus.PENDING_CONFIRM) {
+                        && reservation.getStatus() != VisitReservation.ReservationStatus.PENDING_CONFIRM
+                        && reservation.getStatus() != VisitReservation.ReservationStatus.ENTERED) {
                     throw new ParkingException("입차 처리할 수 없는 예약 상태입니다.");
                 }
+
 
                 LocalDateTime reservedAt = reservation.getReservedAt();
                 LocalDateTime now = LocalDateTime.now();
@@ -76,6 +90,10 @@ public class StaffEntryService {
                         reservation.getHousehold(), reservation, null,
                         ParkingLog.EntryType.RESERVATION);
                 parkingLogRepository.save(log);
+
+                if (reservation.getStatus() != VisitReservation.ReservationStatus.ENTERED) {
+                    reservation.enter();
+                }
 
                 // 트랜잭션 안에서 userId 미리 추출
                 List<Long> residentUserIds = reservation.getHousehold().getUsers().stream()

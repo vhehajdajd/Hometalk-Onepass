@@ -30,7 +30,7 @@
     <div th:replace="~{fragments/headerCategoryMenu :: parkingAdmin}"></div>
 
     <!-- 본문 -->
-    <main class="content">
+    <main class="content" style="flex:1;">
       <div class="container">
         <h2 class="page-title">차량 승인 관리</h2>
 
@@ -63,10 +63,10 @@
         <ul class="pk-pagination" id="pagination"></ul>
       </div>
     </main>
-
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
   </div>
 </div>
-<footer th:replace="~{fragments/footer :: footer}"></footer>
+
 
 <!-- 서류 모달 -->
 <div id="documentModal" style="display:none; position:fixed; inset:0; background:rgba(3,33,84,0.45); z-index:1000; align-items:center; justify-content:center;">

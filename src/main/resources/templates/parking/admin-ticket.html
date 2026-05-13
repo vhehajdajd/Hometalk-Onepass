@@ -25,7 +25,7 @@
     <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='parking')}"></div>
     <div th:replace="~{fragments/headerCategoryMenu :: parkingAdmin}"></div>
 
-    <main class="content">
+    <main class="content" style="flex:1;">
       <div class="container">
         <h2 class="page-title">관리자 티켓 발급</h2>
 
@@ -127,9 +127,10 @@
 
       </div>
     </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
   </div>
 </div>
-<footer th:replace="~{fragments/footer :: footer}"></footer>
+
 <script th:inline="javascript">
   const contextPath = /*[[@{/}]]*/ '/';
   const csrfToken = document.querySelector('meta[name="_csrf"]').content;
