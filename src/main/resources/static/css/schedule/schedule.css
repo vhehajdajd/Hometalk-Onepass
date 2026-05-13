@@ -125,7 +125,7 @@
 /* ── 네비 카드 ─────────────────────────────────────────────────────────────── */
 .cal-nav-card {
     width: 280px;
-    background: var(--color-main);
+    background: linear-gradient(180deg, #3a5fcd 0%, #6b8de3 100%);
     border-radius: 4px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.07);
     padding: 20px 18px;

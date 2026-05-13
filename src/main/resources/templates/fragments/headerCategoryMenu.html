@@ -86,6 +86,13 @@
     <a class="category-item" th:href="@{/complaints/my}">내 민원</a>
 </div>
 
+<div th:fragment="inquiryAdmin" class="category-bar">
+    <a class="category-item" th:href="@{/inquiries/list}">문의 목록</a>
+    <a class="category-item" th:href="@{/complaints/list}">민원 목록</a>
+</div>
+
+
+
 <!-- ── 회원 승인 - 관리자 ── -->
 <div th:fragment="approvalAdmin" class="category-bar">
     <a class="category-item" th:href="@{/admin/users/approvals}">승인 신청 목록</a>
