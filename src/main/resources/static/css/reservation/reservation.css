@@ -572,3 +572,34 @@
     justify-content: center; /* 세로 중앙 정렬 */
     text-align: center;
 }
+/* 예약 신청 달력 */
+.flatpickr-calendar {
+    transform: scale(1.2);
+    transform-origin: top left;
+}
+
+.flatpickr-day {
+    width: 42px;
+    height: 42px;
+    line-height: 42px;
+    font-size: 15px;
+}
+
+.date-input-wrapper {
+    position: relative;
+}
+
+.calendar-icon {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    pointer-events: none;
+}
+
+#resDate {
+    height: 52px;
+    font-size: 16px;
+    padding: 0 45px 0 16px;
+}

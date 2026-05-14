@@ -88,24 +88,25 @@ async function disableUserBookedTimes(date) {
     }
 }
 
-// 2-1. 오늘 날짜 기준으로 일주일
-document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.getElementById('resDate');
-    if (dateInput) {
-        const now = new Date();
+document.addEventListener('DOMContentLoaded', function () {
 
-        // 1. 최소 날짜 (오늘)
-        const minDate = now.toISOString().split('T')[0];
+    const now = new Date();
 
-        // 2. 최대 날짜 (오늘 + 7일)
-        const maxDateObj = new Date();
-        maxDateObj.setDate(now.getDate() + 7);
-        const maxDate = maxDateObj.toISOString().split('T')[0];
+    const maxDateObj = new Date();
+    maxDateObj.setDate(now.getDate() + 7);
 
-        // 3. 속성 적용
-        dateInput.min = minDate;
-        dateInput.max = maxDate;
-    }
+    flatpickr("#resDate", {
+        locale: "ko",
+        dateFormat: "Y-m-d",
+
+        minDate: "today",
+        maxDate: maxDateObj,
+
+        onChange: function(selectedDates, dateStr) {
+            selectDate(dateStr);
+        }
+    });
+
 });
 
 async function updateCapacityInfo(facilityId, date) {
