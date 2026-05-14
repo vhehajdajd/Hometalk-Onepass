@@ -72,19 +72,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const tradeBox = document.getElementById('tradeBox');
 
     function onCategoryChange() {
+        if (!categorySelect) return;
         const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-        const categoryCode = selectedOption.dataset.code?.toLowerCase();
+        const categoryCode = selectedOption.dataset.code?.trim().toLowerCase();
 
         const isTrade = categoryCode === 'trade';
+        const tradeType = document.querySelector('select[name="tradeType"]');
 
         if (tradeBox) {
             tradeBox.style.display = isTrade ? 'block' : 'none';
         }
-        const tradeType = document.querySelector('select[name="tradeType"]');
 
-        if (!isTrade && tradeType) {
-            tradeType.value = "";
+        if (tradeType) {
+            tradeType.required = isTrade;
+            tradeType.disabled = !isTrade;
+            if (!isTrade) {
+                tradeType.value = "";
+                tradeType.setCustomValidity(""); // 중요
+            }
         }
+        console.log({
+            categoryCode,
+            isTrade,
+            required: tradeType?.required,
+            display: tradeBox?.style.display
+        });
     }
 
     if (categorySelect && tradeBox) {
