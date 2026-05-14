@@ -55,6 +55,7 @@ public class SecurityConfig {
                                 "/auth",
                                 "/auth/loginimage/**",
                                 "/auth/login",
+                                "/auth/oauth2/**",
                                 "/auth/register/**",
                                 "/auth/api/check-id-duplication",
                                 "/oauth2/authorization/**",
