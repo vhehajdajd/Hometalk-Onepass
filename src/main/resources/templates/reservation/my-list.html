@@ -54,6 +54,15 @@
                                     </span>
                                 </td>
                                 <td>
+                                    <!-- 예약 상태가 CANCELED일 때만 노출 -->
+                                    <div th:if="${res.status.toString() == 'CANCELED' && res.cancelReason != null}"
+                                         class="reject-reason-box"
+                                         style="margin-bottom: 8px;">
+                                        <small style="color: #d9534f; display: block; background: #fdf2f2; padding: 4px 8px; border-radius: 4px;">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            <strong>반려 사유:</strong> [[${res.cancelReason}]]
+                                        </small>
+                                    </div>
                                     <button th:if="${res.status?.toString() == 'CONFIRMED'
                                                    && (now.isAfter(res.startTime) || now.isEqual(res.startTime))
                                                    && now.isBefore(res.endTime)}"

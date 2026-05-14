@@ -130,6 +130,11 @@
                                         <button type="button" class="btn btn-point btn-sm"
                                                 th:onclick="|confirmAdminCancel('${res.id}')|">강제취소</button>
                                     </div>
+                                    <div th:if="${res.status?.toString() == 'CANCELED' and res.cancelReason != null}"
+                                         style="color: #d9534f; margin-top: 2px;">
+                                        <i class="fas fa-comment-dots"></i>
+                                        사유: <span th:text="${res.cancelReason}">사유 내용</span>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>

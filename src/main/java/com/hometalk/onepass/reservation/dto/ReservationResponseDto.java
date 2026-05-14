@@ -17,6 +17,8 @@ public class ReservationResponseDto {
     private LocalDateTime actualEndTime;
     private ReservationStatus status;
 
+    private String cancelReason;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -40,6 +42,7 @@ public class ReservationResponseDto {
 
         dto.setActualEndTime(reservation.getActualEndTime());
         dto.setStatus(reservation.getStatus());
+        dto.setCancelReason(reservation.getCancelReason());
         dto.setCreatedAt(reservation.getCreatedAt());
         dto.setUpdatedAt(reservation.getUpdatedAt());
         return dto;

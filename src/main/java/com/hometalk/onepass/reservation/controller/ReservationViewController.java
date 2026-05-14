@@ -91,6 +91,7 @@ public class ReservationViewController {
      */
     @PostMapping("/cancel/{id}")
     public String cancelReservation(@PathVariable Long id,
+                                    @RequestParam(required = false) String reason,
                                     @RequestHeader(value = "Referer", required = false) String referer,
                                     Authentication authentication,
                                     RedirectAttributes redirectAttributes) {
@@ -101,7 +102,7 @@ public class ReservationViewController {
                 (CustomUserDetails) authentication.getPrincipal();
 
         try {
-            reservationService.cancel(id, userDetails.getUserId(), userDetails.getRole(), null);
+            reservationService.cancel(id, userDetails.getUserId(), userDetails.getRole(), reason);
             redirectAttributes.addFlashAttribute("message", "예약 취소가 완료되었습니다.");
             redirectAttributes.addFlashAttribute("status", "success");
         } catch (Exception e) {
