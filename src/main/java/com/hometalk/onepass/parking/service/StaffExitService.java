@@ -38,7 +38,7 @@ public class StaffExitService {
 
         return parkingLogRepository.findParkedByLast4(last4)
                 .stream()
-                .map(log -> new ParkingLogResponse(log, getAvailableMinutes(log)))
+                .map(log -> new ParkingLogResponse(log, log.getAppliedMinutes() != null ? log.getAppliedMinutes() : 0))
                 .toList();
     }
 
@@ -48,7 +48,7 @@ public class StaffExitService {
                 .stream()
                 .filter(log -> log.getEntryType() == ParkingLog.EntryType.RESERVATION
                         || log.getEntryType() == ParkingLog.EntryType.MANUAL)
-                .map(log -> new ParkingLogResponse(log, getAvailableMinutes(log)))
+                .map(log -> new ParkingLogResponse(log, log.getAppliedMinutes() != null ? log.getAppliedMinutes() : 0))
                 .toList();
     }
 
