@@ -11,7 +11,7 @@
     <script th:src="@{/js/notification/notification-sse.js}"></script>
     <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
-<body>
+<body class="approval-admin-page">
 <div class="main-layout">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='userApproval')}"></div>
 
@@ -20,7 +20,7 @@
         <div th:replace="~{fragments/headerCategoryMenu :: approvalAdmin}"></div>
 
         <main class="content">
-            <div class="container">
+            <div class="approval-container">
                 <section class="approval-page">
                     <div class="approval-head">
                         <div>
@@ -38,6 +38,8 @@
                         <table class="approval-table">
                             <thead>
                             <tr>
+                                <th>No</th>
+                                <th>요청일</th>
                                 <th>회원</th>
                                 <th>연락처</th>
                                 <th>세대 정보</th>
@@ -46,7 +48,13 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:each="user : ${pendingUsers}">
+                            <tr th:each="user, userStat : ${pendingUsers}">
+                                <td>
+                                    <span th:text="${pendingUserPage.totalElements - (pendingUserPage.number * pendingUserPage.size) - userStat.index}">1</span>
+                                </td>
+                                <td>
+                                    <span th:text="${user.requestDate ?: '-'}">2026-05-14 10:30</span>
+                                </td>
                                 <td>
                                     <strong th:text="${user.name}">홍길동</strong>
                                     <span th:text="${user.nickname ?: '-'}">닉네임</span>

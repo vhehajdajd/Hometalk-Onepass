@@ -1,7 +1,9 @@
 package com.hometalk.onepass.auth.controller;
 
+import com.hometalk.onepass.auth.dto.AdminUserApprovalResponseDTO;
 import com.hometalk.onepass.auth.service.AdminUserApprovalService;
 import com.hometalk.onepass.auth.entity.User;
+import org.springframework.data.domain.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -25,12 +27,14 @@ public class AdminUserApprovalController {
     @GetMapping("/approvals")
     public String approvals(@RequestParam(defaultValue = "0") int page, Model model) {
         int safePage = Math.max(page, 0);
-        var pendingUsers = adminUserApprovalService.getPendingUsers(
-                PageRequest.of(safePage, 15, Sort.by(Sort.Direction.DESC, "id"))
+        Sort requestDateSort = Sort.by(Sort.Direction.DESC, "updatedAt")
+                .and(Sort.by(Sort.Direction.DESC, "id"));
+        Page<AdminUserApprovalResponseDTO> pendingUsers = adminUserApprovalService.getPendingUsers(
+                PageRequest.of(safePage, 15, requestDateSort)
         );
         if (pendingUsers.getTotalPages() > 0 && safePage >= pendingUsers.getTotalPages()) {
             pendingUsers = adminUserApprovalService.getPendingUsers(
-                    PageRequest.of(pendingUsers.getTotalPages() - 1, 15, Sort.by(Sort.Direction.DESC, "id"))
+                    PageRequest.of(pendingUsers.getTotalPages() - 1, 15, requestDateSort)
             );
         }
         int currentPage = pendingUsers.getNumber();
