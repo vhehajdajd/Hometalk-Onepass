@@ -227,22 +227,28 @@ public class NoticeController {
 
     // ── 파일 다운로드 ─────────────────────────────────────────────────────────
     @GetMapping("/download/{attachmentId}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable Long attachmentId) {
+    public ResponseEntity<Resource> downloadFile(@PathVariable Long attachmentId) throws java.io.UnsupportedEncodingException {
         Attachment attachment = noticeService.getAttachment(attachmentId);
+
+        System.out.println("파일 경로: " + attachment.getFilePath());  // ← 추가
 
         Path path = Paths.get(attachment.getFilePath());
         Resource resource = new FileSystemResource(path);
+
+        System.out.println("파일 존재 여부: " + resource.exists());  // ← 추가
 
         if (!resource.exists()) {
             return ResponseEntity.notFound().build();
         }
 
+        String encodedFileName = java.net.URLEncoder.encode(attachment.getFileName(), "UTF-8")
+                .replaceAll("\\+", "%20");
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + attachment.getFileName() + "\"")
+                        "attachment; filename=\"" + encodedFileName + "\"; filename*=UTF-8''" + encodedFileName)
                 .body(resource);
     }
-
     // ── 에디터 이미지 업로드 ──────────────────────────────────────────────────
     @PostMapping("/image-upload")
     @ResponseBody
@@ -260,7 +266,8 @@ public class NoticeController {
 
             String contextPath = request.getContextPath();
             Map<String, String> result = new HashMap<>();
-            result.put("url", contextPath + "/uploads/" + fileName);
+            String serverUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+            result.put("url", serverUrl + contextPath + "/uploads/" + fileName);
             return result;
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드 실패: " + e.getMessage());
