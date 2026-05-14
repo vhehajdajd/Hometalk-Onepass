@@ -70,7 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 카테고리 변경 → 거래박스 제어
     const categorySelect = document.querySelector('.category-select');
     const tradeBox = document.getElementById('tradeBox');
-    if (!categorySelect || !tradeBox) return;
 
     function onCategoryChange() {
         const selectedOption = categorySelect.options[categorySelect.selectedIndex];
