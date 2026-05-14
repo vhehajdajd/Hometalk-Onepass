@@ -1,10 +1,11 @@
-.content {
+.approval-admin-page .content {
     flex: 1;
     font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-.container {
-    width: min(1180px, calc(100% - 80px));
+.approval-container {
+    max-width: 1400px;
+    width: calc(100% - 40px);
     margin: 40px auto;
     background: #fff;
     padding: 40px;
@@ -55,7 +56,7 @@
     border: 1px solid var(--border-color);
     border-radius: 4px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    padding: 40px;
+    padding: 24px;
 }
 
 .approval-empty {
@@ -65,21 +66,18 @@
 }
 
 .approval-table-wrap {
-    overflow: hidden;
-}
-
-.approval-table-wrap {
     overflow-x: auto;
 }
 
 .approval-table {
     width: 100%;
+    min-width: 980px;
     border-collapse: collapse;
 }
 
 .approval-table th,
 .approval-table td {
-    padding: 18px 16px;
+    padding: 16px 10px;
     border-bottom: 1px solid var(--color-modal-line);
     text-align: center;
     vertical-align: middle;
@@ -129,12 +127,15 @@
 .approval-actions {
     display: flex;
     justify-content: center;
+    flex-wrap: nowrap;
     gap: 8px;
+    min-width: 210px;
 }
 
 .approval-form {
     display: flex;
     justify-content: center;
+    flex-wrap: nowrap;
     gap: 6px;
 }
 
@@ -145,6 +146,7 @@
     background: #fff;
     color: var(--color-main);
     font-size: 14px;
+    white-space: nowrap;
 }
 
 .approval-btn {
@@ -157,6 +159,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: opacity .2s ease;
+    white-space: nowrap;
 }
 
 .approval-btn:hover {
@@ -169,8 +172,13 @@
 
 .approval-btn-reject {
     border-color: var(--color-btn-point);
-    background: #fff;
-    color: var(--color-btn-point);
+    background: var(--color-btn-point);
+    color: #fff;
+}
+
+.approval-btn-reject:hover {
+    background: var(--color-btn-point-hover);
+    opacity: 1;
 }
 
 .approval-pagination {
@@ -198,7 +206,7 @@
 }
 
 @media (max-width: 768px) {
-    .container {
+    .approval-container {
         width: calc(100% - 32px);
         margin: 24px 16px;
         padding: 24px 20px;
