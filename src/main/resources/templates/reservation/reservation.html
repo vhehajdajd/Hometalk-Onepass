@@ -3,6 +3,8 @@
 <head>
   <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='시설 예약')}"></th:block>
   <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
 <div class="main-layout">
@@ -58,9 +60,14 @@
           <div id="step2" class="step-section">
             <label class="form-label mb-md">2. 날짜를 선택해주세요 (<span id="selected-facility-name" style="color:var(--color-btn-point)"></span>)</label>
             <div class="summary-card">
-              <input type="date" id="resDate" class="input-field"
-                     onclick="this.showPicker()"
-                     oninput="selectDate(this.value)">
+              <div class="date-input-wrapper">
+                <input type="text"
+                       id="resDate"
+                       class="input-field"
+                       placeholder="연도-월-일 선택">
+
+                <i class="fas fa-calendar-alt calendar-icon"></i>
+              </div>
             </div>
             <div class="btn-group bg-light">
               <button type="button" class="btn btn-outline" onclick="prevStep(1)">이전으로</button>
@@ -109,6 +116,9 @@
     <footer th:replace="~{fragments/footer :: footer}"></footer>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/ko.js"></script>
 <script th:src="@{/js/reservation/reservation.js}"></script>
+
 </body>
 </html>

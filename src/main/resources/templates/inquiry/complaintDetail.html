@@ -1,5 +1,8 @@
+<!--민원 상세-->
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='민원 내용')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
@@ -12,7 +15,14 @@
 
     <div class="main-wrapper">
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'inquiry'} })}"></div>
-        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"></div>
+
+        <!-- 입주민 메뉴 -->
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"
+             sec:authorize="hasRole('RESIDENT')"></div>
+
+        <!-- 관리자 메뉴 -->
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiryAdmin}"
+             sec:authorize="hasRole('ADMIN')"></div>
 
         <div class="dashboard-content">
             <main class="container">

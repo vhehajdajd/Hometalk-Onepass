@@ -2,7 +2,9 @@
 <!--/* @thymesVar id="inquiry" type="com.hometalk.onepass.inquiry.dto.InquiryDto" */-->
 
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko"
+       xmlns:th="http://www.thymeleaf.org"
+       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='문의 내역')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
@@ -14,7 +16,12 @@
     <div class="main-wrapper">
         <!-- 상단 메뉴 -->
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'inquiry'} })}"></div>
-        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"></div>
+
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"
+             sec:authorize="hasRole('RESIDENT')"></div>
+
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiryAdmin}"
+             sec:authorize="hasRole('ADMIN')"></div>
 
         <!-- 메인 콘텐츠 -->
         <div class="dashboard-content">
