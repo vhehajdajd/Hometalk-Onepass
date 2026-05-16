@@ -28,7 +28,16 @@
           <button type="button" class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
         </div>
 
-        <h1 class="title">시설 예약</h1>
+        <div class="flex-between mb-lg">
+
+          <h1 class="title">시설 예약</h1>
+
+          <a th:href="@{/reservation/guide}" class="btn btn-outline">
+            <i class="fas fa-circle-info"></i>
+              예약 안내
+          </a>
+
+        </div>
 
         <div class="reservation-stepper">
           <div class="step-item active" id="step1-indicator"><span class="step-num">1</span>시설 선택</div>
@@ -52,6 +61,7 @@
                    class="facility-card card-hover"
                    th:data-name="${f.name}"
                    th:data-id="${f.id}"
+                   th:data-status="${f.bookingStatus}"
                    th:data-max-time="${f.maxReservationTime}"
                    th:data-max-capacity="${f.maxCapacity}"
                    onclick="handleFacilityClick(this)">
@@ -165,7 +175,8 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/ko.js"></script>
+<script th:src="@{/js/community/api.js}"></script>
+<script th:src="@{/js/community/post-modal.js}"></script>
 <script th:src="@{/js/reservation/reservation.js}"></script>
-
 </body>
 </html>

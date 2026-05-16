@@ -102,6 +102,8 @@ public class ReservationViewController {
 
     /*
      *  예약 취소 처리
+     *   - 사용자: 직접 취소(CANCELED)
+     *   - 관리자: 사유 입력 후 반려(REJECTED)
      */
     @PostMapping("/cancel/{id}")
     public String cancelReservation(@PathVariable Long id,
@@ -117,7 +119,11 @@ public class ReservationViewController {
 
         try {
             reservationService.cancel(id, userDetails.getUserId(), userDetails.getRole(), reason);
-            redirectAttributes.addFlashAttribute("message", "예약 취소가 완료되었습니다.");
+            if (userDetails.getRole() == com.hometalk.onepass.auth.entity.User.UserRole.ADMIN) {
+                redirectAttributes.addFlashAttribute("message", "예약이 반려되었습니다.");
+            } else {
+                redirectAttributes.addFlashAttribute("message", "예약 취소가 완료되었습니다.");
+            }
             redirectAttributes.addFlashAttribute("status", "success");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("message", e.getMessage());
@@ -233,6 +239,12 @@ public class ReservationViewController {
     @GetMapping("/calendar")
     public String calendarPage() {
         return "reservation/calendar";
+    }
+
+    // 예약 안내 페이지
+    @GetMapping("/guide")
+    public String guidePage() {
+        return "reservation/guide";
     }
 
 }

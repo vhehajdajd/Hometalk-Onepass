@@ -123,8 +123,9 @@ public class ReservationService {
             throw new RuntimeException("이미 승인된 예약입니다.");
         }
 
-        if (reservation.getStatus() == ReservationStatus.CANCELED) {
-            throw new RuntimeException("취소된 예약은 승인할 수 없습니다.");
+        if (reservation.getStatus() == ReservationStatus.CANCELED
+                || reservation.getStatus() == ReservationStatus.REJECTED) {
+            throw new RuntimeException("취소 또는 반려된 예약은 승인할 수 없습니다.");
         }
 
         reservation.approve();
@@ -152,8 +153,9 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("해당 예약을 찾을 수 없습니다."));
 
-        if (reservation.getStatus() == ReservationStatus.CANCELED) {
-            throw new RuntimeException("이미 취소된 예약입니다.");
+        if (reservation.getStatus() == ReservationStatus.CANCELED
+                || reservation.getStatus() == ReservationStatus.REJECTED) {
+            throw new RuntimeException("이미 취소 또는 반려된 예약입니다.");
         }
 
         if (!reservation.getUser().getId().equals(currentUserId)
@@ -161,22 +163,22 @@ public class ReservationService {
             throw new RuntimeException("취소 권한이 없습니다.");
         }
 
-        // 관리자 취소
+        // 관리자 반려
         if (currentUserRole.equals(User.UserRole.ADMIN)) {
 
             if (reason == null || reason.trim().isEmpty()) {
-                throw new RuntimeException("취소 사유를 입력해주세요.");
+                throw new RuntimeException("반려 사유를 입력해주세요.");
             }
 
-            reservation.adminCancel(reason);
+            reservation.reject(reason);
 
             // 사용자 알림
             notificationPublisher.publish(
                     reservation.getUser().getId(),
                     NotificationTargetRole.RESIDENT,
                     NotificationType.RESERVATION_CANCELLED,
-                    "예약이 취소되었습니다.",
-                    "관리자에 의해 예약이 취소되었습니다. 사유: " + reason,
+                    "예약이 반려되었습니다.",
+                    "관리자에 의해 예약이 반려되었습니다. 사유: " + reason,
                     "/reservation/my",
                     reservation.getId()
             );
@@ -302,7 +304,8 @@ public class ReservationService {
         List<Reservation> userReservations = reservationRepository.findByUserIdAndReservationDate(userId, date);
 
         return userReservations.stream()
-                .filter(res -> res.getStatus() != ReservationStatus.CANCELED)
+                .filter(res -> res.getStatus() != ReservationStatus.CANCELED
+                        && res.getStatus() != ReservationStatus.REJECTED)
                 .flatMap(res -> {
                     int start = res.getReservationTime().getStartTime().getHour();
                     int end = res.getReservationTime().getEndTime().getHour();

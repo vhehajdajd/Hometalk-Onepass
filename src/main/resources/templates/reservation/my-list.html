@@ -26,9 +26,15 @@
                 <div class="header-with-action flex-between mb-lg">
                     <h1 class="title">나의 예약 현황</h1>
 
-                    <div class="action-wrapper">
-                        <a th:href="@{/reservation/calendar}" class="btn btn-outline flex gap-md">
-                            <span style="margin-right: 8px;"><i class="fas fa-calendar-alt"> </i></span> 캘린더 현황 보기
+                    <div class="action-wrapper flex gap-md">
+                        <a th:href="@{/reservation/guide}" class="btn btn-outline">
+                            <i class="fas fa-circle-info" style="margin-right: 6px;"></i>
+                              예약 안내
+                        </a>
+
+                        <a th:href="@{/reservation/calendar}" class="btn btn-outline">
+                            <i class="fas fa-calendar-alt" style="margin-right: 6px;"></i>
+                            캘린더 현황 보기
                         </a>
                     </div>
                 </div>
@@ -85,7 +91,8 @@
                                                          (res.status?.toString() == 'PENDING' ? 'status-pending' :
                                                          (res.status?.toString() == 'FINISHED' ? 'status-finished' : 'status-active'))}">
 
-                                        <th:block th:if="${res.status?.toString() == 'CANCELED'}">취소됨</th:block>
+                                        <th:block th:if="${res.status?.toString() == 'CANCELED'}">취소</th:block>
+                                        <th:block th:if="${res.status?.toString() == 'REJECTED'}">반려</th:block>
                                         <th:block th:if="${res.status?.toString() == 'PENDING'}">승인대기</th:block>
                                         <th:block th:if="${res.status?.toString() == 'FINISHED'}">이용종료</th:block>
                                         <th:block th:if="${res.status?.toString() == 'CONFIRMED'}">예약확정</th:block>
@@ -93,7 +100,7 @@
                                 </td>
                                 <td>
                                     <!-- 예약 상태가 CANCELED일 때만 노출 -->
-                                    <div th:if="${res.status.toString() == 'CANCELED' && res.cancelReason != null}"
+                                    <div th:if="${res.status.toString() == 'REJECTED' && res.cancelReason != null}"
                                          class="reject-reason-box"
                                          style="margin-bottom: 8px;">
                                         <p style="color: #d9534f; display: block;">
@@ -176,81 +183,70 @@
         <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
 </div>
+
+
+<script th:src="@{/js/community/api.js}"></script>
+
+<script defer th:src="@{/js/community/post-modal.js}"></script>
+
 <script th:inline="javascript">
-    const CSRF_TOKEN = document.querySelector('meta[name="_csrf"]')?.content;
-    const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content;
-
-    function getCsrfHeaders() {
-        const headers = { 'Content-Type': 'application/json' };
-        if (CSRF_HEADER && CSRF_TOKEN) {
-            headers[CSRF_HEADER] = CSRF_TOKEN;
-        }
-        return headers;
-    }
-
-    // 1. [사용자] 이용 종료
-    async function finishUsage(event, id) {
+    function finishUsage(event, id) {
         const btn = event.currentTarget || event.target;
 
-        if (!confirm("지금 이용을 종료하시겠습니까?\n종료 시 남은 시간은 다른 분들이 예약할 수 있도록 개방됩니다.")) {
-            return;
-        }
+        showConfirmModal("지금 이용을 종료하시겠습니까?<br>종료 시 남은 시간은 다른 분들이 예약할 수 있도록 개방됩니다.", async function () {
+            try {
+                btn.disabled = true;
+                const originalText = btn.innerText;
+                btn.innerText = "처리 중...";
 
-        try {
-            btn.disabled = true;
-            const originalText = btn.innerText;
-            btn.innerText = "처리 중...";
+                const response = await apiFetch(`/hometop/api/reservations/${id}/finish`, {
+                    method: 'PATCH'
+                });
 
-            const response = await fetch(`/hometop/api/reservations/${id}/finish`, {
-                method: 'PATCH',
-                headers: getCsrfHeaders()
-            });
-
-            if (response.ok) {
-                showNotice("이용 종료 처리가 완료되었습니다.", "success");
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            } else {
-                const errorText = await response.text();
-                showNotice(errorText || "이용 종료 처리 중 오류가 발생했습니다.", "error");
+                if (response.ok) {
+                    showAlertModal("이용 종료 처리가 완료되었습니다.");
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    const errorText = await response.text();
+                    showAlertModal(errorText || "이용 종료 처리 중 오류가 발생했습니다.");
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            } catch (error) {
+                console.error(error);
+                showAlertModal("서버와 통신 중 오류가 발생했습니다.");
                 btn.disabled = false;
-                btn.innerText = originalText;
             }
-        } catch (error) {
-            console.error("Error:", error);
-            showNotice("서버와 통신 중 오류가 발생했습니다.", "error");
-            btn.disabled = false;
-            if(typeof originalText !== 'undefined') btn.innerText = originalText;
-        }
+        });
     }
 
-    // 2. [사용자] 예약 취소
-    async function confirmCancel(id) {
-        const ok = confirm("예약을 취소하시겠습니까?");
-        if (!ok) return;
+    // [사용자] 예약 취소
+    function confirmCancel(id) {
+        showConfirmModal("예약을 취소하시겠습니까?", async function () {
+            try {
+                const response = await apiFetch(`/hometop/api/reservations/${id}/cancel`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        reason: null
+                    })
+                });
 
-        try {
-            const response = await fetch(`/hometop/api/reservations/${id}/cancel`, {
-                method: 'PATCH',
-                headers: getCsrfHeaders(),
-                body: JSON.stringify({
-                    reason: null // 유저가 직접 취소할 때는 사유가 null
-                })
-            });
-            if (response.ok) {
-                showNotice("예약이 취소되었습니다.", "success");
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            } else {
-                const errorMsg = await response.text();
-                showNotice("실패: " + (errorMsg || response.status), "error");
+                if (response.ok) {
+                    showAlertModal("예약이 취소되었습니다.");
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    const errorMsg = await response.text();
+                    showAlertModal(errorMsg || "예약 취소 중 오류가 발생했습니다.");
+                }
+            } catch (error) {
+                console.error(error);
+                showAlertModal("서버 통신 중 오류가 발생했습니다.");
             }
-        } catch (error) {
-            console.error(error);
-            showNotice("서버 통신 중 오류가 발생했습니다.", "error");
-        }
+        });
     }
 
     // 3. 알림 메시지 띄우기용 함수

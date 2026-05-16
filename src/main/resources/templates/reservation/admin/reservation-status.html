@@ -120,11 +120,16 @@
                                 </td>
                                 <td>
                                    <span class="status-badge"
-                                         th:classappend="${res.status?.toString() == 'CANCELED' ? 'status-canceled' :
-                                                         (res.status?.toString() == 'PENDING' ? 'status-pending' :
-                                                         (res.status?.toString() == 'FINISHED' ? 'status-finished' : 'status-active'))}">
+                                         th:classappend="${
+                                                        res.status?.toString() == 'CANCELED' ? 'status-canceled' :
+                                                        (res.status?.toString() == 'REJECTED' ? 'status-rejected' :
+                                                        (res.status?.toString() == 'PENDING' ? 'status-pending' :
+                                                        (res.status?.toString() == 'FINISHED' ? 'status-finished' :
+                                                        'status-active')))
+                                         }">
 
-                                         <th:block th:if="${res.status?.toString() == 'CANCELED'}">취소됨</th:block>
+                                         <th:block th:if="${res.status?.toString() == 'CANCELED'}">취소</th:block>
+                                         <th:block th:if="${res.status?.toString() == 'REJECTED'}">반려됨</th:block>
                                          <th:block th:if="${res.status?.toString() == 'PENDING'}">승인대기</th:block>
                                          <th:block th:if="${res.status?.toString() == 'FINISHED'}">이용종료</th:block>
                                          <th:block th:if="${res.status?.toString() == 'CONFIRMED'}">예약확정</th:block>
@@ -133,11 +138,16 @@
                                 <td>
                                     <div class="flex-center gap-md" th:if="${res.status?.toString() == 'PENDING'}">
                                         <button type="button" class="btn btn-primary btn-sm"
-                                                th:onclick="|approveReservation('${res.id}')|">승인</button>
+                                                th:onclick="|approveReservation('${res.id}')|">
+                                            승인
+                                        </button>
+
                                         <button type="button" class="btn btn-point btn-sm"
-                                                th:onclick="|confirmAdminCancel('${res.id}')|">강제취소</button>
+                                                th:onclick="|rejectReservation('${res.id}')|">
+                                            반려
+                                        </button>
                                     </div>
-                                    <div th:if="${res.status?.toString() == 'CANCELED' and res.cancelReason != null}"
+                                    <div th:if="${res.status?.toString() == 'REJECTED' and res.cancelReason != null}"
                                          style="color: #d9534f; margin-top: 2px;">
                                         <i class="fas fa-comment-dots"></i>
                                         사유: <span th:text="${res.cancelReason}">사유 내용</span>
@@ -193,113 +203,67 @@
     <p>이 페이지는 관리자만 접근 가능합니다.</p>
     <a th:href="@{/}">홈으로 돌아가기</a>
 </div>
+
+<script th:src="@{/js/community/api.js}"></script>
+
+<script defer th:src="@{/js/community/post-modal.js}"></script>
+
+
 <script th:inline="javascript">
-    const CSRF_TOKEN = document.querySelector('meta[name="_csrf"]')?.content;
-    const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content;
+    // [관리자] 예약 반려
+    async function rejectReservation(id) {
+        const reason = prompt("반려 사유를 입력해주세요.");
 
-    function getCsrfHeaders() {
-        const headers = { 'Content-Type': 'application/json' };
-        if (CSRF_HEADER && CSRF_TOKEN) {
-            headers[CSRF_HEADER] = CSRF_TOKEN;
-        }
-        return headers;
-    }
-
-    // [관리자] 예약 취소 및 강제 취소
-    async function confirmCancel(id, isAdmin = false) {
-        let reason = null;
-
-        // 관리자 강제취소 시 사유 입력창 띄우기
-        if (isAdmin) {
-            reason = prompt("취소 사유를 입력해주세요.");
-            if (!reason || !reason.trim()) {
-                showNotice("취소 사유를 입력해야 합니다.", "error");
-                return;
-            }
-        } else {
-            const ok = confirm("예약을 취소하시겠습니까?");
-            if (!ok) return;
+        if (!reason || !reason.trim()) {
+            showAlertModal("반려 사유를 입력해야 합니다.");
+            return;
         }
 
         try {
-            const response = await fetch(`/hometop/api/reservations/${id}/cancel`, {
+            const response = await apiFetch(`/hometop/api/reservations/${id}/cancel`, {
                 method: 'PATCH',
-                headers: getCsrfHeaders(),
                 body: JSON.stringify({
-                    reason: reason // 관리자가 입력한 사유 전달
+                    reason: reason
                 })
             });
+
             if (response.ok) {
-                showNotice(isAdmin ? "예약이 강제 취소되었습니다." : "예약이 취소되었습니다.", "success");
+                showAlertModal("예약이 반려되었습니다.");
                 setTimeout(() => {
                     location.reload();
                 }, 1000);
             } else {
                 const errorMsg = await response.text();
-                showNotice("실패: " + (errorMsg || response.status), "error");
+                showAlertModal(errorMsg || "반려 처리 중 오류가 발생했습니다.");
             }
         } catch (error) {
             console.error(error);
-            showNotice("서버 통신 중 오류가 발생했습니다.", "error");
+            showAlertModal("서버 통신 중 오류가 발생했습니다.");
         }
-    }
-
-    // [관리자] 강제 취소
-    function confirmAdminCancel(id) {
-        confirmCancel(id, true);
     }
 
     // [관리자] 예약 승인
     function approveReservation(id) {
-        if (!confirm("이 예약을 승인하시겠습니까?")) return;
+        showConfirmModal("이 예약을 승인하시겠습니까?", async function () {
+            try {
+                const response = await apiFetch(`/hometop/api/reservations/${id}/approve`, {
+                    method: 'POST'
+                });
 
-        fetch(`/hometop/api/reservations/${id}/approve`, {
-            method: 'POST',
-            headers: getCsrfHeaders()
-        })
-            .then(res => {
-                if (res.ok) {
-                    showNotice("예약이 승인되었습니다.", "success");
+                if (response.ok) {
+                    showAlertModal("예약이 승인되었습니다.");
                     setTimeout(() => {
                         location.reload();
                     }, 1000);
                 } else {
-                    showNotice("승인 처리 중 오류가 발생했습니다.", "error");
+                    const errorMsg = await response.text();
+                    showAlertModal(errorMsg || "승인 처리 중 오류가 발생했습니다.");
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                showNotice("서버 통신 중 오류가 발생했습니다.", "error");
-            });
-    }
-
-    // 알림 메시지
-    function showNotice(message, type = 'success') {
-        const existingBox = document.querySelector('.alert-box');
-        if (existingBox) existingBox.remove();
-
-        const alertBox = document.createElement('div');
-        alertBox.className = `alert-box ${type === 'success' ? 'alert-success' : 'alert-danger'}`;
-
-        alertBox.innerHTML = `
-            <div class="alert-content">
-                <i class="${type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'}"></i>
-                <span>${message}</span>
-            </div>
-            <button type="button" class="alert-close" onclick="this.parentElement.remove()">&times;</button>
-        `;
-
-        const container = document.querySelector('.container');
-        if (container) {
-            container.prepend(alertBox);
-        } else {
-            alert(message);
-        }
-
-        setTimeout(() => {
-            if (alertBox) alertBox.style.opacity = '0';
-            setTimeout(() => alertBox.remove(), 500);
-        }, 3000);
+            } catch (error) {
+                console.error(error);
+                showAlertModal("서버 통신 중 오류가 발생했습니다.");
+            }
+        });
     }
 </script>
 </body>

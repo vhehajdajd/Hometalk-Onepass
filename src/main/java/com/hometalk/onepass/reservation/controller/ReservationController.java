@@ -114,6 +114,8 @@ public class ReservationController {
 
     /*
        예약 취소 [사용자/관리자 공용]
+            - 사용자: 직접 취소(CANCELED)
+            - 관리자: 사유 입력 후 반려(REJECTED)
      */
     @PatchMapping("/{id}/cancel")
     public void cancel(@PathVariable("id") Long id,

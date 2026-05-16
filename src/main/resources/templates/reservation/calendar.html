@@ -28,15 +28,21 @@
 
         <div class="dashboard-content">
             <main class="container">
-                <div class="header-with-action">
+                <div class="header-with-action flex-between mb-lg">
                     <div class="title-group">
                         <h1 class="module-title title">전체 예약 현황</h1>
-
                         <div id="facilityButtons" class="facility-tabs"></div>
                     </div>
 
-                    <div class="action-wrapper" sec:authorize="!hasRole('ADMIN')">
-                        <a th:href="@{/reservation/apply}" class="btn btn-primary btn-apply-lg">
+                    <div class="action-wrapper flex gap-md">
+                        <a th:href="@{/reservation/guide}" class="btn btn-outline">
+                            <i class="fas fa-circle-info" style="margin-right: 6px;"></i>
+                              예약 안내
+                        </a>
+
+                        <a sec:authorize="!hasRole('ADMIN')"
+                           th:href="@{/reservation/apply}"
+                           class="btn btn-primary btn-apply-lg">
                             + 예약 신청
                         </a>
                     </div>

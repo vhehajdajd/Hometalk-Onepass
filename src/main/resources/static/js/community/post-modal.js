@@ -107,5 +107,6 @@ function showConfirmModal(message, onConfirm) {
 
     document.addEventListener('keydown', escHandler);
 }
-
+window.showAlertModal = showAlertModal;
+window.showConfirmModal = showConfirmModal;
 /* 중복 모달 방지, ESC 메모리 누수 방지, overlay 닫기, 공통 close 처리 */
