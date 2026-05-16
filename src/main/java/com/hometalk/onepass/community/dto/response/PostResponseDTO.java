@@ -28,6 +28,8 @@ public class PostResponseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private int likeCount;
+    private int dislikeCount;
     private int viewCount;
     private int commentCount;
 
@@ -106,6 +108,9 @@ public class PostResponseDTO {
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();
         this.isDeleted = (post.getDeletedAt() != null);
+
+        this.likeCount = post.getLikeCount();
+        this.dislikeCount = post.getDislikeCount();
         this.viewCount = post.getViewCount();
         this.commentCount = post.getCommentCount();
 

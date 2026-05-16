@@ -127,12 +127,6 @@
     vertical-align: middle;
 }
 
-.post-table th:nth-child(1) { width: 12%; }
-.post-table th:nth-child(3) { width: 8%; }
-.post-table th:nth-child(4) { width: 15%; }
-.post-table th:nth-child(5) { width: 15%; }
-
-
 .comment-count-inline {
     color: #00b894;
     margin-left: 5px;
@@ -271,6 +265,26 @@
     gap: 6px;
     flex-wrap: wrap;
     margin-bottom: 10px;
+}
+
+.trade-type {
+    margin-right: 6px;
+    font-weight: 600;
+}
+.post-card-title .trade-type {
+    display: inline-block;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+/* [판매] */
+.post-card-title .badge-sell {
+    color: #2E7D32;
+}
+
+/* [구매] */
+.post-card-title .badge-buy {
+    color: #0288D1;
 }
 
 .post-card-title {

@@ -53,7 +53,13 @@
                         </span>
                     </div>
 
-                    <h3 class="post-card-title" th:text="${post.title}">제목</h3>
+                    <h3 class="post-card-title">
+                        <span th:if="${post.tradeType != null}">
+                            <span th:if="${post.tradeType == 'SELL'}" class="trade-type badge-sell">[판매]</span>
+                            <span th:if="${post.tradeType == 'BUY'}" class="trade-type badge-buy">[구매]</span>
+                        </span>
+                        <span th:text="${post.title}">제목</span>
+                    </h3>
 
                     <div class="post-card-meta">
                         <span th:text="${post.writer}">작성자</span>
@@ -62,6 +68,7 @@
 
                     <div class="post-card-stats">
                         <span><i class="fa-regular fa-eye"></i> <span th:text="${post.viewCount}">0</span></span>
+                        <span><i class="fa-regular fa-heart"></i> <span th:text="${post.likeCount}">0</span></span>
                         <span><i class="fa-regular fa-comment"></i> <span th:text="${post.commentCount}">0</span></span>
                     </div>
                 </div>

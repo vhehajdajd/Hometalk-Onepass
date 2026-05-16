@@ -24,8 +24,12 @@ public class PostListResponse {
     private String categoryCode;
     private String writer;
     private LocalDateTime createdAt;
+
+    private int likeCount;
+    private int dislikeCount;
     private int viewCount;
     private int commentCount;
+
     private boolean hasImage;
     private String thumbnailPath;
 
@@ -46,12 +50,18 @@ public class PostListResponse {
         this.id = post.getId();
         this.title = post.getTitle();
         this.pinned = post.isPinned();
+
         this.boardName = post.getCategory().getBoard().getName();
         this.categoryName = post.getCategory().getName();
         this.categoryCode = post.getCategory().getCode();
+
         this.writer = post.getWriter().getNickname();
         this.createdAt = post.getCreatedAt();
+
+        this.likeCount = post.getLikeCount();
+        this.dislikeCount = post.getDislikeCount();
         this.viewCount = post.getViewCount();
+
         this.commentCount = post.getComments().size();
         this.hasImage = post.getContent() != null && post.getContent().contains("<img");
         // 대표 썸네일 조회

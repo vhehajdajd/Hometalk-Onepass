@@ -108,6 +108,26 @@
                         <div th:utext="${post.content}">게시글 내용</div>
                     </div>
 
+                    <div class="reaction-section">
+                        <button type="button"
+                                class="reaction-btn like-btn"
+                                th:data-post-id="${post.id}"
+                                onclick="toggleReaction(this, 'LIKE')">
+                            <i class="fa-regular fa-heart"></i>
+                            <span class="like-count" th:text="${post.likeCount}">0</span>
+                        </button>
+
+                        <button type="button"
+                                class="reaction-btn dislike-btn"
+                                th:data-post-id="${post.id}"
+                                th:if="${post.categoryCode == 'debate'}"
+                                onclick="toggleReaction(this, 'DISLIKE')">
+                            <i class="fa-regular fa-thumbs-down"></i>
+                            <span class="dislike-count" th:text="${post.dislikeCount}">0</span>
+                        </button>
+
+                    </div>
+
                     <div class="tag-filter-wrapper"
                          th:if="${postTags != null and !postTags.isEmpty()}">
                         <div class="tag-filter-inner">

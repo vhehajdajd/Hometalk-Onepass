@@ -2,14 +2,16 @@ package com.hometalk.onepass.community.service;
 
 import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.auth.entity.User;
+import com.hometalk.onepass.auth.repository.UserRepository;
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
-import com.hometalk.onepass.community.entity.Category;
+import com.hometalk.onepass.community.entity.PostReaction;
 import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.entity.Post;
 import com.hometalk.onepass.community.enums.PostStatus;
+import com.hometalk.onepass.community.enums.ReactionType;
 import com.hometalk.onepass.community.enums.TradeStatus;
 import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
-import com.hometalk.onepass.community.repository.CategoryRepository;
+import com.hometalk.onepass.community.repository.PostReactionRepository;
 import com.hometalk.onepass.community.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,10 @@ import java.util.List;
 public class PostActionService {
 
     private final PostRepository postRepository;
+    private final PostReactionRepository postReactionRepository;
+    private final UserRepository userRepository;
 
+    // 나눔 상태 변경
     @Transactional
     public void updateMarketStatus(Long postId, CustomUserDetails user, MarketStatus status) {
         if (user == null) {
@@ -36,6 +41,7 @@ public class PostActionService {
         post.updateMarketStatus(status);
     }
 
+    // 거래 상태 변경
     @Transactional
     public void updateTradeStatus(Long postId, CustomUserDetails user, TradeStatus status) {
         if (user == null) {
@@ -49,6 +55,7 @@ public class PostActionService {
         post.updateTradeStatus(status);
     }
 
+    // 상단 고정
     @Transactional
     public boolean togglePin(Long postId, CustomUserDetails user) {
         // 0. 로그인 체크
@@ -67,6 +74,7 @@ public class PostActionService {
         return post.isPinned();
     }
 
+    // 임시저장
     @Transactional
     public void saveAsDraft(Long postId, PostRequestDTO dto) {
         Post post = postRepository.findById(postId)
@@ -116,5 +124,64 @@ public class PostActionService {
         if (viewedPosts != null) {
             viewedPosts.add(postId);
         }
+    }
+
+    // 좋아요
+    @Transactional
+    public boolean toggleReaction(Long postId, CustomUserDetails user, ReactionType type) {
+        if (user == null) throw new UnauthorizedAccessException("로그인이 필요합니다.");
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
+
+        User loginUser = userRepository.findById(user.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 1. 반대 타입이 존재하면 삭제
+        ReactionType opposite = (type == ReactionType.LIKE) ? ReactionType.DISLIKE : ReactionType.LIKE;
+        postReactionRepository.findByPostAndUserAndType(post, loginUser, opposite)
+                .ifPresent(r -> {
+                    postReactionRepository.delete(r);
+                    if (opposite == ReactionType.LIKE) post.decreaseLikeCount();
+                    else post.decreaseDislikeCount();
+                });
+
+        // 2. 같은 타입 토글
+        return postReactionRepository.findByPostAndUserAndType(post, loginUser, type)
+                .map(r -> {
+                    postReactionRepository.delete(r);
+                    if (type == ReactionType.LIKE) post.decreaseLikeCount();
+                    else post.decreaseDislikeCount();
+                    return false;
+                })
+                .orElseGet(() -> {
+                    postReactionRepository.save(new PostReaction(post, loginUser, type));
+                    if (type == ReactionType.LIKE) post.increaseLikeCount();
+                    else post.increaseDislikeCount();
+                    return true;
+                });
+    }
+
+    @Transactional(readOnly = true)
+    public int getReactionCount(Long postId, ReactionType type) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
+        return Math.toIntExact(postReactionRepository.countByPostAndType(post, type));
+    }
+
+    public boolean toggleLike(Long postId, CustomUserDetails user) {
+        return toggleReaction(postId, user, ReactionType.LIKE);
+    }
+
+    public boolean toggleDislike(Long postId, CustomUserDetails user) {
+        return toggleReaction(postId, user, ReactionType.DISLIKE);
+    }
+
+    public int getLikeCount(Long postId) {
+        return getReactionCount(postId, ReactionType.LIKE);
+    }
+
+    public int getDislikeCount(Long postId) {
+        return getReactionCount(postId, ReactionType.DISLIKE);
     }
 }

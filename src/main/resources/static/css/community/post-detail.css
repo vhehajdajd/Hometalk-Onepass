@@ -63,6 +63,48 @@
     margin-bottom: 0;
 }
 
+.reaction-section {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin: 36px 0;
+}
+
+.reaction-btn {
+    min-width: 92px;
+    height: 52px;
+    border: 1px solid #d8dee8;
+    border-radius: 14px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 16px;
+    color: #7d8796;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.reaction-btn .like-count {
+    display: inline-block !important;
+    color: #ff5c7a !important;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.reaction-btn:hover {
+    border-color: #aeb8c7;
+    transform: translateY(-1px);
+}
+
+.reaction-btn.active {
+    color: #ff5c7a;
+    border-color: #ffb7c5;
+    background: #fff5f7;
+}
+
+/* 태그 */
+
 .tag-filter-wrapper {
     margin-top: 20px !important;
     padding-bottom: 20px;

@@ -62,8 +62,6 @@ public class PostActionController {
     }
 
 
-
-
     // 사용자 연동
     private CustomUserDetails getLoginCustomUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {

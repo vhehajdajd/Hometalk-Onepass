@@ -176,3 +176,33 @@ function changePage(pageNumber) {
     urlParams.set('page', pageNumber);
     location.href = window.location.pathname + "?" + urlParams.toString();
 }
+
+// 좋아요
+async function toggleReaction(button, type) {
+    const postId = button.dataset.postId;
+
+    try {
+        const response = await apiFetch(`/api/resident/${postId}/reaction?type=${type}`, {
+            method: "POST"
+        });
+        const data = await response.json();
+
+        // 버튼 상태
+        button.classList.toggle("active", data[type.toLowerCase() + 'd']);
+
+        // 숫자 업데이트
+        const countElement = button.querySelector(`.${type.toLowerCase()}-count`);
+        if (countElement && data[type.toLowerCase() + 'Count'] != null) {
+            countElement.textContent = data[type.toLowerCase() + 'Count'];
+        }
+
+        // 반대 버튼 자동 해제
+        const oppositeType = type === 'LIKE' ? 'DISLIKE' : 'LIKE';
+        const oppositeBtn = document.querySelector(`.reaction-btn.${oppositeType.toLowerCase()}-btn[data-post-id="${postId}"]`);
+        if (oppositeBtn) oppositeBtn.classList.remove("active");
+
+    } catch (error) {
+        console.error(error);
+        showAlertModal("오류", "반응 처리 중 문제가 발생했습니다.");
+    }
+}

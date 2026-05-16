@@ -70,6 +70,22 @@ public class CommunityApiController {
         return ResponseEntity.ok(suggestions);
     }
 
+    // 좋아요 토글
+    @PostMapping("/{postId}/like")
+    public ResponseEntity<?> toggleLike(@PathVariable Long postId,
+                                        Authentication authentication) {
+
+        CustomUserDetails user = getLoginCustomUser(authentication);
+
+        boolean liked = postActionService.toggleLike(postId, user);
+        int likeCount = postActionService.getLikeCount(postId);
+
+        return ResponseEntity.ok(Map.of(
+                "liked", liked,
+                "likeCount", likeCount
+        ));
+    }
+
     // 사용자 연동
     private CustomUserDetails getLoginCustomUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {

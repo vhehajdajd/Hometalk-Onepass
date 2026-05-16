@@ -3,11 +3,20 @@
 
 <th:block th:fragment="list(posts, board, categoryCode)">
     <table class="table post-table">
+        <colgroup>
+            <col style="width: 120px;">
+            <col>
+            <col style="width: 90px;">
+            <col style="width: 90px;">
+            <col style="width: 140px;">
+            <col style="width: 130px;">
+        </colgroup>
         <thead>
             <tr>
                 <th>카테고리</th>
                 <th>제목</th>
                 <th>조회수</th>
+                <th>좋아요</th>
                 <th>작성자</th>
                 <th>작성일</th>
             </tr>
@@ -55,6 +64,17 @@
                 <td class="text-center">
                     <div class="view-container">
                         <i class="fa-regular fa-eye"></i><span th:text="${post.viewCount}" style="margin-left: 6px;">123</span>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="view-container">
+                        <i class="fa-regular fa-heart"></i>
+                        <span th:text="${post.likeCount}" style="margin-left: 6px;">0</span>
+
+                        <span th:if="${post.categoryCode != null and post.categoryCode == 'debate'}" style="margin-left: 6px;">
+                            <i class="fa-regular fa-thumbs-down"></i>
+                            <span th:text="${post.dislikeCount}">0</span>
+                        </span>
                     </div>
                 </td>
                 <td th:text="${post.writer}" class="text-center">작성자</td>
