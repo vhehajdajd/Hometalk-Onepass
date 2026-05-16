@@ -1,6 +1,7 @@
 package com.hometalk.onepass.community.dto;
 
 import com.hometalk.onepass.community.entity.Board;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,10 +15,17 @@ import java.util.List;
 @AllArgsConstructor
 public class AdminBoardRqDTO {
     private String boardName;
+    @Pattern(
+            regexp = "^[a-zA-Z0-9_-]+$",
+            message = "게시판 영문 코드는 영어, 숫자, -, _ 만 가능합니다."
+    )
     private String boardCode;
 
     private List<String> categoryNames;
-    private List<String> categoryCodes;
+    private List<@Pattern(
+            regexp = "^[a-zA-Z0-9_-]+$",
+            message = "카테고리 영문 코드는 영어, 숫자, -, _ 만 가능합니다."
+            )  String> categoryCodes;
 
     private List<String> categoryBgColors;
     private List<String> categoryTextColors;

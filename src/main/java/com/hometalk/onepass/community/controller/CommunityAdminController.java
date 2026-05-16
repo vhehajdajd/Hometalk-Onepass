@@ -8,10 +8,13 @@ import com.hometalk.onepass.community.enums.PostStatus;
 import com.hometalk.onepass.community.repository.PostRepository;
 import com.hometalk.onepass.community.service.BoardService;
 import com.hometalk.onepass.community.service.CommunityAdminService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -44,8 +47,19 @@ public class CommunityAdminController {
 
     // 게시판 생성 (카테고리 포함)
     @PostMapping("/board/create")
-    public String createBoard(@ModelAttribute AdminBoardRqDTO adminBoardRqDTO) {
+    public String createBoard(@Valid @ModelAttribute AdminBoardRqDTO adminBoardRqDTO,
+                              BindingResult bindingResult,
+                              RedirectAttributes rttr) {
+
+        if (bindingResult.hasErrors()) {
+            rttr.addFlashAttribute("errorMessage",
+                    bindingResult.getAllErrors().get(0).getDefaultMessage());
+            return "redirect:/community/admin";
+        }
+
         communityAdminService.createBoard(adminBoardRqDTO);
+        rttr.addFlashAttribute("message", "게시판이 생성되었습니다.");
+
         return "redirect:/community/admin";
     }
 
@@ -79,7 +93,6 @@ public class CommunityAdminController {
                                  @RequestParam String textColor,
                                  RedirectAttributes redirectAttributes) {
         try {
-            // 서비스 호출 (수정된 파라미터 포함)
             communityAdminService.addCategory(boardId, name, code, bgColor, textColor);
             redirectAttributes.addFlashAttribute("message", "카테고리가 성공적으로 추가되었습니다.");
         } catch (IllegalStateException e) {
@@ -91,12 +104,12 @@ public class CommunityAdminController {
         return "redirect:/community/admin/board/detail/" + boardId;
     }
 
-    // 카테고리 이름 수정 (AJAX로 처리할 경우 @ResponseBody 사용 가능)
+    // 카테고리 이름 수정
     @GetMapping("/category/update/{id}")
     public String updateCategory(@PathVariable Long id,
                                  @RequestParam("name") String newName,
-                                 @RequestParam("bgColor") String bgColor,
-                                 @RequestParam("textColor") String textColor,
+                                 @RequestParam(value = "bgColor", required = false) String bgColor,
+                                 @RequestParam(value = "textColor", required = false) String textColor,
                                  @RequestParam Long boardId) {
         communityAdminService.updateCategory(id, newName, bgColor, textColor);
         return "redirect:/community/admin/board/detail/" + boardId;

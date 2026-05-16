@@ -35,8 +35,10 @@
 
                 <div class="form-top-actions">
                     <div class="temp-action-group">
-                        <button type="button" th:if="${post.id == null}"
-                                id="btnSaveTemp" th:data-board-code="${boardCode}"
+                        <button type="button"
+                                id="btnSaveTemp"
+                                th:data-board-code="${boardCode}"
+                                th:data-status="${post.postStatus}"
                                 class="btn btn-temp-save">
                             임시저장
                         </button>
@@ -46,11 +48,12 @@
                     </div>
                 </div>
 
-                <form th:action="${post.id == null}
-                                 ? @{/community/{code}/save(code=${board.code})}
-                                 : @{/community/{code}/edit/{id}(code=${board.code}, id=${post.id})}"
-                      method="post" id="postForm" th:object="${post}">
-                    <input type="hidden" th:field="*{id}">
+                <form th:action="${post.id == null or post.postStatus == 'DRAFT'} ? @{/community/{code}/save(code=${board.code})} : @{/community/{code}/edit/{id}(code=${board.code}, id=${post.id})}"
+                      method="post"
+                      id="postForm"
+                      th:object="${post}">
+                    <input type="hidden" id="id" name="id" th:value="${post.id}">
+                    <input type="hidden" name="postStatus" th:value="${post.postStatus}">
                     <input type="hidden" name="isTemp" id="isTemp" value="false">
                     <div class="page-body">
 
@@ -108,10 +111,11 @@
                                    onclick="return confirmCancel()" class="btn btn-outline">취소</a>
                             </div>
 
-                            <div class="right-box">
-                                <button type="submit" onclick="document.getElementById('isTemp').value='false'"
-                                        class="btn btn-primary">등록</button>
-                            </div>
+                            <button type="submit"
+                                    onclick="document.getElementById('isTemp').value='false'"
+                                    class="btn btn-primary">
+                                등록
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -134,6 +138,12 @@
 <script th:inline="javascript">
     window.initialTags = /*[[${post.tags}]]*/ [];
 </script>
-<script th:src="@{/js/community/post.js}"></script>
+<script th:src="@{/js/community/api.js}"></script>
+
+<script defer th:src="@{/js/community/post-modal.js}"></script>
+<script defer th:src="@{/js/community/post-editor.js}"></script>
+<script defer th:src="@{/js/community/post-tag.js}"></script>
+<script defer th:src="@{/js/community/post-temp.js}"></script>
+<script defer th:src="@{/js/community/post.js}"></script>
 </body>
 </html>

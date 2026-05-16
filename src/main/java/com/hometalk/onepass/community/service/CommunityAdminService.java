@@ -114,7 +114,15 @@ public class CommunityAdminService {
             throw new IllegalStateException("시스템 기본 카테고리는 이름을 수정할 수 없습니다.");
         }
 
-        category.rename(newName, bgColor, textColor);
+        String finalBgColor = (bgColor != null && !bgColor.isBlank())
+                ? bgColor
+                : category.getBgColor();
+
+        String finalTextColor = (textColor != null && !textColor.isBlank())
+                ? textColor
+                : category.getTextColor();
+
+        category.rename(newName, finalBgColor, finalTextColor);
     }
 
     @Transactional

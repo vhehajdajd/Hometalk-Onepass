@@ -92,7 +92,7 @@
                                         <form th:action="@{/community/admin/posts/hard-delete/{id}(id=${post.id})}"
                                               method="post"
                                               style="margin:0;"
-                                              onsubmit="return confirm('이 작업은 되돌릴 수 없습니다. \n해당 게시글과 모든 댓글이 영구 삭제됩니다. 진행하시겠습니까?');">
+                                              onsubmit="return confirmHardDelete(event, this)">
                                             <button type="submit"
                                                     class="delete-btn">
                                                 영구 삭제
@@ -114,8 +114,24 @@
     </div>
 </div>
 
-<script th:src="@{/js/community/adminpage.js}"></script>
+<script th:src="@{/js/community/api.js}"></script>
+<script defer th:src="@{/js/community/post-modal.js}"></script>
+<script defer th:src="@{/js/community/adminpage.js}"></script>
 <script th:inline="javascript">
+    function confirmHardDelete(event, form) {
+        event.preventDefault();
+
+        showConfirmModal(
+            "이 작업은 되돌릴 수 없습니다.\n해당 게시글과 모든 댓글이 영구 삭제됩니다. 진행하시겠습니까?",
+            () => {
+                form.submit();
+            }
+        );
+
+        return false;
+    }
+
+
     // 1. 전체 선택/해제 기능
     function toggleAll(selectAll) {
         const checkboxes = document.getElementsByName('postCheck');
@@ -136,64 +152,58 @@
         });
 
         if (selectedIds.length === 0) {
-            alert("삭제할 게시글을 선택해주세요.");
+            showAlertModal("삭제할 게시글을 선택해주세요.");
             return;
         }
 
-        if (confirm(`선택한 ${selectedIds.length}개의 게시글을 DB에서 완전히 영구 삭제하시겠습니까?`)) {
-            // JSON 형태로 전송하거나 폼을 동적으로 생성해 전송
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/hometop/community/admin/posts/hard-delete/batch'; // 일괄 삭제용 매핑 주소
+        showConfirmModal(
+            `선택한 ${selectedIds.length}개의 게시글을 DB에서 완전히 영구 삭제하시겠습니까?`,
+            () => {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/hometop/community/admin/posts/hard-delete/batch'; // 일괄 삭제용 매핑 주소
 
-            // CSRF 토큰
-            const csrfToken = /*[[${_csrf.token}]]*/ '';
-            const csrfHeader = /*[[${_csrf.parameterName}]]*/ '_csrf';
+                // CSRF 토큰
+                const csrfToken = /*[[${_csrf.token}]]*/ '';
+                const csrfHeader = /*[[${_csrf.parameterName}]]*/ '_csrf';
 
-            if (csrfToken) {
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = csrfHeader;
-                csrfInput.value = csrfToken;
-                form.appendChild(csrfInput);
+                if (csrfToken) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = csrfHeader;
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+                }
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'postIds';
+                input.value = selectedIds.join(','); // 1,2,3 형태로 전송
+
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
             }
-
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'postIds';
-            input.value = selectedIds.join(','); // 1,2,3 형태로 전송
-
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
-        }
+        )
     }
 
     function unhidePost(postId) {
-        if (!confirm("선택한 게시글의 숨김을 해제하시겠습니까?")) return;
+        showConfirmModal("선택한 게시글의 숨김을 해제하시겠습니까?", async () => {
+            try {
+                const response = await apiFetch(`/hometop/api/posts/${postId}/unhide`, {
+                    method: 'POST'
+                });
 
-        // CSRF 토큰 (Meta 태그 기준)
-        const token = document.querySelector('meta[name="_csrf"]').content;
-        const header = document.querySelector('meta[name="_csrf_header"]').content;
-
-        fetch(`/hometop/api/posts/${postId}/unhide`, {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json",
-                [header]: token
+                if (response.ok) {
+                    showAlertModal("정상적으로 해제되었습니다.");
+                    location.reload();
+                } else {
+                    showAlertModal("해제 처리 중 오류가 발생했습니다.");
+                }
+            } catch (err) {
+                console.error("Error:", err);
+                showAlertModal("서버 통신 오류가 발생했습니다.");
             }
-        })
-            .then(response => {
-            if (response.ok) {
-                alert("정상적으로 해제되었습니다.");
-                location.reload(); // 목록 새로고침
-            } else {
-                alert("해제 처리 중 오류가 발생했습니다.");
-            }
-        })
-            .catch(err => {
-            console.error("Error:", err);
-            alert("서버 통신 오류가 발생했습니다.");
         });
     }
 </script>

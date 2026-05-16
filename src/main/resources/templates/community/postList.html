@@ -78,7 +78,7 @@
                                     <td class="text-center">
                                         <span th:if="${post.categoryName != null}"
                                               th:text="${post.categoryName}"
-                                              class="list-category"
+                                              class="category-badge"
                                               th:classappend="${post.categoryCode}"
                                               th:style="${post.categoryBgColor != null} ?
                                                         'background-color:' + ${post.categoryBgColor} + '; color:' + ${post.categoryTextColor} + ';' : ''">
@@ -129,7 +129,7 @@
                                 <p class="sub-title">
                                     '<span th:text="${keyword}" class="text-primary"></span>'에 대한 검색 결과가 없습니다.
                                 </p>
-                                <p>단어의 철자가 정확한지 확인관 후 다시 검색해 보세요.</p>
+                                <p>단어의 철자가 정확한지 확인한 후 다시 검색해 보세요.</p>
                                 <a th:href="@{/community/{boardCode}/all(boardCode=${boardCode})}" class="btn btn-outline-secondary btn-sm mt-3">
                                     전체 목록으로 돌아가기
                                 </a>

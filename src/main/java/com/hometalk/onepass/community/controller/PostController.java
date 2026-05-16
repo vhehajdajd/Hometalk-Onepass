@@ -167,8 +167,8 @@ public class PostController {
         }
 
         dto.setId(id);
-
-        if (dto.getPostStatus() == null) {
+        boolean isDraft = dto.getPostStatus() == PostStatus.DRAFT;
+        if (dto.getPostStatus() == null || dto.getPostStatus() == PostStatus.DRAFT) {
             dto.setPostStatus(PostStatus.ACTIVE);
         }
 
@@ -180,7 +180,10 @@ public class PostController {
 
         postService.postSave(boardCode, dto, userId);
 
-        redirectAttributes.addFlashAttribute("message", "게시글이 수정되었습니다.");
+        redirectAttributes.addFlashAttribute(
+                "message",
+                isDraft ? "글이 성공적으로 등록되었습니다." : "게시글이 수정되었습니다."
+        );
         return "redirect:/community/" + boardCode + "/" + categoryPath + "/" + id;
     }
 
@@ -214,9 +217,14 @@ public class PostController {
         dto.setPostStatus(PostStatus.DRAFT);
 
         Long userId = getLoginUserId(authentication);
-        Long id = postService.postSave(boardCode, dto, userId);
 
-        // 성공 시 저장된 게시글의 ID와 메시지를 JSON으로 반환
+        Long id;
+        if (dto.getId() != null) {
+            id = postService.postSave(boardCode, dto, userId); // 기존 id 있으면 update 되게
+        } else {
+            id = postService.postSave(boardCode, dto, userId); // id 없으면 insert
+        }
+
         return ResponseEntity.ok(Map.of(
                 "id", id,
                 "message", "게시글이 임시저장되었습니다."
@@ -310,26 +318,11 @@ public class PostController {
 
     @PostMapping("/image-upload")
     @ResponseBody
-    public Map<String, String> uploadImage(@RequestParam("file") MultipartFile file,
-                                           HttpServletRequest request) {
-
+    public Map<String, String> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
-            File dir = new File(uploadPath);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-
-            String original = file.getOriginalFilename();
-            String fileName = UUID.randomUUID() + "_" + (original != null ? original : "image");
-
-            File dest = new File(dir, fileName);
-            file.transferTo(dest.getAbsoluteFile());
-
-            String contextPath = request.getContextPath();
-
+            String storeFileName = fileService.storeFile(file);
             Map<String, String> result = new HashMap<>();
-            result.put("url", contextPath + "/uploads/" + fileName);
-
+            result.put("url", "/uploads/" + storeFileName);
             return result;
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드 실패: " + e.getMessage());

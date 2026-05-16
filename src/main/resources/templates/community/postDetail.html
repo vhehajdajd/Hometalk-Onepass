@@ -126,8 +126,13 @@
 
                             <form th:action="@{/community/{code}/delete/{id}(code=${boardCode}, id=${post.id})}"
                                   method="post" style="display:inline;" id="deleteForm">
-                                <button type="button" class="btn btn-danger-outline"
-                                        id="btn-delete" th:data-id="${post.id}">삭제</button>
+                                <button type="button"
+                                        class="btn btn-danger-outline"
+                                        id="btn-delete"
+                                        th:data-id="${post.id}"
+                                        onclick="deletePost.call(this)">
+                                    삭제
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -142,7 +147,9 @@
     </div>
 </div>
 
-<script th:src="@{/js/community/post.js}" defer></script>
-<script th:src="@{/js/community/comment.js}"></script>
+<script th:src="@{/js/community/api.js}"></script>
+<script defer th:src="@{/js/community/post-modal.js}"></script>
+<script defer th:src="@{/js/community/post-manage.js}"></script>
+<script defer th:src="@{/js/community/comment.js}"></script>
 </body>
 </html>
