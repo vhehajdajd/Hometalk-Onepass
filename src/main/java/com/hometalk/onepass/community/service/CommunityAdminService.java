@@ -6,6 +6,7 @@ import com.hometalk.onepass.community.dto.response.PostResponseDTO;
 import com.hometalk.onepass.community.entity.Board;
 import com.hometalk.onepass.community.entity.Category;
 import com.hometalk.onepass.community.entity.Post;
+import com.hometalk.onepass.community.enums.BoardType;
 import com.hometalk.onepass.community.enums.PostStatus;
 import com.hometalk.onepass.community.exception.CategoryNotFoundException;
 import com.hometalk.onepass.community.repository.BoardRepository;
@@ -36,7 +37,6 @@ public class CommunityAdminService {
                 .map(board -> {
                     // 각 게시판 카테고리 목록
                     List<AdminBoardRsDTO.CategoryDto> categories = board.getCategories().stream()
-                            .filter(cat -> !cat.getCode().equals("all"))
                             .map(cat -> {
                                 // 각 카테고리별 게시글 개수 카운트
                                 long postCount = postRepository.countByCategoryId(cat.getId());
@@ -69,12 +69,10 @@ public class CommunityAdminService {
         Board board = Board.builder()
                 .name(dto.getBoardName())
                 .code(code)
+                .boardType(dto.getBoardType() != null ? dto.getBoardType() : BoardType.LIST)
                 .system(false)
                 .build();
         boardRepository.save(board);
-
-        // 기본 '전체' 카테고리 자동 생성
-        createDefaultCategory(board);
 
         // 추가 카테고리들이 있다면 생성
         if (dto.getCategoryNames() != null && dto.getCategoryCodes() != null) {
@@ -191,14 +189,11 @@ public class CommunityAdminService {
         }
     }
 
-    // --- [내부 헬퍼 메서드] ---
-    private void createDefaultCategory(Board board) {
-        categoryRepository.save(Category.builder()
-                .name("전체").code("all").system(true).board(board).build());
-    }
-
     private void createCustomCategory(Board board, String name, String code,
                                       String bgColor, String textColor) {
+        if ("all".equalsIgnoreCase(code)) {
+            throw new IllegalStateException("'all'은 전체 목록 URL 예약어라 카테고리 코드로 사용할 수 없습니다.");
+        }
         if (categoryRepository.existsByCodeAndBoardId(code, board.getId())) {
             throw new IllegalStateException("해당 게시판 내에 중복된 카테고리 코드가 있습니다: " + code);
         }
@@ -211,22 +206,6 @@ public class CommunityAdminService {
                 .board(board)
                 .build());
     }
-
-//    private String generateBoardCode(String name) {
-//        String englishOnly = name.replaceAll("[^a-zA-Z0-9]", "");
-//        if (englishOnly.isEmpty()) {
-//            englishOnly = "board";
-//        }
-//        return englishOnly.toLowerCase() + "_" + (System.nanoTime() % 100000);
-//    }
-//
-//    private String generateCategoryCode(String name) {
-//        String englishOnly = name.replaceAll("[^a-zA-Z0-9]", "");
-//        if (englishOnly.isEmpty()) {
-//            englishOnly = "cat";
-//        }
-//        return englishOnly.toLowerCase() + "_" + (System.nanoTime() % 100000);
-//    }
 
     @Transactional(readOnly = true)
     public AdminBoardRsDTO getAdminBoardDetail(Long id) {
@@ -253,9 +232,7 @@ public class CommunityAdminService {
         // 1. 게시판 존재 여부 확인
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판입니다. id=" + boardId));
-        long customCategoryCount = board.getCategories().stream()
-                .filter(c -> !c.getCode().equals("all"))
-                .count();
+        long customCategoryCount = board.getCategories().stream().count();
         if (customCategoryCount >= 5) {
             throw new IllegalStateException("추가 카테고리는 게시판당 최대 5개까지만 생성 가능합니다.");
         }
@@ -276,5 +253,13 @@ public class CommunityAdminService {
 
         // 4. 저장
         categoryRepository.save(category);
+    }
+
+    @Transactional
+    public void updateBoardType(Long boardId, BoardType boardType) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판입니다."));
+
+        board.changeBoardType(boardType);
     }
 }

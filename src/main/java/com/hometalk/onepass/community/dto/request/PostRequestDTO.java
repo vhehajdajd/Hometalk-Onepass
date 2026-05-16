@@ -7,6 +7,7 @@ import com.hometalk.onepass.community.enums.PostStatus;
 import com.hometalk.onepass.community.enums.TradeStatus;
 import com.hometalk.onepass.community.enums.TradeType;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +34,18 @@ public class PostRequestDTO {
 
     private List<String> tags;
 
+    // 대표 썸네일 이미지
+    private MultipartFile thumbnailFile;
+
+    // 일반 첨부 이미지/파일
+    private List<MultipartFile> files;
+
     public List<String> getTags() {
         return tags == null ? new ArrayList<>() : tags;
+    }
+
+    public List<MultipartFile> getFiles() {
+        return files == null ? new ArrayList<>() : files;
     }
 
     public Post toEntity(Category category, Board board, User writer) {

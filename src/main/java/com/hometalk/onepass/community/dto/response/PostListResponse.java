@@ -2,6 +2,7 @@ package com.hometalk.onepass.community.dto.response;
 
 import com.hometalk.onepass.community.entity.Post;
 import com.hometalk.onepass.community.enums.MarketStatus;
+import com.hometalk.onepass.community.enums.PostFileType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,6 +27,7 @@ public class PostListResponse {
     private int viewCount;
     private int commentCount;
     private boolean hasImage;
+    private String thumbnailPath;
 
     private String categoryBgColor;
     private String categoryTextColor;
@@ -52,6 +54,14 @@ public class PostListResponse {
         this.viewCount = post.getViewCount();
         this.commentCount = post.getComments().size();
         this.hasImage = post.getContent() != null && post.getContent().contains("<img");
+        // 대표 썸네일 조회
+        if (post.getFiles() != null && !post.getFiles().isEmpty()) {
+
+            post.getFiles().stream()
+                    .filter(file -> file.getFileType() == PostFileType.THUMBNAIL)
+                    .findFirst()
+                    .ifPresent(file -> this.thumbnailPath = file.getFilePath());
+        }
 
         if (post.getCategory() != null) {
             this.categoryName = post.getCategory().getName();

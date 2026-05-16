@@ -9,14 +9,12 @@ import com.hometalk.onepass.community.dto.response.PostResponseDTO;
 import com.hometalk.onepass.community.dto.response.PostUserRsDTO;
 import com.hometalk.onepass.community.entity.*;
 import com.hometalk.onepass.community.enums.MarketStatus;
+import com.hometalk.onepass.community.enums.PostFileType;
 import com.hometalk.onepass.community.enums.PostStatus;
 import com.hometalk.onepass.community.enums.TradeStatus;
 import com.hometalk.onepass.community.exception.InvalidBoardCodeException;
 import com.hometalk.onepass.community.exception.PostNotFoundException;
-import com.hometalk.onepass.community.repository.BoardRepository;
-import com.hometalk.onepass.community.repository.CategoryRepository;
-import com.hometalk.onepass.community.repository.PostRepository;
-import com.hometalk.onepass.community.repository.TagRepository;
+import com.hometalk.onepass.community.repository.*;
 import com.hometalk.onepass.community.validator.PostValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,7 +23,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 public class PostService {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final PostFileRepository postFileRepository;
+    private final FileService fileService;
     private final PostActionService postActionService;
     private final PostValidator postValidator;
     private final CategoryRepository categoryRepository;
@@ -107,6 +109,46 @@ public class PostService {
                     .tag(tag)
                     .build();
             post.addPostTag(postTag);
+        }
+
+        // 대표 썸네일 저장
+        if (dto.getThumbnailFile() != null && !dto.getThumbnailFile().isEmpty()) {
+            try {
+                String storedName = fileService.storeFile(dto.getThumbnailFile());
+                PostFile thumbnail = PostFile.builder()
+                        .post(post)
+                        .originalName(dto.getThumbnailFile().getOriginalFilename())
+                        .storedName(storedName)
+                        .filePath("/uploads/" + storedName)
+                        .fileType(PostFileType.THUMBNAIL)
+                        .fileSize(dto.getThumbnailFile().getSize())
+                        .build();
+                postFileRepository.save(thumbnail);
+            } catch (IOException e) {
+                throw new RuntimeException("썸네일 저장 중 오류가 발생했습니다.", e);
+            }
+        }
+
+        // 일반 첨부 파일 저장
+        if (dto.getFiles() != null && !dto.getFiles().isEmpty()) {
+            for (MultipartFile file : dto.getFiles()) {
+                if (file == null || file.isEmpty()) continue;
+
+                try {
+                    String storedName = fileService.storeFile(file);
+                    PostFile postFile = PostFile.builder()
+                            .post(post)
+                            .originalName(file.getOriginalFilename())
+                            .storedName(storedName)
+                            .filePath("/uploads/" + storedName)
+                            .fileType(PostFileType.IMAGE)
+                            .fileSize(file.getSize())
+                            .build();
+                    postFileRepository.save(postFile);
+                } catch (IOException e) {
+                    throw new RuntimeException("첨부파일 저장 중 오류가 발생했습니다.", e);
+                }
+            }
         }
         return post.getId();
     }

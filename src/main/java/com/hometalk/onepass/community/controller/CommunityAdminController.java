@@ -3,14 +3,10 @@ package com.hometalk.onepass.community.controller;
 import com.hometalk.onepass.community.dto.AdminBoardRqDTO;
 import com.hometalk.onepass.community.dto.AdminBoardRsDTO;
 import com.hometalk.onepass.community.dto.response.PostResponseDTO;
-import com.hometalk.onepass.community.entity.Post;
-import com.hometalk.onepass.community.enums.PostStatus;
-import com.hometalk.onepass.community.repository.PostRepository;
-import com.hometalk.onepass.community.service.BoardService;
+import com.hometalk.onepass.community.enums.BoardType;
 import com.hometalk.onepass.community.service.CommunityAdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/community/admin")
@@ -34,6 +29,7 @@ public class CommunityAdminController {
         List<AdminBoardRsDTO> boards = communityAdminService.getAdminBoardList();
         model.addAttribute("boards", boards);
         model.addAttribute("adminBoardRqDTO", new AdminBoardRqDTO());
+        model.addAttribute("boardTypes", BoardType.values());
         return "community/admin-management";
     }
 
@@ -151,5 +147,19 @@ public class CommunityAdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "삭제 중 오류 발생: " + e.getMessage());
         }
         return "redirect:/community/admin/posts";
+    }
+
+    @PostMapping("/board/type/{id}")
+    public String updateBoardType(@PathVariable Long id,
+                                  @RequestParam BoardType boardType,
+                                  RedirectAttributes rttr) {
+        try {
+            communityAdminService.updateBoardType(id, boardType);
+            rttr.addFlashAttribute("message", "게시판 유형이 변경되었습니다.");
+        } catch (Exception e) {
+            rttr.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/community/admin/board/detail/" + id;
     }
 }

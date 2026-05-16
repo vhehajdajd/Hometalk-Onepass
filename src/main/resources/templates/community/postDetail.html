@@ -43,7 +43,7 @@
                         <!-- 카테고리 -->
                         <span th:if="${post.categoryName != null}"
                               th:text="${post.categoryName}"
-                              class="list-category"
+                              class="category-badge"
                               th:classappend="${post.categoryCode}"
                               th:style="${post.categoryBgColor != null} ?
                                         'background-color:' + ${post.categoryBgColor} + '; color:' + ${post.categoryTextColor} + ';' : ''">

@@ -42,7 +42,65 @@
                     </div>
                 </div>
 
-                <h3>카테고리 설정</h3>
+                <div class="board-type-setting">
+
+                    <label>게시판 유형</label>
+                    <form th:action="@{/community/admin/board/type/{id}(id=${board.id})}"
+                          method="post"
+                          th:data-post-count="${board.visiblePostCount + board.hiddenPostCount}"
+                          onsubmit="return confirmBoardTypeChange(this)">
+
+                        <div class="board-type-group">
+
+                            <label class="board-type-card">
+                                <input type="radio"
+                                       name="boardType"
+                                       value="LIST"
+                                       th:checked="${board.boardType.name() == 'LIST'}">
+
+                                <div class="board-type-preview">
+                                    <i class="fa-solid fa-table-list"></i>
+                                    <strong>리스트형</strong>
+                                </div>
+                            </label>
+
+                            <label class="board-type-card">
+                                <input type="radio"
+                                       name="boardType"
+                                       value="CARD"
+                                       th:checked="${board.boardType.name() == 'CARD'}">
+
+                                <div class="board-type-preview">
+                                    <i class="fa-solid fa-grip"></i>
+                                    <strong>카드형</strong>
+                                </div>
+                            </label>
+
+                            <label class="board-type-card">
+                                <input type="radio"
+                                       name="boardType"
+                                       value="GALLERY"
+                                       th:checked="${board.boardType.name() == 'GALLERY'}">
+
+                                <div class="board-type-preview">
+                                    <i class="fa-regular fa-image"></i>
+                                    <strong>갤러리형</strong>
+                                </div>
+                            </label>
+
+                        </div>
+
+                        <div class="board-type-actions">
+                            <button type="submit" class="btn btn-save">
+                                유형 변경 저장
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="category-section">
+                    <h3>카테고리 설정</h3>
+                </div>
 
                 <ul class="category-list">
                     <li th:each="cat : ${board.categories}"
@@ -63,6 +121,7 @@
                                 <input type="text"
                                        th:id="'input-' + ${cat.id}"
                                        th:value="${cat.name}"
+                                       th:data-original-name="${cat.name}"
                                        class="form-control">
 
                                 <button class="btn btn-save"
@@ -171,17 +230,21 @@
     }
 
     function saveEdit(id, boardId) {
-        const newName = document.getElementById(`input-${id}`).value;
+        const input = document.getElementById(`input-${id}`).value;
+        const newName = input.value.trim();
+        const originalName = input.dataset.originalName.trim();
 
-        if (!newName || newName.trim() === "") {
+        if (!newName) {
             showAlertModal("카테고리 이름을 입력해주세요.");
             return false;
         }
-
+        if (newName === originalName) {
+            toggleEdit(id, false);
+            return false;
+        }
         showConfirmModal("카테고리 이름을 수정하시겠습니까?", () => {
             location.href = `../category/update/${id}?name=${encodeURIComponent(newName)}&boardId=${boardId}`;
         });
-
         return false;
     }
 
@@ -248,6 +311,20 @@
             location.href = `/hometop/community/admin/category/delete/${id}?boardId=${boardId}`;
         });
 
+        return false;
+    }
+
+    function confirmBoardTypeChange(form) {
+        const count = Number(form.dataset.postCount);
+        if (count <= 0) {
+            return true;
+        }
+        showConfirmModal(
+            "게시판 유형을 변경하면 기존 게시글의 화면 구성이 달라질 수 있습니다.\n계속하시겠습니까?",
+            () => {
+                form.submit();
+            }
+        );
         return false;
     }
 </script>

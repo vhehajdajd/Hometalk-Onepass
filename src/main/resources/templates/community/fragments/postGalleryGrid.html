@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<th:block xmlns:th="http://www.thymeleaf.org"
+          th:fragment="gallery(posts, board, categoryCode)">
+
+    <div class="post-gallery-grid">
+        <article class="post-gallery-item" th:each="post : ${posts}">
+            <a class="post-gallery-link"
+               th:href="@{/community/{bCode}/{cCode}/{id}(bCode=${board.code}, cCode=${categoryCode}, id=${post.id})}">
+
+                <div class="post-gallery-thumb">
+                    <img th:if="${post.thumbnailPath != null}"
+                         th:src="@{${post.thumbnailPath}}"
+                         alt="갤러리 썸네일">
+
+                    <div th:unless="${post.thumbnailPath != null}" class="post-thumb-placeholder gallery-placeholder">
+                        <i class="fa-regular fa-image"></i>
+                    </div>
+                </div>
+
+                <div class="post-gallery-info">
+                    <h3 th:text="${post.title}">제목</h3>
+                    <div>
+                        <span th:text="${post.writer}">작성자</span>
+                        <span><i class="fa-regular fa-eye"></i> <span th:text="${post.viewCount}">0</span></span>
+                        <span><i class="fa-regular fa-comment"></i> <span th:text="${post.commentCount}">0</span></span>
+                    </div>
+                </div>
+            </a>
+        </article>
+    </div>
+
+</th:block>

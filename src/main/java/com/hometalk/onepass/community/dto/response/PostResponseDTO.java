@@ -1,6 +1,7 @@
 package com.hometalk.onepass.community.dto.response;
 
 import com.hometalk.onepass.community.entity.Post;
+import com.hometalk.onepass.community.enums.PostFileType;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -37,6 +38,7 @@ public class PostResponseDTO {
     private boolean isDeleted;
 
     private boolean hasImage;
+    private String thumbnailPath;
 
     private String categoryBgColor;
     private String categoryTextColor;
@@ -65,6 +67,13 @@ public class PostResponseDTO {
         this.pinned = post.isPinned();
 
         this.hasImage = post.isHasImage();
+        // 대표 썸네일 조회
+        if (post.getFiles() != null && !post.getFiles().isEmpty()) {
+            post.getFiles().stream()
+                    .filter(file -> file.getFileType() == PostFileType.THUMBNAIL)
+                    .findFirst()
+                    .ifPresent(file -> this.thumbnailPath = file.getFilePath());
+        }
 
         if (post.getCategory() != null) {
             this.categoryId = post.getCategory().getId();

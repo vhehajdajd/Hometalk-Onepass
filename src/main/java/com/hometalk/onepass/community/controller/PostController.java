@@ -9,7 +9,6 @@ import com.hometalk.onepass.community.exception.PostNotFoundException;
 import com.hometalk.onepass.community.service.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +25,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -48,17 +46,8 @@ public class PostController {
     private String uploadPath;
 
     @GetMapping("/{boardCode}")
-    public String boardMain(@PathVariable String boardCode,
-                            @RequestParam(defaultValue = "1") int page,
-                            @RequestParam(required = false) String searchType,
-                            @RequestParam(required = false) String keyword,
-                            Model model,
-                            Authentication authentication) {
-
-        BoardResponseDTO board = boardService.findByCode(boardCode);
-        int pageIndex = (page < 1) ? 0 : page - 1;
-
-        return fillCommunityModel(board, null, pageIndex, searchType, keyword, model, authentication);
+    public String boardMain(@PathVariable String boardCode) {
+        return "redirect:/community/" + boardCode + "/all";
     }
 
     @GetMapping("/{boardCode}/{categoryCode:[a-zA-Z]+}")
@@ -71,7 +60,7 @@ public class PostController {
                                Authentication authentication) {
 
         BoardResponseDTO board = boardService.findByCode(boardCode);
-        CategoryResponseDTO category = "all".equals(categoryCode)
+        CategoryResponseDTO category = "all".equalsIgnoreCase(categoryCode)
                 ? null
                 : categoryService.findByCode(categoryCode);
 
