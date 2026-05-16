@@ -902,3 +902,54 @@
     font-size: 14px;
     color: var(--color-text-muted);
 }
+
+.custom-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 33, 84, 0.45);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-modal-box {
+    width: 360px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    text-align: center;
+}
+
+.custom-modal-message {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 24px;
+}
+
+.custom-modal-footer {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.custom-modal-btn {
+    min-width: 90px;
+    height: 38px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.custom-modal-btn.cancel-btn {
+    background: #f1f5f9;
+    color: #333;
+}
+
+.custom-modal-btn.confirm-btn {
+    background: var(--color-btn);
+    color: #fff;
+}
