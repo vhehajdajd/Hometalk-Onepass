@@ -20,6 +20,14 @@
         <div class="dashboard-content">
 
             <main class="container">
+                <div th:if="${message}" th:class="|alert-box ${status == 'success' ? 'alert-success' : 'alert-danger'}|">
+                    <div class="alert-content">
+                        <i th:class="${status == 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'}"></i>
+                        <span th:text="${message}">성공 메시지입니다.</span>
+                    </div>
+                    <button type="button" class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+                </div>
+
                 <div class="mb-xl">
                     <h1 class="module-title title" th:text="${isEdit} ? '시설 정보 수정' : '시설 설정 및 관리'">시설 설정 및 관리</h1>
                     <small style="font-size: 0.5em; color: var(--color-sub);"
@@ -50,11 +58,11 @@
                             <div class="form-group" style="flex: 1; margin-bottom: 0;">
                                 <label class="form-label">대표 아이콘</label>
                                 <select class="input-field select-field" name="iconType">
-                                    <option value="DUMBBELL" th:selected="${facility != null and facility.iconType == 'DUMBBELL'}">🏋️ 헬스/운동</option>
-                                    <option value="BOOK" th:selected="${facility != null and facility.iconType == 'BOOK'}">📖 공부/도서</option>
-                                    <option value="TENNIS" th:selected="${facility != null and facility.iconType == 'TENNIS'}">🎾 스포츠/테니스</option>
-                                    <option value="HOUSE" th:selected="${facility != null and facility.iconType == 'HOUSE'}">🏠 숙박/게스트</option>
-                                    <option value="COFFEE" th:selected="${facility != null and facility.iconType == 'COFFEE'}">☕ 커뮤니티/카페</option>
+                                    <option value="fas fa-dumbbell" th:selected="${facility != null and facility.iconType == 'fas fa-dumbbell'}">🏋️ 헬스/운동</option>
+                                    <option value="fas fa-book" th:selected="${facility != null and facility.iconType == 'fas fa-book'}">📖 공부/도서</option>
+                                    <option value="fas fa-table-tennis-paddle-ball" th:selected="${facility != null and facility.iconType == 'fas fa-table-tennis-paddle-ball'}">🎾 스포츠/테니스</option>
+                                    <option value="fas fa-house-user" th:selected="${facility != null and facility.iconType == 'fas fa-house-user'}">🏠 숙박/게스트</option>
+                                    <option value="fas fa-coffee" th:selected="${facility != null and facility.iconType == 'fas fa-coffee'}">☕ 커뮤니티/카페</option>
                                 </select>
                             </div>
                         </div>
@@ -63,12 +71,14 @@
                         <div class="form-group">
                             <label class="form-label">시설 대표 사진</label>
                             <div class="file-upload-wrapper">
-                                <div th:if="${isEdit and facility.imagePath != null}" class="mb-sm">
-                                    <img th:src="${facility.imagePath}" alt="현재 시설 사진"
+                                <div th:if="${isEdit and facility.imagePath != null}" class="mb-sm image-preview-wrapper">
+                                    <img th:src="@{${facility.imagePath}}" alt="현재 시설 사진"
                                          style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
+                                    <button type="button" id="removeImageBtn" class="remove-image-btn">×</button>
+                                    <input type="hidden" name="deleteImage" id="deleteImage" value="false">
                                 </div>
-
                                 <input type="file" name="imageFile" class="input-field" accept="image/*" style="border: none; padding: 0;">
+
                                 <p class="file-hint" th:if="${isEdit and facility.imagePath != null}"
                                    th:text="|※ 현재 파일: ${facility.imagePath}|"></p>
                                 <p class="file-hint">※ 가로/세로 1:1 비율의 깔끔한 사진을 권장합니다.</p>
@@ -142,6 +152,15 @@
         btn.disabled = true;
         btn.innerText = '처리 중...';
     });
+
+    const removeBtn = document.getElementById('removeImageBtn');
+
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function () {
+        document.getElementById('deleteImage').value = 'true';
+        this.parentElement.remove();
+        });
+    }
 </script>
 </body>
 </html>

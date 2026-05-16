@@ -1,6 +1,7 @@
 package com.hometalk.onepass.reservation.controller;
 
 import com.hometalk.onepass.auth.config.CustomUserDetails;
+import com.hometalk.onepass.community.service.FileService;
 import com.hometalk.onepass.facility.dto.FacilityRequestDto;
 import com.hometalk.onepass.facility.dto.FacilityResponseDto;
 import com.hometalk.onepass.facility.service.FacilityService;
@@ -30,6 +31,7 @@ public class ReservationViewController {
 
     private final FacilityService facilityService;
     private final ReservationService reservationService;
+    private final FileService fileService;
 
     /*
        [입주민] 예약 신청 화면
@@ -37,14 +39,18 @@ public class ReservationViewController {
     @GetMapping("/apply")
     public String showApplyForm(Model model, Authentication authentication) {
         model.addAttribute("facilities", facilityService.findAll());
+        Long userId = 1L;
         if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            Long userId = userDetails.getUserId();
+            userId = userDetails.getUserId();
         }
+        List<FacilityResponseDto> facilities = facilityService.getFacilitiesWithStatus(userId);
+        model.addAttribute("facilities", facilities);
         return "reservation/reservation";
     }
 
     // 예약 등록 처리
+    /*
     @PostMapping("/register")
     public String registerReservation(@ModelAttribute ReservationRequestDto dto,
                                       Authentication authentication,
@@ -60,13 +66,16 @@ public class ReservationViewController {
             return "redirect:/reservation/apply";
         }
     }
+    */
 
     /*
        [입주민] 내 예약 목록
      */
     @GetMapping("/my")
     public String myReservations(Model model, Authentication authentication,
-                                 @RequestParam(defaultValue = "0") int page) {
+                                 @RequestParam(defaultValue = "0") int page,
+                                 @RequestParam(defaultValue = "regDate") String sortBy,
+                                 @RequestParam(required = false) ReservationStatus status) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/auth";
         }
@@ -81,8 +90,13 @@ public class ReservationViewController {
             return "redirect:/auth";
         }
 
-        Page<ReservationResponseDto> myResPage = reservationService.findByUserId(userId, page, 15);
+        Page<ReservationResponseDto> myResPage = reservationService.findByUserId(userId, page, 15, sortBy, status);
+
         model.addAttribute("reservations", myResPage);
+        model.addAttribute("currentSort", sortBy);
+        model.addAttribute("selectedStatus", status);
+        model.addAttribute("statuses", ReservationStatus.values());
+
         return "reservation/my-list";
     }
 
@@ -160,11 +174,11 @@ public class ReservationViewController {
     public String registerFacility(@ModelAttribute FacilityRequestDto dto,
                                    @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
                                    RedirectAttributes redirectAttributes) {
-        // 1. 서비스 호출해서 저장
         try {
-            facilityService.register(dto);
+            facilityService.register(dto, imageFile);
             redirectAttributes.addFlashAttribute("message", "새 시설이 성공적으로 등록되었습니다.");
             redirectAttributes.addFlashAttribute("status", "success");
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("message", "등록 중 오류가 발생했습니다: " + e.getMessage());
             redirectAttributes.addFlashAttribute("status", "error");
@@ -188,9 +202,11 @@ public class ReservationViewController {
     @PreAuthorize("hasRole('ADMIN')")
     public String updateFacility(@PathVariable Long id,
                                  @ModelAttribute FacilityRequestDto dto,
+                                 @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+                                 @RequestParam(defaultValue = "false") boolean deleteImage,
                                  RedirectAttributes redirectAttributes) {
         try {
-            facilityService.update(id, dto);
+            facilityService.update(id, dto, imageFile, deleteImage);
             redirectAttributes.addFlashAttribute("message", "시설 정보가 수정되었습니다.");
             redirectAttributes.addFlashAttribute("status", "success");
         } catch (Exception e) {

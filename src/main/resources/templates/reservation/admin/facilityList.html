@@ -53,8 +53,16 @@
                 </span>
               </td>
               <td>
-                <span th:text="${facility.iconType}">DUMBBELL</span> |
-                <span th:text="|${facility.openTime} ~ ${facility.closeTime}|">09:00 ~ 22:00</span>
+                <div class="admin-icon-container">
+                  <span class="status-badge admin-icon-badge">
+                    <i th:class="${facility.iconType != null && facility.iconType != '' ? facility.iconType : 'fas fa-building'}"></i>
+                  </span>
+                  <span class="divider">|</span>
+                  <span class="admin-time-text"
+                        th:text="|${facility.operationTime?.formattedOpenTime} ~ ${facility.operationTime?.formattedCloseTime}|">
+                    09:00 ~ 22:00
+                  </span>
+                </div>
               </td>
               <td th:text="|${facility.maxReservationTime}시간|">2시간</td>
               <td>

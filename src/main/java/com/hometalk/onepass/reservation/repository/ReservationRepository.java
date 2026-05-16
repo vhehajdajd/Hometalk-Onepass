@@ -27,7 +27,19 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     // 내 예약 내역
     @EntityGraph(attributePaths = {"facility"})
-    Page<Reservation> findByUserIdOrderByIdDesc(Long userId, Pageable pageable);
+    @Query("""
+            SELECT r FROM Reservation r
+            WHERE r.user.id = :userId
+            AND (:status IS NULL OR r.status = :status)
+            ORDER BY 
+                CASE WHEN r.reservationTime.endTime < :now THEN 1 ELSE 0 END ASC
+            """)
+    Page<Reservation> findByUserIdAndStatus(
+            @Param("userId") Long userId,
+            @Param("status") ReservationStatus status,
+            @Param("now") LocalDateTime now,
+            Pageable pageable
+    );
 
     @EntityGraph(attributePaths = {"user", "facility"})
     @Query("""

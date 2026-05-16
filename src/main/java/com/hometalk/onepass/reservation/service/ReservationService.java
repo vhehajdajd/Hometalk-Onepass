@@ -212,10 +212,14 @@ public class ReservationService {
         }
     }
 
-    public Page<ReservationResponseDto> findByUserId(Long userId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-
-        return reservationRepository.findByUserIdOrderByIdDesc(userId, pageable)
+    public Page<ReservationResponseDto> findByUserId(Long userId, int page, int size, String sortBy, ReservationStatus status) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "id"); // 기본: 최신 등록순
+        // 예약일 가까운 순일 때는 시간 오름차순
+        if ("resDate".equals(sortBy)) {
+            sort = Sort.by(Sort.Direction.ASC, "reservationTime.startTime");
+        }
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return reservationRepository.findByUserIdAndStatus(userId, status, LocalDateTime.now(), pageable)
                 .map(ReservationResponseDto::fromEntity);
     }
 

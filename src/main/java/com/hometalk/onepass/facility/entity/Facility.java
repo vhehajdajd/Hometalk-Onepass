@@ -24,6 +24,10 @@ public class Facility {
     private String imagePath;   // 시설 전경 사진
     private int maxCapacity;    // 시설별 최대 인원
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private BookingStatus status;
+
     @Embedded
     private OperationTime operationTime; // LocalTime 기반 운영 시간
 
