@@ -85,22 +85,26 @@
     cursor: pointer;
     transition: all 0.15s ease;
 }
-.reaction-btn .like-count {
-    display: inline-block !important;
-    color: #ff5c7a !important;
-    font-size: 16px;
-    font-weight: 600;
+
+/* 좋아요 활성화 */
+.reaction-btn.like-btn.active {
+    background-color: #FFE3E3;
+    border-color: #FFA8A8;
+    color: #E03131;
+}
+/* 활성화 시 하트 채우기 */
+.reaction-btn.like-btn.active i {
+    font-weight: 900;
 }
 
-.reaction-btn:hover {
-    border-color: #aeb8c7;
-    transform: translateY(-1px);
+/* 싫어요 활성화 */
+.reaction-btn.dislike-btn.active {
+    background-color: #E8F7FF;
+    border-color: #A5D8FF;
+    color: #1971C2;
 }
-
-.reaction-btn.active {
-    color: #ff5c7a;
-    border-color: #ffb7c5;
-    background: #fff5f7;
+.reaction-btn.dislike-btn.active i {
+    font-weight: 900;
 }
 
 /* 태그 */

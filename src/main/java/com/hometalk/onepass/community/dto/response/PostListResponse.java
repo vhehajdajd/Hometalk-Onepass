@@ -27,6 +27,9 @@ public class PostListResponse {
 
     private int likeCount;
     private int dislikeCount;
+    private boolean isLiked;
+    private boolean isDisliked;
+
     private int viewCount;
     private int commentCount;
 
@@ -47,6 +50,10 @@ public class PostListResponse {
     private List<String> tags;
 
     public PostListResponse(Post post) {
+        this(post, false, false);
+    }
+
+    public PostListResponse(Post post, boolean isLiked, boolean isDisliked) {
         this.id = post.getId();
         this.title = post.getTitle();
         this.pinned = post.isPinned();
@@ -61,6 +68,9 @@ public class PostListResponse {
         this.likeCount = post.getLikeCount();
         this.dislikeCount = post.getDislikeCount();
         this.viewCount = post.getViewCount();
+
+        this.isLiked = isLiked;
+        this.isDisliked = isDisliked;
 
         this.commentCount = post.getComments().size();
         this.hasImage = post.getContent() != null && post.getContent().contains("<img");

@@ -108,9 +108,12 @@
                         <div th:utext="${post.content}">게시글 내용</div>
                     </div>
 
-                    <div class="reaction-section">
+                    <div class="reaction-section" style="display: flex; gap: 12px;">
+
                         <button type="button"
+                                id="likeBtn"
                                 class="reaction-btn like-btn"
+                                th:classappend="${post?.isLiked} ? 'active' : ''"
                                 th:data-post-id="${post.id}"
                                 onclick="toggleReaction(this, 'LIKE')">
                             <i class="fa-regular fa-heart"></i>
@@ -119,6 +122,7 @@
 
                         <button type="button"
                                 class="reaction-btn dislike-btn"
+                                th:classappend="${post?.isDisliked} ? 'active' : ''"
                                 th:data-post-id="${post.id}"
                                 th:if="${post.categoryCode == 'debate'}"
                                 onclick="toggleReaction(this, 'DISLIKE')">

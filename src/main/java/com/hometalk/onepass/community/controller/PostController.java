@@ -367,12 +367,19 @@ public class PostController {
             model.addAttribute("searchError", "검색 유형을 선택해주세요.");
         }
 
+        CustomUserDetails loginUser = null;
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof CustomUserDetails) {
+            loginUser = (CustomUserDetails) authentication.getPrincipal();
+        }
+
         Page<PostListResponse> postsPage = postService.searchPosts(
                 board.getId(),
                 category != null ? category.getId() : null,
                 searchType,
                 keyword,
-                page
+                page,
+                loginUser
         );
 
         model.addAttribute("posts", postsPage.getContent());

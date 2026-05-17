@@ -1,5 +1,6 @@
 package com.hometalk.onepass.community.service;
 
+import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.UserRepository;
 import com.hometalk.onepass.community.dto.CommunityPostResponseDTO;
@@ -7,11 +8,9 @@ import com.hometalk.onepass.community.dto.request.PostRequestDTO;
 import com.hometalk.onepass.community.dto.response.PostListResponse;
 import com.hometalk.onepass.community.dto.response.PostResponseDTO;
 import com.hometalk.onepass.community.dto.response.PostUserRsDTO;
+import com.hometalk.onepass.community.dto.response.ReactionStatus;
 import com.hometalk.onepass.community.entity.*;
-import com.hometalk.onepass.community.enums.MarketStatus;
-import com.hometalk.onepass.community.enums.PostFileType;
-import com.hometalk.onepass.community.enums.PostStatus;
-import com.hometalk.onepass.community.enums.TradeStatus;
+import com.hometalk.onepass.community.enums.*;
 import com.hometalk.onepass.community.exception.InvalidBoardCodeException;
 import com.hometalk.onepass.community.exception.PostNotFoundException;
 import com.hometalk.onepass.community.repository.*;
@@ -43,6 +42,7 @@ public class PostService {
     private final CategoryRepository categoryRepository;
     private final BoardRepository boardRepository;
     private final TagRepository tagRepository;
+    private final PostReactionRepository postReactionRepository;
 
     // Create
     @Transactional
@@ -154,29 +154,36 @@ public class PostService {
     }
 
     // Read
-    public Page<PostListResponse> searchPosts(Long boardId, Long categoryId, String searchType, String keyword, int page) {
+    public Page<PostListResponse> searchPosts(Long boardId, Long categoryId, String searchType, String keyword, int page,
+                                              CustomUserDetails loginUser) {
         PostStatus status = PostStatus.ACTIVE;
         Pageable pageable = PageRequest.of(page, 15);
 
-        // 1. 보드 엔티티 조회 (검색 메서드 파라미터가 Board 객체이므로 필요)
+        // 게시판 조회
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판입니다."));
 
-        // 2. 검색어나 검색 타입이 없으면 일반 목록 조회
+        Page<Post> posts;
         if (keyword == null || keyword.isBlank()) {
-            return getNormalList(boardId, categoryId, status, pageable).map(PostListResponse::new);
+            posts = getNormalList(boardId, categoryId, status, pageable);
+        } else {
+            posts = switch (searchType) {
+                case "title" -> postRepository.findByTitle(board, keyword, status, pageable);
+                case "nickname" -> postRepository.findByNickname(board, keyword, status, pageable);
+                case "tc" -> postRepository.findByTitleOrContent(board, keyword, status, pageable);
+                case "tag" -> postRepository.findByTagName(board.getId(), keyword, status, pageable);
+                default -> getNormalList(boardId, categoryId, status, pageable);
+            };
         }
 
-        Page<Post> posts;
-        // 2. 검색어 존재 여부에 따른 분기 처리
-        posts = switch (searchType) {
-            case "title" -> postRepository.findByTitle(board, keyword, status, pageable);
-            case "nickname" -> postRepository.findByNickname(board, keyword, status, pageable);
-            case "tc" -> postRepository.findByTitleOrContent(board, keyword, status, pageable);
-            case "tag" -> postRepository.findByTagName(board.getId(), keyword, status, pageable);
-            default -> getNormalList(boardId, categoryId, status, pageable);
-        };
-        return posts.map(PostListResponse::new);
+        return posts.map(post -> {
+            // 로그인 사용자 기준 좋아요/싫어요 상태 조회
+            ReactionStatus reactionStatus = loginUser != null
+                    ? postActionService.getReactionStatus(post.getId(), loginUser.getUserId())
+                    : new ReactionStatus(post.getId(), false, false, post.getLikeCount(), post.getDislikeCount());
+
+            return new PostListResponse(post, reactionStatus.isLiked(), reactionStatus.isDisliked());
+        });
     }
     // 중복 코드를 방지하기 위한 내부 헬퍼 메서드
     private Page<Post> getNormalList(Long boardId, Long categoryId, PostStatus status, Pageable pageable) {
@@ -194,7 +201,13 @@ public class PostService {
                 .map(PostUserRsDTO::getUserId)
                 .orElse(null);
         postActionService.increaseViewCount(postId, currentUserId, viewedPosts);
+        ReactionStatus status = postActionService.getReactionStatus(postId, currentUserId);
+
         PostResponseDTO dto = new PostResponseDTO(post);
+        dto.setLiked(status.isLiked());
+        dto.setDisliked(status.isDisliked());
+        dto.setLikeCount(status.getLikeCount());
+        dto.setDislikeCount(status.getDislikeCount());
         postValidator.setAuthority(dto, post, currentUser);
         return dto;
     }

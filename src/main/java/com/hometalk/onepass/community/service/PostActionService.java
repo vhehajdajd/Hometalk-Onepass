@@ -4,6 +4,7 @@ import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.UserRepository;
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
+import com.hometalk.onepass.community.dto.response.ReactionStatus;
 import com.hometalk.onepass.community.entity.PostReaction;
 import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.entity.Post;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -109,26 +111,39 @@ public class PostActionService {
     public void increaseViewCount(Long postId, Long currentUserId, List<Long> viewedPosts) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
-
         // 1. 본인 글 제외 로직
-        // 작성자가 로그인 유저와 같다면 조회수를 올리지 않고 즉시 종료
         if (currentUserId != null && post.getWriter().getId().equals(currentUserId)) return;
-
         // 2. 중복 조회 방지
         if (viewedPosts != null && viewedPosts.contains(postId)) return;
-
         // 3. 위 조건들을 통과하면 조회수 증가
         post.addViewCount();
-
-        // 4. 읽은 목록에 추가 (이건 컨트롤러/서비스 단에서 세션에 담아줘야 함)
+        // 4. 읽은 목록에 추가
         if (viewedPosts != null) {
             viewedPosts.add(postId);
         }
     }
 
-    // 좋아요
+    // 좋아요/싫어요
+    @Transactional(readOnly = true)
+    public ReactionStatus getReactionStatus(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
+
+        boolean liked = false;
+        boolean disliked = false;
+
+        if (userId != null) {
+            User loginUser = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+            liked = postReactionRepository.findByPostAndUserAndType(post, loginUser, ReactionType.LIKE).isPresent();
+            disliked = postReactionRepository.findByPostAndUserAndType(post, loginUser, ReactionType.DISLIKE).isPresent();
+        }
+
+        return new ReactionStatus(post.getId(), liked, disliked, post.getLikeCount(), post.getDislikeCount());
+    }
+
     @Transactional
-    public boolean toggleReaction(Long postId, CustomUserDetails user, ReactionType type) {
+    public ReactionStatus toggleReactionAndGetStatus(Long postId, CustomUserDetails user, ReactionType type) {
         if (user == null) throw new UnauthorizedAccessException("로그인이 필요합니다.");
 
         Post post = postRepository.findById(postId)
@@ -137,51 +152,36 @@ public class PostActionService {
         User loginUser = userRepository.findById(user.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        // 1. 반대 타입이 존재하면 삭제
-        ReactionType opposite = (type == ReactionType.LIKE) ? ReactionType.DISLIKE : ReactionType.LIKE;
-        postReactionRepository.findByPostAndUserAndType(post, loginUser, opposite)
-                .ifPresent(r -> {
-                    postReactionRepository.delete(r);
-                    if (opposite == ReactionType.LIKE) post.decreaseLikeCount();
+        // 싫어요는 토론 카테고리만 허용
+        if (type == ReactionType.DISLIKE && !"debate".equals(post.getCategory().getCode())) {
+            throw new IllegalArgumentException("토론 게시글에서만 싫어요 가능합니다.");
+        }
+
+        // 반대 반응 삭제
+        ReactionType oppositeType = (type == ReactionType.LIKE) ? ReactionType.DISLIKE : ReactionType.LIKE;
+        postReactionRepository.findByPostAndUserAndType(post, loginUser, oppositeType)
+                .ifPresent(oppositeReaction -> {
+                    postReactionRepository.delete(oppositeReaction);
+                    if (oppositeType == ReactionType.LIKE) post.decreaseLikeCount();
                     else post.decreaseDislikeCount();
                 });
 
-        // 2. 같은 타입 토글
-        return postReactionRepository.findByPostAndUserAndType(post, loginUser, type)
-                .map(r -> {
-                    postReactionRepository.delete(r);
+        // 토글 처리
+        postReactionRepository.findByPostAndUserAndType(post, loginUser, type)
+                .ifPresentOrElse(existing -> {
+                    postReactionRepository.delete(existing);
                     if (type == ReactionType.LIKE) post.decreaseLikeCount();
                     else post.decreaseDislikeCount();
-                    return false;
-                })
-                .orElseGet(() -> {
+                }, () -> {
                     postReactionRepository.save(new PostReaction(post, loginUser, type));
                     if (type == ReactionType.LIKE) post.increaseLikeCount();
                     else post.increaseDislikeCount();
-                    return true;
                 });
-    }
 
-    @Transactional(readOnly = true)
-    public int getReactionCount(Long postId, ReactionType type) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
-        return Math.toIntExact(postReactionRepository.countByPostAndType(post, type));
-    }
+        // 로그인 사용자 기준 상태 반환
+        boolean liked = postReactionRepository.findByPostAndUserAndType(post, loginUser, ReactionType.LIKE).isPresent();
+        boolean disliked = postReactionRepository.findByPostAndUserAndType(post, loginUser, ReactionType.DISLIKE).isPresent();
 
-    public boolean toggleLike(Long postId, CustomUserDetails user) {
-        return toggleReaction(postId, user, ReactionType.LIKE);
-    }
-
-    public boolean toggleDislike(Long postId, CustomUserDetails user) {
-        return toggleReaction(postId, user, ReactionType.DISLIKE);
-    }
-
-    public int getLikeCount(Long postId) {
-        return getReactionCount(postId, ReactionType.LIKE);
-    }
-
-    public int getDislikeCount(Long postId) {
-        return getReactionCount(postId, ReactionType.DISLIKE);
+        return new ReactionStatus(post.getId(), liked, disliked, post.getLikeCount(), post.getDislikeCount());
     }
 }

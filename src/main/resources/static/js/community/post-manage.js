@@ -178,31 +178,38 @@ function changePage(pageNumber) {
 }
 
 // 좋아요
-async function toggleReaction(button, type) {
-    const postId = button.dataset.postId;
+function toggleReaction(buttonElement, type) {
+    const postId = buttonElement.dataset.postId;
+    const url = type === 'LIKE'
+        ? `/hometop/api/resident/${postId}/like`
+        : `/hometop/api/resident/${postId}/dislike`;
 
-    try {
-        const response = await apiFetch(`/api/resident/${postId}/reaction?type=${type}`, {
-            method: "POST"
-        });
-        const data = await response.json();
+    fetch(url, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if(data.code && data.code !== "C999") {
+                alert(data.message);
+                return;
+            }
 
-        // 버튼 상태
-        button.classList.toggle("active", data[type.toLowerCase() + 'd']);
+            const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
+            const dislikeBtn = document.querySelector(`.dislike-btn[data-post-id="${postId}"]`);
 
-        // 숫자 업데이트
-        const countElement = button.querySelector(`.${type.toLowerCase()}-count`);
-        if (countElement && data[type.toLowerCase() + 'Count'] != null) {
-            countElement.textContent = data[type.toLowerCase() + 'Count'];
-        }
+            if (likeBtn) {
+                likeBtn.querySelector('.like-count').innerText = data.likeCount;
+                likeBtn.classList.toggle('active', data.liked);
+                const icon = likeBtn.querySelector('i');
+                icon.classList.remove('fa-regular', 'fa-solid');
+                icon.classList.add(data.liked ? 'fa-solid' : 'fa-regular', 'fa-heart');
+            }
 
-        // 반대 버튼 자동 해제
-        const oppositeType = type === 'LIKE' ? 'DISLIKE' : 'LIKE';
-        const oppositeBtn = document.querySelector(`.reaction-btn.${oppositeType.toLowerCase()}-btn[data-post-id="${postId}"]`);
-        if (oppositeBtn) oppositeBtn.classList.remove("active");
-
-    } catch (error) {
-        console.error(error);
-        showAlertModal("오류", "반응 처리 중 문제가 발생했습니다.");
-    }
+            if (dislikeBtn) {
+                dislikeBtn.querySelector('.dislike-count').innerText = data.dislikeCount;
+                dislikeBtn.classList.toggle('active', data.disliked);
+                const icon = dislikeBtn.querySelector('i');
+                icon.classList.remove('fa-regular', 'fa-solid');
+                icon.classList.add(data.disliked ? 'fa-solid' : 'fa-regular', 'fa-thumbs-down');
+            }
+        })
+        .catch(err => console.error('추천 처리 중 오류 발생:', err));
 }

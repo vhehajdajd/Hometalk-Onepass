@@ -3,7 +3,10 @@ package com.hometalk.onepass.community.controller;
 import com.hometalk.onepass.auth.config.CustomUserDetails;
 import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.auth.entity.User;
+import com.hometalk.onepass.community.dto.response.ReactionStatus;
+import com.hometalk.onepass.community.entity.Post;
 import com.hometalk.onepass.community.enums.MarketStatus;
+import com.hometalk.onepass.community.enums.ReactionType;
 import com.hometalk.onepass.community.enums.TradeStatus;
 import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
 import com.hometalk.onepass.community.service.PostActionService;
@@ -70,21 +73,38 @@ public class CommunityApiController {
         return ResponseEntity.ok(suggestions);
     }
 
-    // 좋아요 토글
     @PostMapping("/{postId}/like")
     public ResponseEntity<?> toggleLike(@PathVariable Long postId,
                                         Authentication authentication) {
-
-        CustomUserDetails user = getLoginCustomUser(authentication);
-
-        boolean liked = postActionService.toggleLike(postId, user);
-        int likeCount = postActionService.getLikeCount(postId);
-
-        return ResponseEntity.ok(Map.of(
-                "liked", liked,
-                "likeCount", likeCount
-        ));
+        try {
+            CustomUserDetails user = getLoginCustomUser(authentication);
+            ReactionStatus status = postActionService.toggleReactionAndGetStatus(postId, user, ReactionType.LIKE);
+            return ResponseEntity.ok(status);
+        } catch (IllegalArgumentException | UnauthorizedAccessException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("code", "C400", "message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("code", "C999", "message", "서버 내부 오류가 발생했습니다"));
+        }
     }
+
+    @PostMapping("/{postId}/dislike")
+    public ResponseEntity<?> toggleDislike(@PathVariable Long postId,
+                                           Authentication authentication) {
+        try {
+            CustomUserDetails user = getLoginCustomUser(authentication);
+            ReactionStatus status = postActionService.toggleReactionAndGetStatus(postId, user, ReactionType.DISLIKE);
+            return ResponseEntity.ok(status);
+        } catch (IllegalArgumentException | UnauthorizedAccessException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("code", "C400", "message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("code", "C999", "message", "서버 내부 오류가 발생했습니다"));
+        }
+    }
+
 
     // 사용자 연동
     private CustomUserDetails getLoginCustomUser(Authentication authentication) {

@@ -11,12 +11,10 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface PostReactionRepository extends JpaRepository<PostReaction, Long> {
-    boolean existsByPostAndUserAndType(Post post, User user, ReactionType type);
 
+    // 특정 게시글에서 특정 사용자 + 타입이 존재하는지 확인 (좋아요/싫어요 여부)
+    boolean existsByPostIdAndUserIdAndType(Long postId, Long userId, ReactionType type);
+
+    // 특정 게시글과 사용자 + 타입에 해당하는 PostReaction 조회
     Optional<PostReaction> findByPostAndUserAndType(Post post, User user, ReactionType type);
-
-    void deleteByPostAndUserAndType(Post post, User user, ReactionType type);
-
-    @Query("SELECT COUNT(r) FROM PostReaction r WHERE r.post = :post AND r.type = :type")
-    long countByPostAndType(@Param("post") Post post, @Param("type") ReactionType type);
 }
