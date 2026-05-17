@@ -1,5 +1,8 @@
+<!--민원 리스트-->
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='민원 게시판')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
@@ -7,10 +10,17 @@
 <body>
 <div class="main-layout">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='inquiry')}"></div>
-
+    <!--상단 메뉴-->
     <div class="main-wrapper">
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'inquiry'} })}"></div>
-        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"></div>
+
+        <!-- 입주민 메뉴 -->
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"
+             sec:authorize="hasRole('RESIDENT')"></div>
+
+        <!-- 관리자 메뉴 -->
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiryAdmin}"
+             sec:authorize="hasRole('ADMIN')"></div>
 
         <div class="dashboard-content">
             <main class="container">
@@ -38,7 +48,15 @@
                     <tbody th:if="${paging != null}">
                     <tr th:each="list : ${paging.content}">
                         <td>
-                            <span class="badge category-badge" th:text="${list.category}">시설/기술</span>
+                            <span class="badge category-badge"
+                                  th:text="${list.category}"
+                                  th:classappend="
+                                    ${list.category == '시설/기술'} ? 'facility' :
+                                    (${list.category == '환경/위생'} ? 'clean' :
+                                    (${list.category == '보안/안전'} ? 'security' :
+                                    'etc'))">
+                                시설/기술
+                            </span>
                         </td>
 
                         <td class="title-cell">
@@ -125,6 +143,7 @@
                 </div>
             </main>
         </div>
+
         <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
 </div>

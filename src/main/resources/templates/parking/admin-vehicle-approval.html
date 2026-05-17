@@ -8,6 +8,10 @@
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
   <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
   <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+  <meta name="ctx" th:content="@{/}">
+  <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
+  <script th:src="@{/js/notification/notification-sse.js}"></script>
+  <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
 <body>
 
@@ -26,7 +30,7 @@
     <div th:replace="~{fragments/headerCategoryMenu :: parkingAdmin}"></div>
 
     <!-- 본문 -->
-    <main class="content">
+    <main class="content" style="flex:1;">
       <div class="container">
         <h2 class="page-title">차량 승인 관리</h2>
 
@@ -59,10 +63,10 @@
         <ul class="pk-pagination" id="pagination"></ul>
       </div>
     </main>
-
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
   </div>
 </div>
-<footer th:replace="~{fragments/footer :: footer}"></footer>
+
 
 <!-- 서류 모달 -->
 <div id="documentModal" style="display:none; position:fixed; inset:0; background:rgba(3,33,84,0.45); z-index:1000; align-items:center; justify-content:center;">
@@ -81,6 +85,7 @@
       </div>
       <button type="button" class="btn-ghost" onclick="closeDocumentModal()">닫기</button>
     </div>
+  </div>
 </div>
 
 <!-- 반려 모달 -->
@@ -139,19 +144,19 @@
     tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">로딩 중...</td></tr>`;
 
     fetch(`${contextPath}admin/vehicle/approval/list?status=${currentStatus}&page=${currentPage}&size=${PAGE_SIZE}`)
-      .then(res => res.json())
-      .then(data => {
-        tbody.innerHTML = '';
+            .then(res => res.json())
+            .then(data => {
+              tbody.innerHTML = '';
 
-        if (!data || !data.content || data.content.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">데이터가 없습니다.</td></tr>`;
-          renderPagination(0);
-          return;
-        }
+              if (!data || !data.content || data.content.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">데이터가 없습니다.</td></tr>`;
+                renderPagination(0);
+                return;
+              }
 
-        data.content.forEach(v => {
-          const overQuota = v.approvedCount >= 1;
-          const row = `
+              data.content.forEach(v => {
+                const overQuota = v.approvedCount > 1;
+                const row = `
             <tr>
               <td>${v.vehicleNumber}</td>
               <td>${v.model ?? '-'}</td>
@@ -164,12 +169,12 @@
               <td>${v.createdAt}</td>
               <td>
                 ${v.documentPaths && v.documentPaths.length > 0
-                  ? `<button class="pk-btn pk-btn-primary"
+                        ? `<button class="pk-btn pk-btn-primary"
                              onclick="viewDocument(this)"
                              data-paths='${JSON.stringify(v.documentPaths).replace(/'/g, "&apos;")}'>
                        보기 (${v.documentPaths.length}장)
                      </button>`
-                  : '없음'}
+                        : '없음'}
               </td>
               <td>
                 ${currentStatus === 'PENDING' ? `
@@ -182,15 +187,15 @@
               </td>
             </tr>
           `;
-          tbody.innerHTML += row;
-        });
+                tbody.innerHTML += row;
+              });
 
-        renderPagination(data.page.totalPages);
-      })
-      .catch(err => {
-        console.error(err);
-        tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">데이터 조회 실패</td></tr>`;
-      });
+              renderPagination(data.page.totalPages);
+            })
+            .catch(err => {
+              console.error(err);
+              tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">데이터 조회 실패</td></tr>`;
+            });
   }
 
   function renderPagination(totalPages) {
@@ -242,7 +247,6 @@
     pagination.appendChild(nextLi);
   }
 
-  // 서류 모달 열기 (여러 장 지원)
   function viewDocument(btn) {
     currentDocPaths = JSON.parse(btn.dataset.paths);
     currentDocIndex = 0;
@@ -250,7 +254,6 @@
     document.getElementById('documentModal').style.display = 'flex';
   }
 
-  // 현재 서류 표시
   function showDocument() {
     const img = document.getElementById('documentImage');
     const err = document.getElementById('documentError');
@@ -259,13 +262,10 @@
     err.style.display = 'none';
     img.src = encodeURI(currentDocPaths[currentDocIndex]);
     idx.textContent = `(${currentDocIndex + 1} / ${currentDocPaths.length})`;
-
-    // 이전/다음 버튼 활성화 처리
     document.getElementById('prevBtn').disabled = currentDocIndex === 0;
     document.getElementById('nextBtn').disabled = currentDocIndex === currentDocPaths.length - 1;
   }
 
-  // 이전 서류
   function prevDocument() {
     if (currentDocIndex > 0) {
       currentDocIndex--;
@@ -273,7 +273,6 @@
     }
   }
 
-  // 다음 서류
   function nextDocument() {
     if (currentDocIndex < currentDocPaths.length - 1) {
       currentDocIndex++;
@@ -281,27 +280,24 @@
     }
   }
 
-  // 서류 모달 닫기
   function closeDocumentModal() {
     document.getElementById('documentModal').style.display = 'none';
   }
 
-  // 차량 승인
   function approveVehicle(approvalId) {
     if (!confirm('승인하시겠습니까?')) return;
 
     postFetch(`${contextPath}admin/vehicle/approval/approve`, { approvalId })
-      .then(() => {
-        alert('승인 완료');
-        loadVehicleList();
-      })
-      .catch(err => {
-        console.error(err);
-        alert('승인 실패');
-      });
+            .then(() => {
+              alert('승인 완료');
+              loadVehicleList();
+            })
+            .catch(err => {
+              console.error(err);
+              alert('승인 실패');
+            });
   }
 
-  // 반려 모달 열기
   function openRejectModal(approvalId) {
     selectedApprovalId = approvalId;
     document.getElementById('rejectReason').value = '';
@@ -309,12 +305,10 @@
     document.getElementById('rejectModal').style.display = 'flex';
   }
 
-  // 반려 모달 닫기
   function closeRejectModal() {
     document.getElementById('rejectModal').style.display = 'none';
   }
 
-  // 반려 확인
   function confirmReject() {
     const reason = document.getElementById('rejectReason').value.trim();
 
@@ -327,34 +321,33 @@
       approvalId: selectedApprovalId,
       rejectReason: reason
     })
-      .then(() => {
-        alert('반려 완료');
-        closeRejectModal();
-        loadVehicleList();
-      })
-      .catch(err => {
-        console.error(err);
-        alert('반려 실패');
-      });
+            .then(() => {
+              alert('반려 완료');
+              closeRejectModal();
+              loadVehicleList();
+            })
+            .catch(err => {
+              console.error(err);
+              alert('반려 실패');
+            });
   }
 
-  // 차량 삭제
   function adminDeleteVehicle(vehicleId) {
     if (!confirm('차량을 삭제하시겠습니까?')) return;
 
     postFetch(`${contextPath}admin/vehicle/approval/delete/${vehicleId}`, {})
-      .then(async res => {
-        if (!res.ok) {
-          const msg = await res.text();
-          throw new Error(msg || '서버 오류');
-        }
-        alert('삭제되었습니다.');
-        loadVehicleList();
-      })
-      .catch(err => {
-        console.error(err);
-        alert('삭제 중 오류가 발생했습니다: ' + err.message);
-      });
+            .then(async res => {
+              if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || '서버 오류');
+              }
+              alert('삭제되었습니다.');
+              loadVehicleList();
+            })
+            .catch(err => {
+              console.error(err);
+              alert('삭제 중 오류가 발생했습니다: ' + err.message);
+            });
   }
 
   loadVehicleList();

@@ -17,6 +17,7 @@ import com.hometalk.onepass.notice.repository.ReadLogRepository;
 import com.hometalk.onepass.notification.entity.NotificationTargetRole;
 import com.hometalk.onepass.notification.entity.NotificationType;
 import com.hometalk.onepass.notification.publisher.NotificationPublisher;
+import com.hometalk.onepass.schedule.entity.Schedule;
 import com.hometalk.onepass.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -178,8 +179,9 @@ public class NoticeService {
                 .orElseThrow(() -> new NoticeNotFoundException(id));
 
         // 연결된 일정 먼저 삭제
-        scheduleRepository.findFirstByNotice(notice)
-                .ifPresent(scheduleRepository::delete);
+        // 연결된 일정 전체 삭제
+        List<Schedule> schedules = scheduleRepository.findByNotice(notice);
+        scheduleRepository.deleteAll(schedules);
 
         readLogRepository.deleteByNotice(notice);
 

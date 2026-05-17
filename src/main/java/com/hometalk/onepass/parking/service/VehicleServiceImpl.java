@@ -51,7 +51,7 @@ public class VehicleServiceImpl implements VehicleService {
         Household household = user.getHousehold();
 
         String vehicleNumber = request.getVehicleNumber().replace(" ", "");
-        if (vehicleRepository.existsByVehicleNumber(vehicleNumber)) {
+        if (vehicleRepository.existsByVehicleNumberAndDeletedAtIsNull(vehicleNumber)) {
             throw new ParkingException("이미 등록된 차량 번호입니다.");
         }
 
@@ -163,7 +163,6 @@ public class VehicleServiceImpl implements VehicleService {
         VehicleApproval approval = vehicleApprovalRepository.findById(approvalId)
                 .orElseThrow(() -> new ParkingException("승인 이력을 찾을 수 없습니다."));
 
-        // 중복 차량 번호 체크
         String vehicleNumber = approval.getVehicle().getVehicleNumber();
         vehicleRepository.findByVehicleNumber(vehicleNumber)
                 .ifPresent(v -> {
@@ -182,7 +181,7 @@ public class VehicleServiceImpl implements VehicleService {
                 NotificationType.VEHICLE_APPROVED,
                 "차량 등록 완료",
                 "차량등록이 완료되었습니다.",
-                "/parking",
+                "/parking/vehicle",
                 approval.getVehicle().getVehicleId()
         );
     }
@@ -204,7 +203,7 @@ public class VehicleServiceImpl implements VehicleService {
                 NotificationType.VEHICLE_REJECTED,
                 "차량 등록 반려",
                 "차량 등록이 반려되었습니다. 사유를 확인 후 다시 등록해 주세요.",
-                "/parking",
+                "/parking/vehicle",
                 approval.getVehicle().getVehicleId()
         );
     }

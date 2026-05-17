@@ -60,7 +60,7 @@
     padding: 15px 10px;
     color: var(--color-main);
     font-weight: 600;
-    font-size: 16px;
+    font-size: 15px;
     text-align: center;
     background: white;
 }
@@ -94,16 +94,20 @@
 
 .title-cell a {
     color: var(--color-main);
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 400;
     text-decoration: none;
 }
+
 
 .title-cell a:hover {
     text-decoration: underline;
     color: var(--color-btn-point);
 }
 
+.title-cell a.pinned-title {
+    font-weight: 700; /* 상단 고정만 굵게 */
+}
 
 /* ── 페이지네이션 ──────────────────────────────────────────────────────────── */
 .page-footer {

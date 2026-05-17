@@ -3,8 +3,7 @@ package com.hometalk.onepass.community.entity;
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.common.entity.BaseSoftDeleteEntity;
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
-import com.hometalk.onepass.community.enums.MarketStatus;
-import com.hometalk.onepass.community.enums.PostStatus;
+import com.hometalk.onepass.community.enums.*;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -42,6 +41,12 @@ public class Post extends BaseSoftDeleteEntity {
     @Builder.Default
     private Integer viewCount = 0;
 
+    @Column(nullable = false)
+    private int likeCount = 0;
+
+    @Column(nullable = false)
+    private int dislikeCount = 0;
+
     @Column(columnDefinition = "integer default 0", nullable = false)
     @Builder.Default
     private Integer commentCount = 0;
@@ -57,6 +62,9 @@ public class Post extends BaseSoftDeleteEntity {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<PostFile> files = new ArrayList<>();
 
     // FK (Post가 N인 관계)
     @ManyToOne(fetch = FetchType.LAZY)
@@ -78,6 +86,14 @@ public class Post extends BaseSoftDeleteEntity {
     @Enumerated(EnumType.STRING)
     private MarketStatus marketStatus;
 
+    @Column(length = 20)
+    @Enumerated(EnumType.STRING)
+    private TradeType tradeType;
+
+    @Column(length = 20)
+    @Enumerated(EnumType.STRING)
+    private TradeStatus tradeStatus;
+
     // 변경 method
     public void update(String title, String content, Category category, PostStatus status) {
         this.title = title;
@@ -98,11 +114,27 @@ public class Post extends BaseSoftDeleteEntity {
     public void softDelete() {
         super.softDelete();     // 부모 deletedAt 설정 실행
         this.postStatus = PostStatus.DELETED;
+        if (this.comments != null) {
+            this.comments.clear();
+        }
     }
 
     // 조회수
     public void addViewCount() {
         this.viewCount++;
+    }
+    // 좋아요수
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) this.likeCount--;
+    }
+    public void increaseDislikeCount() {
+        this.dislikeCount++;
+    }
+    public void decreaseDislikeCount() {
+        if (this.dislikeCount > 0) this.dislikeCount--;
     }
 
     // 상태 변경 method
@@ -111,5 +143,12 @@ public class Post extends BaseSoftDeleteEntity {
     }
     public void updateStatus(PostStatus status) {
         this.postStatus = status;
+    }
+    public void updateTrade(TradeType tradeType, TradeStatus tradeStatus) {
+        this.tradeType = tradeType;
+        this.tradeStatus = tradeStatus;
+    }
+    public void updateTradeStatus(TradeStatus tradeStatus) {
+        this.tradeStatus = tradeStatus;
     }
 }

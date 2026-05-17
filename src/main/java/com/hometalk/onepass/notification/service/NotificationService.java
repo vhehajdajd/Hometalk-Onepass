@@ -63,6 +63,18 @@ public class NotificationService {
                 );
     }
 
+    // ─────────────────── 전체삭제 버튼 클릭 -> 전체읽음+삭제 ───────────────────
+    @Transactional
+    public void deleteAll(Long userId, NotificationTargetRole role) {
+        // 읽음 이력 먼저 삭제
+        List<Long> notificationIds = notificationRepository
+                .findAllMyNotificationIds(userId, role);
+        if (!notificationIds.isEmpty()) {
+            notificationReadRepository.deleteByNotificationIdIn(notificationIds);
+            notificationRepository.deleteAllByIdIn(notificationIds);
+        }
+    }
+
     @Transactional
     public void markAllAsRead(Long userId, NotificationTargetRole role) {
         notificationReadRepository.bulkReadAll(userId, role.name());

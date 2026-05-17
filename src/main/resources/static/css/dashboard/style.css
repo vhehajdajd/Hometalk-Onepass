@@ -28,7 +28,7 @@
 
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
-    background: #eef1f8;
+    background: white;
     color: var(--color-text);
     font-size: 14px;
     line-height: 1.6;
@@ -52,7 +52,7 @@ body {
 
 .sidebar-logo {
     width: 100%;
-    padding: 20px 10px 16px;
+    padding: 14px 10px 14px;
     border-bottom: 1px solid rgba(255,255,255,0.2);
     margin-bottom: 12px;
     display: flex;
@@ -165,7 +165,7 @@ body {
 .dashboard-content { flex: 1; padding: 20px 24px; overflow-y: auto; }
 
 /* ── 그리드 ── */
-.dashboard-grid { display: flex; flex-direction: column; gap: 14px; max-width: 1500px; margin: 0 auto; }
+.dashboard-grid { display: flex; flex-direction: column; gap: 14px; max-width: 1400px; margin: 0 auto; }
 .row-1 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .row-2 { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 14px; }
 .row-3 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
@@ -247,9 +247,17 @@ body {
     color: var(--badge-default-font);
     white-space: nowrap;
     flex-shrink: 0;
+    min-width: 64px;
+    text-align: center;
 }
 
 .community-title { flex: 1; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.community-badge.list-category.free   { background-color: #E6F7FF; color: #1890FF; }
+.community-badge.list-category.debate { background-color: #F3E5F5; color: #7B1FA2; }
+.community-badge.list-category.share  { background-color: #FFF7E6; color: #FA8C16; }
+.community-badge.list-category.lost   { background-color: #FFE5E5; color: #FF4D4F; }
+.community-badge.list-category.survey { background-color: #F6FFED; color: #52C41A; }
 
 /* ── 달력 ── */
 .dashboard-content .cal-nav { display: flex; align-items: center; gap: 8px; }
@@ -453,7 +461,7 @@ body {
 .s-pending    { background: var(--badge-safety);   color: var(--badge-safety-font); }
 .s-confirmed  { background: var(--badge-facility); color: var(--badge-facility-font); }
 .s-unanswered { background: #fde8e8; color: #c0392b; }
-.s-processing { background: #e8eaf6; color: #3949ab; }
+.s-processing { background: #FFF8E1; color: #BA7517; }
 .s-received   { background: var(--badge-default);  color: var(--badge-default-font); }
 
 /* ── 관리비 ── */
@@ -479,9 +487,16 @@ body {
 }
 .billing-status-badge.UNPAID { background: #fde8e8; color: var(--color-btn-point); }
 .billing-status-badge.PAID   { background: #e6f4f5; color: var(--badge-normal-font); }
-.billing-card-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+.billing-card-row { display: flex; justify-content: space-between; padding: 15px 0; font-size: 14px; }
 .billing-card-row-label { color: var(--color-text-muted); }
 .billing-card-row-value { font-weight: 600; color: var(--color-text); }
+
+#billingContent {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
 
 .btn-detail {
     display: inline-block;
@@ -515,4 +530,23 @@ body {
     position: sticky;
     bottom: 0;
     z-index: 100;
+}
+
+/* ── 대시보드 상태 배지 ── */
+.dash-status-badge {
+    border-radius: 20px;
+    padding: 3px 0;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    width: 54px;
+    text-align: center;
+}
+
+#todayScheduleList {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
 }

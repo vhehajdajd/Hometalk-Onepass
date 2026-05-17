@@ -12,6 +12,10 @@
     <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
     <link rel="stylesheet" th:href="@{/css/notice/notice-common.css}">
     <link rel="stylesheet" th:href="@{/css/notice/noticeList.css}">
+    <meta name="ctx" th:content="@{/}">
+    <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
+    <script th:src="@{/js/notification/notification-sse.js}"></script>
+    <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
 
 <body>
@@ -99,7 +103,10 @@
                         <span th:text="${notice.badge.label}">분류</span>
                     </td>
                     <td class="title-cell">
-                        <a th:href="@{/notice/{id}(id=${notice.id})}" th:text="${notice.title}">제목</a>
+                        <a th:href="@{/notice/{id}(id=${notice.id})}"
+                           th:text="${notice.title}"
+                           th:classappend="${notice.isPinned} ? 'pinned-title' : ''">
+                        </a>
                     </td>
                     <td th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd')}"></td>
                     <td th:text="${notice.updatedAt != null ? #temporals.format(notice.updatedAt, 'yyyy-MM-dd') : '-'}"></td>

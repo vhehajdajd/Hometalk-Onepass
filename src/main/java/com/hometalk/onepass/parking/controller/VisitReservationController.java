@@ -22,7 +22,6 @@ public class VisitReservationController {
 
     private final VisitReservationService visitReservationService;
 
-    // 방문 예약 목록 페이지
     @GetMapping("/visit")
     public String visitReservationPage(@AuthenticationPrincipal CustomUserDetails userDetails,
                                        Model model) {
@@ -33,24 +32,23 @@ public class VisitReservationController {
         return "parking/visit-reservation";
     }
 
-    // 방문 예약 등록 페이지
     @GetMapping("/visit/register")
     public String visitReservationRegisterPage(Model model) {
         addDateTimeAttributes(model);
         model.addAttribute("reservation", null);
+        model.addAttribute("paths", List.of("parking", "reservationRegister", "reservationRegisterForm"));
         return "parking/visit-reservation-form";
     }
 
-    // 방문 예약 수정 페이지
     @GetMapping("/visit/update/{reservationId}")
     public String visitReservationUpdatePage(@PathVariable Long reservationId, Model model) {
         VisitReservationResponse reservation = visitReservationService.getReservation(reservationId);
         model.addAttribute("reservation", reservation);
+        model.addAttribute("paths", List.of("parking", "reservationRegister", "reservationRegisterForm"));
         addDateTimeAttributes(model);
         return "parking/visit-reservation-form";
     }
 
-    // 방문 예약 등록 처리 (JSON)
     @PostMapping("/visit/register")
     @ResponseBody
     public ResponseEntity<VisitReservationResponse> register(
@@ -60,7 +58,6 @@ public class VisitReservationController {
         return ResponseEntity.ok(visitReservationService.register(householdId, request));
     }
 
-    // 방문 예약 수정 처리 (JSON)
     @PostMapping("/visit/update/{reservationId}")
     @ResponseBody
     public ResponseEntity<VisitReservationResponse> update(
@@ -69,7 +66,6 @@ public class VisitReservationController {
         return ResponseEntity.ok(visitReservationService.update(reservationId, request));
     }
 
-    // 방문 예약 취소
     @PostMapping("/visit/cancel/{reservationId}")
     @ResponseBody
     public ResponseEntity<Void> cancel(@PathVariable Long reservationId) {
@@ -77,7 +73,6 @@ public class VisitReservationController {
         return ResponseEntity.ok().build();
     }
 
-    // 입차 처리
     @PostMapping("/visit/enter/{reservationId}")
     @ResponseBody
     public ResponseEntity<Void> enter(@PathVariable Long reservationId) {
@@ -93,7 +88,6 @@ public class VisitReservationController {
         return ResponseEntity.ok(visitReservationService.getPendingConfirmReservations(householdId));
     }
 
-    // 상태별 예약 목록 조회 (JSON)
     @GetMapping("/visit/list")
     @ResponseBody
     public ResponseEntity<List<VisitReservationResponse>> getReservationsByStatus(
@@ -107,16 +101,14 @@ public class VisitReservationController {
         return ResponseEntity.ok(visitReservationService.getHouseholdReservations(householdId));
     }
 
-    // 날짜 select용 데이터 공통 메서드
     private void addDateTimeAttributes(Model model) {
         model.addAttribute("years", List.of(2026, 2027, 2028));
         model.addAttribute("months", IntStream.rangeClosed(1, 12).boxed().toList());
         model.addAttribute("days", IntStream.rangeClosed(1, 31).boxed().toList());
         model.addAttribute("hours", IntStream.rangeClosed(0, 23).boxed().toList());
-        model.addAttribute("minutes", List.of(00, 10, 20, 30, 40, 50));
+        model.addAttribute("minutes", List.of("00", "10", "20", "30", "40", "50"));
     }
 
-    // 방문 차량 관리 페이지
     @GetMapping("/visit/manage")
     public String visitManagePage() {
         return "parking/visit-management";

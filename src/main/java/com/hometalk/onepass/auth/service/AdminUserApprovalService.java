@@ -4,6 +4,8 @@ import com.hometalk.onepass.auth.dto.AdminUserApprovalResponseDTO;
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,12 @@ public class AdminUserApprovalService {
                 .stream()
                 .map(AdminUserApprovalResponseDTO::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AdminUserApprovalResponseDTO> getPendingUsers(Pageable pageable) {
+        return userRepository.findByStatusAndDeletedAtIsNull(User.UserStatus.PENDING, pageable)
+                .map(AdminUserApprovalResponseDTO::from);
     }
 
     @Transactional

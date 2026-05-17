@@ -2,6 +2,7 @@ package com.hometalk.onepass.community.dto.response;
 
 import com.hometalk.onepass.community.entity.Post;
 import com.hometalk.onepass.community.enums.MarketStatus;
+import com.hometalk.onepass.community.enums.PostFileType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,9 +24,17 @@ public class PostListResponse {
     private String categoryCode;
     private String writer;
     private LocalDateTime createdAt;
+
+    private int likeCount;
+    private int dislikeCount;
+    private boolean isLiked;
+    private boolean isDisliked;
+
     private int viewCount;
     private int commentCount;
+
     private boolean hasImage;
+    private String thumbnailPath;
 
     private String categoryBgColor;
     private String categoryTextColor;
@@ -33,20 +42,46 @@ public class PostListResponse {
     private String marketStatus;
     private String marketStatusDescription;
 
+    private String tradeType;
+    private String tradeTypeDescription;
+    private String tradeStatus;
+    private String tradeStatusDescription;
+
     private List<String> tags;
 
     public PostListResponse(Post post) {
+        this(post, false, false);
+    }
+
+    public PostListResponse(Post post, boolean isLiked, boolean isDisliked) {
         this.id = post.getId();
         this.title = post.getTitle();
         this.pinned = post.isPinned();
+
         this.boardName = post.getCategory().getBoard().getName();
         this.categoryName = post.getCategory().getName();
         this.categoryCode = post.getCategory().getCode();
+
         this.writer = post.getWriter().getNickname();
         this.createdAt = post.getCreatedAt();
+
+        this.likeCount = post.getLikeCount();
+        this.dislikeCount = post.getDislikeCount();
         this.viewCount = post.getViewCount();
+
+        this.isLiked = isLiked;
+        this.isDisliked = isDisliked;
+
         this.commentCount = post.getComments().size();
         this.hasImage = post.getContent() != null && post.getContent().contains("<img");
+        // 대표 썸네일 조회
+        if (post.getFiles() != null && !post.getFiles().isEmpty()) {
+
+            post.getFiles().stream()
+                    .filter(file -> file.getFileType() == PostFileType.THUMBNAIL)
+                    .findFirst()
+                    .ifPresent(file -> this.thumbnailPath = file.getFilePath());
+        }
 
         if (post.getCategory() != null) {
             this.categoryName = post.getCategory().getName();
@@ -72,6 +107,25 @@ public class PostListResponse {
         } else {
             this.marketStatus = null;
             this.marketStatusDescription = null;
+        }
+
+        // 거래 게시판 상태
+        if ("trade".equalsIgnoreCase(post.getCategory().getCode())
+                && post.getTradeType() != null
+                && post.getTradeStatus() != null
+                && !post.isPinned()) {
+
+            this.tradeType = post.getTradeType().name();
+            this.tradeTypeDescription = post.getTradeType().getDescription();
+
+            this.tradeStatus = post.getTradeStatus().name();
+            this.tradeStatusDescription = post.getTradeStatus().getDescription();
+
+        } else {
+            this.tradeType = null;
+            this.tradeTypeDescription = null;
+            this.tradeStatus = null;
+            this.tradeStatusDescription = null;
         }
     }
 

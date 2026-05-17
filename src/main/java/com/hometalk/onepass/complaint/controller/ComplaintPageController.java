@@ -76,4 +76,6 @@ public class ComplaintPageController {
         model.addAttribute("complaint", complaintDto);
         return "inquiry/complaintDetail";
     }
+
+
 }

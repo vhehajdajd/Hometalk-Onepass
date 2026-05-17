@@ -50,7 +50,6 @@
 .page-footer {
     display: block;
     width: 100%;
-    margin-top: var(--spacing-lg);
     padding-top: 25px;
     border-top: 1px solid var(--color-modal-line);
     overflow: hidden;
@@ -68,22 +67,26 @@
 }
 
 /* 5. 카테고리 배지 */
-.list-category {
-    padding: 3px 12px;
-    border-radius: 6px;
-    font-size: var(--font-small);
-    font-weight: 600;
-    display: inline-block;
-    background-color: #f0f0f0;
-    color: #333;
+.category-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+    min-height: 22px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* 카테고리별 색상 */
-.list-category.free   { background-color: #E6F7FF; color: #1890FF; }
-.list-category.debate { background-color: #F3E5F5; color: #7B1FA2; }
-.list-category.share  { background-color: #FFF7E6; color: #FA8C16; }
-.list-category.lost   { background-color: #FFE5E5; color: #FF4D4F; }
-.list-category.survey { background-color: #F6FFED; color: #52C41A; }
+.category-badge.free   { background-color: #E6F7FF; color: #1890FF; }
+.category-badge.debate { background-color: #F3E5F5; color: #7B1FA2; }
+.category-badge.share  { background-color: #FFF7E6; color: #FA8C16; }
+.category-badge.lost   { background-color: #FFE5E5; color: #FF4D4F; }
+.category-badge.survey { background-color: #F6FFED; color: #52C41A; }
+.category-badge.trade { background-color: #FFE1D6; color: #D96C4A; }
 
 /* 6. 태그 */
 .tag-filter-wrapper {
@@ -194,10 +197,20 @@
     border: 1px solid #B2F5EA;
 }
 
+/* 완료 */
 .badge-completed {
     background-color: #EDF2F7;
     color: #718096;
     border: 1px solid #E2E8F0;
+}
+
+.trade-type { font-weight: 700; margin-right: 6px; }
+
+/* 거래중 */
+.badge-selling {
+    background-color: #EBF8FF;
+    color: #3182CE;
+    border: 1px solid #BEE3F8;
 }
 
 
@@ -317,6 +330,122 @@
         transform: translateY(-4px);
     }
 
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+
+.btn-close-x {
+    background: none;
+    border: none;
+    font-size: 24px; /* 크기를 시원하게 키움 */
+    line-height: 1;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.custom-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 9999;
+
+    animation: fadeIn 0.2s ease;
+}
+
+.custom-modal-box {
+    width: 100%;
+    max-width: 360px;
+
+    background: #ffffff;
+
+    border-radius: 16px;
+
+    padding: 28px 24px 20px;
+
+    box-shadow:
+            0 10px 25px rgba(0,0,0,0.08),
+            0 4px 10px rgba(0,0,0,0.04);
+
+    animation: modalUp 0.2s ease;
+}
+
+.custom-modal-message {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #334155;
+
+    text-align: center;
+
+    white-space: pre-line;
+}
+
+.custom-modal-footer {
+    margin-top: 24px;
+
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.custom-modal-btn {
+    min-width: 90px;
+
+    border: none;
+    border-radius: 10px;
+
+    padding: 10px 16px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.confirm-btn {
+    background: var(--color-main);
+    color: white;
+}
+
+.confirm-btn:hover {
+    opacity: 0.92;
+}
+
+.cancel-btn {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.cancel-btn:hover {
+    background: #e2e8f0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
     to {
         opacity: 1;
         transform: translateY(0);

@@ -9,7 +9,6 @@ import com.hometalk.onepass.community.exception.PostNotFoundException;
 import com.hometalk.onepass.community.service.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +25,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -48,17 +46,8 @@ public class PostController {
     private String uploadPath;
 
     @GetMapping("/{boardCode}")
-    public String boardMain(@PathVariable String boardCode,
-                            @RequestParam(defaultValue = "1") int page,
-                            @RequestParam(required = false) String searchType,
-                            @RequestParam(required = false) String keyword,
-                            Model model,
-                            Authentication authentication) {
-
-        BoardResponseDTO board = boardService.findByCode(boardCode);
-        int pageIndex = (page < 1) ? 0 : page - 1;
-
-        return fillCommunityModel(board, null, pageIndex, searchType, keyword, model, authentication);
+    public String boardMain(@PathVariable String boardCode) {
+        return "redirect:/community/" + boardCode + "/all";
     }
 
     @GetMapping("/{boardCode}/{categoryCode:[a-zA-Z]+}")
@@ -71,7 +60,7 @@ public class PostController {
                                Authentication authentication) {
 
         BoardResponseDTO board = boardService.findByCode(boardCode);
-        CategoryResponseDTO category = "all".equals(categoryCode)
+        CategoryResponseDTO category = "all".equalsIgnoreCase(categoryCode)
                 ? null
                 : categoryService.findByCode(categoryCode);
 
@@ -93,8 +82,8 @@ public class PostController {
 
         addLayoutAttributes(board, null, model, true, authentication);
         model.addAttribute("post", new PostRequestDTO());
-
-        int tempCount = postService.getTempPostCount(boardCode);
+        Long userId = getLoginUserId(authentication);
+        int tempCount = postService.getTempPostCount(boardCode, userId);
         model.addAttribute("tempCount", tempCount);
 
         return "community/postForm";
@@ -122,8 +111,8 @@ public class PostController {
             redirectAttributes.addFlashAttribute("errorMessage", "존재하지 않거나 삭제된 게시글입니다.");
             return "redirect:/community/square/all";
         }
-
-        int tempCount = postService.getTempPostCount(boardCode);
+        Long userId = getLoginUserId(authentication);
+        int tempCount = postService.getTempPostCount(boardCode, userId);
         model.addAttribute("tempCount", tempCount);
 
         return "community/postForm";
@@ -146,7 +135,7 @@ public class PostController {
         Long id = postService.postSave(boardCode, dto, userId);
 
         String msg = isTemp ? "게시글이 임시저장되었습니다." : "글이 성공적으로 등록되었습니다.";
-        redirectAttributes.addFlashAttribute("successMessage", msg);
+        redirectAttributes.addFlashAttribute("message", msg);
 
         if (isTemp) {
             return "redirect:/community/" + boardCode + "/edit/" + id;
@@ -167,8 +156,8 @@ public class PostController {
         }
 
         dto.setId(id);
-
-        if (dto.getPostStatus() == null) {
+        boolean isDraft = dto.getPostStatus() == PostStatus.DRAFT;
+        if (dto.getPostStatus() == null || dto.getPostStatus() == PostStatus.DRAFT) {
             dto.setPostStatus(PostStatus.ACTIVE);
         }
 
@@ -180,7 +169,10 @@ public class PostController {
 
         postService.postSave(boardCode, dto, userId);
 
-        redirectAttributes.addFlashAttribute("successMessage", "게시글이 수정되었습니다.");
+        redirectAttributes.addFlashAttribute(
+                "message",
+                isDraft ? "글이 성공적으로 등록되었습니다." : "게시글이 수정되었습니다."
+        );
         return "redirect:/community/" + boardCode + "/" + categoryPath + "/" + id;
     }
 
@@ -197,13 +189,49 @@ public class PostController {
         Long userId = getLoginUserId(authentication);
         postService.deletePost(id, userId, boardCode);
 
-        redirectAttributes.addFlashAttribute("successMessage", "게시글이 삭제되었습니다.");
+        redirectAttributes.addFlashAttribute("message", "게시글이 삭제되었습니다.");
         return "redirect:/community/" + boardCode + "/all";
+    }
+
+
+    @PostMapping("/{boardCode}/save-temp")
+    @ResponseBody
+    public ResponseEntity<?> saveTempApi(@PathVariable String boardCode,
+                                         @ModelAttribute PostRequestDTO dto,
+                                         Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        dto.setPostStatus(PostStatus.DRAFT);
+
+        Long userId = getLoginUserId(authentication);
+
+        Long id;
+        if (dto.getId() != null) {
+            id = postService.postSave(boardCode, dto, userId); // 기존 id 있으면 update 되게
+        } else {
+            id = postService.postSave(boardCode, dto, userId); // id 없으면 insert
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "id", id,
+                "message", "게시글이 임시저장되었습니다."
+        ));
+    }
+
+    @GetMapping("/{boardCode}/temp-count")
+    @ResponseBody
+    public int getTempCount(@PathVariable String boardCode, Authentication authentication) {
+        if (authentication == null) return 0;
+        Long userId = getLoginUserId(authentication);
+        return postService.getTempPostCount(boardCode, userId);
     }
 
     @GetMapping("/{boardCode}/temp-list")
     @ResponseBody
     public List<PostListResponse> getTempPosts(@PathVariable String boardCode,
+                                               RedirectAttributes redirectAttributes,
                                                Authentication authentication) {
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -211,6 +239,7 @@ public class PostController {
         }
 
         Long userId = getLoginUserId(authentication);
+        redirectAttributes.addFlashAttribute("message", "임시저장 되었습니다.");
         return postService.getTempPosts(boardCode, userId);
     }
 
@@ -238,6 +267,7 @@ public class PostController {
     public String postDetail(@PathVariable String boardCode,
                              @PathVariable String categoryCode,
                              @PathVariable Long id,
+                             @RequestParam(value = "page", defaultValue = "1") int page,
                              HttpSession session,
                              Model model,
                              Authentication authentication) {
@@ -267,6 +297,8 @@ public class PostController {
         model.addAttribute("boardCode", boardCode);
         model.addAttribute("currentCategoryCode", categoryCode);
 
+        model.addAttribute("currentPage", page);
+
         model.addAttribute("comments", commentService.findAllByPostId(id));
         model.addAttribute("postTags", postService.getTagsByPostId(id));
 
@@ -275,26 +307,11 @@ public class PostController {
 
     @PostMapping("/image-upload")
     @ResponseBody
-    public Map<String, String> uploadImage(@RequestParam("file") MultipartFile file,
-                                           HttpServletRequest request) {
-
+    public Map<String, String> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
-            File dir = new File(uploadPath);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-
-            String original = file.getOriginalFilename();
-            String fileName = UUID.randomUUID() + "_" + (original != null ? original : "image");
-
-            File dest = new File(dir, fileName);
-            file.transferTo(dest.getAbsoluteFile());
-
-            String contextPath = request.getContextPath();
-
+            String storeFileName = fileService.storeFile(file);
             Map<String, String> result = new HashMap<>();
-            result.put("url", contextPath + "/uploads/" + fileName);
-
+            result.put("url", "/uploads/" + storeFileName);
             return result;
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드 실패: " + e.getMessage());
@@ -350,12 +367,19 @@ public class PostController {
             model.addAttribute("searchError", "검색 유형을 선택해주세요.");
         }
 
+        CustomUserDetails loginUser = null;
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof CustomUserDetails) {
+            loginUser = (CustomUserDetails) authentication.getPrincipal();
+        }
+
         Page<PostListResponse> postsPage = postService.searchPosts(
                 board.getId(),
                 category != null ? category.getId() : null,
                 searchType,
                 keyword,
-                page
+                page,
+                loginUser
         );
 
         model.addAttribute("posts", postsPage.getContent());

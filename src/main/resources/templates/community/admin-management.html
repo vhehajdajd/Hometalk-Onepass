@@ -29,12 +29,17 @@
                 </div>
 
                 <div class="admin-guide">
-                    <h3><i class="fas fa-thumbtack"></i> 관리자 페이지 안내</h3>
-                    <p>게시판과 카테고리를 생성 및 관리할 수 있습니다.</p>
+                    <h3>
+                        <i class="fas fa-thumbtack"></i>
+                        관리자 페이지 안내
+                    </h3>
+                    <p>게시판, 카테고리 및 게시판 화면 유형을 관리할 수 있습니다.</p>
                     <ul>
-                        <li>게시판은 최대 5개까지 생성 가능합니다.</li>
-                        <li>카테고리는 게시판별로 최대 5개까지 생성 가능합니다.</li>
-                        <li>시스템 기본 데이터는 수정/삭제가 불가능합니다.</li>
+                        <li>게시판은 <strong>최대 5개</strong>까지 생성 가능합니다.</li>
+                        <li>카테고리는 게시판별로 <strong>최대 5개</strong>까지 생성 가능합니다.</li>
+                        <li><strong>게시판 유형</strong>은 리스트형 / 카드형 / 갤러리형 중 선택 가능합니다.</li>
+                        <li>게시판 유형 변경 시 기존 게시글의 화면 구성이 달라질 수 있습니다.</li>
+                        <li>시스템 기본 데이터는 수정/삭제가 <strong>제한</strong>됩니다.</li>
                     </ul>
                 </div>
 
@@ -60,8 +65,57 @@
                                     <input type="text" th:field="*{boardName}" placeholder="예: 갤러리" required>
                                 </div>
                                 <div class="form-group" style="flex: 1;">
-                                    <label>게시판 코드 (URL용)</label>
-                                    <input type="text" name="boardCode" placeholder="예: gallery" required>
+                                    <label>게시판 영문명 (URL용)</label>
+                                    <input type="text"
+                                           name="boardCode"
+                                           placeholder="예: gallery"
+                                           pattern="[a-zA-Z0-9_-]+"
+                                           title="영문, 숫자, -, _ 만 입력 가능합니다."
+                                           required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>게시판 화면 유형</label>
+
+                                <div class="board-type-group">
+
+                                    <label class="board-type-card">
+                                        <input type="radio"
+                                               name="boardType"
+                                               value="LIST"
+                                               checked>
+
+                                        <div class="board-type-preview">
+                                            <i class="fa-solid fa-table-list"></i>
+                                            <strong>리스트형</strong>
+                                            <p>일반 게시판</p>
+                                        </div>
+                                    </label>
+
+                                    <label class="board-type-card">
+                                        <input type="radio"
+                                               name="boardType"
+                                               value="CARD">
+
+                                        <div class="board-type-preview">
+                                            <i class="fa-solid fa-grip"></i>
+                                            <strong>카드형</strong>
+                                            <p>중고거래 · 나눔</p>
+                                        </div>
+                                    </label>
+
+                                    <label class="board-type-card">
+                                        <input type="radio"
+                                               name="boardType"
+                                               value="GALLERY">
+
+                                        <div class="board-type-preview">
+                                            <i class="fa-regular fa-image"></i>
+                                            <strong>갤러리형</strong>
+                                            <p>사진 중심 게시판</p>
+                                        </div>
+                                    </label>
+
                                 </div>
                             </div>
                             <div class="form-group">
@@ -90,6 +144,8 @@
     </div>
 </div>
 
-<script th:src="@{/js/community/adminpage.js}"></script>
+<script th:src="@{/js/community/api.js}"></script>
+<script defer th:src="@{/js/community/post-modal.js}"></script>
+<script defer th:src="@{/js/community/adminpage.js}"></script>
 </body>
 </html>

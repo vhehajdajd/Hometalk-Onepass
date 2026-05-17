@@ -39,8 +39,11 @@ body {
 }
 
 .main-wrapper {
-  display: block;
-  width: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    flex: 1;
+    position: relative;
 }
 
 /* ---------- 페이지 타이틀 ---------- */
@@ -326,6 +329,7 @@ body {
   color: var(--color-btn-point);
   min-height: 18px;
 }
+
 
 .hint {
   font-size: 12px;

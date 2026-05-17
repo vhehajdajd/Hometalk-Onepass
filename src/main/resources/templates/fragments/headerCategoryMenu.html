@@ -73,15 +73,25 @@
 <div th:fragment="reservationAdmin" class="category-bar">
     <a class="category-item" th:href="@{/reservation/admin/status}">전체 예약 현황</a>
     <a class="category-item" th:href="@{/reservation/admin/facilities}">시설 관리</a>
+    <a class="category-item" th:href="@{/reservation/admin/list}">시설 목록</a>
 </div>
 
 <!-- ── 문의/민원 - 입주민 ── -->
 <div th:fragment="inquiry" class="category-bar">
     <a class="category-item" th:href="@{/inquiries/list}">문의 목록</a>
     <a class="category-item" th:href="@{/inquiries/write}">문의 작성</a>
+    <a class="category-item" th:href="@{/inquiries/my}">내 문의</a>
     <a class="category-item" th:href="@{/complaints/list}">민원 목록</a>
     <a class="category-item" th:href="@{/complaints/write}">민원 작성</a>
+    <a class="category-item" th:href="@{/complaints/my}">내 민원</a>
 </div>
+
+<div th:fragment="inquiryAdmin" class="category-bar">
+    <a class="category-item" th:href="@{/inquiries/list}">문의 목록</a>
+    <a class="category-item" th:href="@{/complaints/list}">민원 목록</a>
+</div>
+
+
 
 <!-- ── 회원 승인 - 관리자 ── -->
 <div th:fragment="approvalAdmin" class="category-bar">

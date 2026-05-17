@@ -3,6 +3,9 @@
 <head>
   <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='시설 예약')}"></th:block>
   <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <div class="main-layout">
@@ -17,7 +20,32 @@
 
       <main class="container">
 
-        <h1 class="title">시설 예약</h1>
+        <div th:if="${message}" th:class="|alert-box ${status == 'success' ? 'alert-success' : 'alert-danger'}|">
+          <div class="alert-content">
+            <i th:class="${status == 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'}"></i>
+            <span th:text="${message}">성공 메시지입니다.</span>
+          </div>
+          <button type="button" class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+        </div>
+
+        <div class="flex-between mb-lg">
+
+          <h1 class="title">시설 예약</h1>
+
+          <a th:href="@{/reservation/guide}" class="btn btn-outline">
+            <i class="fas fa-circle-info"></i>
+              예약 안내
+          </a>
+
+        </div>
+
+        <div class="reservation-stepper">
+          <div class="step-item active" id="step1-indicator"><span class="step-num">1</span>시설 선택</div>
+          <div class="step-line"></div>
+          <div class="step-item" id="step2-indicator"><span class="step-num">2</span>날짜 선택</div>
+          <div class="step-line"></div>
+          <div class="step-item" id="step3-indicator"><span class="step-num">3</span>시간 선택</div>
+        </div>
 
         <form id="reservationForm">
           <input type="hidden" id="hidden-facility" name="facilityName">
@@ -30,30 +58,73 @@
             <div class="facility-list">
               <!-- DB의 facilities 목록을 반복해서 출력 -->
               <div th:each="f : ${facilities}"
-                   class="facility-item card-hover"
+                   class="facility-card card-hover"
                    th:data-name="${f.name}"
                    th:data-id="${f.id}"
-                   onclick="handleFacilityClick(this)"> <!-- 함수 호출 방식을 변경 -->
+                   th:data-status="${f.bookingStatus}"
+                   th:data-max-time="${f.maxReservationTime}"
+                   th:data-max-capacity="${f.maxCapacity}"
+                   onclick="handleFacilityClick(this)">
 
-                <strong th:text="${f.name}">시설명</strong>
-                <p class="time-info" style="font-size: 12px; color: gray;">
-                  운영: <span th:text="${f.operationTime?.formattedOpenTime}">09:00</span>
-                  ~ <span th:text="${f.operationTime?.formattedCloseTime}">22:00</span>
-                </p>
-                <span class="badge">(1시간 단위)</span>
+                <div class="card-img-wrapper">
+
+                  <th:block th:if="${f.imagePath != null && f.imagePath != ''}">
+                    <img th:src="@{${f.imagePath}}" alt="시설 사진" class="facility-img">
+                  </th:block>
+
+                  <th:block th:unless="${f.imagePath != null && f.imagePath != ''}">
+                    <div class="no-image-bg flex-center">
+                      <i th:class="${f.iconType != null && f.iconType != '' ? f.iconType : 'fas fa-building'}" class="fallback-icon"></i>
+                    </div>
+                  </th:block>
+                </div>
+
+                <div class="card-content-wrap">
+                  <div class="card-header">
+                    <strong th:text="${f.name}">시설명</strong>
+                  </div>
+
+                  <div class="card-body">
+                    <p class="capacity-info">
+                      <i class="fas fa-users"></i> 총 정원: <span th:text="${f.maxCapacity}">0</span>명
+                    </p>
+                    <p class="time-info">
+                      운영: <span th:text="${f.operationTime?.formattedOpenTime}">09:00</span>
+                      ~ <span th:text="${f.operationTime?.formattedCloseTime}">22:00</span>
+                    </p>
+                  </div>
+
+                  <div class="card-footer">
+                    <th:block th:switch="${f.bookingStatus.toString()}">
+                      <span th:case="'ALREADY_BOOKED'" class="status-indicator-badge status-booked">● 예약중</span>
+                      <span th:case="'CLOSED'" class="status-indicator-badge status-closed">● 운영종료</span>
+                      <span th:case="*" class="status-indicator-badge status-available">● 예약가능</span>
+                    </th:block>
+
+                    <span class="badge" th:text="|(${f.maxReservationTime}시간 단위)|">(1시간 단위)</span>
+                  </div>
+                </div>
+
               </div>
+            </div>
 
               <!-- 등록된 시설이 없을 때 메시지 -->
               <div th:if="${#lists.isEmpty(facilities)}" class="text-center text-muted py-xl">
                 현재 예약 가능한 시설이 없습니다.
               </div>
-            </div>
           </div>
 
           <div id="step2" class="step-section">
             <label class="form-label mb-md">2. 날짜를 선택해주세요 (<span id="selected-facility-name" style="color:var(--color-btn-point)"></span>)</label>
             <div class="summary-card">
-              <input type="date" id="resDate" class="input-field" onchange="selectDate(this.value)">
+              <div class="date-input-wrapper">
+                <input type="text"
+                       id="resDate"
+                       class="input-field"
+                       placeholder="연도-월-일 선택">
+
+                <i class="fas fa-calendar-alt calendar-icon"></i>
+              </div>
             </div>
             <div class="btn-group bg-light">
               <button type="button" class="btn btn-outline" onclick="prevStep(1)">이전으로</button>
@@ -62,6 +133,13 @@
 
           <div id="step3" class="step-section">
             <label class="form-label mb-md">3. 예약 시간 및 상세 확인</label>
+            <div class="info-guide-box mt-md">
+              <p class="guide-text">
+                <i class="fas fa-info-circle"></i>
+                <strong>예약 방법:</strong> 원하시는 시간대의 <strong>시작 시간</strong>과 <strong>종료 시간</strong>을 각각 클릭해 주세요.
+                (자동으로 사이 시간까지 선택됩니다.)
+              </p>
+            </div>
             <div class="summary-card">
               <div class="admin-answer-section text-center mb-lg">
                 <span id="display-date-text" class="text-muted">날짜 선택 전</span>
@@ -71,16 +149,20 @@
               </div>
               <div class="time-grid mt-lg">
                 <th:block th:each="hour : ${#numbers.sequence(9, 21)}">
-                  <label class="time-chip-label time-chip-wrapper">
-                    <input type="radio" name="startTime" class="time-radio"
-                           th:value="${#numbers.formatInteger(hour, 2) + ':00'}"
-                           onchange="updateTimeDisplay(this.value)">
+                  <label class="time-chip-label time-chip-wrapper"
+                         th:data-hour="${hour}"
+                         onclick="handleTimeClick(this)">
                     <div class="time-chip" th:text="${#numbers.formatInteger(hour, 2) + ':00'}">00:00</div>
+                    <small class="capacity-status" th:id="|cap-${hour}|">
+                      <i class="fas fa-user-friends" style="font-size: 10px;"></i>
+                      <span class="count-text">조회 중...</span>
+                    </small>
                   </label>
                 </th:block>
               </div>
               <div class="btn-area flex-center gap-md mt-xl">
-                <button type="button" class="btn btn-outline" onclick="prevStep(2)">이전</button>
+                <button type="button" class="btn btn-outline"
+                        onclick="document.getElementById('resDate').value=''; prevStep(2);">이전</button>
                 <button type="button" class="btn btn-primary" onclick="submitReservation()">최종 예약 신청</button>
               </div>
             </div>
@@ -91,6 +173,10 @@
     <footer th:replace="~{fragments/footer :: footer}"></footer>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/ko.js"></script>
+<script th:src="@{/js/community/api.js}"></script>
+<script th:src="@{/js/community/post-modal.js}"></script>
 <script th:src="@{/js/reservation/reservation.js}"></script>
 </body>
 </html>

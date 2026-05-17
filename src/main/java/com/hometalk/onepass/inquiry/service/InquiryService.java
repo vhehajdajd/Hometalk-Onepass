@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -46,6 +45,7 @@ public class InquiryService {
     public Long register(InquiryDto dto,
                          List<MultipartFile> files,
                          Authentication authentication) throws IOException {
+
         Long userId = getLoginUserId(authentication);
 
         if (dto.getTitle() == null || dto.getTitle().trim().isEmpty()) {
@@ -53,7 +53,8 @@ public class InquiryService {
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."));
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."));
 
         if (isDuplicate(dto, user.getId())) {
             throw new IllegalStateException("이미 동일한 문의가 접수되었습니다. 잠시 후 다시 시도해주세요.");
@@ -96,14 +97,14 @@ public class InquiryService {
             }
         }
 
-/*        // 전체 관리자에게 문의 접수 알림
+// ✅ 알림 추가 — 전체 관리자에게 문의 접수 알림
         notificationPublisher.publishToAll(
                 NotificationTargetRole.ADMIN,
                 NotificationType.INQUIRY_RECEIVED,
                 "새로운 문의 접수",
                 "새로운 문의가 접수되었습니다.",
                 "/inquiries/detail/" + inquiry.getId()
-        );*/
+        );
 
         return inquiry.getId();
     }
@@ -114,7 +115,8 @@ public class InquiryService {
         boolean isAdmin = isAdmin(authentication);
 
         Inquiry inquiry = inquiryRepository.findByIdWithAttachments(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 문의글을 찾을 수 없습니다."));
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 문의글을 찾을 수 없습니다."));
 
         boolean isOwner = inquiry.getUser() != null
                 && inquiry.getUser().getId().equals(userId);
@@ -133,11 +135,13 @@ public class InquiryService {
 
     @Transactional
     public void deleteInquiry(Long id, Authentication authentication) {
+
         Long userId = getLoginUserId(authentication);
         boolean isAdmin = isAdmin(authentication);
 
         Inquiry inquiry = inquiryRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "삭제할 문의글이 없습니다."));
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "삭제할 문의글이 없습니다."));
 
         boolean isOwner = inquiry.getUser() != null
                 && inquiry.getUser().getId().equals(userId);
@@ -156,13 +160,18 @@ public class InquiryService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "관리자만 답변을 등록할 수 있습니다.");
         }
 
+        if (answer == null || answer.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "답변 내용을 입력해주세요.");
+        }
+
         Inquiry inquiry = inquiryRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "답변할 문의글이 없습니다."));
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "답변할 문의글이 없습니다."));
 
         inquiry.updateAnswer(answer);
 
-        // 문의 작성자에게 답변 알림
-/*        if (inquiry.getUser() != null) {
+// ✅ 알림 추가 — 문의 작성자에게 답변 알림
+        if (inquiry.getUser() != null) {
             notificationPublisher.publish(
                     inquiry.getUser().getId(),
                     NotificationTargetRole.RESIDENT,
@@ -172,39 +181,44 @@ public class InquiryService {
                     "/inquiries/detail/" + inquiry.getId(),
                     inquiry.getId()
             );
-        }*/
+        }
     }
 
     public Page<InquiryDto> findAll(Long userId, boolean isAdmin, Pageable pageable) {
-        return inquiryRepository.findAll(pageable)
+
+        if (isAdmin) {
+            return inquiryRepository.findAll(pageable)
+                    .map(i -> {
+                        InquiryDto dto = InquiryDto.fromEntity(i);
+                        dto.setCanView(true);
+                        dto.setCanEdit(true);
+                        dto.setIsAdmin(true);
+                        return dto;
+                    });
+        }
+
+        return inquiryRepository.findByUserId(userId, pageable)
                 .map(i -> {
                     InquiryDto dto = InquiryDto.fromEntity(i);
-
-                    boolean isOwner = i.getUser() != null
-                            && userId != null
-                            && i.getUser().getId().equals(userId);
-
-                    boolean canView = isOwner || isAdmin;
-
-                    dto.setCanView(canView);
-                    dto.setCanEdit(canView);
-                    dto.setIsAdmin(isAdmin);
-
-                    if (!canView) {
-                        dto.setContent("🔒 비공개 문의입니다.");
-                        dto.setUserName("비공개");
-                    }
-
+                    dto.setCanView(true);
+                    dto.setCanEdit(true);
+                    dto.setIsAdmin(false);
                     return dto;
                 });
     }
 
     public Page<InquiryDto> findByUserId(Long userId, Pageable pageable) {
         return inquiryRepository.findByUserId(userId, pageable)
-                .map(InquiryDto::fromEntity);
+                .map(i -> {
+                    InquiryDto dto = InquiryDto.fromEntity(i);
+                    dto.setCanView(true);
+                    dto.setCanEdit(true);
+                    dto.setIsAdmin(false);
+                    return dto;
+                });
     }
 
-    private Long getLoginUserId(Authentication authentication) {
+    public Long getLoginUserId(Authentication authentication) {
 
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
@@ -219,12 +233,13 @@ public class InquiryService {
         String loginId = authentication.getName();
 
         LocalAccount account = localAccountRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다."));
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다."));
 
         return account.getUser().getId();
     }
 
-    private boolean isAdmin(Authentication authentication) {
+    public boolean isAdmin(Authentication authentication) {
         return authentication != null
                 && authentication.getAuthorities().stream()
                 .anyMatch(a ->
@@ -234,21 +249,24 @@ public class InquiryService {
     }
 
     private boolean isDuplicate(InquiryDto dto, Long userId) {
+
         return inquiryRepository.findFirstByUser_IdOrderByIdDesc(userId)
                 .map(lastInquiry -> {
-                    boolean isSameContent = lastInquiry.getCategory().equals(dto.getCategory())
-                            && lastInquiry.getTitle().equals(dto.getTitle());
+                    boolean isSameContent =
+                            lastInquiry.getCategory().equals(dto.getCategory())
+                                    && lastInquiry.getTitle().equals(dto.getTitle());
 
                     long diffInSeconds = java.time.Duration.between(
                             lastInquiry.getCreatedAt(),
                             java.time.LocalDateTime.now()
                     ).getSeconds();
 
-                    return isSameContent && (diffInSeconds < 60);
+                    return isSameContent && diffInSeconds < 60;
                 }).orElse(false);
     }
 
     public List<InquiryDto> findMyRecent(Authentication authentication) {
+
         Long userId = getLoginUserId(authentication);
 
         return inquiryRepository.findTop5ByUser_IdOrderByCreatedAtDesc(userId)
@@ -258,6 +276,7 @@ public class InquiryService {
     }
 
     public List<InquiryDto> findAdminRecent(Authentication authentication) {
+
         if (!isAdmin(authentication)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "관리자만 접근할 수 있습니다.");
         }

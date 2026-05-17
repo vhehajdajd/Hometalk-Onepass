@@ -1,0 +1,79 @@
+<th:block xmlns:th="http://www.thymeleaf.org"
+          th:fragment="card(posts, board, categoryCode)">
+
+    <div class="pinned-card-list" th:if="${posts.?[pinned].size() > 0}">
+        <article class="pinned-card"
+                 th:each="post : ${posts}"
+                 th:if="${post.pinned}">
+            <a th:href="@{/community/{bCode}/{cCode}/{id}(bCode=${board.code}, cCode=${categoryCode}, id=${post.id})}">
+                <span class="pinned-label">📌 고정</span>
+                <strong th:text="${post.title}">제목</strong>
+                <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}">작성일</span>
+            </a>
+        </article>
+    </div>
+
+    <div class="post-card-grid">
+        <article class="post-card"
+                 th:each="post : ${posts}"
+                 th:unless="${post.pinned}">
+            <a class="post-card-link"
+               th:href="@{/community/{bCode}/{cCode}/{id}(bCode=${board.code}, cCode=${categoryCode}, id=${post.id})}">
+
+                <div class="post-card-thumb">
+                    <img th:if="${post.thumbnailPath != null}"
+                         th:src="@{${post.thumbnailPath}}"
+                         alt="썸네일">
+
+                    <div th:unless="${post.thumbnailPath != null}" class="post-thumb-placeholder">
+                        <i class="fa-regular fa-image"></i>
+                    </div>
+                </div>
+
+                <div class="post-card-content">
+                    <div class="post-card-badges">
+                        <span th:if="${post.categoryName != null}"
+                              th:text="${post.categoryName}"
+                              class="category-badge"
+                              th:classappend="${post.categoryCode}"
+                              th:style="${post.categoryBgColor != null} ?
+                                'background-color:' + ${post.categoryBgColor} + '; color:' + ${post.categoryTextColor} + ';' : ''">
+                        </span>
+
+                        <span th:if="${post.marketStatus != null}"
+                              th:text="${post.marketStatusDescription}"
+                              th:classappend="${' badge-' + post.marketStatus.toLowerCase()}"
+                              class="badge status-badge-inline">
+                        </span>
+
+                        <span th:if="${post.tradeStatus != null}"
+                              th:text="${post.tradeStatusDescription}"
+                              th:classappend="${' badge-' + post.tradeStatus.toLowerCase()}"
+                              class="badge status-badge-inline">
+                        </span>
+                    </div>
+
+                    <h3 class="post-card-title">
+                        <span th:if="${post.tradeType != null}">
+                            <span th:if="${post.tradeType == 'SELL'}" class="trade-type badge-sell">[판매]</span>
+                            <span th:if="${post.tradeType == 'BUY'}" class="trade-type badge-buy">[구매]</span>
+                        </span>
+                        <span th:text="${post.title}">제목</span>
+                    </h3>
+
+                    <div class="post-card-meta">
+                        <span th:text="${post.writer}">작성자</span>
+                        <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}">작성일</span>
+                    </div>
+
+                    <div class="post-card-stats">
+                        <span><i class="fa-regular fa-eye"></i> <span th:text="${post.viewCount}">0</span></span>
+                        <span><i class="fa-regular fa-heart"></i> <span th:text="${post.likeCount}">0</span></span>
+                        <span><i class="fa-regular fa-comment"></i> <span th:text="${post.commentCount}">0</span></span>
+                    </div>
+                </div>
+            </a>
+        </article>
+    </div>
+
+</th:block>

@@ -33,7 +33,7 @@ public class User extends BaseSoftDeleteEntity {
     @Column(name = "nickname", length = 30)
     private String nickname;
 
-    @Column(name = "email", nullable = false, unique = true, length = 100)
+    @Column(name = "email", nullable = false, length = 100)
     private String email;
 
     @Column(name = "phone_number", length = 20)
@@ -101,6 +101,18 @@ public class User extends BaseSoftDeleteEntity {
 
     public void reject() {
         this.status = UserStatus.REJECTED;
+    }
+
+    public void resubmitForApproval() {
+        this.status = UserStatus.PENDING;
+        this.approvalNoticeShown = false;
+    }
+
+    public void updateProfile(String name, String nickname, String email, String phoneNumber) {
+        this.name = name;
+        this.nickname = nickname;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
     }
 
     public void markApprovalNoticeShown() {

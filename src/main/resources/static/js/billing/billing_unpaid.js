@@ -419,7 +419,7 @@ function showToast(msg) {
     const t = document.createElement('div');
     t.textContent = msg;
     t.style.cssText = `
-        position:fixed; top:20px; right:20px;
+        position:fixed; top:100px; right:20px;
         background:#2c8a3e; color:white;
         padding:12px 20px; border-radius:6px;
         box-shadow:0 2px 8px rgba(0,0,0,.15);

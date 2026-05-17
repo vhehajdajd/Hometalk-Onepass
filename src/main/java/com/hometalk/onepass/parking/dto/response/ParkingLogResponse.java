@@ -75,14 +75,14 @@ public class ParkingLogResponse {
         // 출차 가능 여부
         if (!this.householdConfirmed) {
             // 세대 미확인 → 강제 출차만 가능
-            this.canExit = false;
+            this.canExit = totalMinutes <= 10;
         } else if (log.getEntryType() == ParkingLog.EntryType.NORMAL) {
             // 입주자 차량 → 무조건 출차 가능
             this.canExit = true;
         } else {
             // 방문/수동 차량 → 티켓으로 커버 가능해야 출차 가능
             int applied = log.getAppliedMinutes() != null ? log.getAppliedMinutes() : 0;
-            this.canExit = totalMinutes == 0 || applied >= totalMinutes;
+            this.canExit = totalMinutes <= 10 || totalMinutes == 0 || applied >= totalMinutes;
         }
     }
 

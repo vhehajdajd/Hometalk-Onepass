@@ -19,7 +19,7 @@ import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    int countByBoardCodeAndPostStatus(String boardCode, PostStatus status);
+    int countByBoardCodeAndPostStatusAndWriterId(String boardCode, PostStatus status, Long writerId);
 
 
     // --- [사용자용 조회] : @SQLRestriction ("deleted_at IS NULL") 자동 적용 ---
@@ -30,14 +30,21 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // 임시저장은 목록 숨기기
     // 게시판 전체 글 조회
     @EntityGraph(attributePaths = {"category", "board", "writer", "postTags.tag"})
-    @Query("SELECT p FROM Post p WHERE p.board.id = :boardId AND p.postStatus = :status")
+    @Query("SELECT p FROM Post p " +
+            "WHERE p.board.id = :boardId AND p.postStatus = :status " +
+            "ORDER BY p.pinned DESC, " +                        // 1순위: 고정글 우선
+            "CASE WHEN p.pinned = true THEN p.id END ASC, " +   // 2순위: 고정글은 등록순
+            "CASE WHEN p.pinned = false THEN p.id END DESC")    // 3순위: 일반글은 최신순
     Page<Post> findActivePosts(@Param("boardId") Long boardId,
                                @Param("status") PostStatus status,
                                Pageable pageable);
 
     // 특정 게시판 내 특정 카테고리 글 조회
     @EntityGraph(attributePaths = {"category", "board", "writer", "postTags.tag"})
-    @Query("SELECT p FROM Post p WHERE p.board.id = :boardId AND p.category.id = :catId AND p.postStatus = :status")
+    @Query("SELECT p FROM Post p WHERE p.board.id = :boardId AND p.category.id = :catId AND p.postStatus = :status " +
+            "ORDER BY p.pinned DESC, " +
+            "CASE WHEN p.pinned = true THEN p.id END ASC, " +
+            "CASE WHEN p.pinned = false THEN p.id END DESC")
     Page<Post> findCategoryPosts(@Param("boardId") Long boardId,
                                  @Param("catId") Long catId,
                                  @Param("status") PostStatus status,
