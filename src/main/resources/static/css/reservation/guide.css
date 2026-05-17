@@ -1,0 +1,84 @@
+/* 예약 안내 페이지 */
+.reservation-guide-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.guide-card {
+    padding: 28px;
+}
+
+.guide-card h3 {
+    font-size: 20px;
+    color: var(--color-main);
+    margin-bottom: 18px;
+}
+
+.guide-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.guide-list li {
+    position: relative;
+    padding-left: 18px;
+    line-height: 1.7;
+    color: #475569;
+}
+
+.guide-list li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--color-btn);
+}
+
+/* 상태 카드 */
+.guide-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.guide-status-item {
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: #fff;
+}
+
+.guide-status-item h4 {
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: var(--color-main);
+}
+
+.guide-status-item p {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+}
+
+/* 안내 상단 */
+.guide-top-box {
+    padding: 18px 22px;
+    border-left: 4px solid var(--color-main);
+    background: #f8fbff;
+    border-radius: var(--radius);
+}
+
+.guide-top-box p {
+    margin: 0;
+    line-height: 1.7;
+    color: #334155;
+}
+
+/* 버튼 */
+.guide-btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+}

@@ -5,7 +5,9 @@ import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
+import com.hometalk.onepass.community.repository.TagRepository;
 import com.hometalk.onepass.community.service.PostActionService;
+import com.hometalk.onepass.community.service.PostService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +25,12 @@ import java.util.List;
 public class PostActionController {
 
     private final PostActionService postActionService;
+    private final PostService postService;
 
     @PersistenceContext
     private EntityManager entityManager;
 
+    // 상단 고정
     @PostMapping("/{postId}/pin")
     public ResponseEntity<Void> togglePin(@PathVariable Long postId,
                                           Authentication authentication) {
@@ -37,19 +41,7 @@ public class PostActionController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/{postId}/status")
-    public ResponseEntity<Void> updateMarketStatus(@PathVariable Long postId,
-                                                   @RequestBody java.util.Map<String, String> request,
-                                                   Authentication authentication) {
-
-        CustomUserDetails user = getLoginCustomUser(authentication);
-
-        MarketStatus marketStatus = MarketStatus.valueOf(request.get("marketStatus"));
-        postActionService.updateMarketStatus(postId, user, marketStatus);
-
-        return ResponseEntity.ok().build();
-    }
-
+    // 숨김 처리
     @PostMapping("/{postId}/hide")
     public ResponseEntity<Void> hidePost(@PathVariable Long postId,
                                          Authentication authentication) {
@@ -60,6 +52,7 @@ public class PostActionController {
         return ResponseEntity.ok().build();
     }
 
+    // 숨김 해제
     @PostMapping("/{postId}/unhide")
     public ResponseEntity<Void> unhidePost(@PathVariable Long postId,
                                            Authentication authentication) {
@@ -68,6 +61,8 @@ public class PostActionController {
         return ResponseEntity.ok().build();
     }
 
+
+    // 사용자 연동
     private CustomUserDetails getLoginCustomUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new UnauthorizedAccessException("로그인이 필요합니다.");

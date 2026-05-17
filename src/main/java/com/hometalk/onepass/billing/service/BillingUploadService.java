@@ -176,7 +176,7 @@ public class BillingUploadService {
                     "고지서 업로드 완료",
                     billingMonths + " 고지서 업로드가 완료되었습니다. " +
                             "(신규 " + insertCount + "건 / 수정 " + updateCount + "건)",
-                    "/admin/billing"
+                    "/billing/admin/monthly"
             );
         }
 

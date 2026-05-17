@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='예약 안내')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
+    <link rel="stylesheet" th:href="@{/css/reservation/guide.css}">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<div class="main-layout">
+
+    <!-- 사이드바 -->
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='reservation')}"></div>
+
+    <div class="main-wrapper">
+
+        <!-- 현재 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'reservation'} })}"></div>
+
+        <!-- 카테고리 메뉴 -->
+        <div th:replace="~{fragments/headerCategoryMenu :: reservation}"></div>
+
+        <main class="container">
+
+            <div class="reservation-guide-wrap">
+
+                <!-- 제목 -->
+                <div class="guide-header">
+                    <h2 class="title">예약 안내</h2>
+                    <p class="text-muted">
+                        시설 예약 전 반드시 아래 안내사항을 확인해주세요.
+                    </p>
+                </div>
+
+                <!-- 상단 안내 박스 -->
+                <div class="guide-top-box">
+                    <p>
+                        예약은 시설별 운영 정책에 따라 제한될 수 있으며,
+                        승인 완료된 예약만 최종 예약으로 인정됩니다.
+                    </p>
+                </div>
+
+                <!-- 예약 신청 전 확인사항 -->
+                <section class="card guide-card">
+                    <h3>예약 신청 전 확인사항</h3>
+
+                    <ul class="guide-list">
+                        <li>시설별 운영 시간과 예약 가능 여부를 확인해주세요.</li>
+                        <li>예약 신청 후 상태가 변경될 수 있습니다.</li>
+                        <li>승인 완료된 예약만 최종 예약으로 인정됩니다.</li>
+                        <li>시설별 정책에 따라 예약 제한이 적용될 수 있습니다.</li>
+                    </ul>
+                </section>
+
+                <!-- 예약 상태 안내 -->
+                <section class="card guide-card">
+                    <h3>예약 상태 안내</h3>
+
+                    <div class="guide-status-grid">
+
+                        <div class="guide-status-item">
+                            <span class="badge badge-pending">대기</span>
+                            <p>예약 신청 후 관리자 확인 전 상태입니다.</p>
+                        </div>
+
+                        <div class="guide-status-item">
+                            <span class="badge badge-confirmed">승인</span>
+                            <p>관리자가 예약을 확정한 상태입니다.</p>
+                        </div>
+
+                        <div class="guide-status-item">
+                            <span class="badge status-canceled">반려</span>
+                            <p>예약 조건에 맞지 않아 승인되지 않은 상태입니다.</p>
+                        </div>
+
+                        <div class="guide-status-item">
+                            <span class="badge badge-canceled">취소</span>
+                            <p>사용자 또는 관리자가 예약을 취소한 상태입니다.</p>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- 중복 예약 제한 -->
+                <section class="card guide-card">
+                    <h3>중복 예약 제한</h3>
+
+                    <ul class="guide-list">
+                        <li>동일 시간대 중복 예약은 제한될 수 있습니다.</li>
+                        <li>개인 이용 시설은 사용자 기준으로 중복 여부를 확인합니다.</li>
+                        <li>그룹 이용 시설은 세대 또는 그룹 기준으로 제한될 수 있습니다.</li>
+                    </ul>
+                </section>
+
+                <!-- 시설 이용 유의사항 -->
+                <section class="card guide-card">
+                    <h3>시설 이용 유의사항</h3>
+
+                    <ul class="guide-list">
+                        <li>예약 시간 외 이용은 제한됩니다.</li>
+                        <li>시설 이용 후 정리정돈 부탁드립니다.</li>
+                        <li>시설 파손 또는 운영 정책 위반 시 이용 제한이 적용될 수 있습니다.</li>
+                    </ul>
+                </section>
+
+                <div class="guide-top-box">
+                    <p>
+                        예약 정책은 시설 운영 상황에 따라 변경될 수 있습니다.
+                    </p>
+                </div>
+
+                <!-- 버튼 영역 -->
+                <div class="guide-btn-group">
+                    <a th:href="@{/reservation/calendar}" class="btn btn-outline">
+                        예약 현황 보기
+                    </a>
+
+                    <a th:href="@{/reservation/apply}" class="btn btn-primary">
+                        예약 신청하기
+                    </a>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

@@ -5,7 +5,7 @@
 <link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
 <body>
 
-<div class="main-layout">
+<div class="main-layout" style="display: flex; min-height: 100vh;">
 
   <!-- 1. 사이드바 -->
   <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
@@ -20,7 +20,7 @@
     <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
 
     <!-- 본문 -->
-    <main class="content">
+    <main class="content" style="flex: 1;">
       <div class="container">
         <h2 class="page-title">월별 주차 기록</h2>
 

@@ -33,76 +33,76 @@ public class ScheduleNotificationScheduler {
     // ─────────────────────────────────────────────
     // 매일 10:00 — 내일 일정 알림
     // ─────────────────────────────────────────────
-    //    @Transactional
-    //    @Scheduled(cron = "0 0 10 * * *")
-    //    public void notifyTomorrowSchedules() {
-    //        List<ScheduleCalResponseDto> schedules = scheduleService.getTomorrowSchedules();
-    //
-    //        if (schedules.isEmpty()) {
-    //            log.info("[ScheduleNotificationScheduler] 내일 일정 없음 - skip");
-    //            return;
-    //        }
-    //
-    //        for (ScheduleCalResponseDto schedule : schedules) {
-    //            String message = "내일 " + schedule.getTitle() + " 일정이 있습니다.";
-    //
-    //            // 전체 입주민 발송
-    //            notificationPublisher.publishToAll(
-    //                    NotificationTargetRole.RESIDENT,
-    //                    NotificationType.SCHEDULE_TOMORROW,
-    //                    schedule.getTitle(),
-    //                    message,
-    //                    "/schedule"
-    //            );
-    //
-    //            // 전체 관리자 발송
-    //            notificationPublisher.publishToAll(
-    //                    NotificationTargetRole.ADMIN,
-    //                    NotificationType.SCHEDULE_TOMORROW,
-    //                    schedule.getTitle(),
-    //                    message,
-    //                    "/schedule"
-    //            );
-    //        }
-    //
-    //        log.info("[ScheduleNotificationScheduler] 내일 일정 알림 발송 완료 - {}건", schedules.size());
-    //    }
-    //
-    //    // ─────────────────────────────────────────────
-    //    // 매일 08:00 — 오늘 일정 알림
-    //    // ─────────────────────────────────────────────
-    //    @Transactional
-    //    @Scheduled(cron = "0 0 8 * * *")
-    //    public void notifyTodaySchedules() {
-    //        List<ScheduleCalResponseDto> schedules = scheduleService.getTodaySchedules();
-    //
-    //        if (schedules.isEmpty()) {
-    //            log.info("[ScheduleNotificationScheduler] 오늘 일정 없음 - skip");
-    //            return;
-    //        }
-    //
-    //        for (ScheduleCalResponseDto schedule : schedules) {
-    //            String message = "오늘 " + schedule.getTitle() + " 일정이 있습니다.";
-    //
-    //            // 전체 입주민 발송
-    //            notificationPublisher.publishToAll(
-    //                    NotificationTargetRole.RESIDENT,
-    //                    NotificationType.SCHEDULE_TODAY,
-    //                    schedule.getTitle(),
-    //                    message,
-    //                    "/schedule"
-    //            );
-    //
-    //            // 전체 관리자 발송
-    //            notificationPublisher.publishToAll(
-    //                    NotificationTargetRole.ADMIN,
-    //                    NotificationType.SCHEDULE_TODAY,
-    //                    schedule.getTitle(),
-    //                    message,
-    //                    "/schedule"
-    //            );
-    //        }
-    //
-    //        log.info("[ScheduleNotificationScheduler] 오늘 일정 알림 발송 완료 - {}건", schedules.size());
-    //    }
+    @Transactional
+    @Scheduled(cron = "0 0 10 * * *")
+    public void notifyTomorrowSchedules() {
+        List<ScheduleCalResponseDto> schedules = scheduleService.getTomorrowSchedules();
+
+        if (schedules.isEmpty()) {
+            log.info("[ScheduleNotificationScheduler] 내일 일정 없음 - skip");
+            return;
+        }
+
+        for (ScheduleCalResponseDto schedule : schedules) {
+            String message = "내일 " + schedule.getTitle() + " 일정이 있습니다.";
+
+            // 전체 입주민 발송
+            notificationPublisher.publishToAll(
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.SCHEDULE_TOMORROW,
+                    schedule.getTitle(),
+                    message,
+                    "/schedule"
+            );
+
+            // 전체 관리자 발송
+            notificationPublisher.publishToAll(
+                    NotificationTargetRole.ADMIN,
+                    NotificationType.SCHEDULE_TOMORROW,
+                    schedule.getTitle(),
+                    message,
+                    "/schedule"
+            );
+        }
+
+        log.info("[ScheduleNotificationScheduler] 내일 일정 알림 발송 완료 - {}건", schedules.size());
+    }
+
+    // ─────────────────────────────────────────────
+    // 매일 08:00 — 오늘 일정 알림
+    // ─────────────────────────────────────────────
+    @Transactional
+    @Scheduled(cron = "0 0 8 * * *")
+    public void notifyTodaySchedules() {
+        List<ScheduleCalResponseDto> schedules = scheduleService.getTodaySchedules();
+
+        if (schedules.isEmpty()) {
+            log.info("[ScheduleNotificationScheduler] 오늘 일정 없음 - skip");
+            return;
+        }
+
+        for (ScheduleCalResponseDto schedule : schedules) {
+            String message = "오늘 " + schedule.getTitle() + " 일정이 있습니다.";
+
+            // 전체 입주민 발송
+            notificationPublisher.publishToAll(
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.SCHEDULE_TODAY,
+                    schedule.getTitle(),
+                    message,
+                    "/schedule"
+            );
+
+            // 전체 관리자 발송
+            notificationPublisher.publishToAll(
+                    NotificationTargetRole.ADMIN,
+                    NotificationType.SCHEDULE_TODAY,
+                    schedule.getTitle(),
+                    message,
+                    "/schedule"
+            );
+        }
+
+        log.info("[ScheduleNotificationScheduler] 오늘 일정 알림 발송 완료 - {}건", schedules.size());
+    }
 }

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<div th:fragment="postComment(boardCode, categoryCode, postId, comments)">
+<div th:fragment="postComment(boardCode, categoryCode, postId, comments)" id="comment-section">
     <link rel="stylesheet" th:href="@{/css/community/post-comment.css}">
 
-    <div class="comment-form">
+    <div class="comment-form" sec:authorize="isAuthenticated()">
         <form th:action="@{/community/{bCode}/{cCode}/{postId}/comments(bCode=${boardCode}, cCode=${categoryCode}, postId=${postId})}"
-              th:method="post">
-            <textarea name="content" placeholder="댓글을 입력해주세요."></textarea>
+              th:method="post" onsubmit="isSubmitting = true;">
+            <textarea name="content" placeholder="댓글을 입력해주세요." required></textarea>
             <button type="submit" class="comment-submit-btn">등록</button>
             <div style="clear: both;"></div>
         </form>
@@ -25,7 +25,8 @@
                     <strong th:text="${comment.nickname}">작성자</strong>
                     <small th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</small>
                 </div>
-                <div class="comment-actions" th:if="${comment.writerId == #authentication.principal.userId}">
+                <div class="comment-actions"
+                     th:if="${#authorization.expression('isAuthenticated()') and comment.writerId == #authentication.principal.userId}">
                     <div class="custom-dropdown">
                         <button type="button" class="drop-btn" onclick="toggleCommentMenu(this)">⋮</button>
 
@@ -50,7 +51,7 @@
             <div th:id="|edit-form-${comment.id}|" style="display: none;">
                 <form th:action="@{/community/{bCode}/{cCode}/{postId}/comments/{id}/edit
                                  (bCode=${boardCode}, cCode=${categoryCode}, postId=${postId}, id=${comment.id})}"
-                      th:method="post">
+                      th:method="post" onsubmit="isSubmitting = true;">
                     <textarea name="content" class="edit-textarea" th:text="${comment.content}"></textarea>
                     <div class="edit-button-group">
                         <button type="button" class="btn-cancel-edit" th:onclick="|toggleEditForm(${comment.id})|">취소</button>

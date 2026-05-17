@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='전체 예약 현황')}"></th:block>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='예약 현황')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
     <link rel="stylesheet" th:href="@{/css/reservation/calendar.css}">
 </head>
@@ -9,39 +11,54 @@
 
 <div class="main-layout">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='reservation')}"></div>
+
     <div class="main-wrapper">
         <!-- 상단 메뉴 -->
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'reservation'} })}"></div>
-        <div th:replace="~{fragments/headerCategoryMenu :: reservation}"></div>
 
-        <!-- 메인 콘텐츠 -->
+        <!-- 관리자 메뉴 -->
+        <div sec:authorize="hasRole('ADMIN')"
+             th:replace="~{fragments/headerCategoryMenu :: reservationAdmin}">
+        </div>
+
+        <!-- 일반 회원 메뉴 -->
+        <div sec:authorize="!hasRole('ADMIN')"
+             th:replace="~{fragments/headerCategoryMenu :: reservation}">
+        </div>
+
         <div class="dashboard-content">
             <main class="container">
-                <div class="header-with-action">
-                    <!-- 왼쪽: 타이틀과 시설 버튼들 -->
+                <div class="header-with-action flex-between mb-lg">
                     <div class="title-group">
                         <h1 class="module-title title">전체 예약 현황</h1>
                         <div id="facilityButtons" class="facility-tabs"></div>
                     </div>
 
-                    <!-- 오른쪽: 예약 신청하기 버튼 -->
-                    <div class="action-wrapper"> <!-- 기존 .action-wrapper 활용 -->
-                        <a th:href="@{/reservation/apply}" class="btn btn-primary btn-apply-lg">
+                    <div class="action-wrapper flex gap-md">
+                        <a th:href="@{/reservation/guide}" class="btn btn-outline">
+                            <i class="fas fa-circle-info" style="margin-right: 6px;"></i>
+                              예약 안내
+                        </a>
+
+                        <a sec:authorize="!hasRole('ADMIN')"
+                           th:href="@{/reservation/apply}"
+                           class="btn btn-primary btn-apply-lg">
                             + 예약 신청
                         </a>
                     </div>
                 </div>
 
-                <!-- 2. 캘린더가 그려질 핵심 영역 -->
                 <div id="calendar-container">
                     <div id="calendar"></div>
                 </div>
             </main>
         </div>
+
         <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
 </div>
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 <script th:src="@{/js/reservation/calendar.js}"></script>
 </body>
 </html>

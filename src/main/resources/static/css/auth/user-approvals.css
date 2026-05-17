@@ -1,10 +1,12 @@
-.content {
+.approval-admin-page .content {
     flex: 1;
+    font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-.container {
-    width: min(1400px, calc(100% - 48px));
-    margin: 20px auto;
+.approval-container {
+    max-width: 1400px;
+    width: calc(100% - 40px);
+    margin: 40px auto;
     background: #fff;
     padding: 40px;
     box-sizing: border-box;
@@ -21,36 +23,40 @@
     align-items: flex-end;
     justify-content: space-between;
     gap: 16px;
+    padding-bottom: 14px;
     margin-bottom: 18px;
+    border-bottom: 2px solid var(--border-color);
 }
 
 .approval-head h1 {
     margin: 0 0 4px;
     color: var(--color-main);
-    font-size: 24px;
+    font-size: 30px;
+    font-weight: 600;
 }
 
 .approval-head p {
     margin: 0;
     color: var(--color-text-muted);
+    font-size: 15px;
 }
 
 .approval-count {
-    padding: 6px 12px;
-    border-radius: 999px;
+    padding: 3px 10px;
+    border-radius: 4px;
     background: var(--color-main);
     color: #fff;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .approval-empty,
 .approval-table-wrap {
     background: #fff;
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 4px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    padding: 40px;
+    padding: 24px;
 }
 
 .approval-empty {
@@ -60,80 +66,104 @@
 }
 
 .approval-table-wrap {
-    overflow: hidden;
+    overflow-x: auto;
 }
 
 .approval-table {
     width: 100%;
+    min-width: 980px;
     border-collapse: collapse;
 }
 
 .approval-table th,
 .approval-table td {
-    padding: 14px 16px;
+    padding: 16px 10px;
     border-bottom: 1px solid var(--color-modal-line);
-    text-align: left;
+    text-align: center;
     vertical-align: middle;
 }
 
 .approval-table th {
     background: #f8fafc;
     color: var(--color-main);
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.approval-table td {
+    font-size: 15px;
+}
+
+.approval-table td strong {
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .approval-table td strong,
 .approval-table td span,
 .approval-table td small {
     display: block;
+    text-align: center;
 }
 
 .approval-table td small {
     margin-top: 3px;
     color: var(--color-text-muted);
-    font-size: 12px;
+    font-size: 15px;
 }
 
 .approval-status {
     display: inline-flex;
+    justify-content: center;
     width: fit-content;
     padding: 3px 10px;
-    border-radius: 999px;
+    border-radius: 4px;
     background: var(--badge-safety);
     color: var(--badge-safety-font);
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .approval-actions {
     display: flex;
+    justify-content: center;
+    flex-wrap: nowrap;
     gap: 8px;
+    min-width: 210px;
 }
 
 .approval-form {
     display: flex;
+    justify-content: center;
+    flex-wrap: nowrap;
     gap: 6px;
 }
 
 .approval-role {
     height: 32px;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 4px;
     background: #fff;
     color: var(--color-main);
-    font-size: 13px;
+    font-size: 14px;
+    white-space: nowrap;
 }
 
 .approval-btn {
     height: 32px;
-    padding: 0 12px;
-    border: 0;
-    border-radius: 6px;
+    padding: 6px 12px;
+    border: 1px solid transparent;
+    border-radius: 4px;
     color: #fff;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
+    transition: opacity .2s ease;
+    white-space: nowrap;
+}
+
+.approval-btn:hover {
+    opacity: .88;
 }
 
 .approval-btn-approve {
@@ -141,13 +171,54 @@
 }
 
 .approval-btn-reject {
+    border-color: var(--color-btn-point);
     background: var(--color-btn-point);
+    color: #fff;
+}
+
+.approval-btn-reject:hover {
+    background: var(--color-btn-point-hover);
+    opacity: 1;
+}
+
+.approval-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.approval-page-link {
+    min-width: 32px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    color: var(--color-main);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+}
+
+.approval-page-link:hover,
+.approval-page-link.active {
+    color: var(--color-btn-point);
+    text-decoration: underline;
 }
 
 @media (max-width: 768px) {
-    .container {
+    .approval-container {
         width: calc(100% - 32px);
-        margin: 20px 16px;
+        margin: 24px 16px;
         padding: 24px 20px;
+    }
+
+    .approval-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .approval-actions,
+    .approval-form {
+        flex-wrap: wrap;
     }
 }

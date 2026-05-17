@@ -206,31 +206,38 @@ async function runValidation(rows) {
    - DB에 있고 값 같음 → null (서버 미전송, 표시 없음)
 ================================================================ */
 async function fetchAndSetUpsertTypes() {
+    console.log('fetchAndSetUpsertTypes 호출됨, CONTEXT_PATH:', CONTEXT_PATH);
     const dbMap = new Map();
 
     try {
         const listRes = await fetch(
-            `${CONTEXT_PATH}/api/billing/admin/list?month=${billingMonth}&size=500`
+        `${CONTEXT_PATH}/api/billing/admin/list?month=${billingMonth}&size=500`,
+        { credentials: 'include' }
         );
         if (!listRes.ok) return;
 
         const dbItems = (await listRes.json()).content || [];
 
-        await Promise.all(dbItems.map(async item => {
-            if (!item.billingId || !item.unit) return;
-            try {
-                const detRes = await fetch(`${CONTEXT_PATH}/api/billing/${item.billingId}/detail`);
-                if (!detRes.ok) return;
-                const det = await detRes.json();
-                dbMap.set(item.unit, {
-                    totalAmount: Number(item.totalAmount) || 0,
-                    items: (det.items || []).map(i => ({
-                        itemName:   i.itemName,
-                        itemAmount: Number(i.itemAmount) || 0
-                    }))
-                });
-            } catch (e) { /* 개별 실패 무시 */ }
-        }));
+await Promise.all(dbItems.map(async item => {
+    if (!item.billingId || !item.unit) return;
+    try {
+        const url = `${CONTEXT_PATH}/api/billing/${item.billingId}/detail`;
+        console.log('detail fetch URL:', url);  // ← fetch 밖으로
+        const detRes = await fetch(
+            url,
+            { credentials: 'include' }
+        );
+        if (!detRes.ok) return;
+        const det = await detRes.json();
+        dbMap.set(item.unit, {
+            totalAmount: Number(item.totalAmount) || 0,
+            items: (det.items || []).map(i => ({
+                itemName:   i.itemName,
+                itemAmount: Number(i.itemAmount) || 0
+            }))
+        });
+    } catch (e) { /* 개별 실패 무시 */ }
+}));
     } catch (err) {
         console.warn('UPSERT 비교 실패, 비교 없이 진행', err);
     }
@@ -239,6 +246,7 @@ async function fetchAndSetUpsertTypes() {
         if (r.valid !== '정상') return { ...r, upsertType: null };
 
         const dbRow = dbMap.get(r.unit);
+        console.log('r.unit:', r.unit, '| dbMap has:', dbMap.has(r.unit), '| dbMap keys:', [...dbMap.keys()]);
         if (!dbRow) return { ...r, upsertType: 'INSERT' };
 
         const same = isSame(

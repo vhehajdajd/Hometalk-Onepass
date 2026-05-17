@@ -32,6 +32,41 @@
 .btn-temp-sub:hover { opacity: 0.8; background-color: var(--soft-mint); }
 
 /* 2. 태그 그룹 스타일 */
+.tag-container {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: #fff;
+    min-height: 45px;
+    max-width: 100%;
+    margin-top: 15px;
+}
+
+/* 태그 입력란 (input) */
+#tagInput {
+    outline: none;
+    font-size: 14px;
+    width: 120px;
+    height: 32px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0 10px;
+    transition: border-color 0.2s;
+}
+#tagInput:focus {
+    border-color: var(--main-navy);
+}
+
+.tag-container:focus-within + .tag-help-text {
+    opacity: 1;
+    color: #666;
+    font-weight: 500;
+}
+
 .tag-group {
     margin-bottom: 25px;
     padding: 15px;
@@ -44,6 +79,44 @@
 .form-label { font-weight: 700; color: var(--main-navy); font-size: 0.95rem; }
 .tag-group label { cursor: pointer; font-size: 0.95rem; color: #475569; }
 .tag-group input[type="checkbox"] { margin-right: 5px; accent-color: var(--main-navy); }
+
+.suggestion-list {
+    position: absolute;
+    top: 40px;
+    left: auto;
+    width: 120px;
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.suggestion-list li {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #333;
+    text-align: left;
+}
+
+.suggestion-list li:hover {
+    background-color: #f1f5f9;
+    color: var(--main-navy);
+}
+
+.tag-help-text {
+    margin-top: 6px;
+    margin-left: 20px;
+    font-size: 12px;
+    color: #888;
+    letter-spacing: -0.5px;
+}
 
 /* 3. 입력 필드 레이아웃 (카테고리 & 제목) */
 .form-inline-group {
@@ -70,6 +143,14 @@
 .input-control:focus, .category-select:focus, .editor-wrapper textarea:focus {
     border-color: var(--main-navy);
     box-shadow: 0 0 0 3px rgba(3, 33, 84, 0.05);
+}
+#tradeBox {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.trade-select {
+    width: 120px;
 }
 
 /* 글자수 제한 표시 */
@@ -131,7 +212,10 @@
 }
 .modal-content h3 { margin-bottom: 20px; display: flex; justify-content: space-between; }
 .close-modal { cursor: pointer; color: #94a3b8; }
-#tempListArea { list-style: none; max-height: 300px; overflow-y: auto; }
+#tempListArea { list-style: none; max-height: 400px; overflow-y: auto; }
+#tempListModal .modal-content {
+    width: 500px;
+}
 #tempListArea li {
     display: flex;
     align-items: center;
@@ -216,40 +300,4 @@
 
 .form-group {
     margin-top: 12px;
-}
-
-.tag-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background-color: #fff;
-    min-height: 45px;
-    max-width: 100%;
-    margin-top: 15px;
-}
-
-/* 태그 입력란 (input) */
-#tagInput {
-    outline: none;
-    font-size: 14px;
-    width: 30%;
-    height: 30px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.tag-help-text {
-    margin-top: 6px;
-    margin-left: 20px;
-    font-size: 12px;
-    color: #888;
-    letter-spacing: -0.5px;
-}
-.tag-container:focus-within + .tag-help-text {
-    opacity: 1;
-    color: #666;
-    font-weight: 500;
 }

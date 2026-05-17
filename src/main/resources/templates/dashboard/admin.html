@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('관리자 대시보드')}"></head>
+<link rel="stylesheet" th:href="@{/css/home/home.css}">
+
 <style>
     /* ── 일정 모달 ── */
     .modal-overlay {
@@ -55,6 +57,17 @@
     <div class="main-wrapper">
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='home')}"></div>
         <div th:replace="~{fragments/headerCategoryMenu :: home}"></div>
+
+        <section class="banner">
+            <img th:src="@{/images/banner.png}" alt="포레스트 리움 단지 전경"
+                 onerror="this.style.display='none'" />
+            <div class="banner-overlay">
+                <div class="banner-text">
+                    <h1>안녕하세요,<br>HomeTalk OnePass입니다.</h1>
+                    <p>포레스트 리움 단지 내 소식과 정보를<br>편리하게 이용하세요.</p>
+                </div>
+            </div>
+        </section>
 
         <div class="dashboard-content">
             <div class="dashboard-grid">
@@ -150,7 +163,7 @@
                     <div class="card">
                         <div class="card-header">
                             <span class="card-title"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:5px;"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>문의</span>
-                            <a class="card-more" th:href="@{/hometop/inquiries/list}">더보기 &rsaquo;</a>
+                            <a class="card-more" th:href="@{/inquiries/list}">더보기 &rsaquo;</a>
                         </div>
                         <div id="inquiryList"><div class="loading">불러오는 중...</div></div>
                     </div>
@@ -173,7 +186,7 @@
 <div class="modal-overlay" id="scheduleDetailModal" onclick="if(event.target===this) closeScheduleModal()">
     <div class="modal-box">
         <div class="modal-header">
-            <span>일정 상세</span>
+            <span>오늘의 일정</span>
             <button class="modal-close" onclick="closeScheduleModal()">✕</button>
         </div>
         <div class="modal-body">
@@ -236,17 +249,38 @@
         if (!s) return;
         document.getElementById('modalTitle').textContent = s.title;
         document.getElementById('modalBadge').textContent = s.badge ? (BADGE_LABEL[s.badge] || s.badge) : '-';
-        document.getElementById('modalStart').textContent = formatDateTime(s.startAt);
+
         var endRow = document.getElementById('modalEndRow');
         if (s.endAt) {
-            document.getElementById('modalEnd').textContent = formatDateTime(s.endAt);
-            endRow.style.display = '';
+            var startDateStr = s.startAt.substring(0, 10);
+            var endDateStr   = s.endAt.substring(0, 10);
+            var endD = new Date(s.endAt);
+            var endTimeStr = pad(endD.getHours()) + ':' + pad(endD.getMinutes());
+
+            if (startDateStr === endDateStr) {
+                // 같은 날 → 시작 날짜+시간 ~ 종료시간
+                document.getElementById('modalStart').innerHTML = formatDateTime(s.startAt) + ' ~ ' + endTimeStr;
+                endRow.style.display = 'none';
+            } else {
+                // 다른 날 → 시작 날짜+시작시간 ~ 종료시간, 종료는 날짜만
+                document.getElementById('modalStart').innerHTML = formatDateTime(s.startAt) + ' ~ ' + endTimeStr;
+                document.getElementById('modalEnd').textContent = endDateStr;
+                endRow.style.display = '';
+            }
         } else {
+            document.getElementById('modalStart').innerHTML = formatDateTime(s.startAt);
             endRow.style.display = 'none';
         }
-        document.getElementById('modalInfoRow').style.display     = 'none';
-        document.getElementById('modalLocationRow').style.display = 'none';
-        document.getElementById('modalNoticeRow').style.display   = 'none';
+
+        document.getElementById('modalInfo').textContent = s.info || '-';
+        document.getElementById('modalInfoRow').style.display = s.info ? '' : 'none';
+        document.getElementById('modalLocation').textContent = s.location || '-';
+        document.getElementById('modalLocationRow').style.display = s.location ? '' : 'none';
+        document.getElementById('modalNoticeRow').style.display = s.noticeId ? '' : 'none';
+        if (s.noticeId) {
+            document.getElementById('modalNoticeLink').href = contextPath + 'notice/' + s.noticeId;
+        }
+
         document.getElementById('scheduleDetailModal').style.display = 'flex';
     }
     function closeScheduleModal() {
@@ -271,8 +305,11 @@
             var badge   = s.badge || 'DEFAULT';
             var timeStr = formatTime(s.startAt);
             if (s.endAt) timeStr += ' ~ ' + formatTime(s.endAt);
+            var badgeHtml = (badge && badge !== 'DEFAULT')
+                ? '<span class="today-schedule-badge ' + badge + '">' + badgeLabel(s.badge) + '</span>'
+                : '';
             return '<div class="today-schedule-item">' +
-                '<span class="today-schedule-badge ' + badge + '">' + badgeLabel(s.badge) + '</span>' +
+                badgeHtml +
                 '<span class="today-schedule-title">' + s.title + '</span>' +
                 '<span class="today-schedule-time">' + timeStr + '</span>' +
             '</div>';
@@ -300,25 +337,34 @@
         var el = document.getElementById('communityList');
         if (!data || !data.length) { el.innerHTML = '<div class="loading">게시글이 없습니다.</div>'; return; }
         el.innerHTML = data.map(function(c) {
-            var boardCode = c.boardCode || 'square';
-            var postId    = c.postId || c.id;
+            var boardCode    = c.boardCode || 'square';
+            var postId       = c.postId || c.id;
+            var categoryCode = (c.categoryCode || '').toLowerCase();
             return '<a class="community-item" href="' + contextPath + 'community/' + boardCode + '/' + c.categoryCode + '/' + postId + '">' +
-                '<span class="community-badge">' + c.categoryName + '</span>' +
+                '<span class="community-badge list-category ' + categoryCode + '">' + c.categoryName + '</span>' +
                 '<span class="community-title">' + c.title + '</span></a>';
         }).join('');
     }
 
     function renderTodaySchedule(data) {
         var el = document.getElementById('todayScheduleList');
-        if (!data || !data.length) { el.innerHTML = '<div class="loading">오늘 일정이 없습니다.</div>'; return; }
+        if (!data || !data.length) {
+            el.style.justifyContent = 'center';
+            el.innerHTML = '<div class="loading">오늘 일정이 없습니다.</div>';
+            return;
+        }
+        el.style.justifyContent = 'flex-start';
         el.innerHTML = data.map(function(s) {
             var badge   = s.badge || 'DEFAULT';
             var timeStr = formatTime(s.startAt);
             if (s.endAt) timeStr += ' ~ ' + formatTime(s.endAt);
-            return '<div class="today-schedule-item" style="cursor:pointer;" onclick="openScheduleModal(' + s.id + ')">' +
+            var badgeHtml = (badge && badge !== 'DEFAULT')
+                ? '<span class="today-schedule-badge ' + badge + '">' + badgeLabel(s.badge) + '</span>'
+                : '';
+            return '<div class="today-schedule-item" style="cursor:pointer; flex-direction:row; align-items:center; gap:8px;" onclick="openScheduleModal(' + s.id + ')">' +
                 '<span class="today-schedule-badge ' + badge + '">' + badgeLabel(s.badge) + '</span>' +
                 '<span class="today-schedule-title">' + s.title + '</span>' +
-                '<span class="today-schedule-time">' + timeStr + '</span></div>';
+                '<span class="today-schedule-time" style="margin-left:auto;">' + timeStr + '</span></div>';
         }).join('');
     }
 
@@ -334,6 +380,51 @@
                 '<span class="billing-card-row-label">미납 총액</span>' +
                 '<span class="billing-card-row-value" style="color:var(--color-btn-point);">' + comma(data.totalUnpaidAmount) + '원</span>' +
             '</div>';
+    }
+
+    function renderInquiry(data, elId, path) {
+        var el = document.getElementById(elId);
+        if (!data || !data.length) { el.innerHTML = '<div class="loading">내역이 없습니다.</div>'; return; }
+        var statusClass = { '미답변': 's-unanswered', '완료': 's-answered', '처리중': 's-processing', '확인중': 's-processing' };
+        el.innerHTML = data.slice(0, 3).map(function(d) {
+            return '<a class="community-item" href="' + contextPath + path + '/' + d.id + '">' +
+                '<span style="font-size:11px; color:var(--color-text-muted); flex:none; white-space:nowrap;">' + (d.category || '-') + '</span>' +
+                '<span class="community-title">' + d.title + '</span>' +
+                '<span class="dash-status-badge ' + (statusClass[d.status] || '') + '">' + (d.status || '-') + '</span>' +
+            '</a>';
+        }).join('');
+    }
+
+    function renderComplaint(data, elId, path) {
+        var el = document.getElementById(elId);
+        if (!data || !data.length) { el.innerHTML = '<div class="loading">내역이 없습니다.</div>'; return; }
+        var statusLabel = { 'WAITING': '접수', 'CHECK': '확인중', 'PROCESSING': '처리중', 'COMPLETED': '완료' };
+        var statusClass = { 'WAITING': 's-received', 'CHECK': 's-processing', 'PROCESSING': 's-processing', 'COMPLETED': 's-answered' };
+        var lockIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:2px; opacity:0.5;"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+        el.innerHTML = data.slice(0, 3).map(function(d) {
+            return '<a class="community-item" href="' + contextPath + path + '/' + d.id + '">' +
+                '<span style="font-size:11px; color:var(--color-text-muted); flex:none; white-space:nowrap;">' + (d.category || '-') + '</span>' +
+                '<span class="community-title">' + (d.secret ? lockIcon : '') + d.title + '</span>' +
+                '<span class="dash-status-badge ' + (statusClass[d.status] || '') + '">' + (statusLabel[d.status] || d.status) + '</span>' +
+            '</a>';
+        }).join('');
+    }
+
+    function renderReservation(data, elId) {
+        var el = document.getElementById(elId);
+        if (!data || !data.length) { el.innerHTML = '<div class="loading">내역이 없습니다.</div>'; return; }
+        var statusLabel = { 'CONFIRMED': '예약완료', 'CANCELED': '취소됨', 'PENDING': '승인대기' };
+        var statusClass = { 'CONFIRMED': 's-answered', 'CANCELED': 's-unanswered', 'PENDING': 's-pending' };
+        el.innerHTML = data.slice(0, 3).map(function(d) {
+            var date = d.startTime ? d.startTime.substring(5, 10).replace('-', '/') : '-';
+            var timeStr = d.startTime ? d.startTime.substring(11, 16) : '';
+            if (d.endTime) timeStr += ' ~ ' + d.endTime.substring(11, 16);
+            return '<a class="community-item" href="' + contextPath + 'reservation/admin/status">' +
+                '<span style="font-size:11px; color:var(--color-text-muted); flex:none; white-space:nowrap;">' + d.facilityName + '</span>' +
+                '<span class="community-title">' + date + ' · ' + timeStr + '</span>' +
+                '<span class="dash-status-badge ' + (statusClass[d.status] || '') + '">' + (statusLabel[d.status] || d.status) + '</span>' +
+            '</a>';
+        }).join('');
     }
 
     function renderParking(parkedCount, pendingCount) {
@@ -429,28 +520,28 @@
 
     // ── API 호출 ─────────────────────────────────────────────────────────────
 
-    // 공지사항
+    // 공지사항 ✅
     fetch(contextPath + 'notice/api/detail')
         .then(function(res) { return res.json(); })
         .then(function(data) { renderNotice(data); })
         .catch(function() { document.getElementById('noticeList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 커뮤니티 최신글
+    // 커뮤니티 최신글 ✅
     fetch(contextPath + 'api/community/recent')
         .then(function(res) { return res.json(); })
         .then(function(data) { renderCommunity(data); })
         .catch(function() { document.getElementById('communityList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 오늘의 일정
+    // 오늘의 일정 ✅
     fetch(contextPath + 'schedule/api/calendar')
         .then(function(res) { return res.json(); })
         .then(function(data) { todayScheduleData = data; renderTodaySchedule(data); })
         .catch(function() { document.getElementById('todayScheduleList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 달력 일정 초기 로드
+    // 달력 일정 초기 로드 ✅
     loadCalendarSchedules();
 
-    // 주차 현황
+    // 주차 현황 ✅
     Promise.all([
         fetch(contextPath + 'staff/exit/list/visit').then(function(res) { return res.json(); }),
         fetch(contextPath + 'staff/exit/list/resident').then(function(res) { return res.json(); }),
@@ -462,20 +553,37 @@
         renderParking(visitList.length + residentList.length, pendingList.length);
     }).catch(function() { renderParking('-', '-'); });
 
-    // 관리비
+    // 관리비 ✅
     fetch(contextPath + 'api/billing/admin/summary')
         .then(function(res) { return res.json(); })
         .then(function(data) { renderAdminBilling(data); })
         .catch(function() { document.getElementById('billingContent').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 예약 API 미구현 - 추후 연결
-    document.getElementById('reservationList').innerHTML = '<div class="loading">불러오기 실패</div>';
+    // 예약 ✅ GET /api/admin/reservation/recent
+    fetch(contextPath + 'api/admin/reservation/recent')
+        .then(function(res) { return res.json(); })
+        .then(function(data) { renderReservation(data, 'reservationList'); })
+        .catch(function() { document.getElementById('reservationList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 문의 API 미구현 - 추후 연결
-    document.getElementById('inquiryList').innerHTML = '<div class="loading">불러오기 실패</div>';
+    // 문의 ✅ GET /api/admin/inquiry/recent
+    fetch(contextPath + 'api/admin/inquiry/recent')
+        .then(function(res) { return res.json(); })
+        .then(function(data) { renderInquiry(data, 'inquiryList', 'inquiries/detail'); })
+        .catch(function() { document.getElementById('inquiryList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
 
-    // 민원 API 미구현 - 추후 연결
-    document.getElementById('complaintList').innerHTML = '<div class="loading">불러오기 실패</div>';
+    // 민원 ✅ GET /api/admin/complaint/recent
+    fetch(contextPath + 'api/admin/complaint/recent')
+        .then(function(res) { return res.json(); })
+        .then(function(data) { renderComplaint(data, 'complaintList', 'complaints/detail'); })
+        .catch(function() { document.getElementById('complaintList').innerHTML = '<div class="loading">불러오기 실패</div>'; });
+
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+    function formatDateTime(str) {
+        if (!str) return '-';
+        var d = new Date(str);
+        return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
+               '&nbsp;&nbsp;' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
 </script>
 </body>
 </html>

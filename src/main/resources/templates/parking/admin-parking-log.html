@@ -6,6 +6,11 @@
   <title>전체 주차 기록 조회</title>
   <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
   <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+  <!--✅ 알림 추가 -->
+  <meta name="ctx" th:content="@{/}">
+  <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
+  <script th:src="@{/js/notification/notification-sse.js}"></script>
+  <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
 <body>
 
@@ -24,7 +29,7 @@
     <div th:replace="~{fragments/headerCategoryMenu :: parkingAdmin}"></div>
 
     <!-- 본문 -->
-    <main class="content">
+    <main class="content" style="flex:1;">
       <div class="container">
         <h2 class="page-title">전체 주차 기록 조회</h2>
 
@@ -89,9 +94,9 @@
 
       </div>
     </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
   </div>
 </div>
-<footer th:replace="~{fragments/footer :: footer}"></footer>
 
 <script th:inline="javascript">
   const contextPath = /*[[@{/}]]*/ '/';

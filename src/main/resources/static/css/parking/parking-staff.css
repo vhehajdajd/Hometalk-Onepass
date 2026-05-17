@@ -94,9 +94,6 @@
 }
 
 /* ---------- 경비 상단 네브바 ---------- */
-body {
-    padding-top: 56px;
-}
 
 .staff-navbar {
     position: fixed;

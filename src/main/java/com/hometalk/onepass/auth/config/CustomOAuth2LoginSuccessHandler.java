@@ -84,7 +84,7 @@ public class CustomOAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSucc
             return; // 더 이상 아래 코드가 실행되지 않도록 종료
         } else {
             // 이미 가입된 소셜 계정이면 로그인 전 요청했던 화면으로 이동하고,
-            // 별도 목적지가 없으면 기본 홈 화면으로 이동한다.
+            // 별도 목적지가 없으면 역할별 분기 대시보드로 이동한다.
             log.info("기존 유저 -> 메인 페이지로 이동");
             if (Boolean.TRUE.equals(request.getSession().getAttribute(RememberMeConfig.OAUTH2_REMEMBER_ME_SESSION_KEY))) {
                 request.getSession().removeAttribute(RememberMeConfig.OAUTH2_REMEMBER_ME_SESSION_KEY);
@@ -98,12 +98,9 @@ public class CustomOAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSucc
                 return;
             }
 
+            // 로컬 로그인과 동일하게 기본 목적지는 /dashboard로 두고, 컨트롤러에서 role별 화면으로 분기한다.
             String redirectUrl = LoginRedirectUtils.consumeRedirectUrl(request)
-                    .orElseGet(() -> UriComponentsBuilder.fromUriString(getBaseUrl(request))
-                            .path(request.getContextPath())
-                            .path("/home")
-                            .build()
-                            .toUriString());
+                    .orElse("/dashboard");
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
             return;
         }

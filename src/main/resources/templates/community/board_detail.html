@@ -35,14 +35,72 @@
                         <form th:action="@{/community/admin/board/delete/{id}(id=${board.id})}" method="post">
                             <button type="submit"
                                     class="btn-hard-delete"
-                                    onclick="return confirm('정말로 이 게시판을 삭제하시겠습니까?\n삭제된 게시판의 데이터는 복구할 수 없습니다.')">
+                                    onclick="return confirmDeleteBoard(this.form)">
                                 게시판 삭제
                             </button>
                         </form>
                     </div>
                 </div>
 
-                <h3>카테고리 설정</h3>
+                <div class="board-type-setting">
+
+                    <label>게시판 유형</label>
+                    <form th:action="@{/community/admin/board/type/{id}(id=${board.id})}"
+                          method="post"
+                          th:data-post-count="${board.visiblePostCount + board.hiddenPostCount}"
+                          onsubmit="return confirmBoardTypeChange(this)">
+
+                        <div class="board-type-group">
+
+                            <label class="board-type-card">
+                                <input type="radio"
+                                       name="boardType"
+                                       value="LIST"
+                                       th:checked="${board.boardType.name() == 'LIST'}">
+
+                                <div class="board-type-preview">
+                                    <i class="fa-solid fa-table-list"></i>
+                                    <strong>리스트형</strong>
+                                </div>
+                            </label>
+
+                            <label class="board-type-card">
+                                <input type="radio"
+                                       name="boardType"
+                                       value="CARD"
+                                       th:checked="${board.boardType.name() == 'CARD'}">
+
+                                <div class="board-type-preview">
+                                    <i class="fa-solid fa-grip"></i>
+                                    <strong>카드형</strong>
+                                </div>
+                            </label>
+
+                            <label class="board-type-card">
+                                <input type="radio"
+                                       name="boardType"
+                                       value="GALLERY"
+                                       th:checked="${board.boardType.name() == 'GALLERY'}">
+
+                                <div class="board-type-preview">
+                                    <i class="fa-regular fa-image"></i>
+                                    <strong>갤러리형</strong>
+                                </div>
+                            </label>
+
+                        </div>
+
+                        <div class="board-type-actions">
+                            <button type="submit" class="btn btn-save">
+                                유형 변경 저장
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="category-section">
+                    <h3>카테고리 설정</h3>
+                </div>
 
                 <ul class="category-list">
                     <li th:each="cat : ${board.categories}"
@@ -63,13 +121,14 @@
                                 <input type="text"
                                        th:id="'input-' + ${cat.id}"
                                        th:value="${cat.name}"
+                                       th:data-original-name="${cat.name}"
                                        class="form-control">
 
                                 <button class="btn btn-save"
                                         type="button"
                                         th:data-id="${cat.id}"
                                         th:data-board-id="${board.id}"
-                                        onclick="saveEdit(this.dataset.id, this.dataset.boardId)">
+                                        onclick="return saveEdit(this.dataset.id, this.dataset.boardId)">
                                     저장
                                 </button>
 
@@ -102,7 +161,7 @@
                                         th:data-id="${cat.id}"
                                         th:data-count="${cat.postCount}"
                                         th:data-board-id="${board.id}"
-                                        onclick="deleteCategory(this.dataset.id, this.dataset.count, this.dataset.boardId)">
+                                        onclick="return deleteCategory(this.dataset.id, this.dataset.count, this.dataset.boardId)">
                                     삭제
                                 </button>
                             </th:block>
@@ -145,9 +204,18 @@
     </div>
 </div>
 
-<script th:src="@{/js/community/adminpage.js}"></script>
+<script th:src="@{/js/community/api.js}"></script>
+<script defer th:src="@{/js/community/post-modal.js}"></script>
+<script defer th:src="@{/js/community/adminpage.js}"></script>
 
 <script>
+    function confirmDeleteBoard(form) {
+        showConfirmModal("정말로 이 게시판을 삭제하시겠습니까?\n삭제된 게시판의 데이터는 복구할 수 없습니다.", () => {
+            form.submit();
+        });
+        return false;
+    }
+
     function toggleEdit(id, isEdit) {
         const viewElements = document.querySelectorAll(`#name-text-${id}, #btn-group-${id}`);
         const editForm = document.getElementById(`edit-form-${id}`);
@@ -162,14 +230,22 @@
     }
 
     function saveEdit(id, boardId) {
-        const newName = document.getElementById(`input-${id}`).value;
+        const input = document.getElementById(`input-${id}`).value;
+        const newName = input.value.trim();
+        const originalName = input.dataset.originalName.trim();
 
-        if (!newName || newName.trim() === "") {
-            alert("카테고리 이름을 입력해주세요.");
-            return;
+        if (!newName) {
+            showAlertModal("카테고리 이름을 입력해주세요.");
+            return false;
         }
-
-        location.href = `../category/update/${id}?name=${encodeURIComponent(newName)}&boardId=${boardId}`;
+        if (newName === originalName) {
+            toggleEdit(id, false);
+            return false;
+        }
+        showConfirmModal("카테고리 이름을 수정하시겠습니까?", () => {
+            location.href = `../category/update/${id}?name=${encodeURIComponent(newName)}&boardId=${boardId}`;
+        });
+        return false;
     }
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -227,15 +303,29 @@
         console.log("삭제 시도 - 카테고리ID:", id, "글개수:", count, "게시판ID:", boardId);
 
         if (count > 0) {
-            alert("게시글이 있는 카테고리는 삭제할 수 없습니다.");
-            return;
+            showAlertModal("게시글이 있는 카테고리는 삭제할 수 없습니다.");
+            return false;
         }
 
-        if (confirm("정말로 삭제하시겠습니까?")) {
-            const url = `/hometop/community/admin/category/delete/${id}?boardId=${boardId}`;
-            console.log("이동할 최종 주소:", url);
-            location.href = url;
+        showConfirmModal("정말로 삭제하시겠습니까?", () => {
+            location.href = `/hometop/community/admin/category/delete/${id}?boardId=${boardId}`;
+        });
+
+        return false;
+    }
+
+    function confirmBoardTypeChange(form) {
+        const count = Number(form.dataset.postCount);
+        if (count <= 0) {
+            return true;
         }
+        showConfirmModal(
+            "게시판 유형을 변경하면 기존 게시글의 화면 구성이 달라질 수 있습니다.\n계속하시겠습니까?",
+            () => {
+                form.submit();
+            }
+        );
+        return false;
     }
 </script>
 </body>

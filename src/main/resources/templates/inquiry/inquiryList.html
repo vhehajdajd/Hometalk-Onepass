@@ -1,7 +1,10 @@
 <!--/* @thymesVar id="inquiries" type="org.springframework.data.domain.Page<com.hometalk.onepass.inquiry.dto.InquiryDto>" */-->
 <!--/* @thymesVar id="inquiry" type="com.hometalk.onepass.inquiry.dto.InquiryDto" */-->
+
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko"
+       xmlns:th="http://www.thymeleaf.org"
+       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='문의 내역')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
@@ -9,10 +12,17 @@
 <body>
 <div class="main-layout">
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='inquiry')}"></div>
+
     <div class="main-wrapper">
         <!-- 상단 메뉴 -->
         <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'inquiry'} })}"></div>
-        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"></div>
+
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiry}"
+             sec:authorize="hasRole('RESIDENT')"></div>
+
+        <div th:replace="~{fragments/headerCategoryMenu :: inquiryAdmin}"
+             sec:authorize="hasRole('ADMIN')"></div>
+
         <!-- 메인 콘텐츠 -->
         <div class="dashboard-content">
             <main class="container">
@@ -25,31 +35,59 @@
                         <col style="width: 15%">
                         <col style="width: 15%">
                     </colgroup>
+
                     <thead>
-                        <tr>
-                            <th>분류</th>
-                            <th>제목</th>
-                            <th>상태</th>
-                            <th>등록일</th>
-                        </tr>
+                    <tr>
+                        <th>분류</th>
+                        <th>제목</th>
+                        <th>상태</th>
+                        <th>등록일</th>
+                    </tr>
                     </thead>
+
                     <tbody>
-                        <tr th:each="inquiry : ${inquiries.content}">
-                            <td th:text="${inquiry.category}">시설/기술</td>
-                            <td class="title-cell">
-                                <a th:href="@{|/inquiries/detail/${inquiry.id}|}" th:text="${inquiry.title}">문의 제목입니다.</a>
-                            </td>
-                            <td>
-                                <span class="badge"
-                                      th:classappend="${inquiry.status == '답변완료' ? 'status-complete' : 'status-waiting'}"
-                                      th:text="${inquiry.status}">
-                                    미답변
-                                </span>
-                            </td>
-                            <td class="text-muted" th:text="${#temporals.format(inquiry.createdAt, 'yyyy-MM-dd')}">2026-04-16</td>
-                        </tr>
-                        <tr th:if="${inquiries.isEmpty()}">
-                            <td colspan="5" class="text-muted" style="padding: 100px 0; text-align: center;">등록된 문의 내역이 없습니다.</td>
+                    <tr th:each="inquiry : ${inquiries.content}">
+                        <td>
+                            <span class="badge category-badge"
+                                  th:text="${inquiry.category}"
+                                  th:classappend="
+                                    ${inquiry.category == '서비스 문의' or inquiry.category == '시설/기술'} ? 'service' :
+                                    (${inquiry.category == '예약 문의' or inquiry.category == '환경/위생'} ? 'reservation' :
+                                    (${inquiry.category == '시설 이용' or inquiry.category == '보안/안전'} ? 'facility' :
+                                    (${inquiry.category == '관리비 / 결제'} ? 'payment' :
+                                    (${inquiry.category == '계정 / 출입'} ? 'account' :
+                                    'etc'))))">
+                                서비스 문의
+                            </span>
+                        </td>
+
+                        <td class="title-cell">
+                            <a th:href="@{/inquiries/detail/{id}(id=${inquiry.id})}"
+                               th:text="${inquiry.title}">
+                                문의 제목입니다.
+                            </a>
+                        </td>
+
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${inquiry.status == '답변완료'} ? 'status-complete' : 'status-waiting'"
+                                  th:text="${inquiry.status}">
+                                미답변
+                            </span>
+                        </td>
+
+                        <td class="text-muted"
+                            th:text="${#temporals.format(inquiry.createdAt, 'yyyy-MM-dd')}">
+                            2026-04-16
+                        </td>
+                    </tr>
+
+                    <tr th:if="${inquiries.isEmpty()}">
+                        <td colspan="4"
+                            class="text-muted"
+                            style="padding: 100px 0; text-align: center;">
+                            등록된 문의 내역이 없습니다.
+                        </td>
                     </tr>
                     </tbody>
                 </table>
@@ -57,22 +95,35 @@
                 <div class="pagination-container mt-lg">
                     <nav class="pagination-nav">
                         <ul class="pagination" th:if="${!inquiries.isEmpty()}">
+
                             <!-- 이전 페이지 -->
-                            <li class="page-item" th:classappend="${!inquiries.hasPrevious} ? '' : 'disabled'">
-                                <a class="page-link" th:href="@{|?page=${inquiries.number - 1}|}">&laquo;</a>
+                            <li class="page-item"
+                                th:classappend="${!inquiries.hasPrevious()} ? 'disabled' : ''">
+                                <a class="page-link"
+                                   th:href="@{|?page=${inquiries.number - 1}|}">
+                                    &laquo;
+                                </a>
                             </li>
 
                             <!-- 페이지 번호 -->
                             <li class="page-item"
-                                th:each="page: ${#numbers.sequence(0, inquiries.totalPages - 1)}"
+                                th:each="page : ${#numbers.sequence(0, inquiries.totalPages - 1)}"
                                 th:if="${page >= inquiries.number - 2 and page <= inquiries.number + 2}"
-                                th:classappend="${page == inquiries.number} ? 'active'">
-                                <a class="page-link" th:text="${page + 1}" th:href="@{|?page=${page}|}"></a>
+                                th:classappend="${page == inquiries.number} ? 'active' : ''">
+                                <a class="page-link"
+                                   th:text="${page + 1}"
+                                   th:href="@{|?page=${page}|}">
+                                    1
+                                </a>
                             </li>
 
                             <!-- 다음 페이지 -->
-                            <li class="page-item" th:classappend="${!inquiries.hasNext} ? '' : 'disabled'">
-                                <a class="page-link" th:href="@{|?page=${inquiries.number + 1}|}">&raquo;</a>
+                            <li class="page-item"
+                                th:classappend="${!inquiries.hasNext()} ? 'disabled' : ''">
+                                <a class="page-link"
+                                   th:href="@{|?page=${inquiries.number + 1}|}">
+                                    &raquo;
+                                </a>
                             </li>
                         </ul>
                     </nav>
@@ -84,6 +135,7 @@
                 </div>
             </main>
         </div>
+
         <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
 </div>

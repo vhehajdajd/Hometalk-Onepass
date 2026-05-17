@@ -11,6 +11,10 @@
     <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
     <link rel="stylesheet" th:href="@{/css/schedule/schedule.css}">
     <link rel="stylesheet" th:href="@{/css/notice/notice-common.css}">
+    <meta name="ctx" th:content="@{/}">
+    <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
+    <script th:src="@{/js/notification/notification-sse.js}"></script>
+    <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
 
 <body>
@@ -179,9 +183,7 @@
                         </tr>
                         <tr id="formRepeatEndRow" style="display:none;">
                             <td class="modal-label">반복 종료일</td>
-                            <td class="time-group">
-                                <input type="date" id="formRepeatEndDate">
-                            </td>
+                            <td><input type="date" id="formRepeatEndDate"></td>
                         </tr>
                         <tr>
                             <td class="modal-label">시작 *</td>
@@ -189,15 +191,14 @@
                                 <input type="date" id="formStartDate">
                                 <select id="formStartHour"></select>
                                 <select id="formStartMinute"></select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="modal-label">종료</td>
-                            <td class="time-group">
-                                <input type="date" id="formEndDate">
+                                <span>~</span>
                                 <select id="formEndHour"></select>
                                 <select id="formEndMinute"></select>
                             </td>
+                        </tr>
+                        <tr>
+                            <td class="modal-label">종료일</td>
+                            <td><input type="date" id="formEndDate"></td>
                         </tr>
                         <tr>
                             <td class="modal-label">설명</td>
@@ -378,9 +379,6 @@
         document.getElementById('detailModalOverlay').addEventListener('click', function(e) {
             if (e.target === this) closeDetailModal();
         });
-        document.getElementById('formModalOverlay').addEventListener('click', function(e) {
-            if (e.target === this) closeFormModal();
-        });
         document.getElementById('repeatDeleteModalOverlay').addEventListener('click', function(e) {
             if (e.target === this) closeRepeatDeleteModal();
         });
@@ -422,7 +420,6 @@
         var groups = {};
         multiDaySchedules.forEach(function(s) {
             if (s.repeatGroupId) {
-                // 주 단위로 그룹 키 생성
                 var date = new Date(s.startAt);
                 var weekKey = s.repeatGroupId + '_week_' + Math.floor(date.getDate() / 7);
                 if (!groups[weekKey]) groups[weekKey] = [];
@@ -433,7 +430,6 @@
         });
 
         var sortedGroupKeys = Object.keys(groups).sort(function(a, b) {
-            // 반복일정은 뒤로
             var aIsRepeat = a.indexOf('single_') === -1 ? 1 : 0;
             var bIsRepeat = b.indexOf('single_') === -1 ? 1 : 0;
             if (aIsRepeat !== bIsRepeat) return aIsRepeat - bIsRepeat;
@@ -500,13 +496,10 @@
             cells.push({ day: k, otherMonth: true });
         }
 
-        // 연속일정 (반복 아닌 것), 단일일정, 반복일정 순서로 정렬
         var multiDaySchedules = scheduleData.filter(function(s) { return isMultiDay(s) && !s.repeatGroupId; });
         var repeatSchedules = scheduleData.filter(function(s) { return s.repeatGroupId; });
         var singleDaySchedules = scheduleData.filter(function(s) { return !isMultiDay(s); });
-        // 연속일정 먼저 슬롯 배정, 반복일정 나중에
-        var allMultiDay = multiDaySchedules.concat(repeatSchedules);
-        var slotResult = assignMultiDaySlots(multiDaySchedules.concat(repeatSchedules), cells);;
+        var slotResult = assignMultiDaySlots(multiDaySchedules.concat(repeatSchedules), cells);
         var scheduleSlotMap = slotResult.scheduleSlotMap;
 
         var cellDivs = [];
@@ -521,7 +514,6 @@
                                currentYear === today.getFullYear());
                 if (isToday) div.classList.add('is-today');
 
-                // 날짜 클릭 시 일정 등록 모달 (ADMIN만)
                 div.addEventListener('click', function(e) {
                     if (e.target.classList.contains('cal-badge') ||
                         e.target.classList.contains('cal-badge-multi')) return;
@@ -551,7 +543,7 @@
             body.appendChild(div);
         });
 
-        // 연속일정 배지 렌더링 (반복 아닌 것)
+        // 연속일정 배지 렌더링
         multiDaySchedules.forEach(function(s) {
             var sd = new Date(s.startAt);
             var ed = s.endAt ? new Date(s.endAt) : sd;
@@ -584,7 +576,7 @@
             });
         });
 
-        // 반복일정 배지 렌더링 (최하단)
+        // 반복일정 배지 렌더링
         repeatSchedules.forEach(function(s) {
             var sd = new Date(s.startAt);
             var ed = s.endAt ? new Date(s.endAt) : sd;
@@ -668,13 +660,27 @@
                 editingNoticeId = s.noticeId;
                 document.getElementById('detailName').textContent = s.title;
                 document.getElementById('detailBadge').textContent = s.badge ? (BADGE_LABEL[s.badge] || s.badge) : '-';
-                document.getElementById('detailStart').textContent = formatDateTime(s.startAt);
 
+                // ── 시작/종료 표시 ──────────────────────────────────────────
                 var endRow = document.getElementById('detailEndRow');
                 if (s.endAt) {
-                    document.getElementById('detailEnd').textContent = formatDateTime(s.endAt);
-                    endRow.style.display = '';
+                    var startDateStr = s.startAt.substring(0, 10);
+                    var endDateStr   = s.endAt.substring(0, 10);
+                    var endD = new Date(s.endAt);
+                    var endTimeStr = pad(endD.getHours()) + ':' + pad(endD.getMinutes());
+
+                    if (startDateStr === endDateStr) {
+                        // 같은 날 → 시작 날짜+시간 ~ 종료시간
+                        document.getElementById('detailStart').innerHTML = formatDateTime(s.startAt) + ' ~ ' + endTimeStr;
+                        endRow.style.display = 'none';
+                    } else {
+                        // 다른 날 → 시작 날짜+시작시간 ~ 종료시간, 종료는 날짜만
+                        document.getElementById('detailStart').innerHTML = formatDateTime(s.startAt) + ' ~ ' + endTimeStr;
+                        document.getElementById('detailEnd').textContent = endDateStr;
+                        endRow.style.display = '';
+                    }
                 } else {
+                    document.getElementById('detailStart').innerHTML = formatDateTime(s.startAt);
                     endRow.style.display = 'none';
                 }
 
@@ -732,6 +738,7 @@
                     document.getElementById('formStartHour').value = pad(start.getHours());
                     document.getElementById('formStartMinute').value = pad(start.getMinutes());
 
+                    // 종료 시간 로드 (시작 행의 종료 시간 select에 적용)
                     if (s.endAt) {
                         var end = new Date(s.endAt);
                         document.getElementById('formEndDate').value = formatDate(end);
@@ -739,6 +746,8 @@
                         document.getElementById('formEndMinute').value = pad(end.getMinutes());
                     } else {
                         document.getElementById('formEndDate').value = '';
+                        document.getElementById('formEndHour').value = '00';
+                        document.getElementById('formEndMinute').value = '00';
                     }
 
                     document.getElementById('formInfo').value = s.info || '';
@@ -750,6 +759,7 @@
                         document.getElementById('formRepeatType').value = s.repeatType;
                         repeatEndRow.style.display = '';
                         document.getElementById('formEndDate').disabled = true;
+                        document.getElementById('formEndDate').value = ''; // 종료일 초기화
                         if (s.repeatEndAt) {
                             document.getElementById('formRepeatEndDate').value = s.repeatEndAt.substring(0, 10);
                         }
@@ -777,6 +787,8 @@
             document.getElementById('formBadge').value = '';
             document.getElementById('formRepeatType').value = 'NONE';
             document.getElementById('formRepeatEndDate').value = '';
+            document.getElementById('formEndHour').value = '00';
+            document.getElementById('formEndMinute').value = '00';
             badgeRow.style.display = '';
             repeatRow.style.display = '';
             repeatEndRow.style.display = 'none';
@@ -827,7 +839,11 @@
         var dto = {
             title: name,
             startAt: startDate + 'T' + document.getElementById('formStartHour').value + ':' + document.getElementById('formStartMinute').value + ':00',
-            endAt: endDate ? endDate + 'T' + document.getElementById('formEndHour').value + ':' + document.getElementById('formEndMinute').value + ':00' : null,
+            endAt: endDate
+                ? endDate + 'T' + document.getElementById('formEndHour').value + ':' + document.getElementById('formEndMinute').value + ':00'
+                : (document.getElementById('formEndHour').value !== '00' || document.getElementById('formEndMinute').value !== '00')
+                    ? startDate + 'T' + document.getElementById('formEndHour').value + ':' + document.getElementById('formEndMinute').value + ':00'
+                    : null,
             info: document.getElementById('formInfo').value,
             location: document.getElementById('formLocation').value,
             referenceUrl: document.getElementById('formUrl').value,
@@ -904,7 +920,7 @@
         if (!str) return '-';
         var d = new Date(str);
         return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
-               ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+               '&nbsp;&nbsp;&nbsp;&nbsp;' + pad(d.getHours()) + ':' + pad(d.getMinutes());
     }
 
     function formatDate(d) {

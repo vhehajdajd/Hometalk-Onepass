@@ -40,6 +40,18 @@ public class StaffEntryService {
         String last4 = keyword.replace(" ", "");
         if (last4.length() != 4) return List.of();
 
+        // 이미 주차 중인 차량 체크
+        List<String> parkedNumbers = parkingLogRepository
+                .findByStatus(ParkingLog.ParkingStatus.PARKED)
+                .stream().map(ParkingLog::getVehicleNumber).toList();
+
+        boolean alreadyParked = parkedNumbers.stream()
+                .anyMatch(n -> n.replace(" ", "").endsWith(last4));
+
+        if (alreadyParked) {
+            throw new ParkingException("이미 입차된 차량입니다.");
+        }
+
         List<VehicleSearchResult> results = new ArrayList<>();
         vehicleRepository.findApprovedByLast4(last4)
                 .stream().map(VehicleSearchResult::ofResident).forEach(results::add);
@@ -57,9 +69,11 @@ public class StaffEntryService {
                         .orElseThrow(() -> new ParkingException("예약 정보를 찾을 수 없습니다."));
 
                 if (reservation.getStatus() != VisitReservation.ReservationStatus.RESERVED
-                        && reservation.getStatus() != VisitReservation.ReservationStatus.PENDING_CONFIRM) {
+                        && reservation.getStatus() != VisitReservation.ReservationStatus.PENDING_CONFIRM
+                        && reservation.getStatus() != VisitReservation.ReservationStatus.ENTERED) {
                     throw new ParkingException("입차 처리할 수 없는 예약 상태입니다.");
                 }
+
 
                 LocalDateTime reservedAt = reservation.getReservedAt();
                 LocalDateTime now = LocalDateTime.now();
@@ -77,18 +91,27 @@ public class StaffEntryService {
                         ParkingLog.EntryType.RESERVATION);
                 parkingLogRepository.save(log);
 
-                // ✅ 알림 — ④ 예약 방문객 입차 (입주자에게 알림)
-                reservation.getHousehold().getUsers().stream()
+                if (reservation.getStatus() != VisitReservation.ReservationStatus.ENTERED) {
+                    reservation.enter();
+                }
+
+                // 트랜잭션 안에서 userId 미리 추출
+                List<Long> residentUserIds = reservation.getHousehold().getUsers().stream()
                         .filter(u -> u.getRole() == User.UserRole.RESIDENT)
-                        .forEach(u -> notificationPublisher.publish(
-                                u.getId(),
-                                NotificationTargetRole.RESIDENT,
-                                NotificationType.VEHICLE_VISITOR_ENTRY,
-                                "방문 차량 입차",
-                                "예약하신 방문 차량(" + reservation.getVehicleNumber() + ")이 도착하여 입차했습니다.",
-                                "/parking",
-                                reservation.getReservationId()
-                        ));
+                        .map(User::getId)
+                        .toList();
+                String vehicleNum = reservation.getVehicleNumber();
+                Long reservationId = reservation.getReservationId();
+
+                residentUserIds.forEach(userId -> notificationPublisher.publishAsync(
+                        userId,
+                        NotificationTargetRole.RESIDENT,
+                        NotificationType.VEHICLE_VISITOR_ENTRY,
+                        "방문 차량 입차",
+                        "예약하신 방문 차량(" + vehicleNum + ")이 도착하여 입차했습니다.",
+                        "/parking/vehicle",
+                        reservationId
+                ));
             }
 
             case RESIDENT -> {
@@ -110,27 +133,31 @@ public class StaffEntryService {
                         ParkingLog.EntryType.NORMAL);
                 parkingLogRepository.save(log);
 
-                // ✅ 알림 — ③ 입주자 차량 입차
-                notificationPublisher.publish(
-                        vehicle.getUser().getId(),
+                // 입주자 본인에게 알림
+                Long userId = vehicle.getUser().getId();
+                String vehicleNum = vehicle.getVehicleNumber();
+                Long vehicleId = vehicle.getVehicleId();
+
+                notificationPublisher.publishAsync(
+                        userId,
                         NotificationTargetRole.RESIDENT,
                         NotificationType.VEHICLE_ENTRY,
                         "입주자 입차",
-                        "입주자 차량(" + vehicle.getVehicleNumber() + ")이 입차했습니다.",
-                        "/parking",
-                        vehicle.getVehicleId()
+                        "입주자 차량(" + vehicleNum + ")이 입차했습니다.",
+                        "/parking/vehicle",
+                        vehicleId
                 );
             }
         }
     }
 
     @Transactional
-    public void processManualEntry(ManualEntryRequest request, String postNum) {
+    public void processManualEntry(ManualEntryRequest request) {
         Household household = null;
 
         if (hasText(request.getDong()) && hasText(request.getHo())) {
-            household = householdRepository.findByPostNumAndDongAndHo(
-                            postNum, request.getDong(), request.getHo())
+            household = householdRepository.findByDongAndHo(
+                            request.getDong() + "동", request.getHo() + "호")
                     .orElse(null);
         }
 

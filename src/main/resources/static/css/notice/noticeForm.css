@@ -285,3 +285,16 @@ input[type="file"] {
     border-color: var(--color-main);
     background: white;
 }
+
+.schedule-modal {
+    width: 500px;
+}
+
+.modal-table .full-date input[type="date"] {
+    width: 100% !important;
+}
+
+.modal-table input:-webkit-autofill,
+.modal-table input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px white inset !important;
+}

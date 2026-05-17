@@ -20,25 +20,41 @@
 
             <div class="content-container">
 
+                <div class="alert-container">
+                    <!-- 성공 메시지 (message) -->
+                    <div th:if="${message}" class="alert-banner alert-success">
+                        <span th:text="${message}">성공 메시지 영역</span>
+                        <button class="btn-close-x" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                    <!-- 에러 메시지 (errorMessage) -->
+                    <div th:if="${errorMessage}" class="alert-banner alert-error">
+                        <span th:text="${errorMessage}">에러 메시지 영역</span>
+                        <button class="btn-close-x" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                </div>
+
                 <div class="form-top-actions">
                     <div class="temp-action-group">
-                        <button type="button" th:if="${post.id == null}"
-                                id="btnSaveTemp" th:data-board-code="${boardCode}"
+                        <button type="button"
+                                id="btnSaveTemp"
+                                th:data-board-code="${boardCode}"
+                                th:data-status="${post.postStatus}"
                                 class="btn btn-temp-save">
                             임시저장
                         </button>
                         <button type="button" id="btnLoadTemp" class="btn btn-temp-sub" th:data-board-code="${boardCode}">
-                            임시저장 목록 (<span th:text="${tempCount}">0</span>)
+                            임시저장 목록 (<span id="temp-count-display" th:text="${tempCount}">0</span>)
                         </button>
                     </div>
                 </div>
 
-                <form th:action="${post.id == null}
-                                 ? @{/community/{code}/save(code=${board.code})}
-                                 : @{/community/{code}/edit/{id}(code=${board.code}, id=${post.id})}"
-                      method="post" id="postForm" th:object="${post}">
-                    <input type="hidden" th:field="*{id}">
-                    <input type="hidden" name="categoryCode" value="all">
+                <form th:action="${post.id == null or post.postStatus == 'DRAFT'} ? @{/community/{code}/save(code=${board.code})} : @{/community/{code}/edit/{id}(code=${board.code}, id=${post.id})}"
+                      method="post"
+                      enctype="multipart/form-data"
+                      id="postForm"
+                      th:object="${post}">
+                    <input type="hidden" id="id" name="id" th:value="${post.id}">
+                    <input type="hidden" name="postStatus" th:value="${post.postStatus}">
                     <input type="hidden" name="isTemp" id="isTemp" value="false">
                     <div class="page-body">
 
@@ -46,8 +62,17 @@
                             <div class="category-field">
                                 <select th:field="*{categoryId}" required class="category-select">
                                     <option value="">카테고리 선택</option>
-                                    <option th:each="category : ${categories}" th:value="${category.id}"
+                                    <option th:each="category : ${categories}"
+                                            th:value="${category.id}"
+                                            th:data-code="${category.code}"
                                             th:text="${category.name}">카테고리 명</option>
+                                </select>
+                            </div>
+                            <div id="tradeBox" style="display:none;">
+                                <select name="tradeType" class="input-control trade-select">
+                                    <option value="">거래 유형</option>
+                                    <option value="SELL">판매</option>
+                                    <option value="BUY">구매</option>
                                 </select>
                             </div>
 
@@ -62,14 +87,43 @@
                             <input type="hidden" id="content" name="content" th:field="*{content}">
                             <div id="editor"></div>
                         </div>
+                        <!-- 대표 이미지 업로드 -->
+                        <div th:if="${board.boardType.name() == 'CARD' or board.boardType.name() == 'GALLERY'}"
+                             class="form-group">
+
+                            <label class="form-label">대표 이미지</label>
+
+                            <input type="file"
+                                   name="thumbnailFile"
+                                   accept="image/*"
+                                   class="input-control">
+                        </div>
+
+                        <!-- 갤러리 이미지 업로드 -->
+                        <div th:if="${board.boardType.name() == 'GALLERY'}"
+                             class="form-group">
+
+                            <label class="form-label">갤러리 이미지</label>
+
+                            <input type="file"
+                                   name="files"
+                                   accept="image/*"
+                                   multiple
+                                   class="input-control">
+                        </div>
                         <div class="form-group">
                             <label class="form-label">태그 입력</label>
+
+                            <div id="tag-message-container"
+                                 style="min-height: 20px; margin-bottom: 5px; display: flex; align-items: center;"></div>
+
                             <div class="tag-container">
                                 <div id="tag-list"></div>
-                                <input type="text" id="tagInput" />
+                                <input type="text" id="tagInput" maxlength="5" placeholder="태그"/>
+                                <ul id="tagSuggestions" class="suggestion-list" style="display:none;"></ul>
                             </div>
-                            <div class="tag-help-text">
-                                태그를 입력 후 Enter를 누르세요
+                            <div class="tag-help-text" style="margin-top: 8px; font-size: 0.85rem; color: #64748b;">
+                                태그를 입력 후 Enter를 누르거나 목록에서 선택하세요. (최대 5자, 최대 5개)
                             </div>
                             <div id="hidden-tags"></div>
                         </div>
@@ -78,14 +132,15 @@
                     <div class="page-footer">
                         <div class="footer-content">
                             <div class="left-box">
-                                <a th:href="@{/community/{code}(code=${board.code})}"
+                                <a th:href="@{/community/{code}/all(code=${board.code})}"
                                    onclick="return confirmCancel()" class="btn btn-outline">취소</a>
                             </div>
 
-                            <div class="right-box">
-                                <button type="submit" onclick="document.getElementById('isTemp').value='false'"
-                                        class="btn btn-primary">등록</button>
-                            </div>
+                            <button type="submit"
+                                    onclick="document.getElementById('isTemp').value='false'"
+                                    class="btn btn-primary">
+                                등록
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -108,6 +163,12 @@
 <script th:inline="javascript">
     window.initialTags = /*[[${post.tags}]]*/ [];
 </script>
-<script th:src="@{/js/community/post.js}"></script>
+<script th:src="@{/js/community/api.js}"></script>
+
+<script defer th:src="@{/js/community/post-modal.js}"></script>
+<script defer th:src="@{/js/community/post-editor.js}"></script>
+<script defer th:src="@{/js/community/post-tag.js}"></script>
+<script defer th:src="@{/js/community/post-temp.js}"></script>
+<script defer th:src="@{/js/community/post.js}"></script>
 </body>
 </html>

@@ -40,17 +40,12 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
 
             if ("naver".equals(registrationId)) {
                 // 네이버는 프로젝트에서 별도로 구현한 로그아웃 콜백 엔드포인트로 보낸다.
-                String naverLogoutUrl = UriComponentsBuilder.fromUriString(getBaseUrl(request))
-                        .path(request.getContextPath())
-                        .path("/auth/oauth2/naver/logout")
-                        .build()
-                        .toUriString();
-                response.sendRedirect(naverLogoutUrl);
+                response.sendRedirect(request.getContextPath() + "/home?alert=logout");
                 return;
             }
         }
 
-        response.sendRedirect(request.getContextPath() + "/home");
+        response.sendRedirect(request.getContextPath() + "/home?alert=logout");
     }
 
     private void redirectToKakaoLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -60,12 +55,15 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
         String logoutRedirectUri = UriComponentsBuilder.fromUriString(getBaseUrl(request))
                 .path(request.getContextPath())
                 .path("/home")
+                .queryParam("alert", "logout")
                 .build()
                 .toUriString();
 
         // 로컬 로그인 사용자는 이 분기를 타지 않고 바로 아래 /auth 리다이렉트로 끝난다.
         String kakaoLogoutUrl = UriComponentsBuilder
-                .fromUriString("http://localhost:8090/hometop/auth/oauth2/kakao/logout")
+                .fromUriString(getBaseUrl(request))
+                .path(request.getContextPath())
+                .path("/auth/oauth2/kakao/logout")
                 .queryParam("client_id", kakaoClientId)
                 .queryParam("logout_redirect_uri", logoutRedirectUri)
                 .build()

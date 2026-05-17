@@ -8,6 +8,37 @@
     margin: 40px auto;
     padding: 30px 40px;
     background: #ffffff;
+
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/* 정렬 탭 버튼 기본 스타일 */
+.sort-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #666;
+    background-color: #f8f9fa;
+    border: 1px solid #eef2f6;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.sort-tab-btn:hover {
+    background-color: #f1f3f5;
+    color: #333;
+}
+.sort-tab-btn.active {
+    background-color: #e8f0fe;
+    color: #1a73e8;
+    border-color: #d2e3fc;
+    font-weight: 600;
 }
 
 /* =========================
@@ -22,6 +53,18 @@
 
 .table td.title-cell {
     text-align: left; /* 제목만 왼쪽 정렬 */
+}
+
+.past-reservation {
+    background-color: #f8f9fa !important;
+    color: #a0a0a0 !important;
+    opacity: 0.7;
+}
+
+.past-reservation a,
+.past-reservation td,
+.past-reservation span {
+    color: #a0a0a0 !important;
 }
 
 /* =========================
@@ -102,6 +145,11 @@
     max-width: 300px;
 }
 
+.image-preview-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
 .img-preview {
     width: 100%;
     border-radius: var(--radius);
@@ -109,10 +157,108 @@
     object-fit: cover;
 }
 
+.remove-image-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: #ef4444;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: all 0.2s ease;
+}
+
+.remove-image-btn:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+}
+
 /* =========================
    3. STEP-BY-STEP UI (예약/시설 신청)
 ========================= */
+.status-indicator-badge {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+/* 예약 가능 */
+.status-available {
+    background-color: #e8f5e9;
+    color: #4caf50;
+}
+/* 예약중 */
+.status-booked {
+    background-color: #e3f2fd;
+    color: #2196f3;
+}
+/* 운영 종료 */
+.status-closed {
+    background-color: #ffebee;
+    color: #f44336;
+}
+.reservation-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+    gap: 15px;
+}
+.step-item {
+    font-weight: 600;
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.step-item.active {
+    color: #5c7cfa;
+}
+.step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #eee;
+    color: #999;
+    font-size: 0.8rem;
+}
+
+.step-item.active .step-num {
+    background-color: #5c7cfa;
+    color: white;
+}
+
+.step-line {
+    flex: 0 0 50px;
+    height: 2px;
+    background-color: #eee;
+}
+
+.facility-card.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
 .step-section {
+    width: 100%;
+    flex: 1;
     display: none;
     animation: fadeIn 0.4s ease-out;
 }
@@ -122,23 +268,144 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+#step2, #step3 {
+    padding-top: 20px;
+    padding-bottom: 40px;
+}
+.btn-group, .btn-area {
+    margin-top: 50px;
+}
 
 /* 시설 아이템 */
-.facility-item {
-    padding: 30px 20px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin-bottom: 10px;
+.facility-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 20px;
 }
-.facility-item:hover, .facility-item.active {
+.facility-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 340px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.facility-card .card-img-wrapper {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    position: relative;
+    background-color: var(--color-surface-2);
+    border-bottom: 1px solid var(--border-color);
+}
+.facility-card .facility-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+.facility-card:hover .facility-img {
+    transform: scale(1.04);
+}
+.facility-card .card-content-wrap {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* 남은 세로 공간을 텍스트 영역이 다 채우도록 설정 */
+    justify-content: space-between;
+}
+.facility-card:hover,
+.facility-card.active {
     border-color: var(--color-main);
-    background-color: rgba(3, 33, 84, 0.02);
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    background-color: rgba(3, 33, 84, 0.01);
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(3, 33, 84, 0.08);
+    cursor: pointer;
+}
+.facility-card .card-header strong {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-main);
+    display: block;
+    margin-bottom: 8px;
+}
+.facility-card .card-body p {
+    margin: 4px 0;
+    font-size: 13px;
+}
+
+.facility-card .capacity-info {
+    color: var(--color-sub);
+    font-weight: 600;
+}
+
+.facility-card .time-info {
+    color: var(--color-text-muted);
+}
+
+/* 카드 하단: 우측 정렬 배지 영역 */
+.card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.facility-card .badge {
+    background-color: var(--color-surface-2);
+    color: var(--color-text-muted);
+    font-size: 12px;
+    padding: 4px 8px;
+}
+
+.facility-card.active .badge {
+    background-color: var(--color-btn-point);
+    color: #fff;
+}
+/* 이미지가 없을 때 적용되는 그라데이션 배경과 폰트 스타일 */
+.no-image-bg {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.no-image-bg .fallback-icon {
+    font-size: 3.5rem !important;
+    color: #64748b;
+    opacity: 0.8;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05));
+}
+
+/* 시설 목록 타이틀 옆 아이콘 스타일 */
+.facility-icon {
+    margin-right: 6px;
+    color: var(--color-main);
+    font-size: 1.1rem;
+    vertical-align: middle;
+}
+
+/* 카드 내부 레이아웃 정렬용 공통 */
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* 타임 칩 그리드 (4열 배치) */
@@ -148,7 +415,6 @@
     gap: 10px;
     margin-top: 15px;
 }
-.time-radio { display: none; }
 .time-chip {
     padding: 12px 0;
     border: 1px solid var(--border-color);
@@ -158,11 +424,28 @@
     font-weight: 600;
     cursor: pointer;
     background: white;
+    transition: all 0.2s ease;
 }
-.time-radio:checked + .time-chip {
-    background-color: var(--color-main);
-    color: white;
+.time-chip.active {
+    background-color: var(--color-main) !important;
+    color: white !important;
+    border-color: var(--color-main) !important;
+    box-shadow: 0 2px 8px rgba(3, 33, 84, 0.2);
+}
+
+.time-chip:hover:not(.active) {
     border-color: var(--color-main);
+    background-color: rgba(3, 33, 84, 0.05);
+}
+.time-chip-wrapper.is-full {
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.time-chip-wrapper.is-full .time-chip {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    border-color: #e2e8f0;
 }
 
 .bg-light {
@@ -171,6 +454,27 @@
     border-radius: var(--radius);
     display: flex;
     justify-content: center;
+}
+
+/* 시간 선택 안내 박스 스타일 */
+.info-guide-box {
+    background-color: #f0f7ff;
+    border-left: 4px solid var(--color-main);
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.guide-text {
+    font-size: 14px;
+    color: #1e293b;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.guide-text strong {
+    color: var(--color-main);
+    font-weight: 700;
 }
 
 /* =========================
@@ -211,6 +515,7 @@
 .status-check { background-color: #FFF4E0; color: #FFAD06; }        /* 확인 */
 .status-processing { background-color: #E3F2FD; color: #2196F3; }   /* 처리중 */
 .status-finished { background-color: #E8F5E9; color: #4CAF50;}      /* 처리완료 */
+
 
 /* 시설/카테고리용 기본 배지 */
 .category-badge {
@@ -270,7 +575,7 @@
 
 .select-field {
     cursor: pointer;
-    background-image: url("data:image/svg+xml,..."); /
+    background-image: url("data:image/svg+xml,...");
 }
 
 .textarea-field {
@@ -292,4 +597,359 @@
     font-size: 14px;
     color: #64748b;
     line-height: 1.5;
+}
+
+/*민원 write 페이지 카테고리 색상*/
+.category-select {
+    font-weight: 600;
+    border: none;
+}
+
+/* 시설/기술 - 파랑 */
+.category-select.facility {
+    background-color: #dbeafe !important;
+    color: #2563eb !important;
+}
+
+/* 환경/위생 - 초록 */
+.category-select.clean {
+    background-color: #dcfce7 !important;
+    color: #16a34a !important;
+}
+
+/* 보안/안전 - 보라 */
+.category-select.security {
+    background-color: #ede9fe !important;
+    color: #7c3aed !important;
+}
+
+/* 기타민원 - 회색 */
+.category-select.etc {
+    background-color: #f3f4f6 !important;
+    color: #6b7280 !important;
+}
+
+
+/* 민원 list 페이지 카테고리 색상 변경*/
+.badge.facility {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+.badge.clean {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.badge.security {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.badge.etc {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+/*문의 list 카테고리*/
+
+.badge.service {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+.badge.reservation {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.badge.facility {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.badge.payment {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.badge.account {
+    background-color: #ede9fe;
+    color: #7c3aed;
+}
+
+.badge.etc {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+/*문의 글작성 카테고리*/
+.category-select.service {
+    background-color: #dbeafe !important;
+    color: #2563eb !important;
+}
+
+.category-select.reservation {
+    background-color: #dcfce7 !important;
+    color: #16a34a !important;
+}
+
+.category-select.facility {
+    background-color: #fee2e2 !important;
+    color: #dc2626 !important;
+}
+
+.category-select.payment {
+    background-color: #fef3c7 !important;
+    color: #d97706 !important;
+}
+
+.category-select.account {
+    background-color: #ede9fe !important;
+    color: #7c3aed !important;
+}
+
+.category-select.etc {
+    background-color: #f3f4f6 !important;
+    color: #6b7280 !important;
+}
+
+/* 알림 박스 스타일 */
+.alert-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    border-radius: var(--radius);
+    animation: slideDown 0.5s ease-out;
+}
+
+.alert-success {
+    background-color: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.alert-danger {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.alert-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.alert-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.5;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 대시보드 전체 컨테이너 */
+.res-dashboard-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+/* 개별 카드 스타일 */
+.res-stat-card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 14px 18px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f1f3f5;
+    transition: all 0.2s ease;
+}
+.res-stat-info {
+    display: flex;
+    flex-direction: column;
+}
+/* 카드 상단: 레이블과 아이콘 */
+.res-stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.res-stat-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666;
+}
+
+.res-stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+/* 카드 하단: 메인 숫자 */
+.res-stat-value {
+    color: #495057;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.res-stat-unit {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #adb5bd;
+    margin-left: 4px;
+}
+
+/* 상태별 포인트 컬러 */
+.res-pending { border-top: 4px solid #FFD8A8; }
+.res-pending .res-stat-icon { background: #FFF4E6; color: #FD7E14; }
+.res-pending .res-stat-label { color: #868E96; }
+
+.res-active { border-top: 4px solid #B2F2BB; }
+.res-active .res-stat-icon { background: #EBFBEE; color: #40C057; }
+.res-active .res-stat-label { color: #868E96; }
+
+.res-total { border-top: 4px solid #A5D8FF; }
+.res-total .res-stat-icon { background: #E7F5FF; color: #228BE6; }
+.res-total .res-stat-label { color: #868E96; }
+
+
+.flex-direction-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+/* 예약 신청 달력 */
+.flatpickr-calendar {
+    transform: scale(1.2);
+    transform-origin: top left;
+}
+
+.flatpickr-day {
+    width: 42px;
+    height: 42px;
+    line-height: 42px;
+    font-size: 15px;
+}
+
+.date-input-wrapper {
+    position: relative;
+}
+
+.calendar-icon {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    pointer-events: none;
+}
+
+#resDate {
+    height: 52px;
+    font-size: 16px;
+    padding: 0 45px 0 16px;
+}
+
+/* =========================
+   7. 어드민 시설 리스트 아이콘 영역
+========================= */
+/* 아이콘과 구분선, 텍스트를 감싸는 부모 컨테이너 */
+.admin-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* 아이콘을 감싸는 하늘색 정형화 배지 */
+.admin-icon-badge {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    min-width: auto;
+}
+
+/* 운영시간 텍스트 */
+.admin-time-text {
+    font-size: 14px;
+    color: var(--color-text-muted);
+}
+
+.custom-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 33, 84, 0.45);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-modal-box {
+    width: 360px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    text-align: center;
+}
+
+.custom-modal-message {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 24px;
+}
+
+.custom-modal-footer {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.custom-modal-btn {
+    min-width: 90px;
+    height: 38px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.custom-modal-btn.cancel-btn {
+    background: #f1f5f9;
+    color: #333;
+}
+
+.custom-modal-btn.confirm-btn {
+    background: var(--color-btn);
+    color: #fff;
 }
