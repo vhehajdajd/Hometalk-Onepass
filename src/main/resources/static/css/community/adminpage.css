@@ -85,6 +85,38 @@
     font-size: 1.5rem;
     font-weight: 700;
 }
+.admin-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-back-to-community {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 16px;
+    background-color: #ffffff;
+    color: var(--main-navy);
+    border: 1px solid #d7dee8;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+}
+
+.btn-back-to-community:hover {
+    background-color: #f8fafc;
+    border-color: var(--color-btn);
+    color: var(--color-btn);
+}
+
+.btn-back-to-community i {
+    font-size: 14px;
+}
 
 /* =========================
    공통 테이블 스타일
@@ -347,7 +379,7 @@
     background-color: var(--color-btn) !important;
     color: white !important;
     border: none;
-    padding: 10px 25px;
+    padding: 10px 22px;
     border-radius: 6px;
     font-weight: bold;
     cursor: pointer;
@@ -488,7 +520,7 @@ input.error {
 }
 
 .category-section {
-    margin-top: 42px;
+    margin: 42px 0 12px 0;
     padding-top: 28px;
     border-top: 1px solid #eef2f7;
 }
@@ -653,7 +685,7 @@ input.error {
     background: #fff;
 }
 .board-type-preview:hover {
-    transform: translateY(-3px);
+    transform: translateY(-1px);
     border-color: var(--color-btn);
 }
 
@@ -678,7 +710,7 @@ input.error {
     border-color: var(--color-btn);
     background: #f4f8ff;
     box-shadow: 0 0 0 3px rgba(64,115,201,0.12);
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 .board-type-actions {
     display: flex;
@@ -719,3 +751,4 @@ input.error {
     background: #ecfdf5;
     color: #047857;
 }
+

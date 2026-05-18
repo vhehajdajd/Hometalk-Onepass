@@ -274,11 +274,27 @@
 
         if (!form) return;
 
-        form.addEventListener("submit", () => {
-            form.querySelectorAll(".temp-hidden-input").forEach(el => el.remove());
-
+        form.addEventListener("submit", (e) => {
             const nameInput = form.querySelector('input[name="categoryNames"]');
             const codeInput = form.querySelector('input[name="categoryCodes"]');
+            if (!nameInput || !nameInput.value.trim() || !codeInput || !codeInput.value.trim()) {
+                e.preventDefault(); // 폼 제출 중단
+                showAlertModal("모든 칸(이름 및 영문 코드)을 입력해주세요.");
+                return;
+            }
+            const codeRegex = /^[a-zA-Z0-9_-]+$/;
+            const codeValue = codeInput.value.trim();
+            if (!codeRegex.test(codeValue)) {
+                e.preventDefault(); // 한글/특수문자 들어오면 서버 전송 중단
+                showAlertModal("카테고리 영문 코드는 영어, 숫자, -, _ 만 가능합니다.");
+                codeInput.classList.add('error');
+                codeInput.focus();
+                return;
+            } else {
+                codeInput.classList.remove('error');
+            }
+
+            form.querySelectorAll(".temp-hidden-input").forEach(el => el.remove());
 
             if (nameInput) {
                 const hiddenName = document.createElement("input");
@@ -293,7 +309,7 @@
                 const hiddenCode = document.createElement("input");
                 hiddenCode.type = "hidden";
                 hiddenCode.name = "code";
-                hiddenCode.value = codeInput.value;
+                hiddenCode.value = codeValue;
                 hiddenCode.className = "temp-hidden-input";
                 form.appendChild(hiddenCode);
             }

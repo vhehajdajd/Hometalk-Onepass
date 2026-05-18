@@ -45,9 +45,14 @@
 
                 <div class="admin-header">
                     <h2>커뮤니티 설정</h2>
-                    <button type="button" class="btn btn-submit" onclick="openCreateModal()">
-                        + 새 게시판
-                    </button>
+                    <div class="admin-actions flex gap-sm">
+                        <a th:href="@{/community/square/all}" class="btn-back-to-community">
+                            <i class="fa-solid fa-arrow-left-long"></i> 커뮤니티 게시판
+                        </a>
+                        <button type="button" class="btn btn-submit rounded" onclick="openCreateModal()">
+                            + 새 게시판
+                        </button>
+                    </div>
                 </div>
 
                 <div id="createModal" class="modal-overlay">
