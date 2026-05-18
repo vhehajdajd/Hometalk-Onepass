@@ -263,7 +263,7 @@ public class PostService {
 
     // Delete
     @Transactional
-    public void deletePost(Long id, Long currentUserId, String boardCode) {   // user merge 후에는 userId도 필요
+    public void deletePost(Long id, Long currentUserId, String boardCode) {
         // 게시글 조회
         Post post = postRepository.findById(id).orElseThrow(() -> new PostNotFoundException(id, boardCode));
         // 권한 검증

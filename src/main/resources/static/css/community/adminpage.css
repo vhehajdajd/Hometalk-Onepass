@@ -55,6 +55,23 @@
     color: #d35400;
 }
 
+.admin-guide.danger-dark {
+    background-color: #1E293B;
+    border-left: 5px solid #F59E0B;
+}
+
+.admin-guide.danger-dark h3 {
+    color: #F8FAFC;
+}
+
+.admin-guide.danger-dark p {
+    color: #E2E8F0;
+}
+
+.admin-guide.danger-dark li {
+    color: #94A3B8;
+}
+
 /* 1. 레이아웃 및 게시판 목록 테이블 */
 /* 게시판 관리 섹션 전체 */
 .admin-content-area {
@@ -752,3 +769,61 @@ input.error {
     color: #047857;
 }
 
+/* 관리자 페이지 신고 필터 영역 */
+.report-filter-wrapper {
+    background-color: #f8fafc;
+    padding: 16px 20px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 필터 그룹 배치 */
+.report-filter-wrapper .filter-group {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+/* 개별 필터 항목 */
+.report-filter-wrapper .filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 필터 라벨 스타일 */
+.report-filter-wrapper .filter-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
+}
+
+/* 관리자용 커스텀 셀렉트 박스 */
+.report-filter-wrapper .select-admin-filter {
+    height: 38px;
+    min-width: 160px;
+    padding: 0 12px;
+    font-size: 14px;
+    color: #334155;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.report-filter-wrapper .select-admin-filter:hover {
+    border-color: #94a3b8;
+}
+
+.report-filter-wrapper .select-admin-filter:focus {
+    outline: none;
+    border-color: #ff9f43;
+    box-shadow: 0 0 0 3px rgba(255, 159, 67, 0.15);
+}

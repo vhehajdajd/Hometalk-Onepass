@@ -1,22 +1,21 @@
 package com.hometalk.onepass.community.controller;
 
 import com.hometalk.onepass.auth.config.CustomUserDetails;
-import com.hometalk.onepass.auth.entity.Household;
-import com.hometalk.onepass.auth.entity.User;
+import com.hometalk.onepass.community.dto.ReportRequestDTO;
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
 import com.hometalk.onepass.community.dto.response.PostListResponse;
 import com.hometalk.onepass.community.dto.response.ReactionStatus;
-import com.hometalk.onepass.community.entity.Post;
 import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.enums.PostStatus;
 import com.hometalk.onepass.community.enums.ReactionType;
 import com.hometalk.onepass.community.enums.TradeStatus;
+import com.hometalk.onepass.community.exception.PostNotFoundException;
 import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
+import com.hometalk.onepass.community.exception.UserNotFoundException;
 import com.hometalk.onepass.community.service.FileService;
 import com.hometalk.onepass.community.service.PostActionService;
 import com.hometalk.onepass.community.service.PostService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import com.hometalk.onepass.community.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -25,12 +24,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+/*
+    입주민 & 관리자
+        - 임시저장, 상태변경, 태그, 이미지, 신고
+ */
 
 @RestController
 @RequestMapping("/api/resident")
@@ -40,6 +42,7 @@ public class CommunityApiController {
     private final PostActionService postActionService;
     private final PostService postService;
     private final FileService fileService;
+    private final ReportService reportService;
 
     @Value("${file.upload.path}")
     private String uploadPath;
@@ -177,6 +180,38 @@ public class CommunityApiController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(Map.of("code", "C999", "message", "서버 내부 오류가 발생했습니다"));
+        }
+    }
+
+    // 입주민 게시글 신고 접수
+    @PostMapping("/report")
+    public ResponseEntity<?> createReport(@RequestBody ReportRequestDTO dto,
+                                          Authentication authentication) {
+        try {
+            CustomUserDetails userDetails = getLoginCustomUser(authentication);
+
+            reportService.createReport(dto, userDetails.getUserId());
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "신고가 정상적으로 접수되었습니다. 관리자 검토를 진행합니다."
+            ));
+        } catch (UnauthorizedAccessException e) {
+            // 로그인 예외 (401)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("code", "C401", "message", e.getMessage()));
+        } catch (UserNotFoundException | PostNotFoundException e) {
+            // 커스텀 예외 묶음 (404)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("code", "C404", "message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            // 중복 신고 예외 컷 (400)
+            return ResponseEntity.badRequest()
+                    .body(Map.of("code", "C400", "message", e.getMessage())); // "이미 신고한 게시글입니다."
+        } catch (Exception e) {
+            // 서버 내부 에러 핸들링
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("code", "C999", "message", "신고 처리 중 오류가 발생했습니다."));
         }
     }
 

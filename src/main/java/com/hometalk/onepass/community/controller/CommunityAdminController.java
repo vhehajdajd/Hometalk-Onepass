@@ -2,9 +2,11 @@ package com.hometalk.onepass.community.controller;
 
 import com.hometalk.onepass.community.dto.AdminBoardRqDTO;
 import com.hometalk.onepass.community.dto.AdminBoardRsDTO;
+import com.hometalk.onepass.community.dto.ReportResponse;
 import com.hometalk.onepass.community.dto.response.PostResponseDTO;
 import com.hometalk.onepass.community.enums.BoardType;
 import com.hometalk.onepass.community.service.CommunityAdminService;
+import com.hometalk.onepass.community.service.ReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 public class CommunityAdminController {
     private final CommunityAdminService communityAdminService;
+    private final ReportService reportService;
 
     // 게시판&카테고리 목록 조회
     @GetMapping
@@ -151,6 +154,7 @@ public class CommunityAdminController {
         return "redirect:/community/admin/posts";
     }
 
+    // 게시판 유형 변경
     @PostMapping("/board/type/{id}")
     public String updateBoardType(@PathVariable Long id,
                                   @RequestParam BoardType boardType,
@@ -163,5 +167,13 @@ public class CommunityAdminController {
         }
 
         return "redirect:/community/admin/board/detail/" + id;
+    }
+
+    // 대기 상태 신고 목록 조회
+    @GetMapping("/reports")
+    public String getPendingReportPage(Model model) {
+        List<ReportResponse> pendingReports = reportService.findPendingReports();
+        model.addAttribute("reports", pendingReports);
+        return "community/reportList";
     }
 }

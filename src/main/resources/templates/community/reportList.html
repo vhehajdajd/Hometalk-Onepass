@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='신고 관리')}"></th:block>
+  <link rel="stylesheet" th:href="@{/css/community/adminpage.css}">
+</head>
+
+<body>
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
+    <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(${ {'community'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: communityAdmin}"></div>
+        <main class="dashboard-content">
+
+            <div class="admin-content-area">
+
+                <div class="admin-header">
+                    <h2>신고 게시글 내역 관리</h2>
+                    <div class="admin-actions">
+                        <a th:href="@{/community/square/all}" class="btn-back-to-community">
+                          <i class="fas fa-arrow-left"></i> 커뮤니티로 돌아가기
+                        </a>
+                    </div>
+                </div>
+
+                <div class="alert-container">
+                    <!-- 성공 메시지 (message) -->
+                    <div th:if="${message}" class="alert-banner alert-success">
+                      <span th:text="${message}">성공 메시지 영역</span>
+                      <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                    <!-- 에러 메시지 (errorMessage) -->
+                    <div th:if="${errorMessage}" class="alert-banner alert-error">
+                      <span th:text="${errorMessage}">에러 메시지 영역</span>
+                      <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                </div>
+
+                <div class="admin-guide danger-dark">
+                    <h3><i class="fas fa-exclamation-triangle"></i> 커뮤니티 신고 처리 안내</h3>
+                    <p>입주민들이 건전한 커뮤니티 조성을 위해 접수한 신고 목록입니다.</p>
+                    <ul>
+                      <li><strong>신고 승인</strong> 처리 시, 해당 게시글은 일반 목록에서 즉시 격리됩니다.</li>
+                      <li><strong>신고 반려</strong> 처리 시, 허위 또는 오인 신고로 간주되어 게시글은 정상 유지됩니다.</li>
+                    </ul>
+                </div>
+
+                <div class="report-filter-wrapper">
+                    <div class="filter-group">
+
+                        <div class="filter-item">
+                            <label for="filterReason" class="filter-label">신고 유형</label>
+                            <select id="filterReason" class="select-admin-filter" onchange="searchReports()">
+                                <option value="">전체 유형</option>
+                                <option value="SPAM">광고 및 도배</option>
+                                <option value="ABUSE">욕설 및 비방</option>
+                                <option value="PROFANITY">음란성 내용</option>
+                                <option value="INAPPROPRIATE">주민 정서 부적절</option>
+                                <option value="ETC">기타 사유</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-item">
+                            <label for="filterStatus" class="filter-label">처리 상태</label>
+                            <select id="filterStatus" class="select-admin-filter" onchange="searchReports()">
+                                <option value="">전체 상태</option>
+                                <option value="RECEIVED">접수 완료</option>
+                                <option value="PROCEEDING">처리 중</option>
+                                <option value="COMPLETED">처리 완료</option>
+                                <option value="REJECTED">반려 (허위 신고)</option>
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="mt-lg">
+                    <table class="admin-management-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 8%;">신고 ID</th>
+                                <th style="width: 12%;">신고자</th>
+                                <th style="width: 15%;">신고 사유</th>
+                                <th style="width: 30%;">상세 내용</th>
+                                <th style="width: 20%;">대상 게시글</th>
+                                <th style="width: 15%;">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(reports)}">
+                                <td colspan="6" class="text-muted" style="padding: 40px; font-weight: 500;">
+                                  대기 중인 신고 내역이 존재하지 않습니다.
+                                </td>
+                            </tr>
+
+                            <tr th:each="report : ${reports}" th:id="'report-row-' + ${report.id}">
+                                <td th:text="${report.id}">1</td>
+                                <td th:text="${report.username}">홍길동</td>
+                                <td>
+                                  <span class="badge status-deleted" th:text="${report.reason}">사유</span>
+                                </td>
+                                <td class="text-left" th:text="${report.detail}">상세 설명 내용</td>
+                                <td class="title-cell">
+                                  <a th:href="@{/community/post/{id}(id=${report.postId})}" target="_blank" th:text="${report.postTitle}">신고된 글 제목</a>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-primary" th:onclick="processReport([[${report.id}]], 'resolve')">
+                                      <i class="fas fa-check"></i> 승인
+                                    </button>
+                                    <button type="button" class="btn btn-point" th:onclick="processReport([[${report.id}]], 'reject')"  style="margin-left: 4px;">
+                                      <i class="fas fa-times"></i> 반려
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </main>
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+
+<script th:src="@{/js/community/api.js}"></script>
+<script defer th:src="@{/js/community/post-modal.js}"></script>
+<script defer th:src="@{/js/community/adminpage.js}"></script>
+<script th:inline="javascript">
+    function processReport(reportId, action) {
+        const actionText = action === 'resolve' ? '승인하고 해당 게시글을 블라인드(숨김)' : '반려';
+        const message = `정말로 이 신고를 ${actionText}하시겠습니까?`;
+
+        showConfirmModal(message, async () => {
+            try {
+                const response = await apiFetch(`/hometop/api/posts/reports/${reportId}/${action}`, {
+                  method: 'POST'
+                });
+
+                if (response.ok) {
+                    showAlertModal('정상적으로 처리되었습니다.');
+                    const row = document.getElementById(`report-row-${reportId}`);
+                    if (row) {
+                      row.remove();
+                    }
+                } else {
+                      showAlertModal('처리 중 오류가 발생했습니다.');
+                  }
+            } catch (error) {
+                console.error('신고 처리 실패:', error);
+                showAlertModal('서버와 통신 중 에러가 발생했습니다.');
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
