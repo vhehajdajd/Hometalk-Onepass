@@ -6,8 +6,10 @@ import com.hometalk.onepass.community.dto.request.CommentRqDTO;
 import com.hometalk.onepass.community.dto.response.CommentRsDTO;
 import com.hometalk.onepass.community.entity.Comment;
 import com.hometalk.onepass.community.entity.Post;
+import com.hometalk.onepass.community.exception.CommentNotFoundException;
 import com.hometalk.onepass.community.exception.PostNotFoundException;
 import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
+import com.hometalk.onepass.community.exception.UserNotFoundException;
 import com.hometalk.onepass.community.repository.CommentRepository;
 import com.hometalk.onepass.community.repository.PostRepository;
 import com.hometalk.onepass.community.validator.CommentValidator;
@@ -49,7 +51,7 @@ public class CommentService {
         }
         // 작성자 확인
         User writer = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new UserNotFoundException(userId, "존재하지 않는 사용자입니다."));
 
         // 엔티티 생성
         Comment comment = Comment.builder()
@@ -78,7 +80,7 @@ public class CommentService {
     @Transactional
     public void updateComment(Long commentId, Long userId, CommentRqDTO dto) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 댓글이 없습니다."));
+                .orElseThrow(() -> new CommentNotFoundException(commentId));
 
         // 본인 확인
         validator.validateOwner(comment, userId);
@@ -92,7 +94,7 @@ public class CommentService {
     @Transactional
     public void deleteComment(Long commentId, Long userId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 댓글이 없습니다."));
+                .orElseThrow(() -> new CommentNotFoundException(commentId));
         // 본인 확인
         validator.validateOwner(comment, userId);
         commentRepository.delete(comment);

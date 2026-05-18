@@ -1,5 +1,6 @@
 package com.hometalk.onepass.community.service;
 
+import com.hometalk.onepass.community.exception.FileStorageException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +24,7 @@ public class FileService {
     private String uploadPath;
 
     // 이미지 파일 저장
-    public String storeFile(MultipartFile file) throws IOException  {
+    public String storeFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             return null;
         }
@@ -45,24 +47,27 @@ public class FileService {
             // 저장 경로
             Path filePath = uploadDir.resolve(storeFileName);
             // 파일 저장
-            file.transferTo(filePath.toFile());
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
             return storeFileName;
 
         } catch (IOException e) {
             log.error("파일 저장 중 오류 발생", e);
-            throw new RuntimeException("파일 저장 중 오류가 발생했습니다.", e);
+            throw new FileStorageException("파일 저장 중 오류가 발생했습니다.", e);
         }
     }
 
     // 파일 삭제
     public void deleteFile(String filePath) {
-        if (filePath == null) return;
+        if (filePath == null || filePath.isBlank()) return;
         try {
-            Path path = Paths.get(uploadPath,
-                    filePath.replace("/uploads/", ""));
-            Files.deleteIfExists(path);
+            String cleanedPath = filePath.replace("/uploads/", "");
+            Path path = Paths.get(uploadPath).resolve(cleanedPath).normalize();
+            if (path.startsWith(Paths.get(uploadPath))) {
+                Files.deleteIfExists(path);
+                log.info("파일 삭제 완료: {}", path);
+            }
         } catch (IOException e) {
-            log.error("파일 삭제 실패", e);
+            log.error("파일 삭제 실패: {}", filePath, e);
         }
     }
 }

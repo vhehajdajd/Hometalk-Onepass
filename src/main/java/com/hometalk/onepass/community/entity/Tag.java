@@ -24,11 +24,6 @@ public class Tag {
         this.name = name;
     }
 
-    // 변경 method
-    public void updateName(String name) {
-        this.name = name;
-    }
-
     // Tag가 1인 관계
     @OneToMany(mappedBy = "tag")
     private List<PostTag> postTags = new ArrayList<>();

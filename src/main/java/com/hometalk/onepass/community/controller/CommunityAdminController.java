@@ -7,6 +7,7 @@ import com.hometalk.onepass.community.enums.BoardType;
 import com.hometalk.onepass.community.service.CommunityAdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,6 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
+@Slf4j
 @Controller
 @RequestMapping("/community/admin")
 @RequiredArgsConstructor
@@ -35,7 +37,7 @@ public class CommunityAdminController {
 
     // 상세 조회
     @GetMapping("/board/detail/{id}")
-    public String getBoardDetail(@PathVariable Long id, Model model) {
+    public String getBoardDetail(@PathVariable("id") Long id, Model model) {
         AdminBoardRsDTO boardDetail = communityAdminService.getAdminBoardDetail(id);
         model.addAttribute("board", boardDetail);
         return "community/board_detail"; // 상세 페이지 뷰 이름
@@ -67,7 +69,7 @@ public class CommunityAdminController {
             rttr.addFlashAttribute("message", "게시판이 성공적으로 삭제되었습니다.");
         } catch (IllegalStateException e) {
             rttr.addFlashAttribute("errorMessage", e.getMessage());
-            System.out.println("삭제 에러 발생: " + e.getMessage());
+            log.error("게시판 삭제 에러 발생 (ID: {}): {}", id, e.getMessage());
         }
         return "redirect:/community/admin";
     }
@@ -101,7 +103,7 @@ public class CommunityAdminController {
     }
 
     // 카테고리 이름 수정
-    @GetMapping("/category/update/{id}")
+    @PostMapping("/category/update/{id}")
     public String updateCategory(@PathVariable Long id,
                                  @RequestParam("name") String newName,
                                  @RequestParam(value = "bgColor", required = false) String bgColor,
@@ -112,7 +114,7 @@ public class CommunityAdminController {
     }
 
     // 6. 카테고리 삭제
-    @GetMapping("/category/delete/{id}")
+    @PostMapping("/category/delete/{id}")
     public String deleteCategory(@PathVariable Long id, @RequestParam Long boardId,
                                  RedirectAttributes rttr) {
         try {

@@ -27,9 +27,6 @@ public class PostActionController {
     private final PostActionService postActionService;
     private final PostService postService;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     // 상단 고정
     @PostMapping("/{postId}/pin")
     public ResponseEntity<Void> togglePin(@PathVariable Long postId,
@@ -67,78 +64,13 @@ public class PostActionController {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new UnauthorizedAccessException("로그인이 필요합니다.");
         }
+
         Object principal = authentication.getPrincipal();
         if (principal instanceof CustomUserDetails customUserDetails) {
             return customUserDetails;
         }
 
-        User user = getLoginUser(authentication);
-        Household household = user.getHousehold();
-
-        return new CustomUserDetails(
-                user.getId(),
-                household != null ? household.getId() : null,
-                household != null ? household.getPostNum() : null,
-                user.getName(),
-                user.getRole(),
-                user.getStatus(),
-                user.isApprovalNoticeShown(),
-                getLoginId(authentication),
-                "",
-                user.getNickname()
-        );
+        throw new UnauthorizedAccessException("인증된 사용자 정보가 올바르지 않습니다.");
     }
 
-    private String getLoginId(Authentication authentication) {
-
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof CustomUserDetails customUserDetails
-                && customUserDetails.getLoginId() != null) {
-            return customUserDetails.getLoginId();
-        }
-
-        return authentication.getName();
-    }
-
-    private User getLoginUser(Authentication authentication) {
-
-        if (authentication == null || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getPrincipal())) {
-            throw new UnauthorizedAccessException("로그인이 필요합니다.");
-        }
-
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof CustomUserDetails customUserDetails) {
-            Long userId = customUserDetails.getUserId();
-
-            if (userId != null) {
-                User user = entityManager.find(User.class, userId);
-
-                if (user != null) {
-                    return user;
-                }
-            }
-        }
-
-        String loginId = authentication.getName();
-
-        List<User> users = entityManager.createQuery(
-                        "select u " +
-                                "from LocalAccount la " +
-                                "join la.user u " +
-                                "where la.loginId = :loginId",
-                        User.class
-                )
-                .setParameter("loginId", loginId)
-                .setMaxResults(1)
-                .getResultList();
-
-        if (users.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다.");
-        }
-
-        return users.get(0);
-    }
 }

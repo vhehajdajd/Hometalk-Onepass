@@ -11,8 +11,7 @@ import com.hometalk.onepass.community.dto.response.PostUserRsDTO;
 import com.hometalk.onepass.community.dto.response.ReactionStatus;
 import com.hometalk.onepass.community.entity.*;
 import com.hometalk.onepass.community.enums.*;
-import com.hometalk.onepass.community.exception.InvalidBoardCodeException;
-import com.hometalk.onepass.community.exception.PostNotFoundException;
+import com.hometalk.onepass.community.exception.*;
 import com.hometalk.onepass.community.repository.*;
 import com.hometalk.onepass.community.validator.PostValidator;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,11 +50,11 @@ public class PostService {
         Category category = null;
         if (dto.getCategoryId() != null) {
             category = categoryRepository.findById(dto.getCategoryId())
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+                    .orElseThrow(() -> new CategoryNotFoundException(dto.getCategoryId(), boardCode));
         }
         // 작성자 정보 조회
         User writer = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException(userId, boardCode));
 
         Post post;
         if (dto.getId() != null) {
@@ -72,61 +70,83 @@ public class PostService {
             post.getPostTags().clear();
         } else {
             // [CASE: 신규] ID가 없으면 새로 생성
+            if (dto.getTitle() == null || dto.getTitle().trim().isEmpty()) {
+                throw new EmptyContentException("제목은 필수 입력 항목입니다.", boardCode);
+            }
+            if (dto.getContent() == null || dto.getContent().trim().isEmpty()) {
+                throw new EmptyContentException("내용은 필수 입력 항목입니다.", boardCode);
+            }
+
             post = dto.toEntity(category, board, writer);
             post = postRepository.save(post);
 
-            // 거래 게시글
-            if ("trade".equalsIgnoreCase(category.getCode())) {
-                if (dto.getTradeType() == null) {
-                    throw new IllegalArgumentException("거래 유형은 필수입니다.");
+            if (category != null) {
+                // 거래 게시글
+                if ("trade".equalsIgnoreCase(category.getCode())) {
+                    if (dto.getTradeType() == null) {
+                        throw new EmptyContentException("거래 유형(TradeType)은 필수입니다.", boardCode);
+                    }
+                    post.updateTrade(dto.getTradeType(), TradeStatus.SELLING);
                 }
-                post.updateTrade(dto.getTradeType(), TradeStatus.SELLING);
-            }
-            // 나눔 게시글
-            if ("share".equalsIgnoreCase(category.getCode())) {
-                post.updateMarketStatus(MarketStatus.SHARED);
+                // 나눔 게시글
+                if ("share".equalsIgnoreCase(category.getCode())) {
+                    post.updateMarketStatus(MarketStatus.SHARED);
+                }
             }
         }
 
         // 태그
         List<String> tags = dto.getTags() != null ? dto.getTags() : List.of();
-        for (String tagName : tags) {
-            if (tagName == null) continue;
-            String cleanTag = tagName.trim();
-            if (cleanTag.isEmpty()) continue;
-            if (cleanTag.length() > 5) {
-                cleanTag = cleanTag.substring(0, 5);
+        if (!tags.isEmpty()) {
+            List<String> cleanTagNames = tags.stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(name -> !name.isEmpty())
+                    .map(name -> name.length() > 5 ? name.substring(0, 5) : name)
+                    .distinct()
+                    .toList();
+
+            if (!cleanTagNames.isEmpty()) {
+                List<Tag> existingTags = tagRepository.findByNameIn(cleanTagNames);
+                Set<String> existingTagNames = existingTags.stream()
+                        .map(Tag::getName)
+                        .collect(Collectors.toSet());
+
+                List<Tag> newTags = cleanTagNames.stream()
+                        .filter(name -> !existingTagNames.contains(name))
+                        .map(name -> Tag.builder().name(name).build())
+                        .toList();
+
+                if (!newTags.isEmpty()) {
+                    tagRepository.saveAll(newTags); // 일괄 저장
+                }
+
+                List<Tag> allTags = new ArrayList<>();
+                allTags.addAll(existingTags);
+                allTags.addAll(newTags);
+
+                for (Tag tag : allTags) {
+                    PostTag postTag = PostTag.builder()
+                            .post(post)
+                            .tag(tag)
+                            .build();
+                    post.addPostTag(postTag);
+                }
             }
-            String finalTagName = cleanTag;
-            Tag tag = tagRepository.findByName(cleanTag)
-                    .orElseGet(() -> tagRepository.save(
-                            Tag.builder()
-                                    .name(finalTagName)
-                                    .build()
-                    ));
-            PostTag postTag = PostTag.builder()
-                    .post(post)
-                    .tag(tag)
-                    .build();
-            post.addPostTag(postTag);
         }
 
         // 대표 썸네일 저장
         if (dto.getThumbnailFile() != null && !dto.getThumbnailFile().isEmpty()) {
-            try {
-                String storedName = fileService.storeFile(dto.getThumbnailFile());
-                PostFile thumbnail = PostFile.builder()
-                        .post(post)
-                        .originalName(dto.getThumbnailFile().getOriginalFilename())
-                        .storedName(storedName)
-                        .filePath("/uploads/" + storedName)
-                        .fileType(PostFileType.THUMBNAIL)
-                        .fileSize(dto.getThumbnailFile().getSize())
-                        .build();
-                postFileRepository.save(thumbnail);
-            } catch (IOException e) {
-                throw new RuntimeException("썸네일 저장 중 오류가 발생했습니다.", e);
-            }
+            String storedName = fileService.storeFile(dto.getThumbnailFile());
+            PostFile thumbnail = PostFile.builder()
+                    .post(post)
+                    .originalName(dto.getThumbnailFile().getOriginalFilename())
+                    .storedName(storedName)
+                    .filePath("/uploads/" + storedName)
+                    .fileType(PostFileType.THUMBNAIL)
+                    .fileSize(dto.getThumbnailFile().getSize())
+                    .build();
+            postFileRepository.save(thumbnail);
         }
 
         // 일반 첨부 파일 저장
@@ -134,20 +154,16 @@ public class PostService {
             for (MultipartFile file : dto.getFiles()) {
                 if (file == null || file.isEmpty()) continue;
 
-                try {
-                    String storedName = fileService.storeFile(file);
-                    PostFile postFile = PostFile.builder()
-                            .post(post)
-                            .originalName(file.getOriginalFilename())
-                            .storedName(storedName)
-                            .filePath("/uploads/" + storedName)
-                            .fileType(PostFileType.IMAGE)
-                            .fileSize(file.getSize())
-                            .build();
-                    postFileRepository.save(postFile);
-                } catch (IOException e) {
-                    throw new RuntimeException("첨부파일 저장 중 오류가 발생했습니다.", e);
-                }
+                String storedName = fileService.storeFile(file);
+                PostFile postFile = PostFile.builder()
+                        .post(post)
+                        .originalName(file.getOriginalFilename())
+                        .storedName(storedName)
+                        .filePath("/uploads/" + storedName)
+                        .fileType(PostFileType.IMAGE)
+                        .fileSize(file.getSize())
+                        .build();
+                postFileRepository.save(postFile);
             }
         }
         return post.getId();
@@ -161,7 +177,7 @@ public class PostService {
 
         // 게시판 조회
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판입니다."));
+                .orElseThrow(() -> new InvalidBoardCodeException(String.valueOf(boardId)));
 
         Page<Post> posts;
         if (keyword == null || keyword.isBlank()) {
@@ -175,14 +191,19 @@ public class PostService {
                 default -> getNormalList(boardId, categoryId, status, pageable);
             };
         }
+        User currentUser = (loginUser != null)
+                ? userRepository.findById(loginUser.getUserId()).orElse(null)
+                : null;
 
         return posts.map(post -> {
-            // 로그인 사용자 기준 좋아요/싫어요 상태 조회
-            ReactionStatus reactionStatus = loginUser != null
-                    ? postActionService.getReactionStatus(post.getId(), loginUser.getUserId())
-                    : new ReactionStatus(post.getId(), false, false, post.getLikeCount(), post.getDislikeCount());
-
-            return new PostListResponse(post, reactionStatus.isLiked(), reactionStatus.isDisliked());
+            boolean liked = false;
+            boolean disliked = false;
+            // N+1 제거
+            if (currentUser != null) {
+                liked = postReactionRepository.findByPostAndUserAndType(post, currentUser, ReactionType.LIKE).isPresent();
+                disliked = postReactionRepository.findByPostAndUserAndType(post, currentUser, ReactionType.DISLIKE).isPresent();
+            }
+            return new PostListResponse(post, liked, disliked);
         });
     }
     // 중복 코드를 방지하기 위한 내부 헬퍼 메서드
@@ -274,7 +295,7 @@ public class PostService {
 
     public List<String> searchTags(String keyword) {
         if (keyword == null || keyword.length() < 1) return List.of();
-        return tagRepository.findTop5ByNameStartingWith(keyword, PageRequest.of(0, 5));
+        return tagRepository.findNameByNameStartingWith(keyword, PageRequest.of(0, 5));
     }
 
     // 사용자 연동

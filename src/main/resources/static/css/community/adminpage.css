@@ -199,6 +199,7 @@
 ========================= */
 .category-input-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
     margin-bottom: 14px;
@@ -214,9 +215,25 @@
 
 /* 상단 입력 영역 */
 .category-item-wrapper .d-flex.gap-2.mb-2 {
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100%;
+    margin-bottom: 14px !important;
+}
+
+.category-item-wrapper input[name="categoryNames"],
+.category-item-wrapper input[name="categoryCodes"] {
+    flex: 1 !important;
+    width: 0 !important;
+    min-width: 0;
+    height: 42px;
+    padding: 0 14px;
+    border: 1px solid #d7dee8;
+    border-radius: 10px;
+    font-size: 14px;
+    box-sizing: border-box;
 }
 
 /* input */
@@ -237,10 +254,25 @@
 
 /* 삭제 버튼 */
 .category-item-wrapper .btn-remove {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    flex-shrink: 0;
+    width: 38px !important;
+    height: 38px !important;
+    flex-shrink: 0 !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 !important;
+    cursor: pointer;
+    border: 1px solid #f5222d;
+    background-color: #fff1f0;
+    color: #f5222d;
+    transition: all 0.15s ease;
+}
+.category-item-wrapper .btn-remove:hover {
+    background-color: #f5222d !important;
+    color: #ffffff !important;
 }
 
 /* 테마 영역 */
@@ -263,19 +295,23 @@
 /* 프리셋 */
 .preset-label {
     cursor: pointer;
+    display: inline-block;
 }
 
 .preset-label input {
     display: none;
+    flex-shrink: 0;
 }
 
 /* 컬러 원 */
 .preset-dot {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    display: inline-block;
+    width: 30px;
+    height: 30px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50% !important;
+    display: block;
     border: 2px solid transparent;
+    box-sizing: border-box;
     transition: all 0.15s ease;
 }
 
