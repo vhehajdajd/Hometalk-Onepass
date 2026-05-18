@@ -55,14 +55,21 @@ public class VehicleServiceImpl implements VehicleService {
             throw new ParkingException("이미 등록된 차량 번호입니다.");
         }
 
-        Vehicle vehicle = new Vehicle(household, user, vehicleNumber,
-                request.getModel(), request.getVehicleType());
-        vehicleRepository.save(vehicle);
+        // 파일 체크를 save() 전으로 이동
+        if (documents == null || documents.isEmpty() ||
+                documents.stream().allMatch(MultipartFile::isEmpty)) {
+            throw new ParkingException("첨부 서류는 필수입니다.");
+        }
 
         List<String> documentPaths = fileStorageService.saveDocuments(documents);
         if (documentPaths.isEmpty()) {
-            throw new ParkingException("첨부 서류는 필수입니다.");
+            throw new ParkingException("서류 저장에 실패했습니다.");
         }
+
+        // 파일 저장 성공 후 vehicle 저장
+        Vehicle vehicle = new Vehicle(household, user, vehicleNumber,
+                request.getModel(), request.getVehicleType());
+        vehicleRepository.save(vehicle);
 
         vehicleApprovalRepository.save(
                 new VehicleApproval(vehicle, String.join(",", documentPaths)));

@@ -158,4 +158,14 @@ public interface ParkingLogRepository extends JpaRepository<ParkingLog, Long> {
             @Param("type") String type,
             @Param("household") String household,
             Pageable pageable);
+
+
+    // ParkingLogRepository.java
+    @Query("""
+    SELECT COUNT(p) > 0 FROM ParkingLog p
+    WHERE p.status = 'PARKED'
+      AND p.deletedAt IS NULL
+      AND RIGHT(REPLACE(p.vehicleNumber, ' ', ''), 4) = :last4
+    """)
+    boolean existsParkedByLast4(@Param("last4") String last4);
 }

@@ -179,9 +179,9 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
         List<ParkingLog> logs = parkingLogRepository.findByStatus(ParkingLog.ParkingStatus.PARKED);
 
         return logs.stream()
-                .filter(log -> log.getEntryType() != ParkingLog.EntryType.NORMAL)
-                .filter(log -> log.getEntryType() == ParkingLog.EntryType.MANUAL && log.getHousehold() != null ||
-                        (log.getHousehold() != null && log.getHousehold().getId().equals(householdId)))
+                .filter(log -> log.getEntryType() == ParkingLog.EntryType.RESERVATION) // 예약 차량만
+                .filter(log -> log.getHousehold() != null
+                        && log.getHousehold().getId().equals(householdId)) // 내 세대만
                 .map(log -> new ParkingSearchResponse(
                         log, tickets, ticketUsageRepository.findByParkingLog(log)))
                 .collect(Collectors.toList());
