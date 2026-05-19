@@ -132,17 +132,19 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     // 동일 시설 활성 예약 여부 확인
     @Query("""
-            SELECT COUNT(r) > 0 FROM Reservation r
-            WHERE r.user.id = :userId
-            AND r.facility.id = :facilityId
-            AND r.status IN (
-                com.hometalk.onepass.reservation.entity.ReservationStatus.CONFIRMED,
-                com.hometalk.onepass.reservation.entity.ReservationStatus.PENDING
-            )
-            """)
+        SELECT COUNT(r) > 0 FROM Reservation r
+        WHERE r.user.id = :userId
+        AND r.facility.id = :facilityId
+        AND r.status IN (
+            com.hometalk.onepass.reservation.entity.ReservationStatus.CONFIRMED,
+            com.hometalk.onepass.reservation.entity.ReservationStatus.PENDING
+        )
+        AND r.reservationTime.endTime > :now
+        """)
     boolean existsActiveReservation(
             @Param("userId") Long userId,
-            @Param("facilityId") Long facilityId
+            @Param("facilityId") Long facilityId,
+            @Param("now") LocalDateTime now
     );
 
     // 특정 시간대 현재 예약 인원 수

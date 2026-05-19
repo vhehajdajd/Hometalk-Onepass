@@ -6,6 +6,7 @@ import com.hometalk.onepass.reservation.dto.ReservationRequestDto;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -53,8 +54,11 @@ public class ReservationController {
        모든 예약 조회
      */
     @GetMapping
-    public List<ReservationResponseDto> list() {
-        return reservationService.findAll();
+    public Page<ReservationResponseDto> list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return reservationService.findAll(page, size);
     }
 
     /*

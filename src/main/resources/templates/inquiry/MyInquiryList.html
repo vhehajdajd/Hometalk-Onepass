@@ -37,10 +37,12 @@
                             <span class="badge category-badge"
                                   th:text="${my.category}"
                                   th:classappend="
-                                    ${my.category == '시설/기술'} ? 'facility' :
-                                    (${my.category == '환경/위생'} ? 'clean' :
-                                    (${my.category == '보안/안전'} ? 'security' :
-                                    'etc'))">
+                                    ${my.category == '서비스 문의'} ? 'service' :
+                                    (${my.category == '예약 문의'} ? 'reservation' :
+                                    (${my.category == '시설 문의'} ? 'facility' :
+                                    (${my.category == '결제 문의'} ? 'payment' :
+                                    (${my.category == '계정 문의'} ? 'account' :
+                                    'etc'))))">
                                 카테고리
                             </span>
                         </td>
