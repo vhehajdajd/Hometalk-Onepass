@@ -216,4 +216,24 @@ public class StaffExitService {
 
         return availableMinutes;
     }
+
+    // 최근 출차 기록 조회 (오늘 출차된 것만)
+    @Transactional(readOnly = true)
+    public List<ParkingLogResponse> getRecentExitList() {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        return parkingLogRepository.findExitedToday(startOfDay)
+                .stream()
+                .map(log -> new ParkingLogResponse(log, log.getAppliedMinutes() != null ? log.getAppliedMinutes() : 0))
+                .toList();
+    }
+
+    // 출차 취소
+    @Transactional
+    public void cancelExit(Long parkingId) {
+        ParkingLog parkingLog = parkingLogRepository.findByIdWithLock(parkingId)
+                .orElseThrow(() -> new ParkingException("주차 기록을 찾을 수 없습니다."));
+
+        parkingLog.cancelExit(); // 시간 검증 포함
+        log.info("출차 취소 처리 - parkingId: {}", parkingId);
+    }
 }

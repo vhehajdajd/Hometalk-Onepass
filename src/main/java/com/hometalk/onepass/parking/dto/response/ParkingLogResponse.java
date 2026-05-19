@@ -16,6 +16,7 @@ public class ParkingLogResponse {
     private final boolean householdConfirmed;
     private final String entryType;
     private final String entryTime;
+    private final String exitTime;
     private final String status;
     private final String purpose;
     private final String reservedAt;
@@ -23,6 +24,7 @@ public class ParkingLogResponse {
     private final String parkingTime;
     private final String ticketInfo;
     private final boolean canExit;
+    private final boolean canCancelExit;
 
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("MM.dd HH:mm");
@@ -36,6 +38,9 @@ public class ParkingLogResponse {
                 : "세대 미확인";
         this.entryType = log.getEntryType().name();
         this.entryTime = log.getEntryTime().format(FMT);
+        this.exitTime = log.getExitTime() != null
+                ? log.getExitTime().format(FMT)
+                : null;
         this.status = log.getStatus().name();
         this.purpose = log.getReservation() != null
                 ? log.getReservation().getPurpose()
@@ -61,12 +66,10 @@ public class ParkingLogResponse {
                 log.getEntryTime(), LocalDateTime.now()).toMinutes();
         this.parkingTime = formatMinutes(totalMinutes);
 
-        // ✅ [수정된 부분] 티켓 정보
+        // 티켓 정보
         if (log.getEntryType() == ParkingLog.EntryType.NORMAL) {
-            // 입주자 차량은 티켓 개념 없음
             this.ticketInfo = "해당 없음";
         } else {
-            // 방문/외부 차량만 티켓 표시
             this.ticketInfo = availableMinutes > 0
                     ? formatMinutes(availableMinutes) + " 사용 가능"
                     : "티켓 없음";
@@ -74,16 +77,17 @@ public class ParkingLogResponse {
 
         // 출차 가능 여부
         if (!this.householdConfirmed) {
-            // 세대 미확인 → 강제 출차만 가능
             this.canExit = totalMinutes <= 10;
         } else if (log.getEntryType() == ParkingLog.EntryType.NORMAL) {
-            // 입주자 차량 → 무조건 출차 가능
             this.canExit = true;
         } else {
-            // 방문/수동 차량 → 티켓으로 커버 가능해야 출차 가능
             int applied = log.getAppliedMinutes() != null ? log.getAppliedMinutes() : 0;
             this.canExit = totalMinutes <= 10 || totalMinutes == 0 || applied >= totalMinutes;
         }
+
+        // 출차 취소 가능 여부 (출차 후 10분 이내)
+        this.canCancelExit = log.getExitTime() != null
+                && Duration.between(log.getExitTime(), LocalDateTime.now()).toMinutes() <= 10;
     }
 
     public ParkingLogResponse(ParkingLog log) {

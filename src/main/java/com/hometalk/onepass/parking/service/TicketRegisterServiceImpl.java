@@ -166,6 +166,8 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
         log.info("티켓 취소 - parkingId: {}, 타입: {}, 복구분: {}",
                 request.getParkingId(), ticketType, totalCancelMinutes);
     }
+
+    @Override
     @Transactional(readOnly = true)
     public List<ParkingSearchResponse> getMyParkedVehicles(Long householdId) {
         Household household = householdRepository.findById(householdId)
@@ -179,11 +181,43 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
         List<ParkingLog> logs = parkingLogRepository.findByStatus(ParkingLog.ParkingStatus.PARKED);
 
         return logs.stream()
-                .filter(log -> log.getEntryType() == ParkingLog.EntryType.RESERVATION) // 예약 차량만
+                .filter(log -> log.getEntryType() == ParkingLog.EntryType.RESERVATION)
                 .filter(log -> log.getHousehold() != null
-                        && log.getHousehold().getId().equals(householdId)) // 내 세대만
+                        && log.getHousehold().getId().equals(householdId))
                 .map(log -> new ParkingSearchResponse(
                         log, tickets, ticketUsageRepository.findByParkingLog(log)))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void unmatchHousehold(Long parkingId, Long householdId) {
+        ParkingLog parkingLog = parkingLogRepository.findByIdWithLock(parkingId)
+                .orElseThrow(() -> new ParkingException("주차 기록을 찾을 수 없습니다."));
+
+        if (parkingLog.getEntryType() != ParkingLog.EntryType.MANUAL) {
+            throw new ParkingException("수동 입차 차량만 해제할 수 있습니다.");
+        }
+        if (parkingLog.getHousehold() == null
+                || !parkingLog.getHousehold().getId().equals(householdId)) {
+            throw new ParkingException("내 손님으로 등록된 차량이 아닙니다.");
+        }
+
+        // 티켓 사용 내역 전체 복구
+        List<TicketUsage> usages = ticketUsageRepository.findByParkingLog(parkingLog);
+        for (TicketUsage usage : usages) {
+            usage.getTicket().restoreCount(usage.getUsedCount());
+            ticketUsageRepository.delete(usage);
+        }
+
+        // appliedMinutes 초기화 + ParkingLog household 해제
+        parkingLog.updateAppliedMinutes(0);
+        parkingLog.unmatchHousehold();
+
+        // VisitReservation household도 해제 → PENDING_CONFIRM으로 되돌리기
+        if (parkingLog.getReservation() != null) {
+            parkingLog.getReservation().unmatchHousehold();
+        }
+
+        log.info("내 손님 해제 - parkingId: {}, householdId: {}", parkingId, householdId);
     }
 }
