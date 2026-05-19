@@ -1,11 +1,11 @@
 package com.hometalk.onepass.auth.entity;
 
+import com.hometalk.onepass.common.entity.BaseSoftDeleteEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +13,7 @@ import java.util.List;
 @Table(name = "household")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Household {
+public class Household extends BaseSoftDeleteEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
