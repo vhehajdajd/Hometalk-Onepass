@@ -15,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -76,5 +77,18 @@ public class TicketController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long householdId = userDetails.getHouseholdId();
         return ResponseEntity.ok(ticketRegisterService.getMyParkedVehicles(householdId));
+    }
+
+    // POST /parking/ticket/unmatch
+    @PostMapping("/ticket/unmatch")
+    @ResponseBody
+    public ResponseEntity<Void> unmatchHousehold(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody Map<String, Long> body) {
+        Long parkingId = body.get("parkingId");
+        if (parkingId == null) return ResponseEntity.badRequest().build();
+        Long householdId = userDetails.getHouseholdId();
+        ticketRegisterService.unmatchHousehold(parkingId, householdId);
+        return ResponseEntity.ok().build();
     }
 }

@@ -40,15 +40,8 @@ public class StaffEntryService {
         String last4 = keyword.replace(" ", "");
         if (last4.length() != 4) return List.of();
 
-        // 이미 주차 중인 차량 체크
-        List<String> parkedNumbers = parkingLogRepository
-                .findByStatus(ParkingLog.ParkingStatus.PARKED)
-                .stream().map(ParkingLog::getVehicleNumber).toList();
-
-        boolean alreadyParked = parkedNumbers.stream()
-                .anyMatch(n -> n.replace(" ", "").endsWith(last4));
-
-        if (alreadyParked) {
+        // DB에서 직접 필터링
+        if (parkingLogRepository.existsParkedByLast4(last4)) {
             throw new ParkingException("이미 입차된 차량입니다.");
         }
 

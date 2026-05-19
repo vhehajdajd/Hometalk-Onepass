@@ -48,6 +48,7 @@
           <div class="tab-group">
             <button type="button" class="tab-btn active" id="visitTabBtn" onclick="switchTab('visit', event)">방문 차량</button>
             <button type="button" class="tab-btn" id="residentTabBtn" onclick="switchTab('resident', event)">입주자 차량</button>
+            <button type="button" class="tab-btn" id="recentExitTabBtn" onclick="switchTab('recentExit', event)">최근 출차 기록</button>
           </div>
 
           <div id="visitTab">
@@ -85,6 +86,26 @@
               </tbody>
             </table>
           </div>
+
+          <!-- 최근 출차 기록 탭 -->
+          <div id="recentExitTab" style="display:none;">
+            <table class="park-table exit-table">
+              <thead>
+              <tr>
+                <th>차량 번호</th>
+                <th>세대</th>
+                <th>입차 시간</th>
+                <th>출차 시간</th>
+                <th>주차 시간</th>
+                <th>관리</th>
+              </tr>
+              </thead>
+              <tbody id="recentExitList">
+              <tr><td colspan="6" class="pk-empty">오늘 출차된 차량이 없습니다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
         </div>
 
       </div>
@@ -112,12 +133,17 @@
   function switchTab(type, e) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     e.currentTarget.classList.add('active');
+    document.getElementById('visitTab').style.display = 'none';
+    document.getElementById('residentTab').style.display = 'none';
+    document.getElementById('recentExitTab').style.display = 'none';
+
     if (type === 'visit') {
       document.getElementById('visitTab').style.display = 'block';
-      document.getElementById('residentTab').style.display = 'none';
-    } else {
-      document.getElementById('visitTab').style.display = 'none';
+    } else if (type === 'resident') {
       document.getElementById('residentTab').style.display = 'block';
+    } else if (type === 'recentExit') {
+      document.getElementById('recentExitTab').style.display = 'block';
+      loadRecentExitList();
     }
   }
 
@@ -198,6 +224,43 @@
       .then(async res => { if (!res.ok) throw new Error(await res.text() || '서버 오류'); alert('알림이 발송되었습니다.'); })
       .catch(err => { console.error(err); alert('알림 발송 중 오류가 발생했습니다.'); })
       .finally(() => { isProcessing = false; btn.disabled = false; });
+  }
+
+  function cancelExit(parkingId, btn) {
+    if (isProcessing) return;
+    if (!confirm('출차를 취소하시겠습니까?')) return;
+    isProcessing = true; btn.disabled = true;
+    postFetch(`${contextPath}staff/exit/cancel`, { parkingId })
+      .then(async res => { if (!res.ok) throw new Error(await res.text() || '서버 오류'); alert('출차가 취소되었습니다.'); loadRecentExitList(); loadParkingList(); })
+      .catch(err => { console.error(err); alert('출차 취소 중 오류가 발생했습니다: ' + err.message); })
+      .finally(() => { isProcessing = false; btn.disabled = false; });
+  }
+
+  function loadRecentExitList() {
+    const recentExitList = document.getElementById('recentExitList');
+    recentExitList.innerHTML = '<tr><td colspan="6">로딩 중...</td></tr>';
+
+    fetch(`${contextPath}staff/exit/list/recent`)
+      .then(async res => { if (!res.ok) throw new Error(await res.text() || '서버 오류'); return res.json(); })
+      .then(data => {
+        recentExitList.innerHTML = '';
+        if (data.length === 0) { recentExitList.innerHTML = '<tr><td colspan="6" class="pk-empty">오늘 출차된 차량이 없습니다.</td></tr>'; return; }
+        data.forEach(vehicle => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${vehicle.vehicleNumber}</td>
+            <td>${vehicle.household}</td>
+            <td>${vehicle.entryTime}</td>
+            <td>${vehicle.exitTime ?? '-'}</td>
+            <td>${vehicle.parkingTime}</td>
+            <td>${vehicle.canCancelExit
+              ? `<button type="button" class="pk-btn pk-btn-secondary" onclick="cancelExit(${vehicle.parkingId}, this)">출차 취소</button>`
+              : `<span style="color:var(--color-text-sub)">취소 불가</span>`}
+            </td>`;
+          recentExitList.appendChild(row);
+        });
+      })
+      .catch(err => { console.error(err); recentExitList.innerHTML = '<tr><td colspan="6">데이터 조회 중 오류가 발생했습니다.</td></tr>'; });
   }
 
   function loadParkingList() {

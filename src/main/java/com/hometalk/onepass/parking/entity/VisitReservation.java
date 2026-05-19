@@ -128,6 +128,15 @@ public class VisitReservation extends BaseSoftDeleteEntity {
         this.status = ReservationStatus.ENTERED;
     }
 
+    // ─── 세대 해제 (내 손님 해제 시) ────────────────────────────
+    public void unmatchHousehold() {
+        if (this.status != ReservationStatus.ENTERED) {
+            throw new IllegalStateException("입차 완료 상태에서만 세대 해제할 수 있습니다.");
+        }
+        this.household = null;
+        this.status = ReservationStatus.PENDING_CONFIRM;
+    }
+
     public enum ReservationStatus {
         RESERVED,        // 사전 예약 완료
         ENTERED,         // 입차 완료

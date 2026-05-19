@@ -111,7 +111,7 @@ public interface ParkingLogRepository extends JpaRepository<ParkingLog, Long> {
     @Query(value = """
             SELECT p FROM ParkingLog p
             LEFT JOIN FETCH p.household h
-            LEFT JOIN FETCH p.vehicle v
+            LEFT JOIN p.vehicle v
             WHERE YEAR(p.entryTime) = :year
               AND MONTH(p.entryTime) = :month
               AND p.deletedAt IS NULL
@@ -158,4 +158,27 @@ public interface ParkingLogRepository extends JpaRepository<ParkingLog, Long> {
             @Param("type") String type,
             @Param("household") String household,
             Pageable pageable);
+
+
+    @Query("""
+    SELECT COUNT(p) > 0 FROM ParkingLog p
+    WHERE p.status = 'PARKED'
+      AND p.deletedAt IS NULL
+      AND RIGHT(REPLACE(p.vehicleNumber, ' ', ''), 4) = :last4
+    """)
+    boolean existsParkedByLast4(@Param("last4") String last4);
+
+    // =========================
+    // 🔥 출차 취소용 (오늘 출차 기록 조회)
+    // =========================
+    @Query("""
+    SELECT p FROM ParkingLog p
+    LEFT JOIN FETCH p.vehicle v
+    WHERE p.exitTime >= :startOfDay
+      AND p.status IN ('EXITED', 'OVERSTAY')
+      AND p.deletedAt IS NULL
+    ORDER BY p.exitTime DESC
+    """)
+    List<ParkingLog> findExitedToday(@Param("startOfDay") LocalDateTime startOfDay);
+
 }

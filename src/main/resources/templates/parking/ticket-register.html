@@ -75,6 +75,12 @@
               <span class="warning">*미등록된 차량입니다. →</span>
               <button type="button" onclick="goRegister()">내 손님으로 등록하기</button>
             </div>
+
+            <!-- 내 손님 해제 버튼 -->
+            <div id="unmatchBox" style="display:none;">
+              <span class="warning">*내 손님으로 등록된 차량입니다. →</span>
+              <button type="button" onclick="unmatchHousehold()">내 손님 해제</button>
+            </div>
           </div>
 
           <!-- 주차 시간 계산 -->
@@ -183,6 +189,7 @@
 
 <script>
   const unregisteredBox = document.getElementById('unregisteredBox');
+  const unmatchBox = document.getElementById('unmatchBox');
 
   let selectedParkingId = null;
   let selectedTicketType = null;
@@ -265,7 +272,7 @@
       });
   }
 
-function refreshCurrentVehicle() {
+  function refreshCurrentVehicle() {
     const currentParkingId = selectedParkingId;
 
     fetch(`${contextPath}parking/ticket/my-vehicles`)
@@ -277,7 +284,7 @@ function refreshCurrentVehicle() {
       .catch(err => console.error(err));
   }
 
-function renderTicketUI(data) {
+  function renderTicketUI(data) {
     selectedParkingId = data.parkingId;
 
     document.getElementById('resultVehicleNumber').textContent = data.vehicleNumber;
@@ -296,42 +303,74 @@ function renderTicketUI(data) {
     document.getElementById('dayRemaining').textContent = `이번 달 남은 티켓 ${dayRemainingCount}개`;
     document.getElementById('hourRemaining').textContent = `이번 달 남은 티켓 ${hourRemainingCount}개`;
 
+    // 미등록 차량 박스
     unregisteredBox.style.display = data.unregistered ? 'block' : 'none';
+
+    // 내 손님 해제 박스 (수동 입차 + 세대 매칭 완료)
+    unmatchBox.style.display = data.manualMatched ? 'block' : 'none';
 
     // 미등록 차량은 티켓 적용 비활성화
     const ticketSection = document.querySelector('.ticket-section');
     if (data.unregistered) {
-        ticketSection.style.opacity = '0.4';
-        ticketSection.style.pointerEvents = 'none';
-        document.getElementById('ticketHint').textContent = '*미등록 차량은 티켓을 적용할 수 없습니다.';
-        document.getElementById('ticketHint').style.color = 'var(--color-btn-point)';
+      ticketSection.style.opacity = '0.4';
+      ticketSection.style.pointerEvents = 'none';
+      document.getElementById('ticketHint').textContent = '*미등록 차량은 티켓을 적용할 수 없습니다.';
+      document.getElementById('ticketHint').style.color = 'var(--color-btn-point)';
     } else {
-        ticketSection.style.opacity = '1';
-        ticketSection.style.pointerEvents = 'auto';
-        document.getElementById('ticketHint').textContent = '';
-        document.getElementById('ticketHint').style.color = '';
+      ticketSection.style.opacity = '1';
+      ticketSection.style.pointerEvents = 'auto';
+      document.getElementById('ticketHint').textContent = '';
+      document.getElementById('ticketHint').style.color = '';
     }
 
     const dayCancelBtn = document.getElementById('dayCancelBtn');
     const hourCancelBtn = document.getElementById('hourCancelBtn');
 
     if (data.dayApplied) {
-        dayCancelBtn.style.display = 'block';
-        dayCancelBtn.innerHTML = `적용 티켓 : ${dayAppliedCount}장 &nbsp;|&nbsp; 티켓 적용 취소`;
+      dayCancelBtn.style.display = 'block';
+      dayCancelBtn.innerHTML = `적용 티켓 : ${dayAppliedCount}장 &nbsp;|&nbsp; 티켓 적용 취소`;
     } else {
-        dayCancelBtn.style.display = 'none';
+      dayCancelBtn.style.display = 'none';
     }
 
     if (data.hourApplied) {
-        hourCancelBtn.style.display = 'block';
-        hourCancelBtn.innerHTML = `적용 티켓 : ${hourAppliedCount}장 &nbsp;|&nbsp; 티켓 적용 취소`;
+      hourCancelBtn.style.display = 'block';
+      hourCancelBtn.innerHTML = `적용 티켓 : ${hourAppliedCount}장 &nbsp;|&nbsp; 티켓 적용 취소`;
     } else {
-        hourCancelBtn.style.display = 'none';
+      hourCancelBtn.style.display = 'none';
     }
 
     resetTicketUI();
     document.getElementById('searchResult').style.display = 'block';
-}
+  }
+
+  function unmatchHousehold() {
+    if (!selectedParkingId) return;
+    if (!confirm('내 손님 등록을 해제하시겠습니까?\n적용된 티켓이 있으면 자동으로 복구됩니다.')) return;
+
+    fetch(`${contextPath}parking/ticket/unmatch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        [csrfHeader]: csrfToken
+      },
+      body: JSON.stringify({ parkingId: selectedParkingId })
+    })
+      .then(async res => {
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.message || '서버 오류');
+        }
+        alert('내 손님 등록이 해제되었습니다.');
+        document.getElementById('searchResult').style.display = 'none';
+        document.getElementById('vehicleNumber').value = '';
+        selectedParkingId = null;
+      })
+      .catch(err => {
+        console.error(err);
+        alert('해제 중 오류가 발생했습니다: ' + err.message);
+      });
+  }
 
   function openCancelModal(type, btn) {
     cancelType = type;
@@ -366,11 +405,11 @@ function renderTicketUI(data) {
   }
 
   function confirmCancel() {
-  const count = parseInt(document.getElementById('cancelCount').value);
-  const type = cancelType;  // 먼저 저장
-  const btn = cancelBtn;    // 먼저 저장
-  closeCancelModal();       // 그 다음 닫기
-  cancelTicket(type, btn, count);  // 저장된 값으로 호출
+    const count = parseInt(document.getElementById('cancelCount').value);
+    const type = cancelType;
+    const btn = cancelBtn;
+    closeCancelModal();
+    cancelTicket(type, btn, count);
   }
 
   function toMinutes(text) {
@@ -524,38 +563,35 @@ function renderTicketUI(data) {
     location.href = `${contextPath}parking/unregistered?vehicleNumber=${encodeURIComponent(vehicleNumber)}`;
   }
 
-  // 페이지 로드 시 내 세대 차량 목록 조회
-async function loadMyVehicles() {
+  async function loadMyVehicles() {
     const res = await fetch(`${contextPath}parking/ticket/my-vehicles`);
     const data = await res.json();
     if (data.length > 0) {
-        // 차량이 하나면 바로 renderTicketUI, 여러 개면 선택 목록 표시
-        if (data.length === 1) {
-            renderTicketUI(data[0]);
-        } else {
-            // 선택 목록 표시 (기존 vehicleSelectBox 활용)
-            const selectList = document.getElementById('vehicleSelectList');
-            data.forEach(vehicle => {
-                const div = document.createElement('div');
-                div.classList.add('result-item');
-                div.style.cursor = 'pointer';
-                div.innerHTML = `<p style="margin:0;">
-                <strong>${vehicle.vehicleNumber}</strong>
-                &nbsp;|&nbsp; 입차 ${vehicle.entryTime}
-                ${vehicle.unregistered ? '&nbsp;|&nbsp; <span style="color:var(--color-btn-point);">미등록 차량</span>' : ''}
-            </p>`;
-                div.addEventListener('click', () => {
-                    document.getElementById('vehicleSelectBox').style.display = 'none';
-                    renderTicketUI(vehicle);
-                });
-                selectList.appendChild(div);
-            });
-            document.getElementById('vehicleSelectBox').style.display = 'block';
-        }
+      if (data.length === 1) {
+        renderTicketUI(data[0]);
+      } else {
+        const selectList = document.getElementById('vehicleSelectList');
+        data.forEach(vehicle => {
+          const div = document.createElement('div');
+          div.classList.add('result-item');
+          div.style.cursor = 'pointer';
+          div.innerHTML = `<p style="margin:0;">
+            <strong>${vehicle.vehicleNumber}</strong>
+            &nbsp;|&nbsp; 입차 ${vehicle.entryTime}
+            ${vehicle.unregistered ? '&nbsp;|&nbsp; <span style="color:var(--color-btn-point);">미등록 차량</span>' : ''}
+          </p>`;
+          div.addEventListener('click', () => {
+            document.getElementById('vehicleSelectBox').style.display = 'none';
+            renderTicketUI(vehicle);
+          });
+          selectList.appendChild(div);
+        });
+        document.getElementById('vehicleSelectBox').style.display = 'block';
+      }
     }
-}
+  }
 
-document.addEventListener('DOMContentLoaded', loadMyVehicles);
+  document.addEventListener('DOMContentLoaded', loadMyVehicles);
 </script>
 
 </body>

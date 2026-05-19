@@ -24,10 +24,11 @@ public class ParkingSearchResponse {
     private final int dayRemaining;
     private final int hourRemaining;
     private final boolean unregistered;
+    private final boolean manualMatched;  // 수동 입차 + 세대 매칭 완료 여부
     private final boolean dayApplied;
     private final boolean hourApplied;
-    private final int dayAppliedCount;   // 추가
-    private final int hourAppliedCount;  // 추가
+    private final int dayAppliedCount;
+    private final int hourAppliedCount;
 
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
@@ -64,12 +65,15 @@ public class ParkingSearchResponse {
 
         this.unregistered = log.getHousehold() == null;
 
+        // 수동 입차 + 세대 매칭 완료된 경우 → 내 손님 해제 버튼 표시용
+        this.manualMatched = log.getEntryType() == ParkingLog.EntryType.MANUAL
+                && log.getHousehold() != null;
+
         this.dayApplied = usages.stream()
                 .anyMatch(u -> u.getTicket().getType() == ParkingTicket.TicketType.DAY);
         this.hourApplied = usages.stream()
                 .anyMatch(u -> u.getTicket().getType() == ParkingTicket.TicketType.HOUR);
 
-        // 적용된 수량 합산
         this.dayAppliedCount = usages.stream()
                 .filter(u -> u.getTicket().getType() == ParkingTicket.TicketType.DAY)
                 .mapToInt(TicketUsage::getUsedCount)

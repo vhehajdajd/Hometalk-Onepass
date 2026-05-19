@@ -39,6 +39,12 @@ public class StaffExitController {
         return ResponseEntity.ok(staffExitService.getParkedResidentList());
     }
 
+    // GET /staff/exit/list/recent
+    @GetMapping("/list/recent")
+    public ResponseEntity<List<ParkingLogResponse>> getRecentExitList() {
+        return ResponseEntity.ok(staffExitService.getRecentExitList());
+    }
+
     // POST /staff/exit/process
     @PostMapping("/process")
     public ResponseEntity<Void> processExit(@RequestBody ExitRequest request) {
@@ -65,10 +71,17 @@ public class StaffExitController {
         if (request.getParkingId() == null) {
             return ResponseEntity.badRequest().build();
         }
-        // ✅ StaffExitService에 알림 발송 로직 위임
         staffExitService.sendTicketShortageNotification(request.getParkingId());
         return ResponseEntity.ok().build();
     }
+
+    // POST /staff/exit/cancel
+    @PostMapping("/cancel")
+    public ResponseEntity<Void> cancelExit(@RequestBody ExitRequest request) {
+        if (request.getParkingId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        staffExitService.cancelExit(request.getParkingId());
+        return ResponseEntity.ok().build();
+    }
 }
-
-

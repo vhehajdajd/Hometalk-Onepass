@@ -19,5 +19,9 @@ public interface TicketRegisterService {
     // 티켓 취소
     void cancelTicket(TicketCancelRequest request, Long householdId);
 
+    // 내 세대 주차 차량 목록
     List<ParkingSearchResponse> getMyParkedVehicles(Long householdId);
+
+    // 내 손님 해제
+    void unmatchHousehold(Long parkingId, Long householdId);
 }
