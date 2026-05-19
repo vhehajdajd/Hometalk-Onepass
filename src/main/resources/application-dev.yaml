@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://210.178.108.186:3306/passonedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: onehome
-    password: homeone402
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   security:
     oauth2:
@@ -13,8 +13,8 @@ spring:
         # 1. 클라이언트 설정: 각 소셜 서비스(카카오, 네이버 등)의 계정 정보 등록
         registration:
           kakao:
-            client-id: 4ad79c0bcd4a2a0ab2ac8b3d0fb76b76 # 카카오에서 발급받은 REST API 키
-            client-secret: k8NJmdYf0NQAD0JShTsmevgS5Q4qzz2s # 카카오 보안을 위해 발급받은 비밀키
+            client-id: ${KAKAO_CLIENT_ID} # 카카오에서 발급받은 REST API 키
+            client-secret: ${KAKAO_SECRET_KEY} # 카카오 보안을 위해 발급받은 비밀키
             client-authentication-method: client_secret_post # 인증 시 ID와 Secret을 POST 요청 바디에 담아 보냄
             authorization-grant-type: authorization_code # OAuth2의 표준 인증 방식인 '권한 부여 코드' 방식 사용
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}" # 로그인 리다이렉트 주소
@@ -24,8 +24,8 @@ spring:
             client-name: Kakao # 로그인 페이지 등에 표시될 서비스 이름
 
           naver:
-            client-id: oBYc1NEcmhM2m_WHKWaH # 네이버에서 발급받은 Client ID
-            client-secret: qZVkWuUwnw # 네이버에서 발급받은 Client Secret
+            client-id: ${NAVER_CLIENT_ID} # 네이버에서 발급받은 Client ID
+            client-secret: ${NAVER_SECRET_KEY} # 네이버에서 발급받은 Client Secret
             client-authentication-method: client_secret_post # 인증 정보를 POST 방식으로 전달
             authorization-grant-type: authorization_code # 권한 코드 방식 사용
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}" # 로그인 리다이렉트 주소
@@ -35,8 +35,8 @@ spring:
             client-name: Naver
 
           google:
-            client-id: 820623076959-ebo61nr950fieqtoe4t3au3qg4trmlgq.apps.googleusercontent.com # 구글 발급 Client Id
-            client-secret: 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 # 구글 Client Secret
+            client-id: ${GOOGLE_CLIENT_ID} # 구글 발급 Client Id
+            client-secret: ${GOOGLE_SECRET_KEY} # 구글 Client Secret
             client-authentication-method: client_secret_post # 인증 정보를 POST 방식으로 전달
             authorization-grant-type: authorization_code # 권한 코드 방식 사용
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}" # 로그인 리다이렉트 주소
