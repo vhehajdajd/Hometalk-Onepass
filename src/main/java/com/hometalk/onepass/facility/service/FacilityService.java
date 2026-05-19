@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -144,11 +145,19 @@ public class FacilityService {
     public List<FacilityResponseDto> getFacilitiesWithStatus(Long userId) {
         List<Facility> facilities = facilityRepository.findAll();
         LocalTime now = LocalTime.now();
+        LocalDateTime nowDateTime = LocalDateTime.now();
+
         return facilities.stream().map(facility -> {
-            boolean hasActiveBooking = reservationRepository.existsActiveReservation(userId, facility.getId());
+            boolean hasActiveBooking = reservationRepository.existsActiveReservation(
+                    userId,
+                    facility.getId(),
+                    nowDateTime
+            );
+
             if (hasActiveBooking) {
                 return FacilityResponseDto.from(facility, BookingStatus.ALREADY_BOOKED);
             }
+
             if (facility.getOperationTime() != null && facility.getOperationTime().getCloseTime() != null) {
                 LocalTime closeTime = facility.getOperationTime().getCloseTime();
 
@@ -156,8 +165,8 @@ public class FacilityService {
                     return FacilityResponseDto.from(facility, BookingStatus.CLOSED);
                 }
             }
-            return FacilityResponseDto.from(facility, BookingStatus.AVAILABLE);
 
+            return FacilityResponseDto.from(facility, BookingStatus.AVAILABLE);
         }).collect(Collectors.toList());
     }
 }

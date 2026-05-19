@@ -92,7 +92,11 @@ public class ReservationService {
     }
     // '이용 종료/취소' 상태가 아닌 예약 확인
     public boolean hasActiveReservation(Long userId, Long facilityId) {
-        return reservationRepository.existsActiveReservation(userId, facilityId);
+        return reservationRepository.existsActiveReservation(
+                userId,
+                facilityId,
+                LocalDateTime.now()
+        );
     }
 
     public ReservationResponseDto findOne(Long id, Long currentUserId, User.UserRole currentUserRole) {
@@ -107,11 +111,11 @@ public class ReservationService {
         return ReservationResponseDto.fromEntity(reservation);
     }
 
-    public List<ReservationResponseDto> findAll() {
-        return reservationRepository.findAll()
-                .stream()
-                .map(ReservationResponseDto::fromEntity)
-                .collect(Collectors.toList());
+    public Page<ReservationResponseDto> findAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+
+        return reservationRepository.findAll(pageable)
+                .map(ReservationResponseDto::fromEntity);
     }
 
     @Transactional

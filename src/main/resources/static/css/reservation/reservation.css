@@ -697,10 +697,11 @@
 }
 
 .board-bottom-actions .btn {
-    min-width: 120px;
-    height: 44px;
-    border-radius: 10px;
-    font-size: 15px;
+    min-width: 100px;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-size: 14px;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
@@ -1329,4 +1330,21 @@
 
 .btn-outline-primary:hover {
     background: #eef5ff;
+}
+
+.board-bottom-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+}
+
+/* 민원 리스트 - 내 민원 보기 버튼 크기 보정 */
+.my-complaint-btn {
+    width: fit-content !important;
+    min-width: 120px !important;
+    max-width: 140px !important;
+    height: 38px !important;
+    padding: 0 18px !important;
+    flex: 0 0 auto !important;
 }
