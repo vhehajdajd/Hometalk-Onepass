@@ -209,7 +209,7 @@ async function submitReport() {
                 detail: detail
             };
 
-            const response = await apiFetch('/hometop/api/posts/reports', {
+            const response = await apiFetch('/hometop/api/resident/report', {
                 method: 'POST',
                 body: JSON.stringify(requestData)
             });
@@ -259,8 +259,8 @@ function toggleReaction(buttonElement, type) {
         ? `/hometop/api/resident/${postId}/like`
         : `/hometop/api/resident/${postId}/dislike`;
 
-    fetch(url, { method: 'POST' })
-        .then(res => res.json())
+    apiFetch(url, { method: 'POST' })
+        .then(res => { return res.json ? res.json() : res; })
         .then(data => {
             if(data.code && data.code !== "C999") {
                 alert(data.message);

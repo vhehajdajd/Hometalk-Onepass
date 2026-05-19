@@ -52,23 +52,23 @@
                         <div class="filter-item">
                             <label for="filterReason" class="filter-label">신고 유형</label>
                             <select id="filterReason" class="select-admin-filter" onchange="searchReports()">
-                                <option value="">전체 유형</option>
-                                <option value="SPAM">광고 및 도배</option>
-                                <option value="ABUSE">욕설 및 비방</option>
-                                <option value="PROFANITY">음란성 내용</option>
-                                <option value="INAPPROPRIATE">주민 정서 부적절</option>
-                                <option value="ETC">기타 사유</option>
+                                <option value="" th:selected="${currentReason == ''}">전체 유형</option>
+                                <option value="SPAM" th:selected="${currentReason == 'SPAM'}">광고 및 도배</option>
+                                <option value="ABUSE" th:selected="${currentReason == 'ABUSE'}">욕설 및 비방</option>
+                                <option value="PROFANITY" th:selected="${currentReason == 'PROFANITY'}">음란성 내용</option>
+                                <option value="INAPPROPRIATE" th:selected="${currentReason == 'INAPPROPRIATE'}">주민 정서 부적절</option>
+                                <option value="ETC" th:selected="${currentReason == 'ETC'}">기타 사유</option>
                             </select>
                         </div>
 
                         <div class="filter-item">
                             <label for="filterStatus" class="filter-label">처리 상태</label>
                             <select id="filterStatus" class="select-admin-filter" onchange="searchReports()">
-                                <option value="">전체 상태</option>
-                                <option value="RECEIVED">접수 완료</option>
-                                <option value="PROCEEDING">처리 중</option>
-                                <option value="COMPLETED">처리 완료</option>
-                                <option value="REJECTED">반려 (허위 신고)</option>
+                                <option value="ALL" th:selected="${currentStatus == 'ALL'}">전체 상태</option>
+                                <option value="PENDING" th:selected="${currentStatus == 'PENDING'}">접수 대기 (PENDING)</option>
+                                <option value="REVIEWING" th:selected="${currentStatus == 'REVIEWING'}">검토 중 (REVIEWING)</option>
+                                <option value="RESOLVED" th:selected="${currentStatus == 'RESOLVED'}">처리 완료 (RESOLVED)</option>
+                                <option value="REJECTED" th:selected="${currentStatus == 'REJECTED'}">신고 반려 (REJECTED)</option>
                             </select>
                         </div>
 
@@ -82,8 +82,8 @@
                                 <th style="width: 8%;">신고 ID</th>
                                 <th style="width: 12%;">신고자</th>
                                 <th style="width: 15%;">신고 사유</th>
-                                <th style="width: 30%;">상세 내용</th>
-                                <th style="width: 20%;">대상 게시글</th>
+                                <th style="width: 20%;">상세 내용</th>
+                                <th style="width: 30%;">대상 게시글</th>
                                 <th style="width: 15%;">관리</th>
                             </tr>
                         </thead>
@@ -98,27 +98,61 @@
                                 <td th:text="${report.id}">1</td>
                                 <td th:text="${report.username}">홍길동</td>
                                 <td>
-                                  <span class="badge status-deleted" th:text="${report.reason}">사유</span>
-                                </td>
-                                <td class="text-left" th:text="${report.detail}">상세 설명 내용</td>
-                                <td class="title-cell">
-                                  <a th:href="@{/community/post/{id}(id=${report.postId})}" target="_blank" th:text="${report.postTitle}">신고된 글 제목</a>
+                                    <div style="font-weight: 500; margin-bottom: 4px;" th:text="${report.reason.description}">사유</div>
+                                    <span class="badge"
+                                          th:classappend="${report.status.badgeClass}"
+                                          th:text="${report.status.displayName}">대기</span>
                                 </td>
                                 <td>
-                                    <button type="button" class="btn btn-primary" th:onclick="processReport([[${report.id}]], 'resolve')">
-                                      <i class="fas fa-check"></i> 승인
+                                    <button type="button"
+                                            class="btn-detail-view"
+                                            th:data-detail="${report.detail}"
+                                            onclick="openDetailModal(this)">
+                                        <i class="far fa-file-alt"></i> 상세 내용 보기
                                     </button>
-                                    <button type="button" class="btn btn-point" th:onclick="processReport([[${report.id}]], 'reject')"  style="margin-left: 4px;">
-                                      <i class="fas fa-times"></i> 반려
-                                    </button>
+                                </td>
+                                <td class="title-cell">
+                                  <a th:href="@{/community/{bCode}/{cCode}/{id}(bCode=${report.boardCode}, cCode=${report.categoryCode}, id=${report.postId})}"
+                                     target="_blank" th:text="${report.postTitle}">신고된 글 제목</a>
+                                </td>
+                                <td>
+                                    <div class="custom-dropdown">
+                                        <button type="button" class="drop-btn" onclick="toggleDropdownMenu(this)">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <div class="drop-content">
+                                            <button type="button"
+                                                    th:onclick="processReport([[${report.id}]], 'resolve')">
+                                                <i class="fas fa-check" style="margin-right: 6px; color: #52c41a;"></i> 신고 승인
+                                            </button>
+
+                                            <button type="button"
+                                                    class="delete-btn"
+                                                    th:onclick="processReport([[${report.id}]], 'reject')">
+                                                <i class="fas fa-times" style="margin-right: 6px;"></i> 신고 반려
+                                            </button>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-
             </div>
-
+            <div id="reportDetailModal" class="admin-modal-overlay" style="display: none;">
+                <div class="admin-modal-content">
+                    <div class="admin-modal-header">
+                        <h3><i class="fas fa-exclamation-circle"></i> 신고 상세 내용</h3>
+                        <button type="button" class="modal-close-x" onclick="closeDetailModal()">&times;</button>
+                    </div>
+                    <div class="admin-modal-body">
+                        <p id="modalDetailContent"></p>
+                    </div>
+                    <div class="admin-modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="closeDetailModal()">닫기</button>
+                    </div>
+                </div>
+            </div>
         </main>
         <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
@@ -128,8 +162,26 @@
 <script defer th:src="@{/js/community/post-modal.js}"></script>
 <script defer th:src="@{/js/community/adminpage.js}"></script>
 <script th:inline="javascript">
+    // 드롭다운
+    function toggleDropdownMenu(button) {
+        const menu = button.nextElementSibling;
+        document.querySelectorAll('.drop-content').forEach(el => {
+            if (el !== menu) el.classList.remove('show-menu');
+        });
+        // 현재 클릭한 메뉴 토글
+        menu.classList.toggle('show-menu');
+    }
+    window.addEventListener('click', function(event) {
+        if (!event.target.closest('.custom-dropdown')) {
+            document.querySelectorAll('.drop-content').forEach(el => {
+                el.classList.remove('show-menu');
+            });
+        }
+    });
+
+    // 승인&반려
     function processReport(reportId, action) {
-        const actionText = action === 'resolve' ? '승인하고 해당 게시글을 블라인드(숨김)' : '반려';
+        const actionText = action === 'resolve' ? '승인하고 해당 게시글을 삭제' : '반려';
         const message = `정말로 이 신고를 ${actionText}하시겠습니까?`;
 
         showConfirmModal(message, async () => {
@@ -153,6 +205,50 @@
             }
         });
     }
+
+    // 조건별 필터링 (개별 적용 필터링)
+    function searchReports() {
+        const reasonValue = document.getElementById('filterReason').value;
+        const statusValue = document.getElementById('filterStatus').value;
+        const urlParams = new URLSearchParams(window.location.search);
+        // 1. 신고 유형
+        if (reasonValue) {
+            urlParams.set('reason', reasonValue);
+        } else {
+            urlParams.delete('reason');
+        }
+        // 2. 처리 상태
+        if (statusValue && statusValue !== 'ALL') {
+            urlParams.set('status', statusValue);
+        } else {
+            urlParams.delete('status');
+        }
+        urlParams.set('page', '0'); // 필터 변경 시 페이지 리셋
+
+        // 최종 주소로 이동
+        location.href = window.location.pathname + "?" + urlParams.toString();
+    }
+
+    // 상세 내용 모달 제어
+    function openDetailModal(button) {
+        const detailText = button.getAttribute('data-detail');
+        // 모달 안의 <p> 태그에 텍스트 주입
+        document.getElementById('modalDetailContent').textContent = detailText || "상세 내용이 없습니다.";
+        // 모달 레이어 보이기
+        document.getElementById('reportDetailModal').style.display = 'flex';
+    }
+    // 모달 닫기
+    function closeDetailModal() {
+        document.getElementById('reportDetailModal').style.display = 'none';
+    }
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('reportDetailModal');
+        if (event.target === modal) {
+            closeDetailModal();
+        }
+    });
+
+    window.searchReports = searchReports;
 </script>
 
 </body>

@@ -5,6 +5,8 @@ import com.hometalk.onepass.community.dto.AdminBoardRsDTO;
 import com.hometalk.onepass.community.dto.ReportResponse;
 import com.hometalk.onepass.community.dto.response.PostResponseDTO;
 import com.hometalk.onepass.community.enums.BoardType;
+import com.hometalk.onepass.community.enums.ReportReason;
+import com.hometalk.onepass.community.enums.ReportStatus;
 import com.hometalk.onepass.community.service.CommunityAdminService;
 import com.hometalk.onepass.community.service.ReportService;
 import jakarta.validation.Valid;
@@ -171,9 +173,15 @@ public class CommunityAdminController {
 
     // 대기 상태 신고 목록 조회
     @GetMapping("/reports")
-    public String getPendingReportPage(Model model) {
-        List<ReportResponse> pendingReports = reportService.findPendingReports();
-        model.addAttribute("reports", pendingReports);
+    public String reportAdminPage(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "reason", required = false) String reason,
+            Model model) {
+        List<ReportResponse> reports = reportService.findReportsByFilters(status, reason);
+
+        model.addAttribute("reports", reports);
+        model.addAttribute("currentStatus", (status != null && !status.isBlank()) ? status : "ALL");
+        model.addAttribute("currentReason", (reason != null && !reason.isBlank()) ? reason : "");
         return "community/reportList";
     }
 }

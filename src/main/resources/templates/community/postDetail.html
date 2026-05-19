@@ -105,12 +105,13 @@
                             </div>
 
                             <div class="meta-right-tools">
-                                <button th:if="${!post.editable}"
+                                <button th:if="${!post.editable and !post.pinned}"
+                                        sec:authorize="!hasRole('ADMIN')"
                                         type="button"
                                         class="btn-report"
+                                        data-tooltip="신고"
                                         th:onclick="|openReportModal(${post.id})|">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <span>신고</span>
+                                    <i class="fas fa-flag"></i>
                                 </button>
                             </div>
                         </div>

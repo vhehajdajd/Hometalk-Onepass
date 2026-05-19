@@ -42,31 +42,52 @@
     display: none;
 }
 .btn-report {
-    background: none;
-    border: none;
-    color: #94a3b8;
-    cursor: pointer;
-    font-size: 13.5px;
-    font-weight: 500;
-    display: flex;
+    position: relative;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.15s ease;
-}
-/* 신고 버튼 내부 아이콘 색상 고정 */
-.btn-report i {
-    color: #ff7f50;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .btn-report:hover {
     background-color: #fff1f0;
+    border-color: #ffa39e;
     color: #f5222d;
 }
 
-.btn-report:hover i {
-    color: #f5222d;
+.btn-report::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+
+    /* 툴팁 디자인 */
+    background-color: #333;
+    color: #fff;
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+
+    /* 처음엔 안 보이게 설정 */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+}
+
+.btn-report:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
 }
 
 /* 3. 본문 내용 영역 */

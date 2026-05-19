@@ -18,10 +18,12 @@ public class ReportResponse {
 
     private final Long postId;
     private final String postTitle;
+    private final String boardCode;
+    private final String categoryCode;
 
     public ReportResponse(Long id, ReportReason reason, String detail, String username,
                           LocalDateTime createdAt, ReportStatus status,
-                          Long postId, String postTitle) {
+                          Long postId, String postTitle, String boardCode, String categoryCode) {
         this.id = id;
         this.reason = reason;
         this.detail = detail;
@@ -30,12 +32,27 @@ public class ReportResponse {
         this.status = status;
         this.postId = postId;
         this.postTitle = postTitle;
+        this.boardCode = boardCode;
+        this.categoryCode = categoryCode;
     }
 
     public static ReportResponse from(Report report) {
         String reporterName = report.getUser() != null ? report.getUser().getName() : "알 수 없는 사용자";
         Long postId = report.getPost() != null ? report.getPost().getId() : null;
         String postTitle = report.getPost() != null ? report.getPost().getTitle() : "삭제된 게시글";
+
+        String boardCode = "";
+        String categoryCode = "";
+
+        if (report.getPost() != null) {
+            if (report.getPost().getBoard() != null) {
+                boardCode = report.getPost().getBoard().getCode();
+            }
+            if (report.getPost().getCategory() != null) {
+                categoryCode = report.getPost().getCategory().getCode();
+            }
+        }
+
         return new ReportResponse(
                 report.getId(),
                 report.getReason(),
@@ -43,7 +60,8 @@ public class ReportResponse {
                 reporterName,
                 report.getCreatedAt(),
                 report.getStatus(),
-                postId, postTitle
+                postId, postTitle,
+                boardCode, categoryCode
         );
     }
 }
