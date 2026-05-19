@@ -557,8 +557,28 @@
    6. 폼 레이아웃
 ========================= */
 .write-form {
-    max-width: 1000px;
+    width: 100%;
+    max-width: 1200px;
     margin: 0 auto;
+}
+
+/* 문의 작성 폼 너비 보정 */
+.write-form .flex.gap-md.mb-md {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+}
+
+.write-form .form-group {
+    width: 100%;
+}
+
+.write-form .input-field,
+.write-form .select-field,
+.write-form .textarea-field,
+.write-form .file-upload-wrapper {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .form-group {
@@ -579,7 +599,7 @@
 }
 
 .textarea-field {
-    min-height: 300px;
+    min-height: 360px;
     line-height: 1.6;
     resize: vertical;
 }
@@ -651,6 +671,53 @@
     color: #6b7280;
 }
 
+/* =========================
+   민원 등록 - 분류/제목 비율
+========================= */
+
+.category-group {
+    flex: 0 0 230px;
+}
+
+.title-group {
+    flex: 1;
+}
+
+.category-select {
+    height: 54px;
+    font-size: 15px;
+}
+
+/* 내 민원 보기 */
+.board-bottom-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+}
+
+.board-bottom-actions .btn {
+    min-width: 120px;
+    height: 44px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.btn-outline-primary {
+    border: 1px solid #3f7dd9;
+    background: #fff;
+    color: #3f7dd9;
+}
+
+.btn-outline-primary:hover {
+    background: #eef5ff;
+}
+
 /*문의 list 카테고리*/
 
 .badge.service {
@@ -683,6 +750,7 @@
     color: #6b7280;
 }
 
+
 /*문의 글작성 카테고리*/
 .category-select.service {
     background-color: #dbeafe !important;
@@ -712,6 +780,27 @@
 .category-select.etc {
     background-color: #f3f4f6 !important;
     color: #6b7280 !important;
+}
+
+/* 내 문의 카테고리 색상 */
+.category-badge.security {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.category-badge.clean {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.category-badge.facility {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.category-badge.etc {
+    background: #f3f4f6;
+    color: #6b7280;
 }
 
 /* 알림 박스 스타일 */
@@ -952,4 +1041,292 @@
 .custom-modal-btn.confirm-btn {
     background: var(--color-btn);
     color: #fff;
+}
+
+/* =========================
+   FAQ Dashboard
+========================= */
+
+.faq-container {
+    width: 100%;
+}
+
+.faq-hero {
+    padding: 56px 48px;
+    border-radius: 28px;
+    background: #eef5ff;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.faq-hero h2 {
+    font-size: 30px;
+    font-weight: 800;
+    margin-bottom: 26px;
+}
+
+.faq-hero input {
+    width: 72%;
+    max-width: 960px;
+    height: 58px;
+    border-radius: 18px;
+    border: 1px solid #d6deea;
+    padding: 0 24px;
+    font-size: 16px;
+    background: #fff;
+}
+
+.faq-layout {
+    display: grid;
+    grid-template-columns: 1fr 2.4fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.sticky-box {
+    position: sticky;
+    top: 90px;
+}
+
+.faq-side,
+.faq-status,
+.faq-main {
+    background: #fff;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+.faq-side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.faq-side h3,
+.faq-status h3,
+.faq-main h3 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 18px;
+}
+
+.faq-category-btn {
+    width: 100%;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    background-color: #f8f9fa;
+    border: 1px solid #eef2f6;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.faq-category-btn:hover {
+    background-color: #f1f3f5;
+    color: #333;
+}
+
+.faq-category-btn.active {
+    background-color: #e8f0fe;
+    color: #1a73e8;
+    border-color: #d2e3fc;
+}
+
+.faq-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.faq-item {
+    border: 1px solid #eef2f6;
+    border-radius: 18px;
+    background: #fff;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.faq-item:hover {
+    border-color: #d2e3fc;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
+
+.faq-question {
+    width: 100%;
+    min-height: 78px;
+    padding: 18px 20px;
+    border: none;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.faq-text {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1.5;
+}
+
+.faq-label {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.q-label {
+    background: #e8f0fe;
+    color: #1a73e8;
+}
+
+.a-label {
+    background: #ecfdf5;
+    color: #16a34a;
+}
+
+.faq-arrow {
+    font-size: 13px;
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+}
+
+.faq-answer {
+    display: none;
+    padding: 20px;
+    border-top: 1px solid #eef2f6;
+    background: #fff;
+}
+
+.faq-item.active .faq-answer {
+    display: block;
+}
+
+.faq-item.active .faq-arrow {
+    transform: rotate(180deg);
+}
+
+.faq-answer-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.faq-answer-content p {
+    margin: 2px 0 0;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.faq-help-box {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px dashed #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.faq-help-box a {
+    padding: 7px 12px;
+    border-radius: 10px;
+    background: #e8f0fe;
+    color: #1a73e8;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.faq-help-box a:hover {
+    background: #d2e3fc;
+}
+
+.faq-empty {
+    padding: 60px 0;
+    text-align: center;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.faq-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 28px;
+}
+
+.faq-page-btn {
+    min-width: 36px;
+    height: 36px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.faq-page-btn.active {
+    background: #e8f0fe;
+    color: #1a73e8;
+    border-color: #d2e3fc;
+}
+
+.faq-page-btn.disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.faq-status {
+    display: flex;
+    flex-direction: column;
+}
+
+.faq-status .btn {
+    align-self: flex-end;
+    margin-top: 16px;
+}
+
+.status-btn-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+}
+/* 내 문의 보기 */
+.status-btn-group .btn {
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.btn-outline-primary {
+    border: 1px solid #3f7dd9;
+    color: #3f7dd9;
+    background: #fff;
+}
+
+.btn-outline-primary:hover {
+    background: #eef5ff;
 }
