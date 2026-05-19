@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TagRepository extends JpaRepository<Tag, Long> {
-    Optional<Tag> findByName(String name);
+    List<Tag> findByNameIn(List<String> names);
 
     // 특정 게시판(boardId)에서 가장 많이 사용된 상위 10개 태그 이름 조회
     @Query("SELECT t.name FROM PostTag pt " +
@@ -22,6 +22,5 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
     List<String> findTop10TagNamesByBoardId(@Param("boardId") Long boardId, Pageable pageable);
 
     // 입력한 키워드로 시작하는 태그 최대 5개 검색
-    @Query("SELECT t.name FROM Tag t WHERE t.name LIKE :keyword% ORDER BY t.name ASC")
-    List<String> findTop5ByNameStartingWith(@Param("keyword") String keyword, Pageable pageable);
+    List<String> findNameByNameStartingWith(String keyword, Pageable pageable);
 }

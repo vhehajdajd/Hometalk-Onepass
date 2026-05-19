@@ -25,9 +25,6 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     @PostMapping
     public String saveComment(@PathVariable String boardCode,
                               @PathVariable String categoryCode,
@@ -77,11 +74,6 @@ public class CommentController {
     }
 
     private Long getLoginUserId(Authentication authentication) {
-        return getLoginUser(authentication).getId();
-    }
-
-    private User getLoginUser(Authentication authentication) {
-
         if (authentication == null || !authentication.isAuthenticated()
                 || "anonymousUser".equals(authentication.getPrincipal())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
@@ -91,33 +83,10 @@ public class CommentController {
 
         if (principal instanceof CustomUserDetails customUserDetails) {
             Long userId = customUserDetails.getUserId();
-
             if (userId != null) {
-                User user = entityManager.find(User.class, userId);
-
-                if (user != null) {
-                    return user;
-                }
+                return userId;
             }
         }
-
-        String loginId = authentication.getName();
-
-        List<User> users = entityManager.createQuery(
-                        "select u " +
-                                "from LocalAccount la " +
-                                "join la.user u " +
-                                "where la.loginId = :loginId",
-                        User.class
-                )
-                .setParameter("loginId", loginId)
-                .setMaxResults(1)
-                .getResultList();
-
-        if (users.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다.");
-        }
-
-        return users.get(0);
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증된 사용자 정보가 유효하지 않습니다.");
     }
 }

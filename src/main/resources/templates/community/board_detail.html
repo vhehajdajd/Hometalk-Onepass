@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
+    <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='게시판 관리')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/community/adminpage.css}">
 </head>
 <body>
@@ -43,15 +43,15 @@
                 </div>
 
                 <div class="board-type-setting">
-
-                    <label>게시판 유형</label>
+                    <div class="category-section">
+                        <h3>게시판 유형</h3>
+                    </div>
                     <form th:action="@{/community/admin/board/type/{id}(id=${board.id})}"
                           method="post"
                           th:data-post-count="${board.visiblePostCount + board.hiddenPostCount}"
                           onsubmit="return confirmBoardTypeChange(this)">
 
                         <div class="board-type-group">
-
                             <label class="board-type-card">
                                 <input type="radio"
                                        name="boardType"
@@ -208,7 +208,7 @@
 <script defer th:src="@{/js/community/post-modal.js}"></script>
 <script defer th:src="@{/js/community/adminpage.js}"></script>
 
-<script>
+<script th:inline="javascript">
     function confirmDeleteBoard(form) {
         showConfirmModal("정말로 이 게시판을 삭제하시겠습니까?\n삭제된 게시판의 데이터는 복구할 수 없습니다.", () => {
             form.submit();
@@ -230,9 +230,9 @@
     }
 
     function saveEdit(id, boardId) {
-        const input = document.getElementById(`input-${id}`).value;
-        const newName = input.value.trim();
-        const originalName = input.dataset.originalName.trim();
+        const inputElement = document.getElementById(`input-${id}`);
+        const newName = inputElement.value.trim();
+        const originalName = inputElement.dataset.originalName.trim();
 
         if (!newName) {
             showAlertModal("카테고리 이름을 입력해주세요.");
@@ -242,8 +242,29 @@
             toggleEdit(id, false);
             return false;
         }
-        showConfirmModal("카테고리 이름을 수정하시겠습니까?", () => {
-            location.href = `../category/update/${id}?name=${encodeURIComponent(newName)}&boardId=${boardId}`;
+
+        showConfirmModal("카테고리 이름을 수정하시겠습니까?", async () => {
+            try {
+                // HTML 폼 없이 자바스크립트 내장 FormData 객체 생성
+                const formData = new FormData();
+                formData.append("name", newName);
+                formData.append("boardId", boardId);
+
+                const response = await formDataFetch(`/hometop/community/admin/category/update/${id}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // 성공 시 해당 게시판 상세 페이지
+                    location.href = `/hometop/community/admin/board/detail/${boardId}`;
+                } else {
+                    showAlertModal("수정 중 오류가 발생했습니다.");
+                }
+            } catch (error) {
+                console.error("카테고리 수정 실패:", error);
+                showAlertModal("서버와 통신 중 오류가 발생했습니다.");
+            }
         });
         return false;
     }
@@ -253,11 +274,27 @@
 
         if (!form) return;
 
-        form.addEventListener("submit", () => {
-            form.querySelectorAll(".temp-hidden-input").forEach(el => el.remove());
-
+        form.addEventListener("submit", (e) => {
             const nameInput = form.querySelector('input[name="categoryNames"]');
             const codeInput = form.querySelector('input[name="categoryCodes"]');
+            if (!nameInput || !nameInput.value.trim() || !codeInput || !codeInput.value.trim()) {
+                e.preventDefault(); // 폼 제출 중단
+                showAlertModal("모든 칸(이름 및 영문 코드)을 입력해주세요.");
+                return;
+            }
+            const codeRegex = /^[a-zA-Z0-9_-]+$/;
+            const codeValue = codeInput.value.trim();
+            if (!codeRegex.test(codeValue)) {
+                e.preventDefault(); // 한글/특수문자 들어오면 서버 전송 중단
+                showAlertModal("카테고리 영문 코드는 영어, 숫자, -, _ 만 가능합니다.");
+                codeInput.classList.add('error');
+                codeInput.focus();
+                return;
+            } else {
+                codeInput.classList.remove('error');
+            }
+
+            form.querySelectorAll(".temp-hidden-input").forEach(el => el.remove());
 
             if (nameInput) {
                 const hiddenName = document.createElement("input");
@@ -272,7 +309,7 @@
                 const hiddenCode = document.createElement("input");
                 hiddenCode.type = "hidden";
                 hiddenCode.name = "code";
-                hiddenCode.value = codeInput.value;
+                hiddenCode.value = codeValue;
                 hiddenCode.className = "temp-hidden-input";
                 form.appendChild(hiddenCode);
             }
@@ -307,10 +344,25 @@
             return false;
         }
 
-        showConfirmModal("정말로 삭제하시겠습니까?", () => {
-            location.href = `/hometop/community/admin/category/delete/${id}?boardId=${boardId}`;
-        });
+        showConfirmModal("정말로 삭제하시겠습니까?", async () => {
+            try {
+                const formData = new FormData();
+                formData.append("boardId", boardId);
+                const response = await formDataFetch(`/hometop/community/admin/category/delete/${id}`, {
+                    method: 'POST',
+                    body: formData
+                });
 
+                if (response.ok) {
+                    location.href = `/hometop/community/admin/board/detail/${boardId}`;
+                } else {
+                    showAlertModal("삭제 중 오류가 발생했습니다.");
+                }
+            } catch (error) {
+                console.error("카테고리 삭제 실패:", error);
+                showAlertModal("서버와 통신 중 오류가 발생했습니다.");
+            }
+        });
         return false;
     }
 

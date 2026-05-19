@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
+    <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티 관리')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/community/adminpage.css}">
 </head>
 
@@ -14,6 +14,18 @@
         <main class="dashboard-content">
 
             <section class="admin-content-area">
+
+                <div class="admin-header">
+                    <h2>커뮤니티 설정</h2>
+                    <div class="admin-actions flex gap-sm">
+                        <a th:href="@{/community/square/all}" class="btn-back-to-community">
+                            <i class="fa-solid fa-arrow-left-long"></i> 커뮤니티 게시판
+                        </a>
+                        <button type="button" class="btn btn-submit rounded" onclick="openCreateModal()">
+                            + 새 게시판
+                        </button>
+                    </div>
+                </div>
 
                 <div class="alert-container">
                     <!-- 성공 메시지 (message) -->
@@ -41,13 +53,6 @@
                         <li>게시판 유형 변경 시 기존 게시글의 화면 구성이 달라질 수 있습니다.</li>
                         <li>시스템 기본 데이터는 수정/삭제가 <strong>제한</strong>됩니다.</li>
                     </ul>
-                </div>
-
-                <div class="admin-header">
-                    <h2>커뮤니티 설정</h2>
-                    <button type="button" class="btn btn-submit" onclick="openCreateModal()">
-                        + 새 게시판
-                    </button>
                 </div>
 
                 <div id="createModal" class="modal-overlay">

@@ -2,11 +2,16 @@ package com.hometalk.onepass.community.controller;
 
 import com.hometalk.onepass.community.dto.AdminBoardRqDTO;
 import com.hometalk.onepass.community.dto.AdminBoardRsDTO;
+import com.hometalk.onepass.community.dto.ReportResponse;
 import com.hometalk.onepass.community.dto.response.PostResponseDTO;
 import com.hometalk.onepass.community.enums.BoardType;
+import com.hometalk.onepass.community.enums.ReportReason;
+import com.hometalk.onepass.community.enums.ReportStatus;
 import com.hometalk.onepass.community.service.CommunityAdminService;
+import com.hometalk.onepass.community.service.ReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,12 +21,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
+@Slf4j
 @Controller
 @RequestMapping("/community/admin")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class CommunityAdminController {
     private final CommunityAdminService communityAdminService;
+    private final ReportService reportService;
 
     // 게시판&카테고리 목록 조회
     @GetMapping
@@ -35,7 +42,7 @@ public class CommunityAdminController {
 
     // 상세 조회
     @GetMapping("/board/detail/{id}")
-    public String getBoardDetail(@PathVariable Long id, Model model) {
+    public String getBoardDetail(@PathVariable("id") Long id, Model model) {
         AdminBoardRsDTO boardDetail = communityAdminService.getAdminBoardDetail(id);
         model.addAttribute("board", boardDetail);
         return "community/board_detail"; // 상세 페이지 뷰 이름
@@ -67,7 +74,7 @@ public class CommunityAdminController {
             rttr.addFlashAttribute("message", "게시판이 성공적으로 삭제되었습니다.");
         } catch (IllegalStateException e) {
             rttr.addFlashAttribute("errorMessage", e.getMessage());
-            System.out.println("삭제 에러 발생: " + e.getMessage());
+            log.error("게시판 삭제 에러 발생 (ID: {}): {}", id, e.getMessage());
         }
         return "redirect:/community/admin";
     }
@@ -101,7 +108,7 @@ public class CommunityAdminController {
     }
 
     // 카테고리 이름 수정
-    @GetMapping("/category/update/{id}")
+    @PostMapping("/category/update/{id}")
     public String updateCategory(@PathVariable Long id,
                                  @RequestParam("name") String newName,
                                  @RequestParam(value = "bgColor", required = false) String bgColor,
@@ -112,7 +119,7 @@ public class CommunityAdminController {
     }
 
     // 6. 카테고리 삭제
-    @GetMapping("/category/delete/{id}")
+    @PostMapping("/category/delete/{id}")
     public String deleteCategory(@PathVariable Long id, @RequestParam Long boardId,
                                  RedirectAttributes rttr) {
         try {
@@ -149,6 +156,7 @@ public class CommunityAdminController {
         return "redirect:/community/admin/posts";
     }
 
+    // 게시판 유형 변경
     @PostMapping("/board/type/{id}")
     public String updateBoardType(@PathVariable Long id,
                                   @RequestParam BoardType boardType,
@@ -161,5 +169,19 @@ public class CommunityAdminController {
         }
 
         return "redirect:/community/admin/board/detail/" + id;
+    }
+
+    // 대기 상태 신고 목록 조회
+    @GetMapping("/reports")
+    public String reportAdminPage(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "reason", required = false) String reason,
+            Model model) {
+        List<ReportResponse> reports = reportService.findReportsByFilters(status, reason);
+
+        model.addAttribute("reports", reports);
+        model.addAttribute("currentStatus", (status != null && !status.isBlank()) ? status : "ALL");
+        model.addAttribute("currentReason", (reason != null && !reason.isBlank()) ? reason : "");
+        return "community/reportList";
     }
 }

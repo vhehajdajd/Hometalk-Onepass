@@ -1,5 +1,5 @@
 /*
-    삭제 / 숨김 / 고정 / 상태 변경
+    삭제 / 숨김 / 고정 / 상태 변경 / 신고
  */
 
 // 게시글 삭제 (Soft Delete)
@@ -152,6 +152,81 @@ async function updateTradeStatus(postId, status) {
     }
 }
 
+
+// 1. 신고 모달 열기
+function openReportModal(postId) {
+    const modal = document.getElementById('reportModal');
+    if (!modal) return;
+
+    // 모달 내부 데이터 초기화
+    document.getElementById('reportPostId').value = postId;
+    document.getElementById('reportReason').value = 'SPAM'; // 기본값 설정
+    document.getElementById('reportDetail').value = '';
+
+    // 모달 표시
+    modal.classList.add('show');
+    document.addEventListener('keydown', handleReportModalEsc);
+}
+
+
+// 2. 신고 모달 닫기
+function closeReportModal() {
+    const modal = document.getElementById('reportModal');
+    if (!modal) return;
+
+    modal.classList.remove('show');
+    document.removeEventListener('keydown', handleReportModalEsc);
+}
+
+
+// ESC 키 누를 때 모달 닫히는 핸들러
+function handleReportModalEsc(e) {
+    if (e.key === 'Escape') {
+        closeReportModal();
+    }
+}
+
+
+// 3. 신고 데이터 전송 (접수)
+async function submitReport() {
+    const postId = document.getElementById('reportPostId').value;
+    const reason = document.getElementById('reportReason').value;
+    const detail = document.getElementById('reportDetail').value.trim();
+
+    // 유효성 검사
+    if (!detail) {
+        showAlertModal('상세 신고 사유를 입력해주세요.');
+        return;
+    }
+
+    const message = '이 게시글을 신고하시겠습니까?\n허위 신고일 경우 서비스 이용이 제한될 수 있습니다.';
+
+    showConfirmModal(message, async () => {
+        try {
+            const requestData = {
+                postId: parseInt(postId),
+                reason: reason,
+                detail: detail
+            };
+
+            const response = await apiFetch('/hometop/api/resident/report', {
+                method: 'POST',
+                body: JSON.stringify(requestData)
+            });
+
+            if (response.ok) {
+                showAlertModal('신고가 정상적으로 접수되었습니다. 운영자 검토까지는 시간이 소요될 수 있습니다.');
+                closeReportModal();
+            } else {
+                showAlertModal('신고 접수 중 오류가 발생했습니다. 다시 시도해 주세요.');
+            }
+        } catch (error) {
+            console.error('신고 접수 실패:', error);
+            showAlertModal('서버와 통신 중 에러가 발생했습니다.');
+        }
+    });
+}
+
 // 취소 버튼 컨펌
 function confirmCancel() {
     if (isSubmitting) {
@@ -184,8 +259,8 @@ function toggleReaction(buttonElement, type) {
         ? `/hometop/api/resident/${postId}/like`
         : `/hometop/api/resident/${postId}/dislike`;
 
-    fetch(url, { method: 'POST' })
-        .then(res => res.json())
+    apiFetch(url, { method: 'POST' })
+        .then(res => { return res.json ? res.json() : res; })
         .then(data => {
             if(data.code && data.code !== "C999") {
                 alert(data.message);
@@ -213,3 +288,17 @@ function toggleReaction(buttonElement, type) {
         })
         .catch(err => console.error('추천 처리 중 오류 발생:', err));
 }
+
+// HTML의 th:onclick이나 외부 모듈에서 호출 가능하도록 전체 윈도우 객체 바인딩 세트 배치
+window.deletePost = deletePost;
+window.togglePin = togglePin;
+window.hidePost = hidePost;
+window.unhidePost = unhidePost;
+window.updateStatus = updateStatus;
+window.updateTradeStatus = updateTradeStatus;
+window.openReportModal = openReportModal;
+window.closeReportModal = closeReportModal;
+window.submitReport = submitReport;
+window.confirmCancel = confirmCancel;
+window.changePage = changePage;
+window.toggleReaction = toggleReaction;

@@ -9,7 +9,4 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PostFileRepository extends JpaRepository<PostFile, Long> {
-    List<PostFile> findByPost(Post post);
-
-    Optional<PostFile> findFirstByPostAndFileType(Post post, PostFileType fileType);
 }

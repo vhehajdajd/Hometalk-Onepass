@@ -55,6 +55,23 @@
     color: #d35400;
 }
 
+.admin-guide.danger-dark {
+    background-color: #1E293B;
+    border-left: 5px solid #F59E0B;
+}
+
+.admin-guide.danger-dark h3 {
+    color: #F8FAFC;
+}
+
+.admin-guide.danger-dark p {
+    color: #E2E8F0;
+}
+
+.admin-guide.danger-dark li {
+    color: #94A3B8;
+}
+
 /* 1. 레이아웃 및 게시판 목록 테이블 */
 /* 게시판 관리 섹션 전체 */
 .admin-content-area {
@@ -84,6 +101,38 @@
     color: var(--main-navy);
     font-size: 1.5rem;
     font-weight: 700;
+}
+.admin-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-back-to-community {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 16px;
+    background-color: #ffffff;
+    color: var(--main-navy);
+    border: 1px solid #d7dee8;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+}
+
+.btn-back-to-community:hover {
+    background-color: #f8fafc;
+    border-color: var(--color-btn);
+    color: var(--color-btn);
+}
+
+.btn-back-to-community i {
+    font-size: 14px;
 }
 
 /* =========================
@@ -199,6 +248,7 @@
 ========================= */
 .category-input-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
     margin-bottom: 14px;
@@ -214,9 +264,25 @@
 
 /* 상단 입력 영역 */
 .category-item-wrapper .d-flex.gap-2.mb-2 {
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100%;
+    margin-bottom: 14px !important;
+}
+
+.category-item-wrapper input[name="categoryNames"],
+.category-item-wrapper input[name="categoryCodes"] {
+    flex: 1 !important;
+    width: 0 !important;
+    min-width: 0;
+    height: 42px;
+    padding: 0 14px;
+    border: 1px solid #d7dee8;
+    border-radius: 10px;
+    font-size: 14px;
+    box-sizing: border-box;
 }
 
 /* input */
@@ -237,10 +303,25 @@
 
 /* 삭제 버튼 */
 .category-item-wrapper .btn-remove {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    flex-shrink: 0;
+    width: 38px !important;
+    height: 38px !important;
+    flex-shrink: 0 !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 !important;
+    cursor: pointer;
+    border: 1px solid #f5222d;
+    background-color: #fff1f0;
+    color: #f5222d;
+    transition: all 0.15s ease;
+}
+.category-item-wrapper .btn-remove:hover {
+    background-color: #f5222d !important;
+    color: #ffffff !important;
 }
 
 /* 테마 영역 */
@@ -263,19 +344,23 @@
 /* 프리셋 */
 .preset-label {
     cursor: pointer;
+    display: inline-block;
 }
 
 .preset-label input {
     display: none;
+    flex-shrink: 0;
 }
 
 /* 컬러 원 */
 .preset-dot {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    display: inline-block;
+    width: 30px;
+    height: 30px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50% !important;
+    display: block;
     border: 2px solid transparent;
+    box-sizing: border-box;
     transition: all 0.15s ease;
 }
 
@@ -311,7 +396,7 @@
     background-color: var(--color-btn) !important;
     color: white !important;
     border: none;
-    padding: 10px 25px;
+    padding: 10px 22px;
     border-radius: 6px;
     font-weight: bold;
     cursor: pointer;
@@ -452,7 +537,7 @@ input.error {
 }
 
 .category-section {
-    margin-top: 42px;
+    margin: 42px 0 12px 0;
     padding-top: 28px;
     border-top: 1px solid #eef2f7;
 }
@@ -617,7 +702,7 @@ input.error {
     background: #fff;
 }
 .board-type-preview:hover {
-    transform: translateY(-3px);
+    transform: translateY(-1px);
     border-color: var(--color-btn);
 }
 
@@ -642,7 +727,7 @@ input.error {
     border-color: var(--color-btn);
     background: #f4f8ff;
     box-shadow: 0 0 0 3px rgba(64,115,201,0.12);
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 .board-type-actions {
     display: flex;
@@ -682,4 +767,231 @@ input.error {
 .board-type-badge.gallery {
     background: #ecfdf5;
     color: #047857;
+}
+
+/* 관리자 페이지 신고 필터 영역 */
+.report-filter-wrapper {
+    background-color: #f8fafc;
+    padding: 16px 20px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 필터 그룹 배치 */
+.report-filter-wrapper .filter-group {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+/* 개별 필터 항목 */
+.report-filter-wrapper .filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 필터 라벨 스타일 */
+.report-filter-wrapper .filter-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
+}
+
+/* 관리자용 커스텀 셀렉트 박스 */
+.report-filter-wrapper .select-admin-filter {
+    height: 38px;
+    min-width: 160px;
+    padding: 0 12px;
+    font-size: 14px;
+    color: #334155;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.report-filter-wrapper .select-admin-filter:hover {
+    border-color: #94a3b8;
+}
+
+.report-filter-wrapper .select-admin-filter:focus {
+    outline: none;
+    border-color: #ff9f43;
+    box-shadow: 0 0 0 3px rgba(255, 159, 67, 0.15);
+}
+
+/* ==========================================
+   신고 관리 페이지 전용 - 상세보기 버튼 추가
+   ========================================== */
+.btn-detail-view {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    background-color: #ffffff;
+    color: #475569;
+    border: 1px solid #d7dee8;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+}
+
+.btn-detail-view:hover {
+    background-color: #f8fafc;
+    border-color: var(--color-btn);
+    color: var(--color-btn);
+}
+
+.btn-detail-view i {
+    font-size: 13px;
+}
+
+/* ===================================================
+   신고 관리 페이지 레이아웃 버그 픽스 및 컴포넌트 커스텀
+   =================================================== */
+
+/* 1. 모달창을 화면 정중앙에 고정 오버레이 레이어 설정 */
+#reportDetailModal.admin-modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(15, 23, 42, 0.5) !important; /* 약간의 딤드 효과 */
+    backdrop-filter: blur(2px);
+    display: none; /* 기본 숨김, JS로 flex 토글 */
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9999 !important; /* 다른 레이아웃보다 무조건 위로 */
+}
+
+/* 2. 모달 몸통 콘텐츠 박스 스타일 구체화 */
+#reportDetailModal .admin-modal-content {
+    background: #ffffff !important;
+    padding: 25px !important;
+    border-radius: 14px !important;
+    width: 460px !important;
+    max-width: 90vw !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#reportDetailModal .admin-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eef2f7;
+    padding-bottom: 12px;
+}
+
+#reportDetailModal .admin-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+#reportDetailModal .modal-close-x {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #94a3b8;
+}
+
+#reportDetailModal .admin-modal-body {
+    padding: 10px 0;
+}
+
+#reportDetailModal .admin-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid #eef2f7;
+    padding-top: 12px;
+}
+
+/* 3. 테이블 셀 가로 찢어짐 방지 및 정렬 보정 */
+.admin-management-table {
+    table-layout: auto !important;
+    width: 100%;
+}
+
+/* 세로로 길게 늘어지던 신고 사유 영역 정렬 */
+.admin-management-table td:nth-child(3) {
+    white-space: nowrap !important;
+    min-width: 140px;
+}
+
+/* 4. 드롭다운 너비 확장 및 버튼 글자 줄바꿈 방지 */
+.custom-dropdown .drop-content {
+    min-width: 135px !important;
+    width: max-content !important;
+}
+
+.custom-dropdown .drop-content button {
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ===================================================
+   신고 처리 상태 배지
+   =================================================== */
+
+/* 공통 배지 베이스 디자인 */
+.admin-management-table .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+/* 1. 접수 대기 (PENDING) */
+.badge-pending {
+    background-color: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+/* 2. 검토 중 (REVIEWING) */
+.badge-reviewing {
+    background-color: #fff7e6;
+    color: #fa8c16;
+    border-color: #ffd591;
+}
+
+/* 3. 처리 완료 (RESOLVED) */
+.badge-resolved {
+    background-color: #f6ffed;
+    color: #52c41a;
+    border-color: #b7eb8f;
+}
+
+/* 4. 신고 반려 (REJECTED) */
+.badge-rejected {
+    background-color: #fff1f0;
+    color: #f5222d;
+    border-color: #ffa39e;
 }

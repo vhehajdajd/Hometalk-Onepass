@@ -36,13 +36,6 @@ public class Board {
     private List<Category> categories;
 
     // 변경 method
-    public void rename(String newName) {
-        if (newName == null || newName.isBlank()) {
-            throw new IllegalArgumentException("게시판 이름은 필수입니다.");
-        }
-        this.name = newName;
-    }
-
     public void changeBoardType(BoardType boardType) {
         if (boardType == null) {
             throw new IllegalArgumentException("게시판 유형은 필수입니다.");

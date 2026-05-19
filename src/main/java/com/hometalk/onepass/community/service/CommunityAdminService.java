@@ -9,6 +9,7 @@ import com.hometalk.onepass.community.entity.Post;
 import com.hometalk.onepass.community.enums.BoardType;
 import com.hometalk.onepass.community.enums.PostStatus;
 import com.hometalk.onepass.community.exception.CategoryNotFoundException;
+import com.hometalk.onepass.community.exception.InvalidBoardCodeException;
 import com.hometalk.onepass.community.repository.BoardRepository;
 import com.hometalk.onepass.community.repository.CategoryRepository;
 import com.hometalk.onepass.community.repository.PostRepository;
@@ -33,7 +34,7 @@ public class CommunityAdminService {
     // 게시판 & 카테고리 전체 목록 조회 (관리자 메인용)
     @Transactional(readOnly = true)
     public List<AdminBoardRsDTO> getAdminBoardList() {
-        return boardRepository.findAll().stream()
+        return boardRepository.findAllWithCategories().stream()
                 .map(board -> {
                     // 각 게시판 카테고리 목록
                     List<AdminBoardRsDTO.CategoryDto> categories = board.getCategories().stream()
@@ -92,7 +93,7 @@ public class CommunityAdminService {
     @Transactional
     public void deleteBoard(Long boardId) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판입니다."));
+                .orElseThrow(() -> new InvalidBoardCodeException(String.valueOf(boardId)));
         long totalPostCount = postRepository.countAllByBoardIdNative(boardId);
         if (totalPostCount > 0) {
             throw new IllegalStateException("이 게시판에 아직 삭제되지 않은 데이터(유령 게시글 등)가 "
@@ -156,7 +157,7 @@ public class CommunityAdminService {
         // 현재 시간으로부터 30일 전 시점 계산
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
         // 1. 30일이 지난 DELETED 상태의 게시글 조회
-        List<Post> targets = postRepository.findOldDeletedPosts(PostStatus.DELETED.name(), thirtyDaysAgo);
+        List<Post> targets = postRepository.findOldDeletedPosts(PostStatus.DELETED, thirtyDaysAgo);
 
         if (!targets.isEmpty()) {
             for (Post post : targets) {
@@ -210,7 +211,7 @@ public class CommunityAdminService {
     @Transactional(readOnly = true)
     public AdminBoardRsDTO getAdminBoardDetail(Long id) {
         Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판입니다."));
+                .orElseThrow(() -> new InvalidBoardCodeException(String.valueOf(id)));
 
         List<AdminBoardRsDTO.CategoryDto> categories = board.getCategories().stream()
                 .map(cat -> {
@@ -231,7 +232,7 @@ public class CommunityAdminService {
                             String bgColor, String textColor) {
         // 1. 게시판 존재 여부 확인
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판입니다. id=" + boardId));
+                .orElseThrow(() -> new InvalidBoardCodeException(String.valueOf(boardId)));
         long customCategoryCount = board.getCategories().stream().count();
         if (customCategoryCount >= 5) {
             throw new IllegalStateException("추가 카테고리는 게시판당 최대 5개까지만 생성 가능합니다.");
@@ -258,7 +259,7 @@ public class CommunityAdminService {
     @Transactional
     public void updateBoardType(Long boardId, BoardType boardType) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판입니다."));
+                .orElseThrow(() -> new InvalidBoardCodeException(String.valueOf(boardId)));
 
         board.changeBoardType(boardType);
     }

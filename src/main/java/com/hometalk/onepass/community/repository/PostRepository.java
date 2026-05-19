@@ -51,7 +51,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                                  Pageable pageable);
 
     long countByCategoryId(Long categoryId);
-    long countByBoardId(Long boardId);
 
     // -- 검색 --
     // 제목
@@ -124,7 +123,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     void hardDeleteCommentsByPostId(@Param("postId") Long postId);
 
     // 2. 게시글을 영구 삭제 (Native Query로 @SQLDelete 우회)
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query(value = "DELETE FROM posts WHERE id = :postId", nativeQuery = true)
     void hardDeletePostById(@Param("postId") Long postId);
@@ -132,18 +131,17 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     // -- API --
     // 최신순 상위 3개
+    @EntityGraph(attributePaths = {"category", "board", "writer"})
     List<Post> findTop5ByPostStatusOrderByCreatedAtDesc(PostStatus status);
 
     // 조회수 정렬
+    @EntityGraph(attributePaths = {"category", "board", "writer"})
     List<Post> findTop5ByPostStatusOrderByViewCountDesc(PostStatus status);
 
 
-
-    List<Post> findAllByPostStatusInOrderByUpdatedAtDesc(List<PostStatus> targetStatuses);
-
     // --- [기타/스케줄러] ---
     @Query(value = "SELECT * FROM posts WHERE post_status = :status AND updated_at < :dateTime", nativeQuery = true)
-    List<Post> findOldDeletedPosts(@Param("status") String status, @Param("dateTime") LocalDateTime dateTime);
+    List<Post> findOldDeletedPosts(@Param("status") PostStatus status, @Param("dateTime") LocalDateTime dateTime);
 
     // 게시글 수
     long countByBoardAndPostStatus(Board board, PostStatus status);
