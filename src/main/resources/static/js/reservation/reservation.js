@@ -1,12 +1,10 @@
-const CSRF_TOKEN = document.querySelector('meta[name="_csrf"]')?.content;
-const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content;
+function updateStepper(stepNumber) {
+    document.querySelectorAll('.step-item').forEach(item => item.classList.remove('active'));
 
-function getCsrfHeaders() {
-    const headers = { 'Content-Type': 'application/json' };
-    if (CSRF_HEADER && CSRF_TOKEN) {
-        headers[CSRF_HEADER] = CSRF_TOKEN;
+    const currentIndicator = document.getElementById(`step${stepNumber}-indicator`);
+    if(currentIndicator) {
+        currentIndicator.classList.add('active');
     }
-    return headers;
 }
 
 // 1. 시설 선택 (이용 시간 저장)
@@ -15,6 +13,7 @@ function selectFacility(name, usageTime, id) {
     document.getElementById('hidden-facility-id').value = id;
     document.getElementById('selected-facility-name').innerText = name;
     document.getElementById('selected-facility-usage-time').value = usageTime;
+    updateStepper(2)
     nextStep(2);
 }
 
@@ -35,6 +34,7 @@ async function selectDate(val) {
     const facilityId = document.getElementById('hidden-facility-id').value;
     await updateCapacityInfo(facilityId, val);
     await disableUserBookedTimes(val);
+    updateStepper(3)
     nextStep(3);
 }
 function filterAvailableTimes(selectedDateStr) {
@@ -66,7 +66,7 @@ function filterAvailableTimes(selectedDateStr) {
 
 async function disableUserBookedTimes(date) {
     try {
-        const response = await fetch(`/hometop/api/reservations/user-booked-times?date=${date}`);
+        const response = await apiFetch(`/hometop/api/reservations/user-booked-times?date=${date}`);
         if (!response.ok) return;
         const bookedHours = await response.json();
         const timeChips = document.querySelectorAll('.time-chip-wrapper');
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 async function updateCapacityInfo(facilityId, date) {
     try {
-        const response = await fetch(`/hometop/api/reservations/capacity?facilityId=${facilityId}&date=${date}`);
+        const response = await apiFetch(`/hometop/api/reservations/capacity?facilityId=${facilityId}&date=${date}`);
         const bookedData = await response.json();
 
         const timeChips = document.querySelectorAll('.time-chip-wrapper');
@@ -142,14 +142,24 @@ async function updateCapacityInfo(facilityId, date) {
 let selectedHours = [];
 
 async function handleFacilityClick(element) {
+    const status = element.getAttribute('data-status');
+    if (status === 'ALREADY_BOOKED') {
+        showAlertModal("이미 예약 중인 시설입니다.\n이용 종료 후 다시 예약해주세요.");
+        return;
+    }
+    if (status === 'CLOSED') {
+        showAlertModal("현재 운영 시간이 종료된 시설입니다.");
+        return;
+    }
+
     const name = element.getAttribute('data-name');
     const id = element.getAttribute('data-id');
     try {
-        const response = await fetch(`/hometop/api/reservations/check-active/${id}`);
+        const response = await apiFetch(`/hometop/api/reservations/check-active/${id}`);
         const data = await response.json();
 
         if (data.hasActive) {
-            showNotice(data.message);
+            showAlertModal(data.message);
             return;
         }
     } catch (error) {
@@ -180,7 +190,7 @@ async function handleFacilityClick(element) {
 
 function handleTimeClick(element) {
     if (element.classList.contains('is-full')) {
-        showNotice("이미 정원이 초과된 시간대입니다.", "error");
+        showAlertModal("이미 정원이 초과된 시간대입니다.", "error");
         return;
     }
     const hour = parseInt(element.getAttribute('data-hour'));
@@ -214,7 +224,7 @@ function handleTimeClick(element) {
             const diff = end - start + 1;
 
             if (diff > maxAllowed) {
-                showNotice(`이 시설은 최대 ${maxAllowed}시간까지만 선택 가능합니다.`);
+                showAlertModal(`이 시설은 최대 ${maxAllowed}시간까지만 선택 가능합니다.`);
                 return;
             }
 
@@ -223,7 +233,7 @@ function handleTimeClick(element) {
             for (let i = start; i <= end; i++) {
                 const chip = document.querySelector(`.time-chip-wrapper[data-hour="${i}"]`);
                 if (chip && chip.classList.contains('is-full')) {
-                    showNotice("선택하신 범위에 이미 예약이 꽉 찬 시간이 포함되어 있습니다.", "error");
+                    showAlertModal("선택하신 범위에 이미 예약이 꽉 찬 시간이 포함되어 있습니다.", "error");
                     selectedHours = []; // 선택 초기화
                     renderTimeSelection();
                     return;
@@ -263,8 +273,6 @@ function renderTimeSelection() {
     if (selectedHours.length > 0) {
         document.getElementById('display-time').innerText = `${String(startHour).padStart(2, '0')}:00`;
         document.getElementById('end-time').innerText = `${String(endHour).padStart(2, '0')}:00`;
-
-        console.log("현재 선택된 시간들:", selectedHours);
     }
 }
 
@@ -283,169 +291,58 @@ function prevStep(step) {
     }
     document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
     document.getElementById('step' + step).classList.add('active');
+    updateStepper(step);
 }
 
-// 5. 예약 취소 [공통]
-async function confirmCancel(id, isAdmin = false) {
-    let reason = null;
-    // 관리자 강제취소 시 사유 입력
-    if (isAdmin) {
-        reason = prompt("취소 사유를 입력해주세요.");
-        if (!reason || !reason.trim()) {
-            showNotice("취소 사유를 입력해야 합니다.");
-            return;
-        }
-    } else {
-        const ok = confirm("예약을 취소하시겠습니까?");
-        if (!ok) return;
-    }
-
-    try {
-        const response = await fetch(`/hometop/api/reservations/${id}/cancel`, {
-            method: 'PATCH',
-            headers: getCsrfHeaders(),
-            body: JSON.stringify({
-                reason: reason
-            })
-        });
-        if (response.ok) {
-            showNotice(isAdmin ? "예약이 강제 취소되었습니다." : "예약이 취소되었습니다.");
-            location.reload();
-        } else {
-            const errorMsg = await response.text();
-            showNotice("실패: " + (errorMsg || response.status));
-        }
-    } catch (error) {
-        console.error(error);
-        showNotice("서버 통신 중 오류가 발생했습니다.");
-    }
-}
-
-// [관리자]
-function confirmAdminCancel(id) {
-    confirmCancel(id, true);
-}
-
-// 6. 예약 제출
+// 5. 예약 제출
 async function submitReservation() {
     if (selectedHours.length === 0) {
-        showNotice("시간을 선택해주세요!");
+        showAlertModal("시간을 선택해주세요!", "error");
         return;
     }
 
-    const resDate = document.getElementById('hidden-date').value;
-    const facilityId = document.getElementById('hidden-facility-id').value;
+    showConfirmModal(
+        "선택한 시간대로 예약을 신청하시겠습니까?",
+        async function () {
 
-    // 2. 시간 계산: 선택된 배열에서 최소/최대 추출
-    const startHour = Math.min(...selectedHours);
-    const endHour = Math.max(...selectedHours) + 1;
+            const resDate = document.getElementById('hidden-date').value;
+            const facilityId = document.getElementById('hidden-facility-id').value;
 
-    // 3. 서버로 보낼 데이터
-    const data = {
-        facilityId: parseInt(facilityId),
-        startTime: `${resDate}T${String(startHour).padStart(2, '0')}:00:00`,
-        endTime: `${resDate}T${String(endHour).padStart(2, '0')}:00:00`
-    };
+            const startHour = Math.min(...selectedHours);
+            const endHour = Math.max(...selectedHours) + 1;
 
-    try {
-        const response = await fetch('/hometop/api/reservations', {
-            method: 'POST',
-            headers: getCsrfHeaders(),
-            body: JSON.stringify(data)
-        });
+            const data = {
+                facilityId: parseInt(facilityId),
+                startTime: `${resDate}T${String(startHour).padStart(2, '0')}:00:00`,
+                endTime: `${resDate}T${String(endHour).padStart(2, '0')}:00:00`
+            };
 
-        if (response.ok) {
-            showNotice("예약 신청이 완료되었습니다.");
-            location.href = "/hometop/reservation/my";
-        } else {
-            showNotice("예약에 실패했습니다. (Error: " + response.status + ")");
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        showNotice("서버 통신 중 오류가 발생했습니다.");
-    }
-}
+            try {
+                const response = await apiFetch('/hometop/api/reservations', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
 
-// 예약 승인
-function approveReservation(id) {
-    if (!confirm("이 예약을 승인하시겠습니까?")) return;
+                if (response.ok) {
+                    showAlertModal("예약 신청이 완료되었습니다.");
+                    setTimeout(() => {
+                        location.href = "/hometop/reservation/my";
+                    }, 1200);
 
-    fetch(`/hometop/api/reservations/${id}/approve`, {
-        method: 'POST',
-        headers: getCsrfHeaders()
-    })
-        .then(res => {
-            if (res.ok) {
-                showNotice("예약이 승인되었습니다.");
-                location.reload();
-            } else {
-                showNotice("승인 처리 중 오류가 발생했습니다.");
+                } else {
+                    const errorMsg = await response.text();
+                    showAlertModal(errorMsg || "예약에 실패했습니다.");
+                }
+
+            } catch (error) {
+                console.error("Error:", error);
+                showAlertModal("서버 통신 중 오류가 발생했습니다.");
             }
-        });
-}
-
-// [사용자] 이용 종료
-async function finishUsage(event, id) {
-    const btn = event.currentTarget || event.target;
-
-    if (!confirm("지금 이용을 종료하시겠습니까?\n종료 시 남은 시간은 다른 분들이 예약할 수 있도록 개방됩니다.")) {
-        return;
-    }
-
-    try {
-        btn.disabled = true;
-        const originalText = btn.innerText;
-        btn.innerText = "처리 중...";
-        const response = await fetch(`/hometop/api/reservations/${id}/finish`, {
-            method: 'PATCH',
-            headers: {
-                ...getCsrfHeaders(),
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            showNotice("이용 종료 처리가 완료되었습니다.");
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        } else {
-            const errorText = await response.text();
-            showNotice(errorText || "이용 종료 처리 중 오류가 발생했습니다.", "error");
-            btn.disabled = false;
-            btn.innerText = originalText;
         }
-    } catch (error) {
-        console.error("Error:", error);
-        showNotice("서버와 통신 중 오류가 발생했습니다.", "error");
-        btn.disabled = false;
-        if(typeof originalText !== 'undefined') btn.innerText = originalText;
-    }
+    );
 }
 
-// 알림 메시지
-function showNotice(message, type = 'success') {
-    const existingBox = document.querySelector('.alert-box');
-    if (existingBox) existingBox.remove();
-
-    const alertBox = document.createElement('div');
-    alertBox.className = `alert-box ${type === 'success' ? 'alert-success' : 'alert-danger'}`;
-
-    alertBox.innerHTML = `
-        <div class="alert-content">
-            <i class="${type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'}"></i>
-            <span>${message}</span>
-        </div>
-        <button type="button" class="alert-close" onclick="this.parentElement.remove()">&times;</button>
-    `;
-
-    // 메인 컨테이너 가장 상단에 삽입
-    const container = document.querySelector('.container');
-    container.prepend(alertBox);
-
-    // 3초 후 자동으로 사라지게
-    setTimeout(() => {
-        if (alertBox) alertBox.style.opacity = '0';
-        setTimeout(() => alertBox.remove(), 500);
-    }, 3000);
-}
+window.handleFacilityClick = handleFacilityClick;
+window.handleTimeClick = handleTimeClick;
+window.submitReservation = submitReservation;
+window.prevStep = prevStep;

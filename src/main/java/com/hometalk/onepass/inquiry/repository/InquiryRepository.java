@@ -41,4 +41,6 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
 
     @EntityGraph(attributePaths = {"user"})
     List<Inquiry> findTop5ByUser_IdOrderByCreatedAtDesc(Long userId);
+
+    long countByUserIdAndStatus(Long userId, String status);
 }

@@ -286,4 +286,8 @@ public class InquiryService {
                 .map(InquiryDto::fromEntity)
                 .toList();
     }
+
+    public long countByUserIdAndStatus(Long userId, String status) {
+        return inquiryRepository.countByUserIdAndStatus(userId, status);
+    }
 }

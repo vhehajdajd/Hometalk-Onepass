@@ -5,6 +5,7 @@
   <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
   <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <div class="main-layout">
@@ -19,7 +20,32 @@
 
       <main class="container">
 
-        <h1 class="title">시설 예약</h1>
+        <div th:if="${message}" th:class="|alert-box ${status == 'success' ? 'alert-success' : 'alert-danger'}|">
+          <div class="alert-content">
+            <i th:class="${status == 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'}"></i>
+            <span th:text="${message}">성공 메시지입니다.</span>
+          </div>
+          <button type="button" class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+        </div>
+
+        <div class="flex-between mb-lg">
+
+          <h1 class="title">시설 예약</h1>
+
+          <a th:href="@{/reservation/guide}" class="btn btn-outline">
+            <i class="fas fa-circle-info"></i>
+              예약 안내
+          </a>
+
+        </div>
+
+        <div class="reservation-stepper">
+          <div class="step-item active" id="step1-indicator"><span class="step-num">1</span>시설 선택</div>
+          <div class="step-line"></div>
+          <div class="step-item" id="step2-indicator"><span class="step-num">2</span>날짜 선택</div>
+          <div class="step-line"></div>
+          <div class="step-item" id="step3-indicator"><span class="step-num">3</span>시간 선택</div>
+        </div>
 
         <form id="reservationForm">
           <input type="hidden" id="hidden-facility" name="facilityName">
@@ -32,29 +58,60 @@
             <div class="facility-list">
               <!-- DB의 facilities 목록을 반복해서 출력 -->
               <div th:each="f : ${facilities}"
-                   class="facility-item card-hover"
+                   class="facility-card card-hover"
                    th:data-name="${f.name}"
                    th:data-id="${f.id}"
+                   th:data-status="${f.bookingStatus}"
                    th:data-max-time="${f.maxReservationTime}"
                    th:data-max-capacity="${f.maxCapacity}"
-                   onclick="handleFacilityClick(this)"> <!-- 함수 호출 방식을 변경 -->
+                   onclick="handleFacilityClick(this)">
 
-                <strong th:text="${f.name}">시설명</strong>
-                <p class="capacity-info" style="font-size: 12px; color: var(--color-main);">
-                  <i class="fas fa-users"></i> 총 정원: <span th:text="${f.maxCapacity}">0</span>명
-                </p>
-                <p class="time-info" style="font-size: 12px; color: gray;">
-                  운영: <span th:text="${f.operationTime?.formattedOpenTime}">09:00</span>
-                  ~ <span th:text="${f.operationTime?.formattedCloseTime}">22:00</span>
-                </p>
-                <span class="badge" th:text="|(${f.maxReservationTime}시간 단위)|">(1시간 단위)</span>
+                <div class="card-img-wrapper">
+
+                  <th:block th:if="${f.imagePath != null && f.imagePath != ''}">
+                    <img th:src="@{${f.imagePath}}" alt="시설 사진" class="facility-img">
+                  </th:block>
+
+                  <th:block th:unless="${f.imagePath != null && f.imagePath != ''}">
+                    <div class="no-image-bg flex-center">
+                      <i th:class="${f.iconType != null && f.iconType != '' ? f.iconType : 'fas fa-building'}" class="fallback-icon"></i>
+                    </div>
+                  </th:block>
+                </div>
+
+                <div class="card-content-wrap">
+                  <div class="card-header">
+                    <strong th:text="${f.name}">시설명</strong>
+                  </div>
+
+                  <div class="card-body">
+                    <p class="capacity-info">
+                      <i class="fas fa-users"></i> 총 정원: <span th:text="${f.maxCapacity}">0</span>명
+                    </p>
+                    <p class="time-info">
+                      운영: <span th:text="${f.operationTime?.formattedOpenTime}">09:00</span>
+                      ~ <span th:text="${f.operationTime?.formattedCloseTime}">22:00</span>
+                    </p>
+                  </div>
+
+                  <div class="card-footer">
+                    <th:block th:switch="${f.bookingStatus.toString()}">
+                      <span th:case="'ALREADY_BOOKED'" class="status-indicator-badge status-booked">● 예약중</span>
+                      <span th:case="'CLOSED'" class="status-indicator-badge status-closed">● 운영종료</span>
+                      <span th:case="*" class="status-indicator-badge status-available">● 예약가능</span>
+                    </th:block>
+
+                    <span class="badge" th:text="|(${f.maxReservationTime}시간 단위)|">(1시간 단위)</span>
+                  </div>
+                </div>
+
               </div>
+            </div>
 
               <!-- 등록된 시설이 없을 때 메시지 -->
               <div th:if="${#lists.isEmpty(facilities)}" class="text-center text-muted py-xl">
                 현재 예약 가능한 시설이 없습니다.
               </div>
-            </div>
           </div>
 
           <div id="step2" class="step-section">
@@ -118,7 +175,8 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/ko.js"></script>
+<script th:src="@{/js/community/api.js}"></script>
+<script th:src="@{/js/community/post-modal.js}"></script>
 <script th:src="@{/js/reservation/reservation.js}"></script>
-
 </body>
 </html>

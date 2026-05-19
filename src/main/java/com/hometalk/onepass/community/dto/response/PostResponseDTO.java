@@ -1,6 +1,8 @@
 package com.hometalk.onepass.community.dto.response;
 
+import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.community.entity.Post;
+import com.hometalk.onepass.community.enums.PostFileType;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -27,6 +29,11 @@ public class PostResponseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private int likeCount;
+    private int dislikeCount;
+    private boolean isLiked;
+    private boolean isDisliked;
+
     private int viewCount;
     private int commentCount;
 
@@ -37,6 +44,7 @@ public class PostResponseDTO {
     private boolean isDeleted;
 
     private boolean hasImage;
+    private String thumbnailPath;
 
     private String categoryBgColor;
     private String categoryTextColor;
@@ -65,6 +73,13 @@ public class PostResponseDTO {
         this.pinned = post.isPinned();
 
         this.hasImage = post.isHasImage();
+        // 대표 썸네일 조회
+        if (post.getFiles() != null && !post.getFiles().isEmpty()) {
+            post.getFiles().stream()
+                    .filter(file -> file.getFileType() == PostFileType.THUMBNAIL)
+                    .findFirst()
+                    .ifPresent(file -> this.thumbnailPath = file.getFilePath());
+        }
 
         if (post.getCategory() != null) {
             this.categoryId = post.getCategory().getId();
@@ -97,6 +112,9 @@ public class PostResponseDTO {
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();
         this.isDeleted = (post.getDeletedAt() != null);
+
+        this.likeCount = post.getLikeCount();
+        this.dislikeCount = post.getDislikeCount();
         this.viewCount = post.getViewCount();
         this.commentCount = post.getCommentCount();
 
@@ -139,18 +157,20 @@ public class PostResponseDTO {
     }
 
     public static PostResponseDTO from(Post post) {
-        // 1. 기존 생성자를 호출하여 모든 기본 필드를 채운 DTO 생성
         PostResponseDTO dto = new PostResponseDTO(post);
 
-        // 2. 시스템 게시판(수정 불가) 여부 판별
-        // Post -> Category -> Board 순으로 접근
         List<String> systemBoards = List.of("square", "market", "talk");
         String boardCode = (post.getCategory() != null && post.getCategory().getBoard() != null)
                 ? post.getCategory().getBoard().getCode()
                 : "";
 
         dto.setCanModify(!systemBoards.contains(boardCode));
-
         return dto;
+    }
+
+    public PostResponseDTO(Post post, boolean isLiked, boolean isDisliked) {
+        this(post);
+        this.isLiked = isLiked;
+        this.isDisliked = isDisliked;
     }
 }

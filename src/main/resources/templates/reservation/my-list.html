@@ -15,14 +15,57 @@
         <!-- 메인 콘텐츠 -->
         <div class="dashboard-content">
             <main class="container">
+                <div th:if="${message}" th:class="|alert-box ${status == 'success' ? 'alert-success' : 'alert-danger'}|">
+                    <div class="alert-content">
+                        <i th:class="${status == 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'}"></i>
+                        <span th:text="${message}">성공 메시지입니다.</span>
+                    </div>
+                    <button type="button" class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+                </div>
+
                 <div class="header-with-action flex-between mb-lg">
                     <h1 class="title">나의 예약 현황</h1>
 
-                    <div class="action-wrapper">
-                        <a th:href="@{/reservation/calendar}" class="btn btn-outline flex gap-md">
-                            <span style="margin-right: 8px;"><i class="fas fa-calendar-alt"> </i></span> 캘린더 현황 보기
+                    <div class="action-wrapper flex gap-md">
+                        <a th:href="@{/reservation/guide}" class="btn btn-outline">
+                            <i class="fas fa-circle-info" style="margin-right: 6px;"></i>
+                              예약 안내
+                        </a>
+
+                        <a th:href="@{/reservation/calendar}" class="btn btn-outline">
+                            <i class="fas fa-calendar-alt" style="margin-right: 6px;"></i>
+                            캘린더 현황 보기
                         </a>
                     </div>
+                </div>
+
+                <div class="filter-and-sort-section mb-md" style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px 0;">
+
+                    <div class="sort-tabs" style="display: flex; gap: 8px;">
+                        <a th:href="@{/reservation/my(page=0, sortBy='regDate', status=${selectedStatus})}"
+                           th:classappend="${currentSort == 'regDate' ? 'active' : ''}" class="sort-tab-btn">
+                            <i class="fas fa-history" style="font-size: 12px; margin-right: 4px;"></i> 예약 신청일순
+                        </a>
+                        <a th:href="@{/reservation/my(page=0, sortBy='resDate', status=${selectedStatus})}"
+                           th:classappend="${currentSort == 'resDate' ? 'active' : ''}" class="sort-tab-btn">
+                            <i class="fas fa-calendar-alt" style="font-size: 12px; margin-right: 4px;"></i> 예약 예정일순
+                        </a>
+                    </div>
+
+                    <form th:action="@{/reservation/my}" method="get" id="filterForm">
+                        <input type="hidden" name="page" value="0">
+                        <input type="hidden" name="sortBy" th:value="${currentSort}">
+
+                        <select name="status" class="form-select" onchange="this.form.submit()"
+                                style="padding: 6px 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; cursor: pointer; font-size: 14px; color: #444;">
+                            <option value="">전체 상태</option>
+                            <option th:each="s : ${statuses}"
+                                    th:value="${s}"
+                                    th:text="${s.title}"
+                                    th:selected="${s == selectedStatus}">
+                            </option>
+                        </select>
+                    </form>
                 </div>
 
                 <div class="summary-card" style="padding: 0; overflow-x: auto;" th:if="${not reservations.empty}">
@@ -38,6 +81,7 @@
                         <tbody>
                             <tr th:each="res : ${reservations}"
                                 style="border-bottom: 1px solid var(--border-color);"
+                                th:classappend="${res.endTime != null && res.endTime.isBefore(T(java.time.LocalDateTime).now())} ? 'past-reservation' : ''"
                                 th:with="now=${T(java.time.LocalDateTime).now()}">
                                 <td style="padding: 15px; font-weight: 600; color: var(--color-main);" th:text="${res.facilityName}">테니스장</td>
                                 <td lass="text-muted" th:text="${#temporals.format(res.startTime, 'MM/dd HH:mm') + ' ~ ' + #temporals.format(res.endTime, 'HH:mm')}">04/29 09:00 ~ 10:00</td>
@@ -47,7 +91,8 @@
                                                          (res.status?.toString() == 'PENDING' ? 'status-pending' :
                                                          (res.status?.toString() == 'FINISHED' ? 'status-finished' : 'status-active'))}">
 
-                                        <th:block th:if="${res.status?.toString() == 'CANCELED'}">취소됨</th:block>
+                                        <th:block th:if="${res.status?.toString() == 'CANCELED'}">취소</th:block>
+                                        <th:block th:if="${res.status?.toString() == 'REJECTED'}">반려</th:block>
                                         <th:block th:if="${res.status?.toString() == 'PENDING'}">승인대기</th:block>
                                         <th:block th:if="${res.status?.toString() == 'FINISHED'}">이용종료</th:block>
                                         <th:block th:if="${res.status?.toString() == 'CONFIRMED'}">예약확정</th:block>
@@ -55,13 +100,13 @@
                                 </td>
                                 <td>
                                     <!-- 예약 상태가 CANCELED일 때만 노출 -->
-                                    <div th:if="${res.status.toString() == 'CANCELED' && res.cancelReason != null}"
+                                    <div th:if="${res.status.toString() == 'REJECTED' && res.cancelReason != null}"
                                          class="reject-reason-box"
                                          style="margin-bottom: 8px;">
-                                        <small style="color: #d9534f; display: block; background: #fdf2f2; padding: 4px 8px; border-radius: 4px;">
+                                        <p style="color: #d9534f; display: block;">
                                             <i class="fas fa-exclamation-circle"></i>
                                             <strong>반려 사유:</strong> [[${res.cancelReason}]]
-                                        </small>
+                                        </p>
                                     </div>
                                     <button th:if="${res.status?.toString() == 'CONFIRMED'
                                                    && (now.isAfter(res.startTime) || now.isEqual(res.startTime))
@@ -101,7 +146,7 @@
                         <nav aria-label="Page navigation" class="pagination-nav">
                             <ul class="pagination">
                                 <li class="page-item" th:classappend="${startPage <= 1} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/reservation/my(page=${startPage - 2})}" aria-label="Previous">
+                                    <a class="page-link" th:href="@{/reservation/my(page=${startPage - 2}, sortBy=${currentSort}, status=${selectedStatus})}" aria-label="Previous">
                                         <span aria-hidden="true">&laquo;</span>
                                     </a>
                                 </li>
@@ -109,11 +154,11 @@
                                 <li class="page-item"
                                     th:each="pageNumber : ${#numbers.sequence(startPage, endPage)}"
                                     th:classappend="${pageNumber == currentPage} ? 'active'">
-                                    <a class="page-link" th:href="@{/reservation/my(page=${pageNumber - 1})}" th:text="${pageNumber}"></a>
+                                    <a class="page-link" th:href="@{/reservation/my(page=${pageNumber - 1}, sortBy=${currentSort}, status=${selectedStatus})}" th:text="${pageNumber}"></a>
                                 </li>
 
                                 <li class="page-item" th:classappend="${endPage >= reservations.totalPages} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/reservation/my(page=${endPage})}" aria-label="Next">
+                                    <a class="page-link" th:href="@{/reservation/my(page=${endPage}, sortBy=${currentSort}, status=${selectedStatus})}" aria-label="Next">
                                         <span aria-hidden="true">&raquo;</span>
                                     </a>
                                 </li>
@@ -138,6 +183,100 @@
         <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
 </div>
-<script th:src="@{/js/reservation/reservation.js}"></script>
+
+
+<script th:src="@{/js/community/api.js}"></script>
+
+<script defer th:src="@{/js/community/post-modal.js}"></script>
+
+<script th:inline="javascript">
+    function finishUsage(event, id) {
+        const btn = event.currentTarget || event.target;
+
+        showConfirmModal("지금 이용을 종료하시겠습니까?<br>종료 시 남은 시간은 다른 분들이 예약할 수 있도록 개방됩니다.", async function () {
+            try {
+                btn.disabled = true;
+                const originalText = btn.innerText;
+                btn.innerText = "처리 중...";
+
+                const response = await apiFetch(`/hometop/api/reservations/${id}/finish`, {
+                    method: 'PATCH'
+                });
+
+                if (response.ok) {
+                    showAlertModal("이용 종료 처리가 완료되었습니다.");
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    const errorText = await response.text();
+                    showAlertModal(errorText || "이용 종료 처리 중 오류가 발생했습니다.");
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            } catch (error) {
+                console.error(error);
+                showAlertModal("서버와 통신 중 오류가 발생했습니다.");
+                btn.disabled = false;
+            }
+        });
+    }
+
+    // [사용자] 예약 취소
+    function confirmCancel(id) {
+        showConfirmModal("예약을 취소하시겠습니까?", async function () {
+            try {
+                const response = await apiFetch(`/hometop/api/reservations/${id}/cancel`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        reason: null
+                    })
+                });
+
+                if (response.ok) {
+                    showAlertModal("예약이 취소되었습니다.");
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    const errorMsg = await response.text();
+                    showAlertModal(errorMsg || "예약 취소 중 오류가 발생했습니다.");
+                }
+            } catch (error) {
+                console.error(error);
+                showAlertModal("서버 통신 중 오류가 발생했습니다.");
+            }
+        });
+    }
+
+    // 3. 알림 메시지 띄우기용 함수
+    function showNotice(message, type = 'success') {
+        const existingBox = document.querySelector('.alert-box');
+        if (existingBox) existingBox.remove();
+
+        const alertBox = document.createElement('div');
+        alertBox.className = `alert-box ${type === 'success' ? 'alert-success' : 'alert-danger'}`;
+
+        alertBox.innerHTML = `
+            <div class="alert-content">
+                <i class="${type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'}"></i>
+                <span>${message}</span>
+            </div>
+            <button type="button" class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+        `;
+
+        const container = document.querySelector('.container');
+        if (container) {
+            container.prepend(alertBox);
+        } else {
+            alert(message); // 안전장치용
+        }
+
+        setTimeout(() => {
+            if (alertBox) alertBox.style.opacity = '0';
+            setTimeout(() => alertBox.remove(), 500);
+        }, 3000);
+    }
+</script>
 </body>
 </html>

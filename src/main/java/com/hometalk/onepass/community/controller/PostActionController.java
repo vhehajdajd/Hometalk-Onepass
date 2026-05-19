@@ -1,23 +1,18 @@
 package com.hometalk.onepass.community.controller;
 
 import com.hometalk.onepass.auth.config.CustomUserDetails;
-import com.hometalk.onepass.auth.entity.Household;
-import com.hometalk.onepass.auth.entity.User;
-import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
-import com.hometalk.onepass.community.repository.TagRepository;
 import com.hometalk.onepass.community.service.PostActionService;
 import com.hometalk.onepass.community.service.PostService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import com.hometalk.onepass.community.service.ReportService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
+/*
+    관리자용
+ */
 
 @RestController
 @RequestMapping("/api/posts")
@@ -26,9 +21,7 @@ public class PostActionController {
 
     private final PostActionService postActionService;
     private final PostService postService;
-
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final ReportService reportService;
 
     // 상단 고정
     @PostMapping("/{postId}/pin")
@@ -61,7 +54,25 @@ public class PostActionController {
         return ResponseEntity.ok().build();
     }
 
+    // 신고 승인 및 처리 완료
+    @PostMapping("/reports/{reportId}/resolve")
+    public ResponseEntity<Void> resolveReport(@PathVariable Long reportId,
+                                              Authentication authentication) {
+        getLoginCustomUser(authentication);
+        // 상태 RESOLVED 변경 + post.softDelete()
+        reportService.resolveReport(reportId);
+        return ResponseEntity.ok().build();
+    }
 
+    // 신고 반려 (허위 신고 등 처리)
+    @PostMapping("/reports/{reportId}/reject")
+    public ResponseEntity<Void> rejectReport(@PathVariable Long reportId,
+                                             Authentication authentication) {
+        getLoginCustomUser(authentication);
+        // 상태 REJECTED 변경
+        reportService.rejectReport(reportId);
+        return ResponseEntity.ok().build();
+    }
 
 
     // 사용자 연동
@@ -69,78 +80,13 @@ public class PostActionController {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new UnauthorizedAccessException("로그인이 필요합니다.");
         }
+
         Object principal = authentication.getPrincipal();
         if (principal instanceof CustomUserDetails customUserDetails) {
             return customUserDetails;
         }
 
-        User user = getLoginUser(authentication);
-        Household household = user.getHousehold();
-
-        return new CustomUserDetails(
-                user.getId(),
-                household != null ? household.getId() : null,
-                household != null ? household.getPostNum() : null,
-                user.getName(),
-                user.getRole(),
-                user.getStatus(),
-                user.isApprovalNoticeShown(),
-                getLoginId(authentication),
-                "",
-                user.getNickname()
-        );
+        throw new UnauthorizedAccessException("인증된 사용자 정보가 올바르지 않습니다.");
     }
 
-    private String getLoginId(Authentication authentication) {
-
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof CustomUserDetails customUserDetails
-                && customUserDetails.getLoginId() != null) {
-            return customUserDetails.getLoginId();
-        }
-
-        return authentication.getName();
-    }
-
-    private User getLoginUser(Authentication authentication) {
-
-        if (authentication == null || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getPrincipal())) {
-            throw new UnauthorizedAccessException("로그인이 필요합니다.");
-        }
-
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof CustomUserDetails customUserDetails) {
-            Long userId = customUserDetails.getUserId();
-
-            if (userId != null) {
-                User user = entityManager.find(User.class, userId);
-
-                if (user != null) {
-                    return user;
-                }
-            }
-        }
-
-        String loginId = authentication.getName();
-
-        List<User> users = entityManager.createQuery(
-                        "select u " +
-                                "from LocalAccount la " +
-                                "join la.user u " +
-                                "where la.loginId = :loginId",
-                        User.class
-                )
-                .setParameter("loginId", loginId)
-                .setMaxResults(1)
-                .getResultList();
-
-        if (users.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다.");
-        }
-
-        return users.get(0);
-    }
 }

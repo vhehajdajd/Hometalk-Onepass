@@ -43,7 +43,7 @@
                         <!-- 카테고리 -->
                         <span th:if="${post.categoryName != null}"
                               th:text="${post.categoryName}"
-                              class="list-category"
+                              class="category-badge"
                               th:classappend="${post.categoryCode}"
                               th:style="${post.categoryBgColor != null} ?
                                         'background-color:' + ${post.categoryBgColor} + '; color:' + ${post.categoryTextColor} + ';' : ''">
@@ -80,32 +80,69 @@
 
                         <h1 class="post-title" th:text="${post.title}">게시글 제목</h1>
 
-                        <div class="post-meta">
-                            <span class="author" th:text="${post.writer}">작성자</span>
-                            <span class="date" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span>
-                            <span class="views">조회수 <span th:text="${post.viewCount}">0</span></span>
+                        <div class="post-meta-wrapper">
+                            <div class="meta-left-info">
+                                <span class="author" th:text="${post.writer}">작성자</span>
+                                <span class="date" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span>
+                                <span class="views">조회수 <span th:text="${post.viewCount}">0</span></span>
 
-                            <div class="writer-only-tools" style="display: inline-block; margin-left: 5px;">
-                                <th:block th:if="${post.categoryCode == 'share' and post.editable and post.marketStatus != null and !post.pinned}">
-                                    <select th:onchange="|updateStatus(${post.id}, this.value)|" class="status-select">
-                                        <option th:selected="${post.marketStatus == 'SHARED'}" value="SHARED">나눔중</option>
-                                        <option th:selected="${post.marketStatus == 'RESERVED'}" value="RESERVED">예약중</option>
-                                        <option th:selected="${post.marketStatus == 'COMPLETED'}" value="COMPLETED">나눔완료</option>
-                                    </select>
-                                </th:block>
-                                <th:block th:if="${post.categoryCode == 'trade' and post.tradeStatus != null and post.editable and !post.pinned}">
-                                    <select th:onchange="|updateTradeStatus(${post.id}, this.value)|" class="status-select">
-                                        <option th:selected="${post.tradeStatus == 'SELLING'}" value="SELLING">거래중</option>
-                                        <option th:selected="${post.tradeStatus == 'RESERVED'}" value="RESERVED">예약중</option>
-                                        <option th:selected="${post.tradeStatus == 'COMPLETED'}" value="COMPLETED">완료</option>
-                                    </select>
-                                </th:block>
+                                <div class="writer-only-tools" style="display: inline-block; margin-left: 5px;">
+                                    <th:block th:if="${post.categoryCode == 'share' and post.editable and post.marketStatus != null and !post.pinned}">
+                                        <select th:onchange="|updateStatus(${post.id}, this.value)|" class="status-select">
+                                            <option th:selected="${post.marketStatus == 'SHARED'}" value="SHARED">나눔중</option>
+                                            <option th:selected="${post.marketStatus == 'RESERVED'}" value="RESERVED">예약중</option>
+                                            <option th:selected="${post.marketStatus == 'COMPLETED'}" value="COMPLETED">나눔완료</option>
+                                        </select>
+                                    </th:block>
+                                    <th:block th:if="${post.categoryCode == 'trade' and post.tradeStatus != null and post.editable and !post.pinned}">
+                                        <select th:onchange="|updateTradeStatus(${post.id}, this.value)|" class="status-select">
+                                            <option th:selected="${post.tradeStatus == 'SELLING'}" value="SELLING">거래중</option>
+                                            <option th:selected="${post.tradeStatus == 'RESERVED'}" value="RESERVED">예약중</option>
+                                            <option th:selected="${post.tradeStatus == 'COMPLETED'}" value="COMPLETED">완료</option>
+                                        </select>
+                                    </th:block>
+                                </div>
+                            </div>
+
+                            <div class="meta-right-tools">
+                                <button th:if="${!post.editable and !post.pinned}"
+                                        sec:authorize="!hasRole('ADMIN')"
+                                        type="button"
+                                        class="btn-report"
+                                        data-tooltip="신고"
+                                        th:onclick="|openReportModal(${post.id})|">
+                                    <i class="fas fa-flag"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
 
                     <div class="page-body post-content">
                         <div th:utext="${post.content}">게시글 내용</div>
+                    </div>
+
+                    <div class="reaction-section" style="display: flex; gap: 12px;">
+
+                        <button type="button"
+                                id="likeBtn"
+                                class="reaction-btn like-btn"
+                                th:classappend="${post?.isLiked} ? 'active' : ''"
+                                th:data-post-id="${post.id}"
+                                onclick="toggleReaction(this, 'LIKE')">
+                            <i class="fa-regular fa-heart"></i>
+                            <span class="like-count" th:text="${post.likeCount}">0</span>
+                        </button>
+
+                        <button type="button"
+                                class="reaction-btn dislike-btn"
+                                th:classappend="${post?.isDisliked} ? 'active' : ''"
+                                th:data-post-id="${post.id}"
+                                th:if="${post.categoryCode == 'debate'}"
+                                onclick="toggleReaction(this, 'DISLIKE')">
+                            <i class="fa-regular fa-thumbs-down"></i>
+                            <span class="dislike-count" th:text="${post.dislikeCount}">0</span>
+                        </button>
+
                     </div>
 
                     <div class="tag-filter-wrapper"
@@ -126,8 +163,13 @@
 
                             <form th:action="@{/community/{code}/delete/{id}(code=${boardCode}, id=${post.id})}"
                                   method="post" style="display:inline;" id="deleteForm">
-                                <button type="button" class="btn btn-danger-outline"
-                                        id="btn-delete" th:data-id="${post.id}">삭제</button>
+                                <button type="button"
+                                        class="btn btn-danger-outline"
+                                        id="btn-delete"
+                                        th:data-id="${post.id}"
+                                        onclick="deletePost.call(this)">
+                                    삭제
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -142,7 +184,46 @@
     </div>
 </div>
 
-<script th:src="@{/js/community/post.js}" defer></script>
-<script th:src="@{/js/community/comment.js}"></script>
+<div id="reportModal" class="modal-overlay">
+    <div class="modal-content">
+
+        <div class="modal-header-report">
+            <h3 class="modal-header-title-report">
+                <i class="fas fa-bullhorn"></i> 게시글 신고하기
+            </h3>
+            <button type="button" class="btn-close-x-report" onclick="closeReportModal()">&times;</button>
+        </div>
+
+        <form id="reportForm" class="modal-form-report">
+            <input type="hidden" id="reportPostId">
+
+            <div class="form-group-report">
+                <label class="form-label-report">신고 사유 선택</label>
+                <select id="reportReason" class="status-select select-report-reason">
+                    <option value="SPAM">광고 및 도배</option>
+                    <option value="ABUSE">욕설 및 비방</option>
+                    <option value="PROFANITY">음란성 내용</option>
+                    <option value="INAPPROPRIATE">주민 정서 부적절</option>
+                    <option value="ETC">기타 사유</option>
+                </select>
+            </div>
+
+            <div class="form-group-report">
+                <label class="form-label-report">상세 내용 (필수)</label>
+                <textarea id="reportDetail" class="textarea-report-detail" rows="4" placeholder="운영자가 검토할 수 있도록 구체적인 사유를 적어주세요."></textarea>
+            </div>
+
+            <div class="form-actions-report">
+                <button type="button" class="btn-report-cancel" onclick="closeReportModal()">취소</button>
+                <button type="button" class="btn-report-submit" onclick="submitReport()">신고 접수</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/community/api.js}"></script>
+<script defer th:src="@{/js/community/post-modal.js}"></script>
+<script defer th:src="@{/js/community/post-manage.js}"></script>
+<script defer th:src="@{/js/community/comment.js}"></script>
 </body>
 </html>

@@ -97,7 +97,9 @@ function initCalendar() {
                     const filteredData = Array.isArray(data)
                         ? data.filter(r => {
                         const s = String(r.badge || r.status || '').trim().toUpperCase();
-                        return s !== 'CANCEL' && s !== 'CANCELED';
+                            return s !== 'CANCEL'
+                                && s !== 'CANCELED'
+                                && s !== 'REJECTED';
                     }) : [];
 
                     const groupedByTime = filteredData.reduce((acc, r) => {
@@ -137,6 +139,7 @@ function initCalendar() {
                         if (currentStatus === 'COMPLETED') textColor = '#2B4562';
                         if (currentStatus === 'PENDING' || currentStatus === 'WAITING' || currentStatus === '0') textColor = '#5F5817';
                         if (currentStatus === 'CONFIRMED' || currentStatus === '1') textColor = '#37474F';
+                        if (currentStatus === 'REJECTED') textColor = '#C62828';
 
                         // 합쳐진 이름들 생성 (콤마로 연결)
                         const combinedNames = group.names.join(', ');
@@ -188,6 +191,9 @@ function getStatusColor(status) {
         case 'CANCELED':
         case 'CANCEL':
             return '#EEEEEE';
+
+        case 'REJECTED':
+            return '#FDECEC';
 
         case 'COMPLETED':
             return '#D1E9FF';

@@ -63,73 +63,28 @@
                     </div>
 
                     <div class="page-body mt-md">
-                        <table class="table post-table">
-                            <thead>
-                                <tr>
-                                    <th>카테고리</th>
-                                    <th>제목</th>
-                                    <th>조회수</th>
-                                    <th>작성자</th>
-                                    <th>작성일</th>
-                                </tr>
-                            </thead>
-                            <tbody th:if="${not #lists.isEmpty(posts)}">
-                                <tr th:each="post : ${posts}" th:classappend="${post.pinned} ? 'pinned' : ''">
-                                    <td class="text-center">
-                                        <span th:if="${post.categoryName != null}"
-                                              th:text="${post.categoryName}"
-                                              class="list-category"
-                                              th:classappend="${post.categoryCode}"
-                                              th:style="${post.categoryBgColor != null} ?
-                                                        'background-color:' + ${post.categoryBgColor} + '; color:' + ${post.categoryTextColor} + ';' : ''">
-                                            카테고리
-                                        </span>
-                                    </td>
-                                    <td class="title-cell">
-                                        <!-- 나눔 -->
-                                        <th:block th:if="${post.marketStatus != null and post.marketStatus != ''}">
-                                            <span th:classappend="${'badge-' + post.marketStatus.toLowerCase()}"
-                                                  class="badge status-badge-inline"
-                                                  th:text="${post.marketStatusDescription}">
-                                            </span>
-                                        </th:block>
-                                        <!-- 거래 -->
-                                        <th:block th:if="${post.tradeStatus != null}">
-                                            <span th:classappend="${'badge-' + post.tradeStatus.toLowerCase()}"
-                                                  class="badge status-badge-inline"
-                                                  th:text="${post.tradeStatusDescription}">
-                                            </span>
-                                        </th:block>
-                                        <th:block th:if="${post.tradeType != null}">
-                                            <span th:if="${post.tradeType == 'SELL'}"
-                                                  class="trade-type">[판매]</span>
-                                            <span th:if="${post.tradeType == 'BUY'}"
-                                                  class="trade-type">[구매]</span>
-                                        </th:block>
+                        <th:block th:switch="${board.boardType.name()}">
 
-                                        <a th:href="@{/community/{bCode}/{cCode}/{id}(bCode=${board.code}, cCode=${categoryCode}, id=${post.id})}"
-                                           th:text="${post.title}">제목</a> <span th:if="${post.commentCount > 0}"
-                                              th:text="'[' + ${post.commentCount} + ']'"
-                                              class="text-small comment-count-inline"></span>
-                                        <span th:if="${post.hasImage}" class="img-icon-grey"><i class="fa-regular fa-image"></i>️</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="view-container">
-                                            <i class="fa-regular fa-eye"></i><span th:text="${post.viewCount}" style="margin-left: 6px;">123</span>
-                                        </div>
-                                    </td>
-                                    <td th:text="${post.writer}" class="text-center">작성자</td>
-                                    <td th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}" class="text-small date-cell"></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                            <th:block th:case="'LIST'">
+                                <div th:replace="~{community/fragments/postListTable :: list(posts=${posts}, board=${board}, categoryCode=${categoryCode})}"></div>
+                            </th:block>
+
+                            <th:block th:case="'CARD'">
+                                <div th:replace="~{community/fragments/postCardGrid :: card(posts=${posts}, board=${board}, categoryCode=${categoryCode})}"></div>
+                            </th:block>
+
+                            <th:block th:case="'GALLERY'">
+                                <div th:replace="~{community/fragments/postGalleryGrid :: gallery(posts=${posts}, board=${board}, categoryCode=${categoryCode})}"></div>
+                            </th:block>
+
+                        </th:block>
 
                         <div th:if="${posts.isEmpty()}" class="no-data text-muted">
                             <div th:if="${keyword != null and !keyword.isEmpty()}">
                                 <p class="sub-title">
                                     '<span th:text="${keyword}" class="text-primary"></span>'에 대한 검색 결과가 없습니다.
                                 </p>
-                                <p>단어의 철자가 정확한지 확인관 후 다시 검색해 보세요.</p>
+                                <p>단어의 철자가 정확한지 확인한 후 다시 검색해 보세요.</p>
                                 <a th:href="@{/community/{boardCode}/all(boardCode=${boardCode})}" class="btn btn-outline-secondary btn-sm mt-3">
                                     전체 목록으로 돌아가기
                                 </a>

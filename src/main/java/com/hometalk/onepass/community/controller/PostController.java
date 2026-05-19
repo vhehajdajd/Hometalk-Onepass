@@ -1,33 +1,22 @@
 package com.hometalk.onepass.community.controller;
 
 import com.hometalk.onepass.auth.config.CustomUserDetails;
-import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
 import com.hometalk.onepass.community.dto.response.*;
 import com.hometalk.onepass.community.enums.PostStatus;
 import com.hometalk.onepass.community.exception.PostNotFoundException;
 import com.hometalk.onepass.community.service.*;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 @Controller
@@ -41,26 +30,13 @@ public class PostController {
     private final CommentService commentService;
     private final FileService fileService;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
-    @Value("${file.upload.path}")
-    private String uploadPath;
-
+    // 게시판
     @GetMapping("/{boardCode}")
-    public String boardMain(@PathVariable String boardCode,
-                            @RequestParam(defaultValue = "1") int page,
-                            @RequestParam(required = false) String searchType,
-                            @RequestParam(required = false) String keyword,
-                            Model model,
-                            Authentication authentication) {
-
-        BoardResponseDTO board = boardService.findByCode(boardCode);
-        int pageIndex = (page < 1) ? 0 : page - 1;
-
-        return fillCommunityModel(board, null, pageIndex, searchType, keyword, model, authentication);
+    public String boardMain(@PathVariable String boardCode) {
+        return "redirect:/community/" + boardCode + "/all";
     }
 
+    // 카테고리
     @GetMapping("/{boardCode}/{categoryCode:[a-zA-Z]+}")
     public String categoryList(@PathVariable String boardCode,
                                @PathVariable String categoryCode,
@@ -71,7 +47,7 @@ public class PostController {
                                Authentication authentication) {
 
         BoardResponseDTO board = boardService.findByCode(boardCode);
-        CategoryResponseDTO category = "all".equals(categoryCode)
+        CategoryResponseDTO category = "all".equalsIgnoreCase(categoryCode)
                 ? null
                 : categoryService.findByCode(categoryCode);
 
@@ -80,6 +56,7 @@ public class PostController {
         return fillCommunityModel(board, category, pageIndex, searchType, keyword, model, authentication);
     }
 
+    // 게시글 작성 폼
     @GetMapping("/{boardCode}/write")
     public String postForm(@PathVariable String boardCode,
                            Model model,
@@ -90,16 +67,17 @@ public class PostController {
         }
 
         BoardResponseDTO board = boardService.findByCode(boardCode);
-
         addLayoutAttributes(board, null, model, true, authentication);
         model.addAttribute("post", new PostRequestDTO());
-        Long userId = getLoginUserId(authentication);
-        int tempCount = postService.getTempPostCount(boardCode, userId);
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int tempCount = postService.getTempPostCount(boardCode, userDetails.getUserId());
         model.addAttribute("tempCount", tempCount);
 
         return "community/postForm";
     }
 
+    // 게시글 수정 폼
     @GetMapping("/{boardCode}/edit/{id}")
     public String postEditForm(@PathVariable String boardCode,
                                @PathVariable Long id,
@@ -122,13 +100,14 @@ public class PostController {
             redirectAttributes.addFlashAttribute("errorMessage", "존재하지 않거나 삭제된 게시글입니다.");
             return "redirect:/community/square/all";
         }
-        Long userId = getLoginUserId(authentication);
-        int tempCount = postService.getTempPostCount(boardCode, userId);
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int tempCount = postService.getTempPostCount(boardCode, userDetails.getUserId());
         model.addAttribute("tempCount", tempCount);
 
         return "community/postForm";
     }
 
+    // 게시글 저장
     @PostMapping("/{boardCode}/save")
     public String createPost(@PathVariable String boardCode,
                              @ModelAttribute PostRequestDTO dto,
@@ -142,8 +121,8 @@ public class PostController {
 
         dto.setPostStatus(isTemp ? PostStatus.DRAFT : PostStatus.ACTIVE);
 
-        Long userId = getLoginUserId(authentication);
-        Long id = postService.postSave(boardCode, dto, userId);
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Long id = postService.postSave(boardCode, dto, userDetails.getUserId());
 
         String msg = isTemp ? "게시글이 임시저장되었습니다." : "글이 성공적으로 등록되었습니다.";
         redirectAttributes.addFlashAttribute("message", msg);
@@ -155,6 +134,7 @@ public class PostController {
         return "redirect:/community/" + boardCode + "/all/" + id;
     }
 
+    // 게시글 수정
     @PostMapping("/{boardCode}/edit/{id}")
     public String updatePost(@PathVariable String boardCode,
                              @PathVariable Long id,
@@ -167,23 +147,26 @@ public class PostController {
         }
 
         dto.setId(id);
-
-        if (dto.getPostStatus() == null) {
+        boolean isDraft = dto.getPostStatus() == PostStatus.DRAFT;
+        if (dto.getPostStatus() == null || dto.getPostStatus() == PostStatus.DRAFT) {
             dto.setPostStatus(PostStatus.ACTIVE);
         }
 
-        Long userId = getLoginUserId(authentication);
-
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String categoryPath = StringUtils.hasText(dto.getCategoryCode())
                 ? dto.getCategoryCode()
                 : "all";
 
-        postService.postSave(boardCode, dto, userId);
+        postService.postSave(boardCode, dto, userDetails.getUserId());
 
-        redirectAttributes.addFlashAttribute("message", "게시글이 수정되었습니다.");
+        redirectAttributes.addFlashAttribute(
+                "message",
+                isDraft ? "글이 성공적으로 등록되었습니다." : "게시글이 수정되었습니다."
+        );
         return "redirect:/community/" + boardCode + "/" + categoryPath + "/" + id;
     }
 
+    // 게시글 삭제
     @PostMapping("/{boardCode}/delete/{id}")
     public String deletePost(@PathVariable String boardCode,
                              @PathVariable Long id,
@@ -194,78 +177,14 @@ public class PostController {
             return "redirect:/auth";
         }
 
-        Long userId = getLoginUserId(authentication);
-        postService.deletePost(id, userId, boardCode);
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        postService.deletePost(id, userDetails.getUserId(), boardCode);
 
         redirectAttributes.addFlashAttribute("message", "게시글이 삭제되었습니다.");
         return "redirect:/community/" + boardCode + "/all";
     }
 
-
-    @PostMapping("/{boardCode}/save-temp")
-    @ResponseBody
-    public ResponseEntity<?> saveTempApi(@PathVariable String boardCode,
-                                         @ModelAttribute PostRequestDTO dto,
-                                         Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
-        dto.setPostStatus(PostStatus.DRAFT);
-
-        Long userId = getLoginUserId(authentication);
-        Long id = postService.postSave(boardCode, dto, userId);
-
-        // 성공 시 저장된 게시글의 ID와 메시지를 JSON으로 반환
-        return ResponseEntity.ok(Map.of(
-                "id", id,
-                "message", "게시글이 임시저장되었습니다."
-        ));
-    }
-
-    @GetMapping("/{boardCode}/temp-count")
-    @ResponseBody
-    public int getTempCount(@PathVariable String boardCode, Authentication authentication) {
-        if (authentication == null) return 0;
-        Long userId = getLoginUserId(authentication);
-        return postService.getTempPostCount(boardCode, userId);
-    }
-
-    @GetMapping("/{boardCode}/temp-list")
-    @ResponseBody
-    public List<PostListResponse> getTempPosts(@PathVariable String boardCode,
-                                               RedirectAttributes redirectAttributes,
-                                               Authentication authentication) {
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인 필요");
-        }
-
-        Long userId = getLoginUserId(authentication);
-        redirectAttributes.addFlashAttribute("message", "임시저장 되었습니다.");
-        return postService.getTempPosts(boardCode, userId);
-    }
-
-    @PostMapping("/{boardCode}/delete-temp/{id}")
-    @ResponseBody
-    public ResponseEntity<String> deleteTemp(@PathVariable String boardCode,
-                                             @PathVariable Long id,
-                                             Authentication authentication) {
-
-        try {
-            if (authentication == null || !authentication.isAuthenticated()) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인 필요");
-            }
-
-            Long userId = getLoginUserId(authentication);
-            postService.deletePost(id, userId, boardCode);
-
-            return ResponseEntity.ok("Success");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Fail");
-        }
-    }
-
+    // 게시글 상세 페이지
     @GetMapping("/{boardCode}/{categoryCode:[a-zA-Z]+}/{id:[0-9]+}")
     public String postDetail(@PathVariable String boardCode,
                              @PathVariable String categoryCode,
@@ -294,46 +213,15 @@ public class PostController {
         }
 
         BoardResponseDTO board = boardService.findByCode(boardCode);
-
         addLayoutAttributes(board, category, model, false, authentication);
 
         model.addAttribute("boardCode", boardCode);
         model.addAttribute("currentCategoryCode", categoryCode);
-
         model.addAttribute("currentPage", page);
-
         model.addAttribute("comments", commentService.findAllByPostId(id));
         model.addAttribute("postTags", postService.getTagsByPostId(id));
 
         return "community/postDetail";
-    }
-
-    @PostMapping("/image-upload")
-    @ResponseBody
-    public Map<String, String> uploadImage(@RequestParam("file") MultipartFile file,
-                                           HttpServletRequest request) {
-
-        try {
-            File dir = new File(uploadPath);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-
-            String original = file.getOriginalFilename();
-            String fileName = UUID.randomUUID() + "_" + (original != null ? original : "image");
-
-            File dest = new File(dir, fileName);
-            file.transferTo(dest.getAbsoluteFile());
-
-            String contextPath = request.getContextPath();
-
-            Map<String, String> result = new HashMap<>();
-            result.put("url", contextPath + "/uploads/" + fileName);
-
-            return result;
-        } catch (IOException e) {
-            throw new RuntimeException("이미지 업로드 실패: " + e.getMessage());
-        }
     }
 
     private void addLayoutAttributes(BoardResponseDTO board,
@@ -341,9 +229,7 @@ public class PostController {
                                      Model model,
                                      boolean isWriteMode,
                                      Authentication authentication) {
-
         if (board == null) return;
-
         model.addAttribute("board", board);
         model.addAttribute("category", category);
         model.addAttribute("boards", boardService.findAll());
@@ -366,10 +252,7 @@ public class PostController {
                                       String keyword,
                                       Model model,
                                       Authentication authentication) {
-
-        if (board == null) {
-            return "redirect:/community";
-        }
+        if (board == null) return "redirect:/community";
 
         if (category == null) {
             model.addAttribute("categoryCode", "all");
@@ -385,12 +268,19 @@ public class PostController {
             model.addAttribute("searchError", "검색 유형을 선택해주세요.");
         }
 
+        CustomUserDetails loginUser = null;
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof CustomUserDetails) {
+            loginUser = (CustomUserDetails) authentication.getPrincipal();
+        }
+
         Page<PostListResponse> postsPage = postService.searchPosts(
                 board.getId(),
                 category != null ? category.getId() : null,
                 searchType,
                 keyword,
-                page
+                page,
+                loginUser
         );
 
         model.addAttribute("posts", postsPage.getContent());
@@ -403,67 +293,16 @@ public class PostController {
         return "community/postList";
     }
 
-    private Long getLoginUserId(Authentication authentication) {
-        User user = getLoginUser(authentication);
-        return user.getId();
-    }
-
     private PostUserRsDTO getPostUser(Authentication authentication) {
-
-        if (authentication == null || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getPrincipal())) {
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
             return null;
         }
-
-        User user = getLoginUser(authentication);
-
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         return PostUserRsDTO.builder()
-                .userId(user.getId())
-                .nickname(user.getNickname())
-                .role(user.getRole().name())
+                .userId(userDetails.getUserId())
+                .nickname(userDetails.getNickname())
+                .role(String.valueOf(userDetails.getRole()))
                 .build();
     }
 
-    private User getLoginUser(Authentication authentication) {
-
-        if (authentication == null || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getPrincipal())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
-
-        Object principal = authentication.getPrincipal();
-
-        // 1순위: CustomUserDetails 안에 userId가 있으면 바로 User 조회
-        if (principal instanceof CustomUserDetails customUserDetails) {
-            Long userId = customUserDetails.getUserId();
-
-            if (userId != null) {
-                User user = entityManager.find(User.class, userId);
-
-                if (user != null) {
-                    return user;
-                }
-            }
-        }
-
-        // 2순위: userId가 없으면 loginId로 조회
-        String loginId = authentication.getName();
-
-        List<User> users = entityManager.createQuery(
-                        "select u " +
-                                "from LocalAccount la " +
-                                "join la.user u " +
-                                "where la.loginId = :loginId",
-                        User.class
-                )
-                .setParameter("loginId", loginId)
-                .setMaxResults(1)
-                .getResultList();
-
-        if (users.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다.");
-        }
-
-        return users.get(0);
-    }
 }

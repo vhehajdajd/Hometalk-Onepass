@@ -35,21 +35,22 @@ public class InquiryPageController {
         }
 
         boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")
+                        || a.getAuthority().equals("ADMIN"));
 
-        Long userId = null;
+        // 관리자만 기존 1:1 문의 리스트 화면
+        if (isAdmin) {
+            Page<InquiryDto> inquiries = inquiryService.findAll(null, true, pageable);
 
-        if (!isAdmin) {
-            userId = inquiryService.getLoginUserId(authentication);
+            model.addAttribute("inquiries", inquiries);
+            model.addAttribute("currentPage", inquiries.getNumber());
+            model.addAttribute("totalPages", inquiries.getTotalPages());
+
+            return "inquiry/inquiryList";
         }
 
-        Page<InquiryDto> inquiries = inquiryService.findAll(userId, isAdmin, pageable);
-
-        model.addAttribute("inquiries", inquiries);
-        model.addAttribute("currentPage", inquiries.getNumber());
-        model.addAttribute("totalPages", inquiries.getTotalPages());
-
-        return "inquiry/inquiryList";
+        // 일반 입주민은 FAQ 대시보드로 이동
+        return "redirect:/inquiries/faq";
     }
 
     // 2. 문의 등록 페이지 이동
@@ -98,5 +99,26 @@ public class InquiryPageController {
         model.addAttribute("paging", paging != null ? paging : Page.empty(pageable));
 
         return "inquiry/MyInquiryList";
+    }
+
+
+    // 입주민용 FAQ 리스트
+    @GetMapping("/faq")
+    public String faqPage(Model model,
+                          Authentication authentication) {
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/auth";
+        }
+
+        Long userId = inquiryService.getLoginUserId(authentication);
+
+        model.addAttribute("waitingCount",
+                inquiryService.countByUserIdAndStatus(userId, "미답변"));
+
+        model.addAttribute("completeCount",
+                inquiryService.countByUserIdAndStatus(userId, "답변완료"));
+
+        return "inquiry/faqDashboard";
     }
 }

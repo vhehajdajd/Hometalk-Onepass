@@ -1,8 +1,4 @@
-console.log("댓글 JS 로드 완료");
-
 function toggleEditForm(commentId) {
-    console.log("댓글 수정 모드 전환 (ID: ", commentId);
-
     const allEditForms = document.querySelectorAll('[id^="edit-form-"]');
     const allBodies = document.querySelectorAll('[id^="body-"]');
     const allMetas = document.querySelectorAll('[id^="meta-"]');
@@ -10,6 +6,8 @@ function toggleEditForm(commentId) {
     const targetForm = document.getElementById('edit-form-' + commentId);
     const targetBody = document.getElementById('body-' + commentId);
     const targetMeta = document.getElementById('meta-' + commentId);
+
+    if (!targetForm || !targetBody || !targetMeta) return;
 
     const isAlreadyOpen = (targetForm.style.display === 'block');
 

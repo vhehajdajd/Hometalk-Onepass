@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const items = document.querySelectorAll('.category-item-wrapper');
 
             if (items.length >= 5) {
-                alert("카테고리는 최대 5개까지만 생성 가능합니다.");
+                showAlertModal("카테고리는 최대 5개까지만 생성 가능합니다.");
                 return;
             }
 
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!isValid) {
                 e.preventDefault();
-                alert("모든 칸(이름 및 영문 코드)을 입력해주세요.");
+                showAlertModal("모든 칸(이름 및 영문 코드)을 입력해주세요.");
                 return;
             }
 

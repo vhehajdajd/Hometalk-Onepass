@@ -1,5 +1,6 @@
 package com.hometalk.onepass.community.entity;
 
+import com.hometalk.onepass.community.enums.BoardType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,18 +23,24 @@ public class Board {
     @Column(unique = true, nullable = false, updatable = false)
     private String code;        // URL용
 
-    @Column(name = "is_system")
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private BoardType boardType = BoardType.LIST;
+
+    @Builder.Default
+    @Column(name = "is_system", nullable = false)
     private boolean system = false; // 기본값 false, 초기 데이터만 true로 설정
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Category> categories;
 
     // 변경 method
-    public void rename(String newName) {
-        if (newName == null || newName.isBlank()) {
-            throw new IllegalArgumentException("게시판 이름은 필수입니다.");
+    public void changeBoardType(BoardType boardType) {
+        if (boardType == null) {
+            throw new IllegalArgumentException("게시판 유형은 필수입니다.");
         }
-        this.name = newName;
+        this.boardType = boardType;
     }
 
 }

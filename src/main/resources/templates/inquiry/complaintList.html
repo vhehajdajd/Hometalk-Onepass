@@ -105,6 +105,13 @@
                 </table>
 
                 <div class="pagination-container mt-lg">
+
+                    <a th:href="@{/complaints/my}"
+                       class="btn btn-outline-primary my-complaint-btn"
+                       sec:authorize="hasRole('RESIDENT')">
+                        내 민원 보기
+                    </a>
+
                     <nav class="pagination-nav">
                         <ul class="pagination" th:if="${paging != null and !paging.isEmpty()}">
 
@@ -137,8 +144,12 @@
                         </ul>
                     </nav>
 
+
+
                     <div class="action-wrapper">
-                        <a th:href="@{/complaints/write}" class="btn btn-primary">글 작성</a>
+                        <a th:href="@{/complaints/write}" class="btn btn-primary"
+                           sec:authorize="hasRole('RESIDENT')">
+                            글 작성</a>
                     </div>
                 </div>
             </main>

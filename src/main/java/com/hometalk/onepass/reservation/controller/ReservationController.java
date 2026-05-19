@@ -6,6 +6,7 @@ import com.hometalk.onepass.reservation.dto.ReservationRequestDto;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -53,8 +54,11 @@ public class ReservationController {
        모든 예약 조회
      */
     @GetMapping
-    public List<ReservationResponseDto> list() {
-        return reservationService.findAll();
+    public Page<ReservationResponseDto> list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return reservationService.findAll(page, size);
     }
 
     /*
@@ -114,6 +118,8 @@ public class ReservationController {
 
     /*
        예약 취소 [사용자/관리자 공용]
+            - 사용자: 직접 취소(CANCELED)
+            - 관리자: 사유 입력 후 반려(REJECTED)
      */
     @PatchMapping("/{id}/cancel")
     public void cancel(@PathVariable("id") Long id,

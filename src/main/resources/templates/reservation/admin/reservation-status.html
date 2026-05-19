@@ -14,6 +14,13 @@
 
         <!-- 메인 콘텐츠 -->
         <div class="dashboard-content">
+            <div th:if="${message}" th:class="|alert-box ${status == 'success' ? 'alert-success' : 'alert-danger'}|">
+                <div class="alert-content">
+                    <i th:class="${status == 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'}"></i>
+                    <span th:text="${message}">성공 메시지입니다.</span>
+                </div>
+                <button type="button" class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+            </div>
             <main class="container">
                 <div class="header-with-action flex-between mb-lg">
                     <!-- 왼쪽: 타이틀 -->
@@ -113,11 +120,16 @@
                                 </td>
                                 <td>
                                    <span class="status-badge"
-                                         th:classappend="${res.status?.toString() == 'CANCELED' ? 'status-canceled' :
-                                                         (res.status?.toString() == 'PENDING' ? 'status-pending' :
-                                                         (res.status?.toString() == 'FINISHED' ? 'status-finished' : 'status-active'))}">
+                                         th:classappend="${
+                                                        res.status?.toString() == 'CANCELED' ? 'status-canceled' :
+                                                        (res.status?.toString() == 'REJECTED' ? 'status-rejected' :
+                                                        (res.status?.toString() == 'PENDING' ? 'status-pending' :
+                                                        (res.status?.toString() == 'FINISHED' ? 'status-finished' :
+                                                        'status-active')))
+                                         }">
 
-                                         <th:block th:if="${res.status?.toString() == 'CANCELED'}">취소됨</th:block>
+                                         <th:block th:if="${res.status?.toString() == 'CANCELED'}">취소</th:block>
+                                         <th:block th:if="${res.status?.toString() == 'REJECTED'}">반려됨</th:block>
                                          <th:block th:if="${res.status?.toString() == 'PENDING'}">승인대기</th:block>
                                          <th:block th:if="${res.status?.toString() == 'FINISHED'}">이용종료</th:block>
                                          <th:block th:if="${res.status?.toString() == 'CONFIRMED'}">예약확정</th:block>
@@ -126,11 +138,16 @@
                                 <td>
                                     <div class="flex-center gap-md" th:if="${res.status?.toString() == 'PENDING'}">
                                         <button type="button" class="btn btn-primary btn-sm"
-                                                th:onclick="|approveReservation('${res.id}')|">승인</button>
+                                                th:onclick="|approveReservation('${res.id}')|">
+                                            승인
+                                        </button>
+
                                         <button type="button" class="btn btn-point btn-sm"
-                                                th:onclick="|confirmAdminCancel('${res.id}')|">강제취소</button>
+                                                th:onclick="|rejectReservation('${res.id}')|">
+                                            반려
+                                        </button>
                                     </div>
-                                    <div th:if="${res.status?.toString() == 'CANCELED' and res.cancelReason != null}"
+                                    <div th:if="${res.status?.toString() == 'REJECTED' and res.cancelReason != null}"
                                          style="color: #d9534f; margin-top: 2px;">
                                         <i class="fas fa-comment-dots"></i>
                                         사유: <span th:text="${res.cancelReason}">사유 내용</span>
@@ -186,6 +203,68 @@
     <p>이 페이지는 관리자만 접근 가능합니다.</p>
     <a th:href="@{/}">홈으로 돌아가기</a>
 </div>
-<script th:src="@{/js/reservation/reservation.js}"></script>
+
+<script th:src="@{/js/community/api.js}"></script>
+
+<script defer th:src="@{/js/community/post-modal.js}"></script>
+
+
+<script th:inline="javascript">
+    // [관리자] 예약 반려
+    async function rejectReservation(id) {
+        const reason = prompt("반려 사유를 입력해주세요.");
+
+        if (!reason || !reason.trim()) {
+            showAlertModal("반려 사유를 입력해야 합니다.");
+            return;
+        }
+
+        try {
+            const response = await apiFetch(`/hometop/api/reservations/${id}/cancel`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    reason: reason
+                })
+            });
+
+            if (response.ok) {
+                showAlertModal("예약이 반려되었습니다.");
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                const errorMsg = await response.text();
+                showAlertModal(errorMsg || "반려 처리 중 오류가 발생했습니다.");
+            }
+        } catch (error) {
+            console.error(error);
+            showAlertModal("서버 통신 중 오류가 발생했습니다.");
+        }
+    }
+
+    // [관리자] 예약 승인
+    function approveReservation(id) {
+        showConfirmModal("이 예약을 승인하시겠습니까?", async function () {
+            try {
+                const response = await apiFetch(`/hometop/api/reservations/${id}/approve`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    showAlertModal("예약이 승인되었습니다.");
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    const errorMsg = await response.text();
+                    showAlertModal(errorMsg || "승인 처리 중 오류가 발생했습니다.");
+                }
+            } catch (error) {
+                console.error(error);
+                showAlertModal("서버 통신 중 오류가 발생했습니다.");
+            }
+        });
+    }
+</script>
 </body>
 </html>

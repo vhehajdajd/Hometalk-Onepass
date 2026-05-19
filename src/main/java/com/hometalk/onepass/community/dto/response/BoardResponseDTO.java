@@ -1,6 +1,7 @@
 package com.hometalk.onepass.community.dto.response;
 
 import com.hometalk.onepass.community.entity.Board;
+import com.hometalk.onepass.community.enums.BoardType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +15,7 @@ public class BoardResponseDTO {
     private Long id;
     private String name;
     private String code;
+    private BoardType boardType;
 
     // 정적 팩토리 메서드
     public static BoardResponseDTO from(Board board) {
@@ -21,6 +23,7 @@ public class BoardResponseDTO {
                 .id(board.getId())
                 .name(board.getName())
                 .code(board.getCode())
+                .boardType(board.getBoardType())
                 .build();
     }
 }

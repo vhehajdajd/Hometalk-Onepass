@@ -3,10 +3,7 @@ package com.hometalk.onepass.community.entity;
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.common.entity.BaseSoftDeleteEntity;
 import com.hometalk.onepass.community.dto.request.PostRequestDTO;
-import com.hometalk.onepass.community.enums.MarketStatus;
-import com.hometalk.onepass.community.enums.PostStatus;
-import com.hometalk.onepass.community.enums.TradeStatus;
-import com.hometalk.onepass.community.enums.TradeType;
+import com.hometalk.onepass.community.enums.*;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -44,6 +41,12 @@ public class Post extends BaseSoftDeleteEntity {
     @Builder.Default
     private Integer viewCount = 0;
 
+    @Column(nullable = false)
+    private int likeCount = 0;
+
+    @Column(nullable = false)
+    private int dislikeCount = 0;
+
     @Column(columnDefinition = "integer default 0", nullable = false)
     @Builder.Default
     private Integer commentCount = 0;
@@ -59,6 +62,9 @@ public class Post extends BaseSoftDeleteEntity {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<PostFile> files = new ArrayList<>();
 
     // FK (Post가 N인 관계)
     @ManyToOne(fetch = FetchType.LAZY)
@@ -116,6 +122,19 @@ public class Post extends BaseSoftDeleteEntity {
     // 조회수
     public void addViewCount() {
         this.viewCount++;
+    }
+    // 좋아요수
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) this.likeCount--;
+    }
+    public void increaseDislikeCount() {
+        this.dislikeCount++;
+    }
+    public void decreaseDislikeCount() {
+        if (this.dislikeCount > 0) this.dislikeCount--;
     }
 
     // 상태 변경 method
