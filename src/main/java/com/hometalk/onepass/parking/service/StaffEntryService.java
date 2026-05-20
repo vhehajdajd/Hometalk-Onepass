@@ -40,7 +40,6 @@ public class StaffEntryService {
         String last4 = keyword.replace(" ", "");
         if (last4.length() != 4) return List.of();
 
-        // DB에서 직접 필터링
         if (parkingLogRepository.existsParkedByLast4(last4)) {
             throw new ParkingException("이미 입차된 차량입니다.");
         }
@@ -67,7 +66,6 @@ public class StaffEntryService {
                     throw new ParkingException("입차 처리할 수 없는 예약 상태입니다.");
                 }
 
-
                 LocalDateTime reservedAt = reservation.getReservedAt();
                 LocalDateTime now = LocalDateTime.now();
                 if (now.isBefore(reservedAt.minusMinutes(30)) || now.isAfter(reservedAt.plusMinutes(30))) {
@@ -88,7 +86,6 @@ public class StaffEntryService {
                     reservation.enter();
                 }
 
-                // 트랜잭션 안에서 userId 미리 추출
                 List<Long> residentUserIds = reservation.getHousehold().getUsers().stream()
                         .filter(u -> u.getRole() == User.UserRole.RESIDENT)
                         .map(User::getId)
@@ -126,7 +123,6 @@ public class StaffEntryService {
                         ParkingLog.EntryType.NORMAL);
                 parkingLogRepository.save(log);
 
-                // 입주자 본인에게 알림
                 Long userId = vehicle.getUser().getId();
                 String vehicleNum = vehicle.getVehicleNumber();
                 Long vehicleId = vehicle.getVehicleId();
@@ -156,12 +152,13 @@ public class StaffEntryService {
 
         String vehicleNumber = request.getVehicleNumber().replace(" ", "");
 
-        vehicleRepository.findByVehicleNumber(vehicleNumber)
-                .ifPresent(v -> {
-                    if (!Vehicle.VehicleStatus.APPROVED.equals(v.getStatus())) {
-                        throw new ParkingException("승인되지 않은 등록 차량은 입차할 수 없습니다.");
-                    }
-                });
+        // 승인된 입주자 차량이면 수동 입차 불가
+        String last4 = vehicleNumber.length() >= 4
+                ? vehicleNumber.substring(vehicleNumber.length() - 4)
+                : vehicleNumber;
+        if (!vehicleRepository.findApprovedByLast4(last4).isEmpty()) {
+            throw new ParkingException("등록된 입주자 차량입니다. 일반 입차로 처리해주세요.");
+        }
 
         parkingLogRepository
                 .findByVehicleNumberAndStatus(vehicleNumber, ParkingLog.ParkingStatus.PARKED)
