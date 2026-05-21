@@ -110,7 +110,7 @@ public class NoticeService {
             notificationPublisher.publishToAll(
                     NotificationTargetRole.RESIDENT,
                     NotificationType.NOTICE_NEW,
-                    "새 공지사항",
+                    notice.getTitle(),  // "새 공지사항"(모든 공지가 같은 제목) → 수정
                     "새 공지가 등록되었습니다.",
                     "/notice/" + notice.getId()
             );

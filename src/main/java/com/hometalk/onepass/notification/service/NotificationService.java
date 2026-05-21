@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +28,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class NotificationService {
 
-    private final NotificationRepository     notificationRepository;
+    private final NotificationRepository notificationRepository;
     private final NotificationReadRepository notificationReadRepository;
 
     // ─────────────────── 조회 ───────────────────
@@ -188,9 +189,9 @@ public class NotificationService {
         return LocalDateTime.now().plusDays(days);
     }
 
-    @Transactional
-    @Scheduled(cron = "0 0 3 * * *")
-    public void deleteExpiredNotifications() {
-        notificationRepository.deleteExpiredNotifications();
+        @Transactional
+        @Scheduled(cron = "0 0 3 * * *")
+        public void deleteExpiredNotifications() {
+            notificationRepository.deleteExpiredNotifications();
     }
 }

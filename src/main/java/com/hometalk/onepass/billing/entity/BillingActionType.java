@@ -19,5 +19,8 @@ public enum BillingActionType {
     UPLOAD,
 
     /* 납부 상태 변경 (UNPAID → PAID) */
-    STATUS_CHANGE
+    STATUS_CHANGE,
+
+    /* 삭제 */
+    DELETE
 }
