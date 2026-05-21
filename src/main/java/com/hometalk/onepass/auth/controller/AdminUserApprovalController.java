@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequiredArgsConstructor
@@ -51,14 +52,18 @@ public class AdminUserApprovalController {
 
     @PostMapping("/{userId}/approve")
     public String approve(@PathVariable Long userId,
-                          @RequestParam User.UserRole role) {
+                          @RequestParam User.UserRole role,
+                          RedirectAttributes redirectAttributes) {
         adminUserApprovalService.approve(userId, role);
+        redirectAttributes.addFlashAttribute("successMessage", "회원 승인이 완료되었습니다.");
         return "redirect:/admin/users/approvals";
     }
 
     @PostMapping("/{userId}/reject")
-    public String reject(@PathVariable Long userId) {
+    public String reject(@PathVariable Long userId,
+                         RedirectAttributes redirectAttributes) {
         adminUserApprovalService.reject(userId);
+        redirectAttributes.addFlashAttribute("successMessage", "회원 가입이 거절되었습니다.");
         return "redirect:/admin/users/approvals";
     }
 }

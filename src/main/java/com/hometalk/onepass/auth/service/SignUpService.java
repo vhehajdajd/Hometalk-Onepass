@@ -109,13 +109,8 @@ public class SignUpService {
 
         validateLoginIdAvailableForUser(dto.getLoginId(), userId);
 
-        Household household = Household.builder()
-                .postNum(dto.getPostNum())
-                .buildingName(dto.getBuildingName())
-                .dong(dto.getDong())
-                .ho(dto.getHo())
-                .build();
-        Household savedHousehold = householdRepository.save(household);
+        Household savedHousehold = updateOrCreateHousehold(user.getHousehold(),
+                dto.getPostNum(), dto.getBuildingName(), dto.getDong(), dto.getHo());
 
         user.updateProfile(dto.getName(), dto.getNickname(), dto.getEmail(), dto.getPhoneNumber());
         user.assignHousehold(savedHousehold);
@@ -127,6 +122,23 @@ public class SignUpService {
         }
 
         return user;
+    }
+
+    private Household updateOrCreateHousehold(
+            Household household, String postNum, String buildingName, String dong, String ho) {
+        if (household != null) {
+            household.updateAddress(postNum, buildingName, dong, ho);
+            return household;
+        }
+
+        Household newHousehold = Household.builder()
+                .postNum(postNum)
+                .buildingName(buildingName)
+                .dong(dong)
+                .ho(ho)
+                .build();
+
+        return householdRepository.save(newHousehold);
     }
 
     public void validateLoginIdAvailable(String loginId) {

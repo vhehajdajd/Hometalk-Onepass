@@ -45,4 +45,11 @@ public class Household extends BaseSoftDeleteEntity {
         this.ho = ho;
         this.postNum = postNum;
     }
+
+    public void updateAddress(String postNum, String buildingName, String dong, String ho) {
+        this.postNum = postNum;
+        this.buildingName = buildingName;
+        this.dong = dong;
+        this.ho = ho;
+    }
 }

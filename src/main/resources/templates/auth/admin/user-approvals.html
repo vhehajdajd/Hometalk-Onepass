@@ -72,7 +72,8 @@
                                 </td>
                                 <td>
                                     <div class="approval-actions">
-                                        <form th:action="@{/admin/users/{id}/approve(id=${user.userId})}" method="post" class="approval-form">
+                                        <form th:action="@{/admin/users/{id}/approve(id=${user.userId})}" method="post" class="approval-form"
+                                              onsubmit="return confirm('이 회원 가입을 승인하시겠습니까?')">
                                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                                             <select name="role" class="approval-role" aria-label="승인 역할 선택">
                                                 <option value="RESIDENT">입주민</option>
@@ -112,5 +113,8 @@
         <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>
 </div>
+<script th:if="${successMessage}" th:inline="javascript">
+    alert([[${successMessage}]]);
+</script>
 </body>
 </html>
