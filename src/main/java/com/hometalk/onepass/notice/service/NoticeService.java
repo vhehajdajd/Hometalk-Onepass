@@ -20,6 +20,7 @@ import com.hometalk.onepass.notification.publisher.NotificationPublisher;
 import com.hometalk.onepass.schedule.entity.Schedule;
 import com.hometalk.onepass.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +39,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -213,7 +215,7 @@ public class NoticeService {
                 }
             }
         } catch (Exception e) {
-            // 읽음 처리 실패해도 공지 조회는 정상 동작
+            log.warn("읽음 처리 중 오류 발생. noticeId={}, error={}", id, e.getMessage());
         }
 
         return new NoticeDetailResponseDto(
@@ -359,12 +361,17 @@ public class NoticeService {
             LocalDateTime since = LocalDateTime.now().minusDays(7);
             return readLogRepository.findUnreadRecentNotices(user, since);
         } catch (Exception e) {
+            log.warn("미읽음 공지 조회 중 오류 발생. error={}", e.getMessage());
             return List.of();
         }
     }
 
+    // ✅ 수정 후 — limit을 실제로 사용
+    @Transactional(readOnly = true)
     public List<NoticeListResponseDto> getRecentNotices(int limit) {
-        return noticeRepository.findTop5ByStatusOrderByCreatedAtDesc(NoticeStatus.PUBLISHED)
+        Pageable pageable = PageRequest.of(0, limit, Sort.by("createdAt").descending());
+        return noticeRepository.findByStatus(NoticeStatus.PUBLISHED, pageable)
+                .getContent()
                 .stream()
                 .map(notice -> new NoticeListResponseDto(
                         notice.getId(),
