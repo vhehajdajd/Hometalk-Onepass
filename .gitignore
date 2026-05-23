@@ -38,7 +38,3 @@ out/
 
 ### Upload Files ###
 uploads/
-
-
-### User Custom (Dummy Data) ###
-src/test/java/com/hometalk/onepass/community/CommunityDummyDataTest.java

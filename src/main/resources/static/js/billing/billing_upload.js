@@ -206,38 +206,31 @@ async function runValidation(rows) {
    - DB에 있고 값 같음 → null (서버 미전송, 표시 없음)
 ================================================================ */
 async function fetchAndSetUpsertTypes() {
-    console.log('fetchAndSetUpsertTypes 호출됨, CONTEXT_PATH:', CONTEXT_PATH);
     const dbMap = new Map();
 
     try {
         const listRes = await fetch(
-        `${CONTEXT_PATH}/api/billing/admin/list?month=${billingMonth}&size=500`,
-        { credentials: 'include' }
+            `${CONTEXT_PATH}/api/billing/admin/list?month=${billingMonth}&size=500`
         );
         if (!listRes.ok) return;
 
         const dbItems = (await listRes.json()).content || [];
 
-await Promise.all(dbItems.map(async item => {
-    if (!item.billingId || !item.unit) return;
-    try {
-        const url = `${CONTEXT_PATH}/api/billing/${item.billingId}/detail`;
-        console.log('detail fetch URL:', url);  // ← fetch 밖으로
-        const detRes = await fetch(
-            url,
-            { credentials: 'include' }
-        );
-        if (!detRes.ok) return;
-        const det = await detRes.json();
-        dbMap.set(item.unit, {
-            totalAmount: Number(item.totalAmount) || 0,
-            items: (det.items || []).map(i => ({
-                itemName:   i.itemName,
-                itemAmount: Number(i.itemAmount) || 0
-            }))
-        });
-    } catch (e) { /* 개별 실패 무시 */ }
-}));
+        await Promise.all(dbItems.map(async item => {
+            if (!item.billingId || !item.unit) return;
+            try {
+                const detRes = await fetch(`${CONTEXT_PATH}/api/billing/${item.billingId}/detail`);
+                if (!detRes.ok) return;
+                const det = await detRes.json();
+                dbMap.set(item.unit, {
+                    totalAmount: Number(item.totalAmount) || 0,
+                    items: (det.items || []).map(i => ({
+                        itemName:   i.itemName,
+                        itemAmount: Number(i.itemAmount) || 0
+                    }))
+                });
+            } catch (e) { /* 개별 실패 무시 */ }
+        }));
     } catch (err) {
         console.warn('UPSERT 비교 실패, 비교 없이 진행', err);
     }
@@ -246,7 +239,6 @@ await Promise.all(dbItems.map(async item => {
         if (r.valid !== '정상') return { ...r, upsertType: null };
 
         const dbRow = dbMap.get(r.unit);
-        console.log('r.unit:', r.unit, '| dbMap has:', dbMap.has(r.unit), '| dbMap keys:', [...dbMap.keys()]);
         if (!dbRow) return { ...r, upsertType: 'INSERT' };
 
         const same = isSame(
@@ -279,6 +271,9 @@ function showPreviewSection() {
     document.getElementById('tableActions').style.display     = 'flex';
     document.getElementById('tableTitle').textContent         =
         '유효성 검사 + 고지서 미리보기 + 업로드 확정';
+
+    // UPSERT 컬럼: DB 있을 때만 표시
+    document.getElementById('thUpsert').style.display = dbHasData ? '' : 'none';
 
     renderTable();
 }
@@ -331,7 +326,7 @@ function renderTable() {
     const updateCount = validRows.filter(r => r.upsertType === 'UPDATE').length;
     const noChangeCount = validRows.filter(r => r.valid === '정상' && !r.upsertType).length;
 
-    const showUpsert = true;
+    const showUpsert = dbHasData || mode === 'result';
 
     if (mode === 'preview') {
         document.getElementById('tableMeta').innerHTML =
@@ -420,15 +415,13 @@ function openPreview(hid, month) {
     const row = validRows.find(r => r.household_id === hid && r.billing_month === month);
     if (!row || row.valid !== '정상') return;
 
-    // 익월 10일
     const [y, m] = month.split('-').map(Number);
-    const nextMonth = m === 12 ? 1 : m + 1;
-    const nextYear  = m === 12 ? y + 1 : y;
+    const last   = new Date(y, m, 0).getDate();
 
     document.getElementById('modalHeaderTitle').textContent =
         `고지서 미리보기 — ${row.unit} (${month})`;
     document.getElementById('modalPeriod').textContent =
-        `부과월: ${month} · 납부기한: ${nextYear}.${String(nextMonth).padStart(2,'0')}.10`;
+        `부과월: ${month} · 납부기한: ${month.replace('-','.')}.${String(last).padStart(2,'0')}`;
     document.getElementById('modalRows').innerHTML = row.details.length
         ? row.details.map(d =>
             `<div class="bill-row">
@@ -496,6 +489,7 @@ async function doConfirmUpload() {
     const confirmBtn = document.querySelector('#confirmOverlay .btn-point');
     if (confirmBtn) confirmBtn.disabled = true;
 
+    // ★ selDong 필터 적용
     const targetRows = selDong
         ? validRows.filter(r => r.dong === selDong)
         : validRows;
@@ -516,12 +510,11 @@ async function doConfirmUpload() {
 
     try {
         const res = await fetch(
-            `${CONTEXT_PATH}/api/billing/admin/upload/confirm`,
+            `${CONTEXT_PATH}/api/billing/admin/upload/confirm?adminId=1`,
             {
-                method:      'POST',
-                credentials: 'include',
-                headers:     { 'Content-Type': 'application/json', [CSRF_HEADER]: CSRF_TOKEN },
-                body:        JSON.stringify(uploadRows),
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json', [CSRF_HEADER]: CSRF_TOKEN },
+                body:    JSON.stringify(uploadRows),
             }
         );
         if (!res.ok) throw new Error('업로드 실패');

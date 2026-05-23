@@ -149,7 +149,7 @@ async function openModal(billingId) {
         if (isUnpaid && isOverdue) {
             statusBox.className = 'bm-status-box past';
             statusBox.innerHTML = `<div class="bm-status-title">납부기한이 지났습니다.</div>
-                                   <div class="bm-status-sub">관리사무소로 문의 바랍니다. ☎️ 02-1111-2222</div>`;
+                                   <div class="bm-status-sub">관리사무소에 문의해 주세요. ☎️ 02-888-9999</div>`;
         } else if (isUnpaid) {
             statusBox.className = 'bm-status-box upcoming';
             statusBox.innerHTML = `<div class="bm-status-title">납부기한</div>

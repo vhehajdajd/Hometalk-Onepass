@@ -1,4 +1,30 @@
 /* ═══════════════════════════════════════
-   월별 관리 페이지 전용 스타일
-   ※ 페이지 전용 스타일 없음 — billing_common.css로 통합됨
+   월별 관리 페이지 전용 스타일 (고지서업로드 탭2 DB저장 후 확인화면)
+   파일 위치: static/billing/css/billing_admin_monthly.css
+   공통: billing_admin_upload.css 함께 로드
 ═══════════════════════════════════════ */
+
+/* ── 페이지 타이틀 ── */
+.page-title {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--color-main);
+    margin-bottom: 20px;
+}
+
+.badge-unpaid {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 11px;
+    border-radius: 4px;
+    background: var(--color-unpaid-bg);
+    color: var(--color-unpaid-text);
+}
+.badge-paid {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 11px;
+    border-radius: 4px;
+    background: var(--color-paid-bg);
+    color: var(--color-paid-text);
+}

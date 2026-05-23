@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
-<div th:fragment="postComment(boardCode, categoryCode, postId, comments)" id="comment-section">
+<div th:fragment="postComment(boardCode, categoryCode, postId, comments)">
     <link rel="stylesheet" th:href="@{/css/community/post-comment.css}">
 
     <div class="comment-form">
         <form th:action="@{/community/{bCode}/{cCode}/{postId}/comments(bCode=${boardCode}, cCode=${categoryCode}, postId=${postId})}"
-              th:method="post" onsubmit="isSubmitting = true;">
-            <textarea name="content" placeholder="댓글을 입력해주세요." required></textarea>
+              th:method="post">
+            <textarea name="content" placeholder="댓글을 입력해주세요."></textarea>
             <button type="submit" class="comment-submit-btn">등록</button>
             <div style="clear: both;"></div>
         </form>
@@ -25,24 +25,13 @@
                     <strong th:text="${comment.nickname}">작성자</strong>
                     <small th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</small>
                 </div>
-                <div class="comment-actions" th:if="${comment.writerId == #authentication.principal.userId}">
-                    <div class="custom-dropdown">
-                        <button type="button" class="drop-btn" onclick="toggleCommentMenu(this)">⋮</button>
-
-                        <div class="drop-content">
-                            <button type="button"
-                                    class="menu-item"
-                                    th:onclick="|toggleEditForm(${comment.id})|">
-                                수정
-                            </button>
-
-                            <form th:action="@{/community/{bCode}/{cCode}/{postId}/comments/{id}/delete
-                                         (bCode=${boardCode}, cCode=${categoryCode}, postId=${postId}, id=${comment.id})}"
-                                  th:method="post" onsubmit="return confirm('댓글을 삭제하시겠습니까?');">
-                                <button type="submit" class="delete-btn">삭제</button>
-                            </form>
-                        </div>
-                    </div>
+                <div class="comment-actions">
+                    <button type="button" class="btn-edit" th:onclick="|toggleEditForm(${comment.id})|">수정</button>
+                    <form th:action="@{/community/{bCode}/{cCode}/{postId}/comments/{id}/delete
+                                     (bCode=${boardCode}, cCode=${categoryCode}, postId=${postId}, id=${comment.id})}"
+                          th:method="post" style="display: inline;" onsubmit="return confirm('댓글을 삭제하시겠습니까?');">
+                        <button type="submit" class="btn-delete">삭제</button>
+                    </form>
                 </div>
             </div>
             <div class="comment-content" th:id="|body-${comment.id}|"><p th:text="${comment.content}">댓글 내용</p></div>
@@ -50,7 +39,7 @@
             <div th:id="|edit-form-${comment.id}|" style="display: none;">
                 <form th:action="@{/community/{bCode}/{cCode}/{postId}/comments/{id}/edit
                                  (bCode=${boardCode}, cCode=${categoryCode}, postId=${postId}, id=${comment.id})}"
-                      th:method="post" onsubmit="isSubmitting = true;">
+                      th:method="post">
                     <textarea name="content" class="edit-textarea" th:text="${comment.content}"></textarea>
                     <div class="edit-button-group">
                         <button type="button" class="btn-cancel-edit" th:onclick="|toggleEditForm(${comment.id})|">취소</button>
@@ -72,6 +61,7 @@
         </div>
     </div>
 </div>
+
 </html>
 
 <!--

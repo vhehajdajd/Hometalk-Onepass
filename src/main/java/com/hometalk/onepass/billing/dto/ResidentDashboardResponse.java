@@ -15,9 +15,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResidentDashboardResponse {
-    private String billingMonth;
-    private String status;
-    private BigDecimal totalAmount;
-    private String dueDate;
-    private boolean overdue;  // true면 "체납 3개월 - 관리사무소 문의요망" 표시
+    private String billingMonth;  // 예: "2월"
+    private String status;        // "UNPAID" 또는 "PAID"
+    private BigDecimal totalAmount;     // 245,600
+    private String dueDate;       // "2026년 3월 10일"
 }

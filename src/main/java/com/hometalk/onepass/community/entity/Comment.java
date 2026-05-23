@@ -2,7 +2,6 @@ package com.hometalk.onepass.community.entity;
 
 import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.common.entity.BaseSoftDeleteEntity;
-import com.hometalk.onepass.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,7 +11,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @Table(name = "comments")
-public class Comment extends BaseTimeEntity {
+public class Comment extends BaseSoftDeleteEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

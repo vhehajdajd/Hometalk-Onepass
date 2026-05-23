@@ -56,8 +56,10 @@ public class BillingApiController {
     @PreAuthorize("hasRole('ADMIN')") // 관리자 권한 체크
     public ResponseEntity<AdminDashboardResponse> getAdminSummary() {
         // 1번의 리턴 타입을 DTO로 지정한 방식을 사용하세요.
-        return ResponseEntity.ok(billingService.getAdminUnpaidSummary());
+        return ResponseEntity.ok(billingService.getAdminDashboardSummary());
     }
+
+
 
 
 
@@ -112,26 +114,27 @@ public class BillingApiController {
     ) {
         return ResponseEntity.ok(billingService.getAdminStats(billingMonth));
     }
-    // JS 동적 통계 갱신용 (unpaid 화면)
+    // JS 동적 통계 갱신용
     @GetMapping("/admin/stats/dashboard")
     public ResponseEntity<AdminDashboardStats> getDashboardStats(
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String  month,
             @RequestParam(required = false) String  dong
     ) {
-        return ResponseEntity.ok(billingService.getAdminDashboardStats(year, month, dong));
+        return ResponseEntity.ok(billingService.getDashboardStats(year, month, dong));
     }
 
     // ─────────────────────────────────────────────
-// 관리자: 납부완료 처리
-//   POST /api/billing/admin/{billingId}/pay
-// ─────────────────────────────────────────────
+    // 관리자: 납부완료 처리
+    //   POST /api/billing/admin/{billingId}/pay?adminId=1
+    // ─────────────────────────────────────────────
+
     @PostMapping("/admin/{billingId}/pay")
     public ResponseEntity<Void> markAsPaid(
             @PathVariable Long billingId,
-            @AuthenticationPrincipal CustomUserDetails user
+            @RequestParam(defaultValue = "1") Long adminId   // TODO: CustomUserDetails로 교체
     ) {
-        billingService.markAsPaid(billingId, user.getUserId());
+        billingService.markAsPaid(billingId, adminId);
         return ResponseEntity.ok().build();
     }
 
@@ -180,14 +183,13 @@ public class BillingApiController {
     //   → { insertCount, updateCount }
     // ─────────────────────────────────────────────
 
-    @PostMapping("/admin/upload/confirm")
+ /*   @PostMapping("/admin/upload/confirm")
     public ResponseEntity<BillingUploadService.UploadConfirmResult> confirmUpload(
-            @RequestBody List<BillingUploadService.UploadRow> rows,
-            @AuthenticationPrincipal CustomUserDetails user
+            @RequestBody  List<BillingUploadService.UploadRow> rows,
+            @RequestParam(defaultValue = "1") Long adminId   // TODO: CustomUserDetails로 교체
     ) {
-        Long adminId = user.getUserId();
         return ResponseEntity.ok(billingUploadService.confirmUpload(rows, adminId));
-    }
+    }*/
     // ─────────────────────────────────────────────
     // 관리자: 월별 전체 삭제 (실수 업로드 복구용)
     //   DELETE /api/billing/admin/month/2026-03?adminId=1

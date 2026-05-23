@@ -19,8 +19,4 @@ public interface TicketService {
 
     // 세대별 이번 달 티켓 조회
     List<TicketResponse> getCurrentMonthTickets(Long householdId);
-
-    // 티켓 체크 드롭
-    void issueBulkTickets(List<Long> householdIds, ParkingTicket.TicketType type,
-                          int totalCount, LocalDate issuedDate);
 }

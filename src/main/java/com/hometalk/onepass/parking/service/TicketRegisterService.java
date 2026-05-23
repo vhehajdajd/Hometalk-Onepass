@@ -18,6 +18,4 @@ public interface TicketRegisterService {
 
     // 티켓 취소
     void cancelTicket(TicketCancelRequest request, Long householdId);
-
-    List<ParkingSearchResponse> getMyParkedVehicles(Long householdId);
 }

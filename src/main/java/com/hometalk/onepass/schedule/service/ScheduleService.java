@@ -40,21 +40,6 @@ public class ScheduleService {
         return account.getUser();
     }
 
-    // ── ScheduleCalResponseDto 변환 헬퍼 ─────────────────────────────────────
-    private ScheduleCalResponseDto toCalDto(Schedule schedule) {
-        return new ScheduleCalResponseDto(
-                schedule.getId(),
-                schedule.getTitle(),
-                schedule.getStartAt(),
-                schedule.getEndAt(),
-                schedule.getNotice() != null ? schedule.getNotice().getId() : null,
-                schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
-                schedule.getRepeatGroupId(),
-                schedule.getInfo(),
-                schedule.getLocation()
-        );
-    }
-
     // ── 달력용 일정 목록 조회 (특정 년월) ────────────────────────────────────
     @Transactional(readOnly = true)
     public List<ScheduleCalResponseDto> getSchedulesByMonth(int year, int month) {
@@ -63,7 +48,15 @@ public class ScheduleService {
 
         return scheduleRepository.findByStartAtBetween(start, end)
                 .stream()
-                .map(this::toCalDto)
+                .map(schedule -> new ScheduleCalResponseDto(
+                        schedule.getId(),
+                        schedule.getTitle(),
+                        schedule.getStartAt(),
+                        schedule.getEndAt(),
+                        schedule.getNotice() != null ? schedule.getNotice().getId() : null,
+                        schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
+                        schedule.getRepeatGroupId()
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -96,40 +89,30 @@ public class ScheduleService {
                 schedule.getRepeatType() != null ? schedule.getRepeatType().name() : null,
                 schedule.getRepeatEndAt(),
                 schedule.getRepeatGroupId(),
-                repeatGroupStartAt
+                repeatGroupStartAt  // ← 추가
         );
     }
+
 
     // ── 공지로 연결된 일정 상세 조회 ─────────────────────────────────────────
     @Transactional(readOnly = true)
     public ScheduleDetailResponseDto getScheduleByNotice(Notice notice) {
         return scheduleRepository.findFirstByNotice(notice)
-                .map(schedule -> {
-                    LocalDateTime repeatGroupStartAt = null;
-                    if (schedule.getRepeatGroupId() != null) {
-                        repeatGroupStartAt = scheduleRepository
-                                .findByRepeatGroupId(schedule.getRepeatGroupId())
-                                .stream()
-                                .map(Schedule::getStartAt)
-                                .min(LocalDateTime::compareTo)
-                                .orElse(schedule.getStartAt());
-                    }
-                    return new ScheduleDetailResponseDto(
-                            schedule.getId(),
-                            schedule.getNotice() != null ? schedule.getNotice().getId() : null,
-                            schedule.getTitle(),
-                            schedule.getInfo(),
-                            schedule.getLocation(),
-                            schedule.getReferenceUrl(),
-                            schedule.getStartAt(),
-                            schedule.getEndAt(),
-                            schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
-                            schedule.getRepeatType() != null ? schedule.getRepeatType().name() : null,
-                            schedule.getRepeatEndAt(),
-                            schedule.getRepeatGroupId(),
-                            repeatGroupStartAt
-                    );
-                })
+                .map(schedule -> new ScheduleDetailResponseDto(
+                        schedule.getId(),
+                        schedule.getNotice() != null ? schedule.getNotice().getId() : null,
+                        schedule.getTitle(),
+                        schedule.getInfo(),
+                        schedule.getLocation(),
+                        schedule.getReferenceUrl(),
+                        schedule.getStartAt(),
+                        schedule.getEndAt(),
+                        schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
+                        (String) null,
+                        (LocalDateTime) null,
+                        (Long) null,
+                        (LocalDateTime) null  // ← repeatGroupStartAt 추가
+                ))
                 .orElse(null);
     }
 
@@ -201,59 +184,32 @@ public class ScheduleService {
                 .orElseThrow(() -> new ScheduleNotFoundException(id));
 
         if (schedule.getRepeatGroupId() != null) {
-            Notice notice = schedule.getNotice(); // 추가
+            // 기존 그룹 전체 삭제
             List<Schedule> group = scheduleRepository.findByRepeatGroupId(schedule.getRepeatGroupId());
             group.sort(Comparator.comparing(Schedule::getStartAt));
             scheduleRepository.deleteAll(group);
 
-            LocalDateTime newStart = dto.getStartAt();
+            // 그룹의 첫 번째 일정 날짜로 시작일 교체
+            LocalDateTime originalStart = group.get(0).getStartAt();
+            LocalDateTime newStart = originalStart.toLocalDate()
+                    .atTime(dto.getStartAt().toLocalTime());
+            dto.setStartAt(newStart);
 
             if (dto.getEndAt() != null) {
                 long durationMinutes = java.time.Duration.between(dto.getStartAt(), dto.getEndAt()).toMinutes();
                 dto.setEndAt(newStart.plusMinutes(durationMinutes));
             }
 
-            dto.setStartAt(newStart);
             dto.setRepeatGroupId(schedule.getRepeatGroupId());
-
-            // notice 연동 처리 추가
-            if (notice != null) {
-                createRepeatScheduleWithNotice(
-                        notice,
-                        dto.getTitle(),
-                        dto.getStartAt(),
-                        dto.getEndAt(),
-                        dto.getInfo(),
-                        dto.getLocation(),
-                        dto.getReferenceUrl(),
-                        dto.getRepeatType() != null ? dto.getRepeatType() : RepeatType.WEEKLY,
-                        dto.getRepeatEndAt()
-                );
-            } else {
-                createRepeatSchedule(dto);
-            }
+            createRepeatSchedule(dto);
         } else if (dto.getRepeatType() != null && dto.getRepeatType() != RepeatType.NONE) {
-            Notice notice = schedule.getNotice(); // 기존 notice 저장
+            // 단일 → 반복으로 변경
             scheduleRepository.delete(schedule);
             dto.setRepeatGroupId(System.currentTimeMillis());
-            // notice가 있으면 notice 연동 반복일정 생성
-            if (notice != null) {
-                String noticeUrl = notice.getId() != null ? dto.getReferenceUrl() : null;
-                createRepeatScheduleWithNotice(
-                        notice,
-                        dto.getTitle(),
-                        dto.getStartAt(),
-                        dto.getEndAt(),
-                        dto.getInfo(),
-                        dto.getLocation(),
-                        noticeUrl,
-                        dto.getRepeatType(),
-                        dto.getRepeatEndAt()
-                );
-            } else {
-                createRepeatSchedule(dto);
-            }
+            createRepeatSchedule(dto);
+
         } else {
+            // 단일 → 단일 수정
             schedule.update(
                     dto.getTitle(),
                     dto.getInfo(),
@@ -283,12 +239,12 @@ public class ScheduleService {
             return createSchedule(dto);
         }
 
-        Long groupId = System.currentTimeMillis();
+        Long groupId = System.currentTimeMillis(); // 그룹 ID로 현재 시간 사용
         LocalDateTime current = dto.getStartAt();
         LocalDateTime repeatEndAt = dto.getRepeatEndAt();
 
         if (repeatEndAt == null) {
-            repeatEndAt = current.plusYears(1);
+            repeatEndAt = current.plusYears(1); // 기본 1년
         }
 
         Long firstId = null;
@@ -351,7 +307,7 @@ public class ScheduleService {
         }
     }
 
-    // ── 공지 작성 시 반복일정 생성 ────────────────────────────────────────────
+    // 공지 작성 시 반복일정 생성
     public void createRepeatScheduleWithNotice(Notice notice, String title,
                                                LocalDateTime startAt, LocalDateTime endAt,
                                                String info, String location, String referenceUrl,
@@ -398,7 +354,7 @@ public class ScheduleService {
         }
     }
 
-    // ── 공지 연동 일정 삭제 ───────────────────────────────────────────────────
+    // 공지 연동 일정 삭제
     public void deleteScheduleByNotice(Notice notice) {
         List<Schedule> schedules = scheduleRepository.findByNotice(notice);
         if (!schedules.isEmpty()) {
@@ -412,38 +368,22 @@ public class ScheduleService {
         }
     }
 
-    // ── 오늘 일정 조회 ────────────────────────────────────────────────────────
     @Transactional(readOnly = true)
     public List<ScheduleCalResponseDto> getTodaySchedules() {
         LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1).minusSeconds(1);
 
-        List<Schedule> result = new java.util.ArrayList<>();
-        result.addAll(scheduleRepository.findByStartAtLessThanEqualAndEndAtGreaterThanEqual(endOfDay, startOfDay));
-        result.addAll(scheduleRepository.findByStartAtBetweenAndEndAtIsNull(startOfDay, endOfDay));
-
-        return result.stream()
-                .distinct()
-                .map(this::toCalDto)
-                .collect(Collectors.toList());
-    }
-
-    // ── 내일 일정 조회 ────────────────────────────────────────────────────────
-    @Transactional(readOnly = true)
-    public List<ScheduleCalResponseDto> getTomorrowSchedules() {
-        LocalDateTime startOfTomorrow = LocalDateTime.now().toLocalDate()
-                .plusDays(1).atStartOfDay();
-        LocalDateTime endOfTomorrow = startOfTomorrow.plusDays(1).minusSeconds(1);
-
-        List<Schedule> result = new java.util.ArrayList<>();
-        result.addAll(scheduleRepository.findByStartAtLessThanEqualAndEndAtGreaterThanEqual(
-                endOfTomorrow, startOfTomorrow));
-        result.addAll(scheduleRepository.findByStartAtBetweenAndEndAtIsNull(
-                startOfTomorrow, endOfTomorrow));
-
-        return result.stream()
-                .distinct()
-                .map(this::toCalDto)
+        return scheduleRepository.findByStartAtBetween(startOfDay, endOfDay)
+                .stream()
+                .map(schedule -> new ScheduleCalResponseDto(
+                        schedule.getId(),
+                        schedule.getTitle(),
+                        schedule.getStartAt(),
+                        schedule.getEndAt(),
+                        schedule.getNotice() != null ? schedule.getNotice().getId() : null,
+                        schedule.getEffectiveBadge() != null ? schedule.getEffectiveBadge().name() : null,
+                        schedule.getRepeatGroupId()
+                ))
                 .collect(Collectors.toList());
     }
 }

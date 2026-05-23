@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <th:block th:replace="~{fragments/head :: head('방문 차량 예약')}"></th:block>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>방문 차량 예약</title>
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
     <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
-    <link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
 </head>
+<body>
 
 <div class="main-layout" style="display: flex; min-height: 100vh;">
 
@@ -15,7 +20,7 @@
     <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
 
         <!-- 상단 헤더 -->
-        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='parking')}"></div>
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'parking', 'reservationRegister'} })}"></div>
 
         <!-- 상단 메뉴 -->
         <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
@@ -39,9 +44,8 @@
                         <path d="M12 16h.01"/>
                     </svg>
                     <span>
-                    방문 차량은 예약 시간 <strong>30분 전후</strong>에만 입차 가능합니다.<br>
-                    입차하지 못하셨다면 다시 예약해 주시기 바랍니다.<br>
-                    입차 후 <strong>10분</strong> 이내에는 무료 출차 가능합니다.
+                        방문 차량은 예약 시간 <strong>30분 전후</strong>에만 입차 가능합니다.<br>
+                        입차하지 못하셨다면 다시 예약해 주시기 바랍니다.
                     </span>
                 </div>
 

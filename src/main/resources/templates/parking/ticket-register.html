@@ -1,155 +1,136 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('차량 티켓 등록')}"></head>
-<link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
-<link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>차량 티켓 등록</title>
+  <meta name="_csrf" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
+  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
+  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+</head>
 <body>
 
-<div class="main-layout">
+<div class="container">
+  <h2 class="page-title">차량 티켓 등록</h2>
 
-  <!-- 1. 사이드바 -->
-  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
+  <!-- 잔여 티켓 현황 -->
+  <div class="time-calc-box" style="margin-bottom: 24px;">
+    <div class="time-item">
+      <span class="time-label">이번 달 1일권</span>
+      <span class="time-value">
+        <span th:each="ticket : ${tickets}" th:if="${ticket.ticketType == 'DAY'}"
+              th:text="${ticket.remainingCount} + '개'">0개</span>
+        <span th:if="${#lists.isEmpty(tickets)}">0개</span>
+      </span>
+    </div>
+    <div class="time-item">
+      <span class="time-label">이번 달 1시간권</span>
+      <span class="time-value">
+        <span th:each="ticket : ${tickets}" th:if="${ticket.ticketType == 'HOUR'}"
+              th:text="${ticket.remainingCount} + '개'">0개</span>
+        <span th:if="${#lists.isEmpty(tickets)}">0개</span>
+      </span>
+    </div>
+  </div>
 
-  <!-- 2. 오른쪽 영역 -->
-  <div class="main-wrapper">
+  <!-- 차량 번호 검색 -->
+  <div class="form-group">
+    <label for="vehicleNumber">차량 번호</label>
+    <div class="search-group">
+      <input type="text" id="vehicleNumber" placeholder="차량 번호 4자리 입력" maxlength="4">
+      <button type="button" id="searchBtn" onclick="searchVehicle()">조회</button>
+    </div>
+    <span class="error-msg" id="searchError"></span>
+  </div>
 
-    <!-- 상단 헤더 -->
-    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='parking')}"></div>
+  <!-- 차량 선택 목록 -->
+  <div id="vehicleSelectBox" style="display:none; margin-bottom: 16px;">
+    <p style="font-size: 14px; font-weight: 600; color: var(--color-main); margin-bottom: 8px;">
+      조회된 차량을 선택해주세요.
+    </p>
+    <div id="vehicleSelectList"></div>
+  </div>
 
-    <!-- 상단 메뉴 -->
-    <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
+  <!-- 검색 결과 -->
+  <div id="searchResult" style="display:none;">
 
-    <!-- 본문 -->
-    <main class="content" style="flex:1;">
-      <div class="container">
-        <h2 class="page-title">차량 티켓 등록</h2>
+    <!-- 차량 정보 -->
+    <div class="vehicle-info-box">
+      <p><span class="label">차량번호</span><span id="resultVehicleNumber"></span></p>
+      <p><span class="label">입차일시</span><span id="resultEntryTime"></span></p>
+      <p><span class="label">주차시간</span><span id="resultParkingTime"></span></p>
 
-        <!-- 잔여 티켓 현황 -->
-        <div class="time-calc-box" style="margin-bottom: 24px;">
-          <div class="time-item">
-            <span class="time-label">이번 달 1일권</span>
-            <span class="time-value">
-              <span th:each="ticket : ${tickets}" th:if="${ticket.ticketType == 'DAY'}"
-                    th:text="${ticket.remainingCount} + '개'">0개</span>
-              <span th:if="${#lists.isEmpty(tickets)}">0개</span>
-            </span>
-          </div>
-          <div class="time-item">
-            <span class="time-label">이번 달 1시간권</span>
-            <span class="time-value">
-              <span th:each="ticket : ${tickets}" th:if="${ticket.ticketType == 'HOUR'}"
-                    th:text="${ticket.remainingCount} + '개'">0개</span>
-              <span th:if="${#lists.isEmpty(tickets)}">0개</span>
-            </span>
-          </div>
-        </div>
-
-        <!-- 차량 번호 검색 -->
-        <div class="form-group">
-          <label for="vehicleNumber">차량 번호</label>
-          <div class="search-group">
-            <input type="text" id="vehicleNumber" placeholder="차량 번호 4자리 입력" maxlength="4">
-            <button type="button" id="searchBtn" onclick="searchVehicle()">조회</button>
-          </div>
-          <span class="error-msg" id="searchError"></span>
-        </div>
-
-        <!-- 차량 선택 목록 -->
-        <div id="vehicleSelectBox" style="display:none; margin-bottom: 16px;">
-          <p style="font-size: 14px; font-weight: 600; color: var(--color-main); margin-bottom: 8px;">
-            조회된 차량을 선택해주세요.
-          </p>
-          <div id="vehicleSelectList"></div>
-        </div>
-
-        <!-- 검색 결과 -->
-        <div id="searchResult" style="display:none;">
-
-          <!-- 차량 정보 -->
-          <div class="vehicle-info-box">
-            <p><span class="label">차량번호</span><span id="resultVehicleNumber"></span></p>
-            <p><span class="label">입차일시</span><span id="resultEntryTime"></span></p>
-            <p><span class="label">주차시간</span><span id="resultParkingTime"></span></p>
-
-            <div id="unregisteredBox" style="display:none;">
-              <span class="warning">*미등록된 차량입니다. →</span>
-              <button type="button" onclick="goRegister()">내 손님으로 등록하기</button>
-            </div>
-          </div>
-
-          <!-- 주차 시간 계산 -->
-          <div class="time-calc-box">
-            <div class="time-item">
-              <span class="time-label">주차 시간</span>
-              <span id="totalTime" class="time-value"></span>
-            </div>
-            <div class="time-item">
-              <span class="time-label">적용 시간</span>
-              <span id="appliedTime" class="time-value"></span>
-            </div>
-            <div class="time-item">
-              <span class="time-label">잔여 시간</span>
-              <span id="remainingTime" class="time-value"></span>
-            </div>
-            <div class="time-item" id="neededTimeBox" style="flex-direction: column; align-items: center;">
-              <span class="time-label" style="color: var(--color-btn-point);">티켓 필요 시간</span>
-              <span id="neededTime" class="time-value" style="color: var(--color-btn-point);">-</span>
-            </div>
-          </div>
-
-          <!-- 티켓 적용 -->
-          <div class="ticket-section">
-            <label>티켓 적용</label>
-            <p class="hint">*적용할 티켓을 선택해주세요</p>
-
-            <div class="ticket-list">
-              <div class="ticket-item">
-                <label>
-                  <input type="radio" name="ticketType" value="DAY" onchange="selectTicket('DAY')">
-                  1일권
-                </label>
-                <span id="dayRemaining"></span>
-                <button type="button" style="display:none;"
-                        id="dayCancelBtn" onclick="openCancelModal('DAY', this)">적용 취소</button>
-              </div>
-
-              <div class="ticket-item">
-                <label>
-                  <input type="radio" name="ticketType" value="HOUR" onchange="selectTicket('HOUR')">
-                  1시간권
-                </label>
-                <span id="hourRemaining"></span>
-                <button type="button" style="display:none;"
-                        id="hourCancelBtn" onclick="openCancelModal('HOUR', this)">적용 취소</button>
-              </div>
-            </div>
-
-            <div class="ticket-apply-group">
-              <button type="button" onclick="decreaseCount()">-</button>
-              <input
-                      type="number"
-                      id="ticketCount"
-                      value="1"
-                      min="1"
-                      style="width: 50px; text-align: center; font-size: 16px; font-weight: 700;
-                       color: var(--color-main); border: 1px solid var(--color-border);
-                       border-radius: var(--radius-sm); padding: 4px 8px;"
-                      oninput="handleCountInput(this)"
-              >
-              <button type="button" onclick="increaseCount()">+</button>
-              <button type="button" id="applyBtn" disabled onclick="applyTicket(this)">적용</button>
-            </div>
-            <p class="hint">*숫자를 직접 클릭하여 수량을 입력할 수 있습니다.</p>
-            <p class="hint" id="ticketHint"></p>
-          </div>
-        </div>
-
+      <div id="unregisteredBox" style="display:none;">
+        <span class="warning">*미등록된 차량입니다. →</span>
+        <button type="button" onclick="goRegister()">내 손님으로 등록하기</button>
       </div>
-    </main>
+    </div>
 
-    <!-- 하단 푸터 -->
-    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <!-- 주차 시간 계산 -->
+    <div class="time-calc-box">
+      <div class="time-item">
+        <span class="time-label">주차시간</span>
+        <span id="totalTime" class="time-value"></span>
+      </div>
+      <div class="time-item">
+        <span class="time-label">입력시간</span>
+        <span id="appliedTime" class="time-value"></span>
+      </div>
+      <div class="time-item">
+        <span class="time-label">남은시간</span>
+        <span id="remainingTime" class="time-value"></span>
+      </div>
+      <div class="time-item" id="neededTimeBox" style="flex-direction: column; align-items: center;">
+        <span class="time-label" style="color: var(--color-btn-point);">추가필요</span>
+        <span id="neededTime" class="time-value" style="color: var(--color-btn-point);">-</span>
+      </div>
+    </div>
 
+    <!-- 티켓 적용 -->
+    <div class="ticket-section">
+      <label>티켓 적용</label>
+      <p class="hint">*적용할 티켓을 선택해주세요</p>
+
+      <div class="ticket-list">
+        <div class="ticket-item">
+          <label>
+            <input type="radio" name="ticketType" value="DAY" onchange="selectTicket('DAY')">
+            1일권
+          </label>
+          <span id="dayRemaining"></span>
+          <button type="button" style="display:none;"
+                  id="dayCancelBtn" onclick="openCancelModal('DAY', this)">적용 취소</button>
+        </div>
+
+        <div class="ticket-item">
+          <label>
+            <input type="radio" name="ticketType" value="HOUR" onchange="selectTicket('HOUR')">
+            1시간권
+          </label>
+          <span id="hourRemaining"></span>
+          <button type="button" style="display:none;"
+                  id="hourCancelBtn" onclick="openCancelModal('HOUR', this)">적용 취소</button>
+        </div>
+      </div>
+
+      <div class="ticket-apply-group">
+        <button type="button" onclick="decreaseCount()">-</button>
+        <input
+                type="number"
+                id="ticketCount"
+                value="1"
+                min="1"
+                style="width: 50px; text-align: center; font-size: 16px; font-weight: 700;
+                 color: var(--color-main); border: 1px solid var(--color-border);
+                 border-radius: var(--radius-sm); padding: 4px 8px;"
+                oninput="handleCountInput(this)"
+        >
+        <button type="button" onclick="increaseCount()">+</button>
+        <button type="button" id="applyBtn" disabled onclick="applyTicket(this)">적용</button>
+      </div>
+      <p class="hint" id="ticketHint"></p>
+    </div>
   </div>
 </div>
 
@@ -241,6 +222,7 @@
         data.forEach(vehicle => {
           const div = document.createElement('div');
           div.classList.add('result-item');
+          div.style.cursor = 'pointer';
           div.innerHTML = `
             <p style="margin: 0;">
               <strong>${vehicle.vehicleNumber}</strong>
@@ -260,15 +242,16 @@
       })
       .catch(err => {
         console.error(err);
-        searchError.textContent = err.message || '조회된 차량이 없습니다.';
+        searchError.textContent = err.message || '조회 중 오류가 발생했습니다.';
         document.getElementById('searchResult').style.display = 'none';
       });
   }
 
-function refreshCurrentVehicle() {
+  function refreshCurrentVehicle() {
+    const keyword = document.getElementById('vehicleNumber').value.trim();
     const currentParkingId = selectedParkingId;
 
-    fetch(`${contextPath}parking/ticket/my-vehicles`)
+    fetch(`${contextPath}parking/ticket/search?keyword=${keyword}`)
       .then(res => res.json())
       .then(data => {
         const current = data.find(v => v.parkingId === currentParkingId);
@@ -277,7 +260,7 @@ function refreshCurrentVehicle() {
       .catch(err => console.error(err));
   }
 
-function renderTicketUI(data) {
+  function renderTicketUI(data) {
     selectedParkingId = data.parkingId;
 
     document.getElementById('resultVehicleNumber').textContent = data.vehicleNumber;
@@ -298,40 +281,26 @@ function renderTicketUI(data) {
 
     unregisteredBox.style.display = data.unregistered ? 'block' : 'none';
 
-    // 미등록 차량은 티켓 적용 비활성화
-    const ticketSection = document.querySelector('.ticket-section');
-    if (data.unregistered) {
-        ticketSection.style.opacity = '0.4';
-        ticketSection.style.pointerEvents = 'none';
-        document.getElementById('ticketHint').textContent = '*미등록 차량은 티켓을 적용할 수 없습니다.';
-        document.getElementById('ticketHint').style.color = 'var(--color-btn-point)';
-    } else {
-        ticketSection.style.opacity = '1';
-        ticketSection.style.pointerEvents = 'auto';
-        document.getElementById('ticketHint').textContent = '';
-        document.getElementById('ticketHint').style.color = '';
-    }
-
     const dayCancelBtn = document.getElementById('dayCancelBtn');
     const hourCancelBtn = document.getElementById('hourCancelBtn');
 
     if (data.dayApplied) {
-        dayCancelBtn.style.display = 'block';
-        dayCancelBtn.innerHTML = `적용 티켓 : ${dayAppliedCount}장 &nbsp;|&nbsp; 티켓 적용 취소`;
+      dayCancelBtn.style.display = 'block';
+      dayCancelBtn.textContent = `적용 취소 (${dayAppliedCount}장)`;
     } else {
-        dayCancelBtn.style.display = 'none';
+      dayCancelBtn.style.display = 'none';
     }
 
     if (data.hourApplied) {
-        hourCancelBtn.style.display = 'block';
-        hourCancelBtn.innerHTML = `적용 티켓 : ${hourAppliedCount}장 &nbsp;|&nbsp; 티켓 적용 취소`;
+      hourCancelBtn.style.display = 'block';
+      hourCancelBtn.textContent = `적용 취소 (${hourAppliedCount}장)`;
     } else {
-        hourCancelBtn.style.display = 'none';
+      hourCancelBtn.style.display = 'none';
     }
 
     resetTicketUI();
     document.getElementById('searchResult').style.display = 'block';
-}
+  }
 
   function openCancelModal(type, btn) {
     cancelType = type;
@@ -523,39 +492,6 @@ function renderTicketUI(data) {
     const vehicleNumber = document.getElementById('resultVehicleNumber').textContent;
     location.href = `${contextPath}parking/unregistered?vehicleNumber=${encodeURIComponent(vehicleNumber)}`;
   }
-
-  // 페이지 로드 시 내 세대 차량 목록 조회
-async function loadMyVehicles() {
-    const res = await fetch(`${contextPath}parking/ticket/my-vehicles`);
-    const data = await res.json();
-    if (data.length > 0) {
-        // 차량이 하나면 바로 renderTicketUI, 여러 개면 선택 목록 표시
-        if (data.length === 1) {
-            renderTicketUI(data[0]);
-        } else {
-            // 선택 목록 표시 (기존 vehicleSelectBox 활용)
-            const selectList = document.getElementById('vehicleSelectList');
-            data.forEach(vehicle => {
-                const div = document.createElement('div');
-                div.classList.add('result-item');
-                div.style.cursor = 'pointer';
-                div.innerHTML = `<p style="margin:0;">
-                <strong>${vehicle.vehicleNumber}</strong>
-                &nbsp;|&nbsp; 입차 ${vehicle.entryTime}
-                ${vehicle.unregistered ? '&nbsp;|&nbsp; <span style="color:var(--color-btn-point);">미등록 차량</span>' : ''}
-            </p>`;
-                div.addEventListener('click', () => {
-                    document.getElementById('vehicleSelectBox').style.display = 'none';
-                    renderTicketUI(vehicle);
-                });
-                selectList.appendChild(div);
-            });
-            document.getElementById('vehicleSelectBox').style.display = 'block';
-        }
-    }
-}
-
-document.addEventListener('DOMContentLoaded', loadMyVehicles);
 </script>
 
 </body>

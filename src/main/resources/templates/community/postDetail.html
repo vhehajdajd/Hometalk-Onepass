@@ -2,82 +2,56 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:replace="~{community/fragments/head :: commHead(pageTitle='커뮤니티')}"></th:block>
-    <!-- 후에 제거할 meta들 -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <link rel="stylesheet" th:href="@{/css/community/post-detail.css}">
 </head>
 <body>
-<div class="main-layout" style="background-color: #ffffff">
+<div class="main-layout" style="display: flex; min-height: 100vh;">
+    <!-- 1. 왼쪽 사이드바 -->
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='community')}"></div>
-    <div class="main-wrapper">
+    <!-- 2. 오른쪽 영역 (헤더 + 본문) -->
+    <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+        <!--            <a th:text="${boardId}">광장 = 1, 마켓 = 2</a>-->
+        <!--            <a th:each="board : ${boards}" th:text="${board.name}">String = 광장, 마켓 </a>-->
+        <!--            <a th:each="category : ${categories}" th:text="${category.name}">전체, 자유, 토론 </a>-->
+        <!--            <a th:text="${categoryId}">전체, 자유, 토론 </a>-->
+        <!--            <p>현재 경로는 <span th:text="${boards[0].name}">현재 경로</span>입니다.</p>-->
+        <!-- 상단 헤더 -->
+        <th:block th:each="board : ${boards}">
+            <div th:if="${boardId == board.id}">
+                <div th:switch="${categoryId}">
+                    <div th:case="2">
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '자유' } })}"></div>
+                    </div>
+                    <div th:case="3">
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '토론' } })}"></div>
+                    </div>
+                    <div th:case="4">
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '나눔' } })}"></div>
+                    </div>
+                    <div th:case="5">
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '분실문' } })}"></div>
+                    </div>
+                    <div th:case="*" >
+                        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community', board.name, '전체' } })}"></div>
+                    </div>
+                </div>
+            </div>
+        </th:block>
         <!-- 상단 메뉴 -->
-        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'community'} })}"></div>
-        <div th:replace="~{fragments/headerCategoryMenu :: ${#authorization.expression('hasRole(''ADMIN'')')} ? 'communityAdmin' : 'community'}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: community}"></div>
 
-        <main class="dashboard-content">
-            <div class="container">
+        <main class="main-wrapper content-community" style="flex: 1; display: flex; flex-direction: column;">
             <div th:replace="~{community/fragments/boardListHeader :: boardListHeader(boards=${boards}, boardId=${boardId}, loginUser=${loginUser})}"></div>
             <div th:replace="~{community/fragments/categoryBanner :: categoryBanner(board=${board}, categories=${categories}, categoryId=${categoryId})}"></div>
 
-            <br>
-
-                <div class="alert-container">
-                    <!-- 성공 메시지 (message) -->
-                    <div th:if="${message}" class="alert-banner alert-success">
-                        <span th:text="${message}">성공 메시지 영역</span>
-                        <button class="btn-close-x" onclick="this.parentElement.style.display='none'">&times;</button>
-                    </div>
-                    <!-- 에러 메시지 (errorMessage) -->
-                    <div th:if="${errorMessage}" class="alert-banner alert-error">
-                        <span th:text="${errorMessage}">에러 메시지 영역</span>
-                        <button class="btn-close-x" onclick="this.parentElement.style.display='none'">&times;</button>
-                    </div>
+                <div th:if="${successMessage}" class="success-message">
+                    <span th:text="${successMessage}"></span>
                 </div>
-
                 <div class="content-container">
-
                     <div class="post-header">
-
-                        <!-- 카테고리 -->
-                        <span th:if="${post.categoryName != null}"
-                              th:text="${post.categoryName}"
-                              class="list-category"
-                              th:classappend="${post.categoryCode}"
-                              th:style="${post.categoryBgColor != null} ?
-                                        'background-color:' + ${post.categoryBgColor} + '; color:' + ${post.categoryTextColor} + ';' : ''">
-                            카테고리
-                        </span>
-
-                        <th:block th:if="${post.categoryCode == 'share' and post.marketStatus != null and post.marketStatus != '' and !post.pinned}">
-                                            <span th:classappend="${'badge-' + post.marketStatus.toLowerCase()}"
-                                                  class="badge status-badge-inline"
-                                                  th:text="${post.marketStatusDescription}">
-                                            </span>
-                        </th:block>
-                        <th:block th:if="${post.categoryCode == 'trade' and post.tradeStatus != null and post.tradeStatus != '' and !post.pinned}">
-                                            <span th:classappend="${'badge-' + post.tradeStatus.toLowerCase()}"
-                                                  class="badge status-badge-inline"
-                                                  th:text="${post.tradeStatusDescription}">
-                                            </span>
-                        </th:block>
-
-                        <!-- 관리자 도구 -->
-                        <div sec:authorize="hasRole('ADMIN')" class="admin-tools"
-                             th:data-board-code="${boardCode}"
-                             th:data-category-code="${currentCategoryCode}" >
-                            <button id="pinBtn" th:onclick="|togglePin(${post.id})|" class="btn-pin"
-                                    th:classappend="${post.pinned} ? 'active' : ''">
-                                <i class="fas fa-thumbtack"></i>
-                                <span th:text="${post.pinned} ? '고정 해제' : '상단 고정'">상단 고정</span>
-                            </button>
-
-                            <button type="button" th:onclick="|hidePost(${post.id})|" class="btn-hide">
-                                <i class="fas fa-eye-slash"></i> 숨김
-                            </button>
-                        </div>
-
+                        <span class="list-category" th:classappend="${post.categoryCode}" th:text="${post.categoryName}">카테고리</span>
+                        <span th:if="${post.categoryCode == 'share' and post.marketStatus != null}"
+                              th:text="${post.marketStatusDescription}"></span>
                         <h1 class="post-title" th:text="${post.title}">게시글 제목</h1>
 
                         <div class="post-meta">
@@ -85,48 +59,53 @@
                             <span class="date" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span>
                             <span class="views">조회수 <span th:text="${post.viewCount}">0</span></span>
 
-                            <div class="writer-only-tools" style="display: inline-block; margin-left: 5px;">
-                                <th:block th:if="${post.categoryCode == 'share' and post.editable and post.marketStatus != null and !post.pinned}">
-                                    <select th:onchange="|updateStatus(${post.id}, this.value)|" class="status-select">
-                                        <option th:selected="${post.marketStatus == 'SHARED'}" value="SHARED">나눔중</option>
-                                        <option th:selected="${post.marketStatus == 'RESERVED'}" value="RESERVED">예약중</option>
-                                        <option th:selected="${post.marketStatus == 'COMPLETED'}" value="COMPLETED">나눔완료</option>
-                                    </select>
-                                </th:block>
-                                <th:block th:if="${post.categoryCode == 'trade' and post.tradeStatus != null and post.editable and !post.pinned}">
-                                    <select th:onchange="|updateTradeStatus(${post.id}, this.value)|" class="status-select">
-                                        <option th:selected="${post.tradeStatus == 'SELLING'}" value="SELLING">거래중</option>
-                                        <option th:selected="${post.tradeStatus == 'RESERVED'}" value="RESERVED">예약중</option>
-                                        <option th:selected="${post.tradeStatus == 'COMPLETED'}" value="COMPLETED">완료</option>
-                                    </select>
-                                </th:block>
+                            <div sec:authorize="hasRole('ADMIN')" class="admin-tools"
+                                 th:data-board-code="${boardCode}"
+                                 th:data-category-code="${currentCategoryCode}" >
+                                <button id="pinBtn" th:onclick="|togglePin(${post.id})|" class="btn-pin"
+                                        th:classappend="${post.pinned} ? 'active' : ''">
+                                <i class="fas fa-thumbtack"></i>
+                                <span th:text="${post.pinned} ? '고정 해제' : '상단 고정'">상단 고정</span>
+                                </button>
+
+                                <button type="button" th:onclick="|hidePost(${post.id})|" class="btn-hide">
+                                    <i class="fas fa-eye-slash"></i> 숨김
+                                </button>
+                            </div>
+
+                            <div th:if="${post.categoryCode == 'share' and post.editable and post.marketStatus != null}"
+                                 class="writer-only-tools" style="display: inline-block; margin-left: 5px;">
+                                <select th:onchange="|updateStatus(${post.id}, this.value)|" class="status-select">
+                                    <option th:selected="${post.marketStatus == 'SHARED'}" value="SHARED">나눔중</option>
+                                    <option th:selected="${post.marketStatus == 'RESERVED'}" value="RESERVED">예약중</option>
+                                    <option th:selected="${post.marketStatus == 'COMPLETED'}" value="COMPLETED">나눔완료</option>
+                                </select>
                             </div>
                         </div>
                     </div>
 
-                    <div class="page-body post-content">
+                    <hr>
+
+                    <div class="page-body post-content" style="word-break: break-all;"> <!-- white-space: pre-wrap; 보고 추가하기 -->
                         <div th:utext="${post.content}">게시글 내용</div>
                     </div>
-
-                    <div class="tag-filter-wrapper"
-                         th:if="${postTags != null and !postTags.isEmpty()}">
+                    <div class="tag-filter-wrapper" th:if="${boardTags != null and !boardTags.isEmpty()}">
                         <div class="tag-filter-inner">
                             <span class="tag-icon"><i class="fa-solid fa-tags"></i></span>
-                            <div th:replace="~{community/fragments/postTag :: tagList(tags=${postTags}, boardCode=${currentBoardCode})}"></div>
+                            <div th:replace="~{community/fragments/postTag :: tagList(tags=${boardTags}, boardCode=${currentBoardCode})}"></div>
                         </div>
                     </div>
 
+                    <hr>
+
                     <div class="page-footer">
-                        <a th:href="@{/community/{code}/{category}(code=${board.code}, category=${currentCategoryCode}, page=${currentPage})}" class="btn btn-outline"
-                           onclick="isSubmitting = true;">목록</a>
+                        <a th:href="@{/community/{code}(code=${board.code})}" class="btn">목록</a>
 
-                        <div class="edit-delete-group" th:if="${post.editable}">
-                            <a th:href="@{/community/{code}/edit/{id}(code=${board.code}, id=${post.id})}"
-                               class="btn btn-primary" style="margin-right: 4px;">수정</a>
-
+                        <div class="edit-delete-group" th:if="${#authentication.name == post.authorId}">
+                            <a th:href="@{/community/{code}/edit/{id}(code=${board.code}, id=${post.id})}" class="btn-edit">수정</a>
                             <form th:action="@{/community/{code}/delete/{id}(code=${boardCode}, id=${post.id})}"
                                   method="post" style="display:inline;" id="deleteForm">
-                                <button type="button" class="btn btn-danger-outline"
+                                <button type="button" class="btn-delete"
                                         id="btn-delete" th:data-id="${post.id}">삭제</button>
                             </form>
                         </div>
@@ -136,7 +115,6 @@
                         <div th:replace="~{community/postComment :: postComment(${boardCode}, ${categoryCode}, ${post.id}, ${comments})}"></div>
                     </div>
                 </div>
-            </div>
         </main>
         <footer th:replace="~{fragments/footer :: footer}"></footer>
     </div>

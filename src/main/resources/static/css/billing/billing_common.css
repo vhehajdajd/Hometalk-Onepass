@@ -1,13 +1,9 @@
 /* ═══════════════════════════════════════
-   관리비 모듈 공통 CSS
+   공통 CSS 변수 (모든 페이지에서 import)
    파일 위치: static/css/billing/billing_common.css
-   로드 순서: dashboard/style.css → billing_common.css → 페이지별 css
 ═══════════════════════════════════════ */
-
-/* =========================
-   1. DESIGN TOKENS
-========================= */
 :root {
+    /* ── 기본 색상 ── */
     --color-bg:              #ffffff;
     --color-main:            #032154;
     --color-sub:             #3C6ABC;
@@ -15,16 +11,23 @@
     --color-btn-secondary:   #9EBFDB;
     --color-btn-point:       #EB6E57;
     --color-btn-point-hover: #D65A45;
+    --color-point-text:      #7ED3D9;
+
+    /* ── 텍스트 ── */
     --color-text:            #000000;
     --color-text-muted:      #888888;
+
+    /* ── 테두리 / 배경 ── */
     --color-white:           #ffffff;
-
     --color-border:          #E2E8F0;
-    --color-border-light:    #f1f5f9;
+    --color-border-light:    #F1F5F9;
     --color-surface:         #ffffff;
-    --color-surface-2:       #f1f5f9;   /* 테이블 헤더, 요약카드 배경 */
-    --color-modal-line:      #f1f5f9;
+    --color-surface-2:       #F5F5F5;
+    --border-color:          #E2E8F0;
+    --color-modal-line:      #F1F5F9;
+    --color-bg-white-btn:    #F5F5F5;
 
+    /* ── 상태 색상 ── */
     --color-unpaid-bg:       #fff3f0;
     --color-unpaid-border:   #f5c4b3;
     --color-unpaid-text:     #993c1d;
@@ -37,33 +40,33 @@
     --color-update-bg:       #fff8ed;
     --color-update-text:     #854f0b;
 
-    --radius-sm: 4px;
-    --radius-md: 4px;
-    --radius-lg: 4px;
-    --radius-xl: 4px;
+    /* ── 라디우스 ── */
+    --radius-sm:  4px;
+    --radius-md:  4px;
+    --radius-lg:  4px;
+    --radius-xl:  4px;
 }
 
-/* =========================
-   2. RESET & BASE
-========================= */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
-    background: #ffffff !important;
+    background-color: white;
     color: var(--color-text);
-    font-size: 14px;
     line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    font-size: 14px;
 }
 
-a      { text-decoration: none; color: inherit; }
-ul, li { list-style: none; }
-
-/* =========================
-   3. 레이아웃
-========================= */
+.wrapper {
+    display: flex !important;
+    width: 100%;
+    min-height: 100vh;
+}
 .main-panel {
     flex: 1;
     display: flex;
@@ -76,137 +79,64 @@ ul, li { list-style: none; }
     display: inline-block;
     vertical-align: middle;
 }
+.layout { display: flex; min-height: 100vh; }
 
-/* notice 패턴과 동일하게 맞춤 */
 .container {
     max-width: 1400px;
-    width: calc(100% - 40px);
     margin: 40px auto;
     padding: 40px 40px 90px 40px;
     background: #ffffff;
-    box-sizing: border-box;
+    width: calc(100% - 40px);
 }
 
-.main-wrapper { min-height: calc(100vh - 80px); }
-
-/* =========================
-   4. 페이지 타이틀 (notice 패턴)
-========================= */
-.page-title {
-    font-size: 30px;
-    font-weight: 600;
-    color: var(--color-main);
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid var(--color-border);
-}
-
-/* =========================
-   5. 버튼
-========================= */
+/* ── 공통 버튼 ── */
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 6px 10px;
-    border-radius: var(--radius-sm);
-    border: 1px solid transparent;
-    cursor: pointer;
     font-size: 13px;
     font-family: inherit;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
     font-weight: 600;
     transition: opacity .15s, background .15s;
-    text-decoration: none;
     white-space: nowrap;
 }
 .btn:hover    { opacity: .88; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 
-.btn-main    { background: var(--color-main);      color: #fff; }
-.btn-sub     { background: var(--color-sub);       color: #fff; }
-.btn-primary { background: var(--color-btn);       color: #fff; }
-.btn-point   { background: var(--color-btn-point); color: #fff; }
+.btn-main      { background: var(--color-main);      color: #fff; }
+.btn-sub       { background: var(--color-sub);        color: #fff; }
+.btn-primary   { background: var(--color-btn);        color: #fff; }
+.btn-secondary { background: transparent; border: 1px solid var(--color-border); color: var(--color-sub); }
+.btn-point     { background: var(--color-btn-point);  color: #fff; }
 .btn-point:hover { background: var(--color-btn-point-hover); opacity: 1; }
+.btn-ghost     { background: var(--color-bg-white-btn); border: 1px solid var(--color-border); color: var(--color-text); }
+.btn-ghost:hover { background: var(--color-surface-2); opacity: 1; }
 
-.btn-secondary {
-    background: transparent;
-    border: 1px solid var(--color-btn-secondary);
-    color: var(--color-sub);
-}
-.btn-ghost {
-    background: #f5f5f5;
-    border: 1px solid var(--color-border);
-    color: var(--color-text);
-}
-.btn-ghost:hover { background: #ebebeb; opacity: 1; }
-
-.btn-outline {
-    background: #fff;
-    border: 1px solid var(--color-border);
-    color: var(--color-text);
-}
-.btn-danger-outline {
-    background: #fff;
-    border: 1px solid var(--color-btn-point);
-    color: var(--color-btn-point);
-}
-
-/* =========================
-   6. 뱃지
-========================= */
+/* ── 공통 뱃지 ── */
 .badge {
     display: inline-block;
     padding: 3px 10px;
-    border-radius: var(--radius-sm);
-    font-size: 11px;
-    font-weight: 600;
-    text-align: center;
+    border-radius: 4px;
+    font-size: 14px;
 }
-.badge-unpaid { background: var(--color-unpaid-bg);  color: var(--color-unpaid-text); }
-.badge-paid   { background: var(--color-paid-bg);    color: var(--color-paid-text);   }
-.badge-error  { background: var(--color-unpaid-bg);  color: var(--color-unpaid-text); }
-.badge-insert { background: var(--color-insert-bg);  color: var(--color-insert-text); }
-.badge-update { background: var(--color-update-bg);  color: var(--color-update-text); }
-.badge-ok     { background: var(--color-paid-bg);    color: var(--color-paid-text);   }
+.badge-unpaid  { background: var(--color-unpaid-bg);  color: var(--color-unpaid-text); }
+.badge-paid    { background: var(--color-paid-bg);    color: var(--color-paid-text);   }
+.badge-error   { background: var(--color-unpaid-bg);  color: var(--color-unpaid-text); }
+.badge-insert  { background: var(--color-insert-bg);  color: var(--color-insert-text); }
+.badge-update  { background: var(--color-update-bg);  color: var(--color-update-text); }
+.badge-ok      { background: var(--color-paid-bg);    color: var(--color-paid-text);   }
 
-/* =========================
-   7. 관리자 탭 네비게이션
-========================= */
-.admin-tab-nav {
-    display: flex;
-    gap: 0;
-    height: 100%;
-    align-items: flex-end;
-}
-.admin-tab-btn {
-    display: flex;
-    align-items: center;
-    padding: 0 22px;
-    height: 44px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-text-muted);
-    text-decoration: none;
-    border-bottom: 2px solid transparent;
-    transition: color .15s, border-color .15s;
-}
-.admin-tab-btn:hover  { color: var(--color-main); }
-.admin-tab-btn.active { color: var(--color-sub); border-bottom-color: var(--color-sub); }
-
-/* =========================
-   8. 필터 (드롭다운)
-========================= */
-.filter-row {
-    display: flex;
-    gap: 8px;
-    margin: 20px 0 12px 0;
-    flex-wrap: wrap;
-}
+/* ── 필터 드롭다운 공통 ── */
+.filter-row { display: flex; gap: 8px; margin: 16px auto; flex-wrap: wrap; }
 .filter-row select {
     height: 36px;
     padding: 0 12px;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     background: var(--color-surface);
     font-size: 13px;
     color: var(--color-text);
@@ -217,7 +147,6 @@ ul, li { list-style: none; }
 .filter-row select:focus { border-color: var(--color-sub); }
 
 .panel-wrap { position: relative; }
-
 .filter-btn {
     display: flex;
     align-items: center;
@@ -226,7 +155,7 @@ ul, li { list-style: none; }
     font-size: 13px;
     font-family: inherit;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     background: var(--color-surface);
     color: var(--color-text);
     cursor: pointer;
@@ -249,238 +178,78 @@ ul, li { list-style: none; }
     box-shadow: 0 4px 16px rgba(3,33,84,.1);
 }
 
-/* =========================
-   9. 칩 그리드
-========================= */
 .chip-grid          { display: grid; gap: 5px; }
-.chip-grid.year-g   { grid-template-columns: repeat(3, 1fr); min-width: 192px; }
-.chip-grid.month-g  { grid-template-columns: repeat(4, 1fr); min-width: 216px; }
-.chip-grid.status-g { grid-template-columns: 1fr;            min-width: 110px; }
-.chip-grid.dong-g   { grid-template-columns: repeat(2, 1fr); min-width: 140px; }
+.chip-grid.year-g   { grid-template-columns: repeat(3,1fr); min-width: 192px; }
+.chip-grid.month-g  { grid-template-columns: repeat(4,1fr); min-width: 216px; }
+.chip-grid.status-g { grid-template-columns: 1fr; min-width: 110px; }
+.chip-grid.dong-g   { grid-template-columns: repeat(2,1fr); min-width: 140px; }
 
 .chip {
     padding: 8px 6px;
     font-size: 13px;
     font-family: inherit;
     text-align: center;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     cursor: pointer;
     border: 1px solid transparent;
     color: var(--color-text);
     background: var(--color-surface-2);
     transition: background .12s, border-color .12s;
 }
-.chip:hover       { border-color: var(--color-btn-secondary); }
-.chip.selected    { background: var(--color-sub); color: #fff; border-color: var(--color-sub); }
-.chip.full        { grid-column: 1/-1; padding: 7px; }
+.chip:hover    { border-color: var(--color-btn-secondary); }
+.chip.selected { background: var(--color-sub); color: #fff; border-color: var(--color-sub); }
+.chip.full     { grid-column: 1/-1; padding: 7px; }
 .chip.status-chip { text-align: left; padding: 9px 14px; }
 
-/* =========================
-   10. 공통 테이블 (notice/parking 패턴)
-========================= */
-.table-section {
-    background: var(--color-surface);
-    border: none;           /* ★ border 제거 */
-    overflow: hidden;
-    margin-top: 16px;
-}
-
-.table-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--color-border-light);
-    margin-bottom: 4px;
-}
-.table-header-title { font-size: 15px; font-weight: 600; color: var(--color-text); }
-.table-header-meta  { font-size: 13px; color: var(--color-text-muted); }
-.meta-error         { color: var(--color-btn-point); font-weight: 600; }
-
-.table-wrap { overflow-x: auto; }
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-    table-layout: fixed;
-    border-left: none;
-    border-right: none;
-}
-
-.data-table thead tr {
-    border-bottom: 2px solid var(--color-main);
-}
-.data-table thead th {
-    padding: 15px 10px;
-    text-align: center;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-main);
-    background: var(--color-surface);
-    border-left: none;
-    border-right: none;
-    white-space: nowrap;
-}
-.data-table thead th.sortable       { cursor: pointer; user-select: none; }
-.data-table thead th.sortable:hover { color: var(--color-sub); }
-.sort-icon { font-size: 10px; opacity: .4; }
-
-/* ★ 바디: height 고정 (notice 패턴) */
-.data-table tbody tr {
-    border-bottom: 1px solid var(--color-border);
-    transition: background .15s;
-}
-.data-table tbody tr:last-child       { border-bottom: none; }
-.data-table tbody tr:hover td         { background: #f5f8ff; }
-.data-table tbody tr.row-error        { background: var(--color-error-bg); }
-.data-table tbody tr.row-error:hover td { background: #fdecea; }
-.data-table tbody tr.done td          { opacity: .55; }
-
-.data-table tbody td {
-    padding: 0 16px;
-    height: 52px;           /* ★ height 고정 */
-    text-align: center;
-    font-size: 14px;
-    color: var(--color-text);
-    vertical-align: middle;
-    border-left: none;
-    border-right: none;
-}
-.data-table tbody td[colspan] {
-    height: auto;
-    padding: 48px 16px;
-    color: #aaa;
-    border-bottom: none;
-    text-align: center;
-}
-
-/* ★ 테이블 푸터: 흰색 배경 */
-.table-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-top: 1px solid var(--color-border-light);
-    background: var(--color-surface);   /* ★ 흰색 */
-}
-.table-summary { font-size: 13px; color: var(--color-text-muted); }
-.table-actions { display: flex; gap: 10px; }
-
-/* =========================
-   11. 모달
-========================= */
+/* ── 공통 모달 ── */
 .modal-overlay {
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background: rgba(3,33,84,.45);
     z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
 }
 .modal-box {
     background: var(--color-surface);
     border-radius: var(--radius-xl);
-    width: 480px;
+    width: 680px;
     max-width: 95vw;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 8px 40px rgba(0,0,0,.18);
-    animation: modal-in .2s ease;
-}
-@keyframes modal-in {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
 }
 .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 18px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 20px;
     background: var(--color-main);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     border-bottom: 2px solid var(--color-modal-line);
 }
 .modal-header-title { font-size: 14px; font-weight: 600; color: #fff; }
 .modal-close-btn {
-    background: none;
-    border: 1px solid rgba(255,255,255,.3);
-    color: #fff;
-    font-size: 14px;
-    cursor: pointer;
-    width: 26px;
-    height: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-sm);
-    opacity: .85;
-    transition: opacity .15s;
+    background: none; border: none; color: #fff;
+    font-size: 18px; cursor: pointer;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; opacity: .8;
 }
 .modal-close-btn:hover { opacity: 1; background: rgba(255,255,255,.15); }
 .modal-body   { padding: 20px 24px 0; }
-.modal-footer {
-    padding: 16px 24px 20px;
-    display: flex;
-    justify-content: flex-end;
-    border-top: 1px solid var(--color-border-light);
-    margin-top: 12px;
-}
+.modal-footer { padding: 16px 24px 20px; display: flex; justify-content: flex-end; border-top: 1px solid var(--color-border-light); margin-top: 12px; }
 
-/* =========================
-   12. 고지서 모달 내부
-========================= */
-.bill-head {
-    text-align: center;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--color-border-light);
-    margin-bottom: 12px;
-}
+/* ── 고지서 모달 내부 ── */
+.bill-head       { text-align: center; padding-bottom: 14px; border-bottom: 1px solid var(--color-border-light); margin-bottom: 12px; }
 .bill-head-title { font-size: 14px; font-weight: 600; color: var(--color-text); }
 .bill-head-sub   { font-size: 12px; color: var(--color-text-muted); margin-top: 4px; }
 .bill-col-hint   { font-size: 11px; color: #bbb; margin-bottom: 6px; }
-
-.bill-rows { display: flex; flex-direction: column; }
-.bill-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 9px 0;
-    border-bottom: 1px solid var(--color-border-light);
-    font-size: 14px;
-}
-.bill-total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding: 12px 0 0;
-    border-top: 2px solid var(--color-text);
-    margin-top: 4px;
-}
+.bill-rows       { display: grid; grid-template-columns: 1fr 1fr; gap: 0 40px; }
+.bill-row        { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--color-border-light); font-size: 14px; }
+.bill-total-row  { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0 0; border-top: 2px solid var(--color-text); margin-top: 4px; }
 .bill-total-label  { font-size: 15px; font-weight: 600; }
 .bill-total-amount { font-size: 18px; font-weight: 600; color: var(--color-main); }
 .bill-preview-note { margin-top: 14px; font-size: 12px; color: #aaa; text-align: center; }
 
-/* =========================
-   13. confirm 팝업
-========================= */
-.confirm-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(3,33,84,.4);
-    z-index: 200;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.confirm-box {
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    padding: 28px 32px;
-    width: 340px;
-    text-align: center;
-    box-shadow: 0 8px 40px rgba(0,0,0,.15);
-    animation: modal-in .2s ease;
-}
+/* ── confirm 팝업 ── */
+.confirm-overlay  { position: fixed; inset: 0; background: rgba(3,33,84,.4); z-index: 200; display: flex; align-items: center; justify-content: center; }
+.confirm-box      { background: var(--color-surface); border-radius: var(--radius-lg); padding: 28px 32px; width: 340px; text-align: center; }
 .confirm-title    { font-size: 15px; font-weight: 600; color: var(--color-text); margin-bottom: 8px; }
 .confirm-msg      { font-size: 13px; color: var(--color-text-muted); margin-bottom: 8px; }
 .confirm-msg-warn { font-size: 12px; color: var(--color-btn-point); font-weight: 600; margin-bottom: 20px; }

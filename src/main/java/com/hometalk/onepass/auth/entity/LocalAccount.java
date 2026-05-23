@@ -34,22 +34,29 @@ public class LocalAccount extends BaseTimeEntity {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
+    @NotNull
     @Column(name = "email_verified", nullable = false)
-    private boolean emailVerified;
+    private Boolean emailVerified = false;
+
+    @Column(name = "email_verify_token", length = 255)
+    private String emailVerifyToken;
 
     @Builder
-    public LocalAccount(User user, String loginId, String passwordHash) {
+    public LocalAccount(User user, String loginId, String passwordHash,
+                        String emailVerifyToken) {
         this.user = user;
         this.loginId = loginId;
         this.passwordHash = passwordHash;
+        this.emailVerified = false;
+        this.emailVerifyToken = emailVerifyToken;
+    }
+
+    public void verifyEmail() {
         this.emailVerified = true;
+        this.emailVerifyToken = null;
     }
 
     public void changePassword(String newPasswordHash) {
         this.passwordHash = newPasswordHash;
-    }
-
-    public void changeLoginId(String loginId) {
-        this.loginId = loginId;
     }
 }

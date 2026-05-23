@@ -18,9 +18,7 @@ public class AdminBoardRqDTO {
 
     private List<String> categoryNames;
     private List<String> categoryCodes;
-
-    private List<String> categoryBgColors;
-    private List<String> categoryTextColors;
+    private List<String> categoryColors;
 
     public Board toEntity() {
         return Board.builder()

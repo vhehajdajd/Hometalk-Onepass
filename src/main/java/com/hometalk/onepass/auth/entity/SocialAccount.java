@@ -40,13 +40,39 @@ public class SocialAccount extends BaseTimeEntity {
     @Column(name = "platform_id", nullable = false, length = 100)
     private String platformId;
 
+    @Column(name = "social_access_token", columnDefinition = "TEXT")
+    private String socialAccessToken;
+
+    @Column(name = "social_refresh_token", columnDefinition = "TEXT")
+    private String socialRefreshToken;
+
+    @Column(name = "social_token_expires_at")
+    private LocalDateTime socialTokenExpiresAt;
+
+    // JSON 원본 저장 - MySQL JSON 타입 매핑
+    @Column(name = "raw_token_data", columnDefinition = "JSON")
+    private String rawTokenData;
+
     @Builder
-    public SocialAccount(User user, Platform platform, String platformId) {
+    public SocialAccount(User user, Platform platform, String platformId,
+                         String socialAccessToken, String socialRefreshToken,
+                         LocalDateTime socialTokenExpiresAt, String rawTokenData) {
         this.user = user;
         this.platform = platform;
         this.platformId = platformId;
+        this.socialAccessToken = socialAccessToken;
+        this.socialRefreshToken = socialRefreshToken;
+        this.socialTokenExpiresAt = socialTokenExpiresAt;
+        this.rawTokenData = rawTokenData;
     }
 
+    public void updateTokens(String accessToken, String refreshToken,
+                             LocalDateTime expiresAt, String rawData) {
+        this.socialAccessToken = accessToken;
+        this.socialRefreshToken = refreshToken;
+        this.socialTokenExpiresAt = expiresAt;
+        this.rawTokenData = rawData;
+    }
 
     // Enum
     public enum Platform {

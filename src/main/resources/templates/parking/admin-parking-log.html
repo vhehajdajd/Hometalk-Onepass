@@ -6,96 +6,76 @@
   <title>전체 주차 기록 조회</title>
   <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
   <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
-  <!--✅ 알림 추가 -->
-  <meta name="ctx" th:content="@{/}">
-  <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
-  <script th:src="@{/js/notification/notification-sse.js}"></script>
-  <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
 <body>
 
-<div class="main-layout">
+<div class="container">
+  <h2 class="page-title">전체 주차 기록 조회</h2>
 
-  <!-- 1. 사이드바 -->
-  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
+  <!-- 필터 영역 -->
+  <div class="pk-filter-group">
 
-  <!-- 2. 오른쪽 영역 -->
-  <div class="main-wrapper">
-
-    <!-- 상단 헤더 -->
-    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='parking')}"></div>
-
-    <!-- 상단 메뉴 -->
-    <div th:replace="~{fragments/headerCategoryMenu :: parkingAdmin}"></div>
-
-    <!-- 본문 -->
-    <main class="content" style="flex:1;">
-      <div class="container">
-        <h2 class="page-title">전체 주차 기록 조회</h2>
-
-        <div class="pk-filter-group">
-          <div class="pk-dropdown-wrapper">
-            <button type="button" class="pk-dropdown-btn" onclick="toggleYearDropdown()">
-              <span id="selectedYear"></span> ▼
-            </button>
-            <div id="yearDropdown" class="pk-dropdown-menu" style="display:none;">
-              <ul id="yearList"></ul>
-            </div>
-          </div>
-
-          <div class="pk-dropdown-wrapper">
-            <button type="button" class="pk-dropdown-btn" onclick="toggleMonthDropdown()">
-              <span id="selectedMonth"></span> ▼
-            </button>
-            <div id="monthDropdown" class="pk-dropdown-menu" style="display:none;">
-              <ul id="monthList"></ul>
-            </div>
-          </div>
-
-          <div class="pk-dropdown-wrapper">
-            <button type="button" class="pk-dropdown-btn" onclick="toggleTypeDropdown()">
-              <span id="selectedType">전체</span> ▼
-            </button>
-            <div id="typeDropdown" class="pk-dropdown-menu" style="display:none;">
-              <ul>
-                <li onclick="selectType('ALL', '전체')">전체</li>
-                <li onclick="selectType('RESIDENT', '입주자')">입주자</li>
-                <li onclick="selectType('VISITOR', '방문')">방문</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="pk-search-group">
-            <input type="text" id="householdSearch" class="pk-search-input" placeholder="동/호수 검색">
-            <button type="button" class="pk-btn pk-btn-primary" onclick="loadParkingLogs()">검색</button>
-          </div>
-        </div>
-
-        <table class="park-table">
-          <thead>
-          <tr>
-            <th>차량 번호</th>
-            <th>세대</th>
-            <th>등록구분</th>
-            <th>입차시간</th>
-            <th>출차시간</th>
-            <th>주차시간</th>
-            <th>정산내역</th>
-          </tr>
-          </thead>
-          <tbody id="parkingList">
-          <tr>
-            <td colspan="7" class="pk-empty">주차 기록이 없습니다.</td>
-          </tr>
-          </tbody>
-        </table>
-
-        <ul class="pk-pagination" id="pagination"></ul>
-
+    <div class="pk-dropdown-wrapper">
+      <button type="button" class="pk-dropdown-btn" onclick="toggleYearDropdown()">
+        <span id="selectedYear"></span> ▼
+      </button>
+      <div id="yearDropdown" class="pk-dropdown-menu" style="display:none;">
+        <ul id="yearList"></ul>
       </div>
-    </main>
-    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+
+    <div class="pk-dropdown-wrapper">
+      <button type="button" class="pk-dropdown-btn" onclick="toggleMonthDropdown()">
+        <span id="selectedMonth"></span> ▼
+      </button>
+      <div id="monthDropdown" class="pk-dropdown-menu" style="display:none;">
+        <ul id="monthList"></ul>
+      </div>
+    </div>
+
+    <div class="pk-dropdown-wrapper">
+      <button type="button" class="pk-dropdown-btn" onclick="toggleTypeDropdown()">
+        <span id="selectedType">전체</span> ▼
+      </button>
+      <div id="typeDropdown" class="pk-dropdown-menu" style="display:none;">
+        <ul>
+          <li onclick="selectType('ALL', '전체')">전체</li>
+          <li onclick="selectType('RESIDENT', '입주자')">입주자</li>
+          <li onclick="selectType('VISITOR', '방문')">방문</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 세대 검색 -->
+    <div class="pk-search-group">
+      <input type="text" id="householdSearch" class="pk-search-input" placeholder="동/호수 검색">
+      <button type="button" class="pk-btn pk-btn-primary" onclick="loadParkingLogs()">검색</button>
+    </div>
+
   </div>
+
+  <!-- 주차 기록 테이블 -->
+  <table class="park-table">
+    <thead>
+    <tr>
+      <th>차량 번호</th>
+      <th>세대</th>
+      <th>등록구분</th>
+      <th>입차시간</th>
+      <th>출차시간</th>
+      <th>주차시간</th>
+      <th>정산내역</th>
+    </tr>
+    </thead>
+    <tbody id="parkingList">
+    <tr>
+      <td colspan="7" class="pk-empty">주차 기록이 없습니다.</td>
+    </tr>
+    </tbody>
+  </table>
+
+  <!-- 페이지네이션 -->
+  <ul class="pk-pagination" id="pagination" style="display:flex; flex-direction:row; justify-content:center;"></ul>
 </div>
 
 <script th:inline="javascript">
@@ -113,23 +93,43 @@
   document.getElementById('selectedYear').textContent  = `${selectedYear}년`;
   document.getElementById('selectedMonth').textContent = `${selectedMonth}월`;
 
+  // 년 목록 생성
   const yearList = document.getElementById('yearList');
   YEARS.forEach(y => {
     const li = document.createElement('li');
     li.textContent = `${y}년`;
-    li.addEventListener('click', () => { selectedYear = y; document.getElementById('selectedYear').textContent = `${y}년`; toggleYearDropdown(); currentPage = 0; loadParkingLogs(); });
+    li.addEventListener('click', () => {
+      selectedYear = y;
+      document.getElementById('selectedYear').textContent = `${y}년`;
+      toggleYearDropdown();
+      currentPage = 0;
+      loadParkingLogs();
+    });
     yearList.appendChild(li);
   });
 
+  // 월 목록 생성
   const monthList = document.getElementById('monthList');
   MONTHS.forEach((m, index) => {
     const li = document.createElement('li');
     li.textContent = m;
-    li.addEventListener('click', () => { selectedMonth = index + 1; document.getElementById('selectedMonth').textContent = m; toggleMonthDropdown(); currentPage = 0; loadParkingLogs(); });
+    li.addEventListener('click', () => {
+      selectedMonth = index + 1;
+      document.getElementById('selectedMonth').textContent = m;
+      toggleMonthDropdown();
+      currentPage = 0;
+      loadParkingLogs();
+    });
     monthList.appendChild(li);
   });
 
-  function selectType(type, label) { selectedType = type; document.getElementById('selectedType').textContent = label; toggleTypeDropdown(); currentPage = 0; loadParkingLogs(); }
+  function selectType(type, label) {
+    selectedType = type;
+    document.getElementById('selectedType').textContent = label;
+    toggleTypeDropdown();
+    currentPage = 0;
+    loadParkingLogs();
+  }
 
   function closeAllDropdowns() {
     document.getElementById('yearDropdown').style.display  = 'none';
@@ -137,12 +137,34 @@
     document.getElementById('typeDropdown').style.display  = 'none';
   }
 
-  function toggleYearDropdown()  { const dd = document.getElementById('yearDropdown');  const isOpen = dd.style.display !== 'none'; closeAllDropdowns(); if (!isOpen) dd.style.display = 'block'; }
-  function toggleMonthDropdown() { const dd = document.getElementById('monthDropdown'); const isOpen = dd.style.display !== 'none'; closeAllDropdowns(); if (!isOpen) dd.style.display = 'block'; }
-  function toggleTypeDropdown()  { const dd = document.getElementById('typeDropdown');  const isOpen = dd.style.display !== 'none'; closeAllDropdowns(); if (!isOpen) dd.style.display = 'block'; }
+  function toggleYearDropdown() {
+    const dd = document.getElementById('yearDropdown');
+    const isOpen = dd.style.display !== 'none';
+    closeAllDropdowns();
+    if (!isOpen) dd.style.display = 'block';
+  }
 
-  document.addEventListener('click', (e) => { if (!e.target.closest('.pk-dropdown-wrapper')) closeAllDropdowns(); });
-  document.getElementById('householdSearch').addEventListener('keydown', (e) => { if (e.key === 'Enter') { currentPage = 0; loadParkingLogs(); } });
+  function toggleMonthDropdown() {
+    const dd = document.getElementById('monthDropdown');
+    const isOpen = dd.style.display !== 'none';
+    closeAllDropdowns();
+    if (!isOpen) dd.style.display = 'block';
+  }
+
+  function toggleTypeDropdown() {
+    const dd = document.getElementById('typeDropdown');
+    const isOpen = dd.style.display !== 'none';
+    closeAllDropdowns();
+    if (!isOpen) dd.style.display = 'block';
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.pk-dropdown-wrapper')) closeAllDropdowns();
+  });
+
+  document.getElementById('householdSearch').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { currentPage = 0; loadParkingLogs(); }
+  });
 
   function loadParkingLogs() {
     const household = encodeURIComponent(document.getElementById('householdSearch').value.trim());
@@ -150,16 +172,22 @@
     tbody.innerHTML = `<tr><td colspan="7" class="pk-empty">로딩 중...</td></tr>`;
 
     fetch(`${contextPath}admin/parking/logs/data?year=${selectedYear}&month=${selectedMonth}&type=${selectedType}&household=${household}&page=${currentPage}&size=${PAGE_SIZE}`)
-            .then(res => { if (!res.ok) throw new Error('서버 오류'); return res.json(); })
-            .then(data => {
-              tbody.innerHTML = '';
-              if (!data || !data.content || data.content.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="pk-empty">주차 기록이 없습니다.</td></tr>`;
-                renderPagination(0); return;
-              }
-              data.content.forEach(log => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+      .then(res => {
+        if (!res.ok) throw new Error('서버 오류');
+        return res.json();
+      })
+      .then(data => {
+        tbody.innerHTML = '';
+
+        if (!data || !data.content || data.content.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="pk-empty">주차 기록이 없습니다.</td></tr>`;
+          renderPagination(0);
+          return;
+        }
+
+        data.content.forEach(log => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
             <td>${log.vehicleNumber}</td>
             <td>${log.household}</td>
             <td>${log.vehicleType}</td>
@@ -168,24 +196,34 @@
             <td>${log.parkingTime}</td>
             <td>${log.settlement}</td>
           `;
-                tbody.appendChild(tr);
-              });
-              renderPagination(data.page.totalPages);
-            })
-            .catch(err => { console.error(err); tbody.innerHTML = `<tr><td colspan="7" class="pk-empty">데이터 조회 실패</td></tr>`; });
+          tbody.appendChild(tr);
+        });
+
+        renderPagination(data.page.totalPages);
+      })
+      .catch(err => {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="7" class="pk-empty">데이터 조회 실패</td></tr>`;
+      });
   }
 
   function renderPagination(totalPages) {
     const pagination = document.getElementById('pagination');
     pagination.innerHTML = '';
+
     if (totalPages <= 0) return;
 
     const prevLi = document.createElement('li');
     const prevA  = document.createElement('a');
-    prevA.textContent = '‹'; prevA.href = '#';
+    prevA.textContent = '‹';
+    prevA.href = '#';
     if (currentPage === 0) prevA.style.opacity = '0.4';
-    prevA.addEventListener('click', (e) => { e.preventDefault(); if (currentPage > 0) { currentPage--; loadParkingLogs(); } });
-    prevLi.appendChild(prevA); pagination.appendChild(prevLi);
+    prevA.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentPage > 0) { currentPage--; loadParkingLogs(); }
+    });
+    prevLi.appendChild(prevA);
+    pagination.appendChild(prevLi);
 
     const startPage = Math.max(0, currentPage - 2);
     const endPage   = Math.min(totalPages - 1, startPage + 4);
@@ -193,18 +231,29 @@
     for (let i = startPage; i <= endPage; i++) {
       const li = document.createElement('li');
       const a  = document.createElement('a');
-      a.textContent = i + 1; a.href = '#';
+      a.textContent = i + 1;
+      a.href = '#';
       if (i === currentPage) li.classList.add('active');
-      a.addEventListener('click', (e) => { e.preventDefault(); currentPage = i; loadParkingLogs(); });
-      li.appendChild(a); pagination.appendChild(li);
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPage = i;
+        loadParkingLogs();
+      });
+      li.appendChild(a);
+      pagination.appendChild(li);
     }
 
     const nextLi = document.createElement('li');
     const nextA  = document.createElement('a');
-    nextA.textContent = '›'; nextA.href = '#';
+    nextA.textContent = '›';
+    nextA.href = '#';
     if (currentPage === totalPages - 1) nextA.style.opacity = '0.4';
-    nextA.addEventListener('click', (e) => { e.preventDefault(); if (currentPage < totalPages - 1) { currentPage++; loadParkingLogs(); } });
-    nextLi.appendChild(nextA); pagination.appendChild(nextLi);
+    nextA.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentPage < totalPages - 1) { currentPage++; loadParkingLogs(); }
+    });
+    nextLi.appendChild(nextA);
+    pagination.appendChild(nextLi);
   }
 
   loadParkingLogs();

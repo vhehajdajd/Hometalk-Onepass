@@ -1,18 +1,13 @@
 package com.hometalk.onepass.parking.service;
 
 import com.hometalk.onepass.auth.entity.Household;
-import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.HouseholdRepository;
-import com.hometalk.onepass.notification.entity.NotificationTargetRole;
-import com.hometalk.onepass.notification.entity.NotificationType;
-import com.hometalk.onepass.notification.publisher.NotificationPublisher;
 import com.hometalk.onepass.parking.dto.request.EntryRequest;
 import com.hometalk.onepass.parking.dto.request.ManualEntryRequest;
 import com.hometalk.onepass.parking.dto.response.VehicleSearchResult;
 import com.hometalk.onepass.parking.entity.ParkingLog;
 import com.hometalk.onepass.parking.entity.Vehicle;
 import com.hometalk.onepass.parking.entity.VisitReservation;
-import com.hometalk.onepass.parking.exception.ParkingException;
 import com.hometalk.onepass.parking.repository.ParkingLogRepository;
 import com.hometalk.onepass.parking.repository.VehicleRepository;
 import com.hometalk.onepass.parking.repository.VisitReservationRepository;
@@ -33,168 +28,171 @@ public class StaffEntryService {
     private final VisitReservationRepository visitReservationRepository;
     private final HouseholdRepository householdRepository;
     private final ParkingLogRepository parkingLogRepository;
-    private final NotificationPublisher notificationPublisher;
 
+    // ─── 차량 조회 ───────────────────────────────────────────────
     @Transactional(readOnly = true)
     public List<VehicleSearchResult> search(String keyword) {
         String last4 = keyword.replace(" ", "");
+
         if (last4.length() != 4) return List.of();
 
-        // 이미 주차 중인 차량 체크
-        List<String> parkedNumbers = parkingLogRepository
-                .findByStatus(ParkingLog.ParkingStatus.PARKED)
-                .stream().map(ParkingLog::getVehicleNumber).toList();
-
-        boolean alreadyParked = parkedNumbers.stream()
-                .anyMatch(n -> n.replace(" ", "").endsWith(last4));
-
-        if (alreadyParked) {
-            throw new ParkingException("이미 입차된 차량입니다.");
-        }
-
         List<VehicleSearchResult> results = new ArrayList<>();
+
         vehicleRepository.findApprovedByLast4(last4)
-                .stream().map(VehicleSearchResult::ofResident).forEach(results::add);
+                .stream()
+                .map(VehicleSearchResult::ofResident)
+                .forEach(results::add);
+
         visitReservationRepository.findTodayReservedByLast4(last4, LocalDate.now())
-                .stream().map(VehicleSearchResult::ofReservation).forEach(results::add);
+                .stream()
+                .map(VehicleSearchResult::ofReservation)
+                .forEach(results::add);
+
         return results;
     }
 
+    // ─── 입차 처리 ───────────────────────────────────────────────
     @Transactional
     public void processEntry(EntryRequest request) {
         switch (request.getType()) {
             case RESERVATION -> {
                 VisitReservation reservation = visitReservationRepository
                         .findById(request.getId())
-                        .orElseThrow(() -> new ParkingException("예약 정보를 찾을 수 없습니다."));
+                        .orElseThrow(() -> new IllegalArgumentException("예약 정보를 찾을 수 없습니다."));
 
+                // 1. 예약 상태 검증
                 if (reservation.getStatus() != VisitReservation.ReservationStatus.RESERVED
-                        && reservation.getStatus() != VisitReservation.ReservationStatus.PENDING_CONFIRM
-                        && reservation.getStatus() != VisitReservation.ReservationStatus.ENTERED) {
-                    throw new ParkingException("입차 처리할 수 없는 예약 상태입니다.");
+                        && reservation.getStatus() != VisitReservation.ReservationStatus.PENDING_CONFIRM) {
+                    throw new IllegalStateException("입차 처리할 수 없는 예약 상태입니다.");
                 }
 
-
+                // 2. 예약 시간 30분 전후 체크
                 LocalDateTime reservedAt = reservation.getReservedAt();
                 LocalDateTime now = LocalDateTime.now();
                 if (now.isBefore(reservedAt.minusMinutes(30)) || now.isAfter(reservedAt.plusMinutes(30))) {
-                    throw new ParkingException("예약 시간 30분 전후에만 입차 가능합니다.");
+                    throw new IllegalStateException("예약 시간 30분 전후에만 입차 가능합니다.");
                 }
 
+                // 3. 차량번호 정규화
                 String vehicleNumber = reservation.getVehicleNumber().replace(" ", "");
+
+                // 4. 입차 중복 방지
                 parkingLogRepository
                         .findByVehicleNumberAndStatus(vehicleNumber, ParkingLog.ParkingStatus.PARKED)
-                        .ifPresent(l -> { throw new ParkingException("이미 입차된 차량입니다."); });
+                        .ifPresent(l -> {
+                            throw new IllegalStateException("이미 입차된 차량입니다.");
+                        });
 
-                ParkingLog log = new ParkingLog(null, vehicleNumber,
-                        reservation.getHousehold(), reservation, null,
-                        ParkingLog.EntryType.RESERVATION);
+                ParkingLog log = new ParkingLog(
+                        null,
+                        vehicleNumber,
+                        reservation.getHousehold(),
+                        reservation,
+                        null,
+                        ParkingLog.EntryType.RESERVATION
+                );
                 parkingLogRepository.save(log);
-
-                if (reservation.getStatus() != VisitReservation.ReservationStatus.ENTERED) {
-                    reservation.enter();
-                }
-
-                // 트랜잭션 안에서 userId 미리 추출
-                List<Long> residentUserIds = reservation.getHousehold().getUsers().stream()
-                        .filter(u -> u.getRole() == User.UserRole.RESIDENT)
-                        .map(User::getId)
-                        .toList();
-                String vehicleNum = reservation.getVehicleNumber();
-                Long reservationId = reservation.getReservationId();
-
-                residentUserIds.forEach(userId -> notificationPublisher.publishAsync(
-                        userId,
-                        NotificationTargetRole.RESIDENT,
-                        NotificationType.VEHICLE_VISITOR_ENTRY,
-                        "방문 차량 입차",
-                        "예약하신 방문 차량(" + vehicleNum + ")이 도착하여 입차했습니다.",
-                        "/parking/vehicle",
-                        reservationId
-                ));
             }
 
             case RESIDENT -> {
                 Vehicle vehicle = vehicleRepository
                         .findById(request.getId())
-                        .orElseThrow(() -> new ParkingException("차량 정보를 찾을 수 없습니다."));
+                        .orElseThrow(() -> new IllegalArgumentException("차량 정보를 찾을 수 없습니다."));
 
+                // ✅ 승인 차량만 허용 (보강)
                 if (!Vehicle.VehicleStatus.APPROVED.equals(vehicle.getStatus())) {
-                    throw new ParkingException("승인된 차량만 입차 처리할 수 있습니다.");
+                    throw new IllegalStateException("승인된 차량만 입차 처리할 수 있습니다.");
                 }
 
+                // 차량번호 정규화
                 String vehicleNumber = vehicle.getVehicleNumber().replace(" ", "");
+
+                // 입차 중복 방지
                 parkingLogRepository
                         .findByVehicleNumberAndStatus(vehicleNumber, ParkingLog.ParkingStatus.PARKED)
-                        .ifPresent(l -> { throw new ParkingException("이미 입차된 차량입니다."); });
+                        .ifPresent(l -> {
+                            throw new IllegalStateException("이미 입차된 차량입니다.");
+                        });
 
-                ParkingLog log = new ParkingLog(vehicle, vehicleNumber,
-                        vehicle.getHousehold(), null, null,
-                        ParkingLog.EntryType.NORMAL);
-                parkingLogRepository.save(log);
-
-                // 입주자 본인에게 알림
-                Long userId = vehicle.getUser().getId();
-                String vehicleNum = vehicle.getVehicleNumber();
-                Long vehicleId = vehicle.getVehicleId();
-
-                notificationPublisher.publishAsync(
-                        userId,
-                        NotificationTargetRole.RESIDENT,
-                        NotificationType.VEHICLE_ENTRY,
-                        "입주자 입차",
-                        "입주자 차량(" + vehicleNum + ")이 입차했습니다.",
-                        "/parking/vehicle",
-                        vehicleId
+                ParkingLog log = new ParkingLog(
+                        vehicle,
+                        vehicleNumber,
+                        vehicle.getHousehold(),
+                        null,
+                        null,
+                        ParkingLog.EntryType.NORMAL
                 );
+                parkingLogRepository.save(log);
             }
         }
     }
 
+    // ─── 수동 입차 ───────────────────────────────────────────────
     @Transactional
     public void processManualEntry(ManualEntryRequest request) {
         Household household = null;
 
         if (hasText(request.getDong()) && hasText(request.getHo())) {
-            household = householdRepository.findByDongAndHo(
-                            request.getDong() + "동", request.getHo() + "호")
-                    .orElse(null);
+            String dong = request.getDong().endsWith("동") ? request.getDong() : request.getDong() + "동";
+            String ho = request.getHo().endsWith("호") ? request.getHo() : request.getHo() + "호";
+
+            /*household = householdRepository
+                    .findByPostNumAndDongAndHo(dong, ho)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 세대입니다."));*/
         }
 
+        // 차량번호 정규화
         String vehicleNumber = request.getVehicleNumber().replace(" ", "");
 
+        // ✅ 핵심 추가: 등록 차량이면 승인 여부 체크
         vehicleRepository.findByVehicleNumber(vehicleNumber)
                 .ifPresent(v -> {
                     if (!Vehicle.VehicleStatus.APPROVED.equals(v.getStatus())) {
-                        throw new ParkingException("승인되지 않은 등록 차량은 입차할 수 없습니다.");
+                        throw new IllegalStateException("승인되지 않은 등록 차량은 입차할 수 없습니다.");
                     }
                 });
 
+        // 입차 중복 방지
         parkingLogRepository
                 .findByVehicleNumberAndStatus(vehicleNumber, ParkingLog.ParkingStatus.PARKED)
-                .ifPresent(l -> { throw new ParkingException("이미 입차된 차량입니다."); });
+                .ifPresent(l -> {
+                    throw new IllegalStateException("이미 입차된 차량입니다.");
+                });
 
         VisitReservation reservation = VisitReservation.ofManual(
-                household, vehicleNumber, request.getPurposeType());
+                household,
+                vehicleNumber,
+                request.getPurposeType()
+        );
         visitReservationRepository.save(reservation);
 
-        parkingLogRepository.save(new ParkingLog(null, vehicleNumber,
-                household, reservation, null, ParkingLog.EntryType.MANUAL));
+        ParkingLog log = new ParkingLog(
+                null,
+                vehicleNumber,
+                household,
+                reservation,
+                null,
+                ParkingLog.EntryType.MANUAL
+        );
+        parkingLogRepository.save(log);
     }
 
+    // ─── 오늘 방문 예정 목록 ─────────────────────────────────────
     @Transactional(readOnly = true)
     public List<VisitReservation> getTodayVisitList() {
         return visitReservationRepository.findTodayReserved(LocalDate.now());
     }
 
+    // ─── 입주자 차량 목록 ────────────────────────────────────────
     @Transactional(readOnly = true)
     public List<Vehicle> getResidentVehicleList() {
-        List<Vehicle> approvedVehicles = vehicleRepository
-                .findAllByStatusWithHousehold(Vehicle.VehicleStatus.APPROVED);
+        List<Vehicle> approvedVehicles = vehicleRepository.findAllByStatusWithHousehold(Vehicle.VehicleStatus.APPROVED);
 
         List<String> parkedVehicleNumbers = parkingLogRepository
                 .findByStatus(ParkingLog.ParkingStatus.PARKED)
-                .stream().map(ParkingLog::getVehicleNumber).toList();
+                .stream()
+                .map(ParkingLog::getVehicleNumber)
+                .toList();
 
         return approvedVehicles.stream()
                 .filter(v -> !parkedVehicleNumbers.contains(
@@ -202,6 +200,7 @@ public class StaffEntryService {
                 .toList();
     }
 
+    // ─── 유틸 ────────────────────────────────────────────────────
     private boolean hasText(String str) {
         return str != null && !str.isBlank();
     }

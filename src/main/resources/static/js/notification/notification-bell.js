@@ -2,15 +2,16 @@
  * HomeTalk OnePass — Bell Icon + Dropdown + Toast (All-in-one)
  * path: /static/notification/js/notification-bell.js
  *
- * 헤더 fragment(headerCurrentMenuView)에 다음 마크업 필요:
+ * 헤더 fragment에 다음 마크업 필요:
  *   <div class="noti-bell-wrap" style="position:relative">
  *       <a class="noti-bell" id="noti-bell-trigger">
+ *           <span class="noti-bell__icon">🔔</span>
  *           <span class="noti-bell__badge" id="noti-bell-badge"></span>
  *       </a>
  *       <div class="noti-dropdown" id="noti-dropdown">
  *           <div class="noti-dropdown__header">
  *               <span class="noti-dropdown__title">알림</span>
- *               <button class="noti-dropdown__action" id="noti-mark-all">전체 삭제</button>
+ *               <button class="noti-dropdown__action" id="noti-mark-all">전체 읽음</button>
  *           </div>
  *           <div class="noti-dropdown__body" id="noti-dropdown-body">
  *               <div class="noti-loading">불러오는 중...</div>
@@ -32,24 +33,11 @@
 
     const state = {
         page: 0,
-        size: 3,
+        size: 10,
         last: false,
         loading: false,
         items: []
-    }
-    // 더보기 초기 숨김 (DOMContentLoaded 안에 추가)
-    const loadMoreBtn = document.getElementById('noti-load-more');
-    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-
-    // markAllRead 수정
-    async function markAllRead() {
-        await fetch(`${CTX}/api/notification/read-all`, {
-            method: 'POST', credentials: 'include'
-        });
-        await fetch(`${CTX}/api/notification/delete-all`, {
-            method: 'DELETE', credentials: 'include'
-        });
-    }
+    };
 
     // ─────────────────── API ───────────────────
 
@@ -80,13 +68,9 @@
         });
     }
 
-    // 전체삭제 버튼 → 읽음+삭제
     async function markAllRead() {
         await fetch(`${CTX}/api/notification/read-all`, {
             method: 'POST', credentials: 'include'
-        });
-        await fetch(`${CTX}/api/notification/delete-all`, {
-            method: 'DELETE', credentials: 'include'
         });
     }
 
@@ -98,15 +82,11 @@
 
         if (count > 0) {
             badge.textContent = count > 99 ? '99+' : count;
-            badge.style.display = 'flex';     // 추가: 숫자가 있을 때만 노출
             badge.classList.add('is-active');
         } else {
-            badge.style.display = 'none';     // 추가: 숫자가 없으면 숨김
             badge.classList.remove('is-active');
         }
     }
-
-
 
     // ─────────────────── 드롭다운 토글 ───────────────────
 
@@ -127,42 +107,37 @@
 
     // ─────────────────── 목록 렌더링 ───────────────────
 
-async function loadList(page, append, size) {
-    if (state.loading) return;
-    state.loading = true;
+    async function loadList(page, append) {
+        if (state.loading) return;
+        state.loading = true;
 
-    const body   = document.getElementById('noti-dropdown-body');
-    const footer = document.getElementById('noti-load-more');
+        const body   = document.getElementById('noti-dropdown-body');
+        const footer = document.getElementById('noti-load-more');
 
-    if (!append && body) {
-        body.innerHTML = '<div class="noti-loading">불러오는 중...</div>';
-    }
-
-    try {
-        const actualSize = size || state.size;
-        const url = `${CTX}/api/notification/list?page=${page}&size=${actualSize}`;
-        const res = await fetch(url, { credentials: 'include' });
-        if (!res.ok) throw new Error('fetch failed');
-        const data = await res.json();
-
-        state.last = data.last;
-        state.page = page;
-
-        if (!append) state.items = [];
-        state.items = state.items.concat(data.content);
-
-        renderItems(append);
-
-        if (footer) {
-            footer.style.display = data.last ? 'none' : 'inline-block';
+        if (!append && body) {
+            body.innerHTML = '<div class="noti-loading">불러오는 중...</div>';
         }
-    } catch (e) {
-        console.error('[Bell] list load failed:', e);
-        if (body) body.innerHTML = '<div class="noti-empty">불러오기 실패</div>';
-    } finally {
-        state.loading = false;
+
+        try {
+            const data = await fetchList(page);
+            state.last = data.last;
+            state.page = page;
+
+            if (!append) state.items = [];
+            state.items = state.items.concat(data.content);
+
+            renderItems(append);
+
+            if (footer) {
+                footer.style.display = data.last ? 'none' : 'inline-block';
+            }
+        } catch (e) {
+            console.error('[Bell] list load failed:', e);
+            if (body) body.innerHTML = '<div class="noti-empty">불러오기 실패</div>';
+        } finally {
+            state.loading = false;
+        }
     }
-}
 
     function renderItems(append) {
         const body = document.getElementById('noti-dropdown-body');
@@ -258,7 +233,7 @@ async function loadList(page, append, size) {
         setTimeout(() => {
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 300);
-        }, 7000);
+        }, 5000);
     }
 
     // ─────────────────── 헬퍼 ───────────────────
@@ -292,10 +267,6 @@ async function loadList(page, append, size) {
         // 1) 페이지 로드 시 미읽음 수 갱신
         renderBadge(await fetchUnreadCount());
 
-        // ✅ 더보기 버튼 초기 숨김
-        const loadMoreBtn = document.getElementById('noti-load-more');
-        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-
         // 2) 벨 클릭 → 드롭다운 토글
         document.getElementById('noti-bell-trigger')?.addEventListener('click', (e) => {
             e.preventDefault();
@@ -319,9 +290,9 @@ async function loadList(page, append, size) {
             e.stopPropagation();
         });
 
-        // 4) 더보기 클릭 시 전체 로드
+        // 4) 더보기
         document.getElementById('noti-load-more')?.addEventListener('click', () => {
-            loadList(0, false, 100); // size 100으로 전체 로드
+            loadList(state.page + 1, true);
         });
 
         // 5) 전체 읽음
@@ -351,7 +322,5 @@ async function loadList(page, append, size) {
         window.addEventListener('focus', async () => {
             renderBadge(await fetchUnreadCount());
         });
-
-
     });
 })();

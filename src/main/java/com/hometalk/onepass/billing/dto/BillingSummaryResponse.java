@@ -7,7 +7,6 @@ package com.hometalk.onepass.billing.dto;
  *  - 입주민 관리비 내역 리스트
  *  - 관리자 미납 세대 관리 목록
  *  - 관리자 고지서 업로드 유효성 검사 + 미리보기 테이블
- *  - 대시보드 알림 연동
  */
 
 import com.hometalk.onepass.billing.entity.Billing;
@@ -17,7 +16,6 @@ import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Optional;
 
 @Getter
 @Builder
@@ -69,7 +67,5 @@ public class BillingSummaryResponse {
                 .lastUploadType(billing.getLastUploadType())
                 .build();
     }
-
-
 
 }

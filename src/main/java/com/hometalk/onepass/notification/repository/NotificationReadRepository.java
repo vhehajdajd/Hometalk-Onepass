@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface NotificationReadRepository extends JpaRepository<NotificationRead, Long> {
@@ -17,11 +16,9 @@ public interface NotificationReadRepository extends JpaRepository<NotificationRe
      */
     Optional<NotificationRead> findByNotificationIdAndUserId(Long notificationId, Long userId);
 
-    // 알림 삭제 전 연관된 읽음 기록 일괄 삭제 (FK 제약 해제용)
-    void deleteByNotificationIdIn(List<Long> notificationIds);
 
     /**
-     * 전체 삭제(읽음) 처리 (Native Bulk INSERT)
+     * 전체 읽음 처리 (Native Bulk INSERT)
      * ⚠️ 호출 시 반드시 role.name() 전달 (String 파라미터)
      * 예: bulkReadAll(userId, role.name())
      */

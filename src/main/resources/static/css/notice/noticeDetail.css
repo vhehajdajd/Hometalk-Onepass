@@ -234,11 +234,3 @@
     max-height: 90vh;
     border-radius: 4px;
 }
-
-.schedule-modal {
-    width: 500px;
-}
-
-.modal-table .full-date input[type="date"] {
-    width: 100% !important;
-}

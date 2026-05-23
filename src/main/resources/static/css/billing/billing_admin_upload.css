@@ -1,8 +1,16 @@
 /* ═══════════════════════════════════════
    고지서 업로드 페이지 전용 스타일
-   파일 위치: static/css/billing/billing_admin_upload.css
-   공통: billing_common.css 함께 로드
+   파일 위치: static//billing/css/billing_admin_upload.css
+   공통: common.css 함께 로드
 ═══════════════════════════════════════ */
+
+/* ── 페이지 타이틀 ── */
+.page-title {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--color-main);
+    margin-bottom: 20px;
+}
 
 /* ── 업로드 존 ── */
 .upload-zone {
@@ -17,14 +25,61 @@
 }
 .upload-zone:hover,
 .upload-zone.drag-over { border-color: var(--color-sub); background: #eaf1fb; }
-.upload-icon  { font-size: 30px; color: var(--color-sub); margin-bottom: 12px; }
+.upload-icon  { font-size: 30px; font-weight: 600px; color: var(--color-sub); margin-bottom: 12px; }
 .upload-title { font-size: 16px; font-weight: 600; color: var(--color-text); margin-bottom: 6px; }
 .upload-hint  { font-size: 14px; color: var(--color-text-muted); }
+
+/* ── 테이블 섹션 ── */
+.table-section {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+.table-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 2px solid var(--color-border-light);
+}
+.table-header-title { font-size: 16px; font-weight: 600; color: var(--color-text); }
+.table-header-meta  { font-size: 15px; color: var(--color-text-muted); }
+.meta-error         { color: var(--color-btn-point); font-weight: 600; }
+
+/* ── 테이블 ── */
+.table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+
+.data-table thead th {
+    padding: 18px 16px;
+    text-align: left;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    background: var(--color-surface-2);
+    border-bottom: 1px solid var(--color-border-light);
+    white-space: nowrap;
+}
+.data-table thead th.sortable { cursor: pointer; user-select: none; }
+.data-table thead th.sortable:hover { color: var(--color-sub); }
+.sort-icon { font-size: 10px; opacity: .4; }
+
+.data-table tbody td {
+    padding: 18px 16px;
+    border-bottom: 1px solid var(--color-border-light);
+    color: var(--color-text);
+    vertical-align: middle;
+}
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover td      { background: var(--color-surface-2); }
+.data-table tbody tr.row-error td  { background: var(--color-error-bg); }
+.data-table tbody tr.row-error:hover td { background: var(--color-unpaid-bg); }
 
 /* ── 미리보기 버튼 ── */
 .btn-preview {
     padding: 6px 10px;
-    font-size: 13px;
+    font-size: 14px;
     font-family: inherit;
     border: 1px solid var(--color-sub);
     border-radius: 4px;
@@ -42,10 +97,21 @@
     background: var(--color-surface-2);
 }
 
-/* ── 업로드 확정 버튼 ── */
+/* ── 테이블 푸터 ── */
+.table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-top: 1px solid var(--color-border-light);
+    background: var(--color-surface-2);
+}
+.table-summary { font-size: 15px; color: var(--color-text-muted); }
+.table-actions { display: flex; gap: 10px; }
+
 .btn-confirm-upload {
     padding: 6px 10px;
-    font-size: 13px;
+    font-size: 14px;
     font-family: inherit;
     border: none;
     border-radius: 4px;
@@ -68,7 +134,7 @@
 }
 .delete-month-link:hover { color: #d83c2d; text-decoration: underline; }
 
-/* ── 삭제 팝업 danger 버튼 ── */
+/* ── 2단계 팝업 ── */
 .confirm-title-danger { color: #d83c2d; }
 .btn-danger {
     padding: 6px 10px;
@@ -84,6 +150,23 @@
 }
 .btn-danger:hover    { background: #d83c2d; color: #fff; opacity: 1; }
 .btn-danger:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ── 관리자 탭 네비게이션 ── */
+.admin-tab-nav { display: flex; gap: 0; height: 100%; align-items: flex-end; }
+.admin-tab-btn {
+    display: flex;
+    align-items: center;
+    padding: 0 22px;
+    height: 44px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: color .15s, border-color .15s;
+}
+.admin-tab-btn:hover  { color: var(--color-main); }
+.admin-tab-btn.active { color: var(--color-sub); border-bottom-color: var(--color-sub); }
 
 /* ── 업로드 완료 배너 ── */
 .upload-done-banner {

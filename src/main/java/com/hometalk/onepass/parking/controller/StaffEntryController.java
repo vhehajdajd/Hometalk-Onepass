@@ -48,9 +48,9 @@ public class StaffEntryController {
     // POST /staff/vehicle/manual-entry
     @PostMapping("/vehicle/manual-entry")
     public ResponseEntity<Void> processManualEntry(
-            @RequestBody @Valid ManualEntryRequest request) {  // @AuthenticationPrincipal 제거
+            @RequestBody @Valid ManualEntryRequest request) {
 
-        staffEntryService.processManualEntry(request);  // postNum 제거
+        staffEntryService.processManualEntry(request);
         return ResponseEntity.ok().build();
     }
 

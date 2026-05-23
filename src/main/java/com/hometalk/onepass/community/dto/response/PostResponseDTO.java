@@ -14,32 +14,25 @@ import java.util.stream.Collectors;
 @Builder
 public class PostResponseDTO {
     private Long id;
-    private Long authorId;      // 본인 확인 ID
     private String title;
     private String content;
-
     private String boardName;
     private Long categoryId;
     private String categoryName;
     private String categoryCode;
-
     private List<String> tags;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
     private int viewCount;
     private int commentCount;
 
-    private String writer;      // 닉네임
+    private String writer;
     private boolean editable;
     private boolean admin;
     private boolean pinned;
     private boolean isDeleted;
 
     private boolean hasImage;
-
-    private String categoryBgColor;
-    private String categoryTextColor;
 
     // 1. 시스템 관리 상태
     private String postStatus;                  // 로직용 - "ACTIVE", "HIDDEN" (CSS 클래스나 조건문용)
@@ -50,12 +43,6 @@ public class PostResponseDTO {
     // 2. 나눔 게시글 상태
     private String marketStatus;                // 로직용: "SHARED", "SOLD"
     private String marketStatusDescription;     // 표시용: "나눔중", "완료"
-
-    // 3. 거래 게시글 상태
-    private String tradeType;                   // 로직용: "BUY", "SELL"
-    private String tradeTypeDescription;        // 표시용: "구매", "판매"
-    private String tradeStatus;                 // 로직용: "SELLING", "RESERVED", "COMPLETED"
-    private String tradeStatusDescription;      // 표시용: "거래중", "예약중", "완료"
 
     // Entity -> DTO 변환 생성자
     public PostResponseDTO(Post post) {
@@ -70,9 +57,6 @@ public class PostResponseDTO {
             this.categoryId = post.getCategory().getId();
             this.categoryName = post.getCategory().getName();
             this.categoryCode = post.getCategory().getCode();
-            // 색상 필드 매핑
-            this.categoryBgColor = post.getCategory().getBgColor();
-            this.categoryTextColor = post.getCategory().getTextColor();
 
             // 종속 관계를 안전하게 연결
             if (post.getCategory().getBoard() != null) {
@@ -80,12 +64,7 @@ public class PostResponseDTO {
             }
         }
 
-        // 작성자 정보 처리
-        if (post.getWriter() != null) {
-            this.authorId = post.getWriter().getId();       // ID 담기
-            this.writer = post.getWriter().getNickname();  // 닉네임 담기
-        }
-
+        this.writer = post.getWriter().getNickname();
         if (post.getPostTags() != null && !post.getPostTags().isEmpty()) {
             this.tags = post.getPostTags().stream()
                     .map(pt -> pt.getTag().getName())
@@ -93,7 +72,6 @@ public class PostResponseDTO {
         } else {
             this.tags = new ArrayList<>(); // null 대신 빈 리스트
         }
-
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();
         this.isDeleted = (post.getDeletedAt() != null);
@@ -105,35 +83,9 @@ public class PostResponseDTO {
         this.postStatusDescription = post.getPostStatus().getDescription();
 
         // 나눔 게시글 상태
-        if ("share".equalsIgnoreCase(post.getCategory().getCode())
-                && post.getMarketStatus() != null
-                && !post.isPinned()) {
-
+        if (post.getMarketStatus() != null) {
             this.marketStatus = post.getMarketStatus().name();
             this.marketStatusDescription = post.getMarketStatus().getDescription();
-
-        } else {
-            this.marketStatus = null;
-            this.marketStatusDescription = null;
-        }
-
-        // 거래 게시글 상태
-        if ("trade".equalsIgnoreCase(post.getCategory().getCode())
-                && post.getTradeType() != null
-                && post.getTradeStatus() != null
-                && !post.isPinned()) {
-
-            this.tradeType = post.getTradeType().name();
-            this.tradeTypeDescription = post.getTradeType().getDescription();
-
-            this.tradeStatus = post.getTradeStatus().name();
-            this.tradeStatusDescription = post.getTradeStatus().getDescription();
-
-        } else {
-            this.tradeType = null;
-            this.tradeTypeDescription = null;
-            this.tradeStatus = null;
-            this.tradeStatusDescription = null;
         }
 
     }

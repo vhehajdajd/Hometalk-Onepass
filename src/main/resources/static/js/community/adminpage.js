@@ -1,19 +1,14 @@
-// 모달 제어
+// 모달 열기
 function openCreateModal() {
     document.getElementById('createModal').classList.add('show');
 }
 
+// 모달 닫기
 function closeModal() {
     const modal = document.getElementById('createModal');
     modal.classList.remove('show');
-    document.getElementById('createBoardForm').reset();
 
-    // 카테고리가 여러 개 추가되어 있었다면 첫 번째만 남기고 초기화
-    const container = document.getElementById('category-container');
-    const items = container.querySelectorAll('.category-item-wrapper');
-    for (let i = 1; i < items.length; i++) {
-        items[i].remove();
-    }
+    document.getElementById('createBoardForm').reset();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -21,35 +16,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const addBtn = document.getElementById('btn-add-category');
     const createBoardForm = document.getElementById('createBoardForm');
 
-    // 2. 카테고리 추가 로직 (반반 프리셋 대응)
+    // 1. 카테고리 추가 로직 (게시판 생성 페이지용)
     if (addBtn && container) {
         addBtn.addEventListener('click', () => {
-            const items = document.querySelectorAll('.category-item-wrapper');
-
-            if (items.length >= 5) {
-                alert("카테고리는 최대 5개까지만 생성 가능합니다.");
-                return;
-            }
-
+            // 현재 존재하는 카테고리 아이템 중 첫 번째 것을 기준으로 복사
+            const items = document.querySelectorAll('.category-item');
             if (items.length > 0) {
                 const newItem = items[0].cloneNode(true);
-                const nextIdx = items.length; // 중복 방지를 위한 인덱스
 
-                // 텍스트 입력값 초기화
+                // 이름(Names)과 코드(Codes) input을 모두 찾아서 초기화
                 const nameInput = newItem.querySelector('input[name="categoryNames"]');
                 const codeInput = newItem.querySelector('input[name="categoryCodes"]');
-                if (nameInput) nameInput.value = '';
-                if (codeInput) codeInput.value = '';
+                if (nameInput) {
+                    nameInput.value = '';
+                    nameInput.classList.remove('error');
+                }
+                if (codeInput) {
+                    codeInput.value = '';
+                    codeInput.classList.remove('error');
+                }
 
-                // ★ 중요: 라디오 버튼 Group Name 변경 (서로 다른 카테고리가 섞이지 않게)
-                const radios = newItem.querySelectorAll('input[type="radio"]');
-                radios.forEach(radio => {
-                    radio.name = 'categoryTheme' + nextIdx; // categoryTheme0, categoryTheme1...
-                    // 첫 번째 프리셋(딥블루)이 기본 체크되도록
-                    if (radio.value.includes("#003366")) radio.checked = true;
-                });
+                if (colorInput) {
+                    colorInput.value = '#EB6E57';
+                }
 
-                // 삭제 버튼 활성화
+                // 삭제 버튼 활성화 및 기능 연결
                 const removeBtn = newItem.querySelector('.btn-remove');
                 if (removeBtn) {
                     removeBtn.disabled = false;
@@ -57,81 +48,34 @@ document.addEventListener('DOMContentLoaded', () => {
                         newItem.remove();
                     };
                 }
-
                 container.appendChild(newItem);
+                // 새로 생긴 이름 칸에 바로 타이핑할 수 있게 포커스
                 nameInput?.focus();
             }
         });
     }
 
-    // 3. 폼 전송 전 유효성 검사 및 데이터 가공
+    // 2. 폼 전송 전 유효성 검사 (게시판 생성 페이지용)
+    // 요소가 있을 때만 addEventListener를 실행하도록 수정
     if (createBoardForm) {
         createBoardForm.addEventListener('submit', (e) => {
-            const nameInputs = document.querySelectorAll('input[name="categoryNames"]');
+            const inputs = document.querySelectorAll('input[name="categoryNames"]');
             const codeInputs = document.querySelectorAll('input[name="categoryCodes"]');
             let isValid = true;
 
-            // 필수 입력 체크
-            nameInputs.forEach((input, index) => {
-                if (!input.value.trim() || !codeInputs[index].value.trim()) {
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
                     input.classList.add('error');
-                    codeInputs[index].classList.add('error');
                     isValid = false;
                 } else {
                     input.classList.remove('error');
-                    codeInputs[index].classList.remove('error');
                 }
             });
 
             if (!isValid) {
                 e.preventDefault();
                 alert("모든 칸(이름 및 영문 코드)을 입력해주세요.");
-                return;
             }
-
-            createBoardForm.querySelectorAll('.temp-hidden-input').forEach(el => el.remove());
-
-            // 각 카테고리 아이템별로 선택된 테마를 찾아 분리 저장
-            const wrappers = document.querySelectorAll('.category-item-wrapper');
-            wrappers.forEach((wrapper, index) => {
-                const selectedTheme = wrapper.querySelector(`input[name="categoryTheme${index}"]:checked`);
-                if (selectedTheme) {
-                    const [bgColor, textColor] = selectedTheme.value.split('|');
-
-                    // 배경색 hidden input 생성
-                    const bgInput = document.createElement('input');
-                    bgInput.type = 'hidden';
-                    bgInput.name = 'categoryBgColors';
-                    bgInput.value = bgColor;
-                    bgInput.className = 'temp-hidden-input';
-                    createBoardForm.appendChild(bgInput);
-
-                    // 글자색 hidden input 생성
-                    const textInput = document.createElement('input');
-                    textInput.type = 'hidden';
-                    textInput.name = 'categoryTextColors';
-                    textInput.value = textColor;
-                    textInput.className = 'temp-hidden-input';
-                    createBoardForm.appendChild(textInput);
-                }
-            });
-        });
-    }
-});
-
-// 관리 버튼 드롭다운
-function toggleDropdown(btn) {
-    document.querySelectorAll('.drop-content').forEach(el => {
-        if (el !== btn.nextElementSibling) el.classList.remove('show-menu');
-    });
-    btn.nextElementSibling.classList.toggle('show-menu');
-}
-
-// 바깥 영역 클릭 시 메뉴 닫기
-window.addEventListener('click', function(e) {
-    if (!e.target.closest('.custom-dropdown')) {
-        document.querySelectorAll('.drop-content').forEach(el => {
-            el.classList.remove('show-menu');
         });
     }
 });

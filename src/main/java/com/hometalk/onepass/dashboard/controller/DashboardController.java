@@ -26,7 +26,7 @@ public class DashboardController {
             case "ROLE_ADMIN"    -> "dashboard/admin";
             case "ROLE_RESIDENT" -> "dashboard/resident";
             case "ROLE_STAFF"    -> "redirect:/staff/entry";
-            case "ROLE_MEMBER"   -> "redirect:/home";
+            case "ROLE_MEMBER"   -> "redirect:/hometop/index";
             default              -> "redirect:/";
         };
     }

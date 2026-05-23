@@ -18,8 +18,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import com.hometalk.onepass.billing.dto.BillingMonthlyStats;
-import com.hometalk.onepass.billing.dto.UserOldestUnpaidProjection;
 
 @Entity
 @Table(name = "notification", indexes = {
@@ -52,7 +50,4 @@ public class Notification extends BaseTimeEntity {
     private String link;        // null 허용
 
     private LocalDateTime expiredAt;
-
-
-
 }

@@ -34,7 +34,6 @@ public class ComInitDataConfig implements CommandLineRunner {
 
             // 2. 생성된 게시판 객체(square, market)를 사용하여 Category 연결
             // 광장 카테고리
-            // 시스템 카테고리는 CSS 클래스(post-list.css)로 디자인을 제어하므로 별도의 bgColor, textColor 설정 X (null 유지)
             categoryRepository.save(Category.builder().name("자유").code("free").board(square).system(true).build());
             categoryRepository.save(Category.builder().name("토론").code("debate").board(square).system(true).build());
 

@@ -8,9 +8,7 @@ import com.hometalk.onepass.community.dto.response.PostListResponse;
 import com.hometalk.onepass.community.dto.response.PostResponseDTO;
 import com.hometalk.onepass.community.dto.response.PostUserRsDTO;
 import com.hometalk.onepass.community.entity.*;
-import com.hometalk.onepass.community.enums.MarketStatus;
 import com.hometalk.onepass.community.enums.PostStatus;
-import com.hometalk.onepass.community.enums.TradeStatus;
 import com.hometalk.onepass.community.exception.InvalidBoardCodeException;
 import com.hometalk.onepass.community.exception.PostNotFoundException;
 import com.hometalk.onepass.community.repository.BoardRepository;
@@ -27,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,9 +58,11 @@ public class PostService {
             // [CASE: 수정/등록] ID가 있으면 기존 글을 찾아서 업데이트
             post = postRepository.findById(dto.getId())
                     .orElseThrow(() -> new PostNotFoundException(dto.getId(), boardCode));
-            // 작성자 본인인지 확인
+
+            // 작성자 본인인지 확인하는 검증 로직 추가 (보안상 중요!)
             postValidator.validateOwner(post, userId);
-            // 기존 엔티티 필드
+
+            // 기존 엔티티의 필드만 변경 (Dirty Checking으로 자동 반영)
             post.update(dto.getTitle(), dto.getContent(), category, dto.getPostStatus());
 
             // 기존 태그 관계 초기화
@@ -72,18 +71,6 @@ public class PostService {
             // [CASE: 신규] ID가 없으면 새로 생성
             post = dto.toEntity(category, board, writer);
             post = postRepository.save(post);
-
-            // 거래 게시글
-            if ("trade".equalsIgnoreCase(category.getCode())) {
-                if (dto.getTradeType() == null) {
-                    throw new IllegalArgumentException("거래 유형은 필수입니다.");
-                }
-                post.updateTrade(dto.getTradeType(), TradeStatus.SELLING);
-            }
-            // 나눔 게시글
-            if ("share".equalsIgnoreCase(category.getCode())) {
-                post.updateMarketStatus(MarketStatus.SHARED);
-            }
         }
 
         // 태그
@@ -92,14 +79,10 @@ public class PostService {
             if (tagName == null) continue;
             String cleanTag = tagName.trim();
             if (cleanTag.isEmpty()) continue;
-            if (cleanTag.length() > 5) {
-                cleanTag = cleanTag.substring(0, 5);
-            }
-            String finalTagName = cleanTag;
             Tag tag = tagRepository.findByName(cleanTag)
                     .orElseGet(() -> tagRepository.save(
                             Tag.builder()
-                                    .name(finalTagName)
+                                    .name(cleanTag)
                                     .build()
                     ));
             PostTag postTag = PostTag.builder()
@@ -114,7 +97,12 @@ public class PostService {
     // Read
     public Page<PostListResponse> searchPosts(Long boardId, Long categoryId, String searchType, String keyword, int page) {
         PostStatus status = PostStatus.ACTIVE;
-        Pageable pageable = PageRequest.of(page, 15);
+        Pageable pageable = PageRequest.of(page, 10,
+                Sort.by(
+                        Sort.Order.desc("pinned"), // 고정글이 1순위
+                        Sort.Order.desc("id")      // 그 안에서 최신순이 2순위
+                )
+        );
 
         // 1. 보드 엔티티 조회 (검색 메서드 파라미터가 Board 객체이므로 필요)
         Board board = boardRepository.findById(boardId)
@@ -148,9 +136,7 @@ public class PostService {
     @Transactional
     public PostResponseDTO postDetail(Long postId, PostUserRsDTO currentUser, String boardCode, List<Long> viewedPosts) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException(postId, boardCode));
-        Long currentUserId = Optional.ofNullable(currentUser)
-                .map(PostUserRsDTO::getUserId)
-                .orElse(null);
+        Long currentUserId = (currentUser != null) ? currentUser.getId() : null;
         postActionService.increaseViewCount(postId, currentUserId, viewedPosts);
         PostResponseDTO dto = new PostResponseDTO(post);
         postValidator.setAuthority(dto, post, currentUser);
@@ -159,8 +145,8 @@ public class PostService {
 
     // 임시저장글 개수
     @Transactional(readOnly = true)
-    public int getTempPostCount(String boardCode, Long writerId) {
-        return postRepository.countByBoardCodeAndPostStatusAndWriterId(boardCode, PostStatus.DRAFT, writerId);
+    public int getTempPostCount(String boardCode) {
+        return postRepository.countByBoardCodeAndPostStatus(boardCode, PostStatus.DRAFT);
     }
 
     // Update
@@ -195,13 +181,13 @@ public class PostService {
         post.softDelete();
     }
 
-    // 임시저장
     public List<PostListResponse> getTempPosts(String boardCode, Long userId) {
         PostStatus status = PostStatus.DRAFT;
-        List<Post> posts = postRepository.findTempPosts(boardCode, userId, PostStatus.DRAFT);
+        List<Post> posts = postRepository.findTempPosts(boardCode, userId, status);
 
         // boardCode와 userId가 일치하고 상태가 DRAFT인 글만 최신순으로 조회
-        return posts.stream()
+        return postRepository.findTempPosts(boardCode, userId, PostStatus.DRAFT)
+                .stream()
                 .map(PostListResponse::new)
                 .collect(Collectors.toList());
     }
@@ -210,23 +196,19 @@ public class PostService {
 
     // 태그
     public List<String> getTagsByBoardId(Long boardId) {
-        return tagRepository.findTop10TagNamesByBoardId(boardId, PageRequest.of(0, 10));
+        return tagRepository.findAllTagNamesByBoardId(boardId);
     }
 
     public List<String> getTagsByPostId(Long postId) {
         return postRepository.findTagsByPostId(postId);
     }
 
-    public List<String> searchTags(String keyword) {
-        if (keyword == null || keyword.length() < 1) return List.of();
-        return tagRepository.findTop5ByNameStartingWith(keyword, PageRequest.of(0, 5));
-    }
 
-    // 사용자 연동
+
     @Transactional(readOnly = true)
     public List<CommunityPostResponseDTO> getRecentPosts() {
         List<Post> posts = postRepository
-                .findTop5ByPostStatusOrderByCreatedAtDesc(PostStatus.ACTIVE);
+                .findTop3ByPostStatusOrderByCreatedAtDesc(PostStatus.ACTIVE);
 
         return posts.stream()
                 .map(post -> new CommunityPostResponseDTO(

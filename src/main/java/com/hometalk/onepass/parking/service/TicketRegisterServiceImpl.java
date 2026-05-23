@@ -8,10 +8,10 @@ import com.hometalk.onepass.parking.dto.response.ParkingSearchResponse;
 import com.hometalk.onepass.parking.entity.ParkingLog;
 import com.hometalk.onepass.parking.entity.ParkingTicket;
 import com.hometalk.onepass.parking.entity.TicketUsage;
-import com.hometalk.onepass.parking.exception.ParkingException;
 import com.hometalk.onepass.parking.repository.ParkingLogRepository;
 import com.hometalk.onepass.parking.repository.ParkingTicketRepository;
 import com.hometalk.onepass.parking.repository.TicketUsageRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,39 +32,55 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
     private final TicketUsageRepository ticketUsageRepository;
     private final HouseholdRepository householdRepository;
 
+    // ─── 차량 조회 (단건) ────────────────────────────────────────
     @Override
     @Transactional(readOnly = true)
     public ParkingSearchResponse searchParkedVehicle(String keyword, Long householdId) {
         String last4 = keyword.replace(" ", "");
-        if (last4.length() != 4) throw new ParkingException("차량 번호 4자리를 입력해주세요.");
+
+        if (last4.length() != 4) {
+            throw new IllegalArgumentException("차량 번호 4자리를 입력해주세요.");
+        }
 
         List<ParkingLog> logs = parkingLogRepository.findParkedByLast4(last4);
-        if (logs.isEmpty()) throw new ParkingException("주차 중인 차량이 없습니다.");
+
+        if (logs.isEmpty()) {
+            throw new EntityNotFoundException("주차 중인 차량이 없습니다.");
+        }
 
         ParkingLog parkingLog = logs.get(0);
+
         Household household = householdRepository.findById(householdId)
-                .orElseThrow(() -> new ParkingException("세대를 찾을 수 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("세대를 찾을 수 없습니다."));
 
         LocalDate today = LocalDate.now();
         List<ParkingTicket> tickets = parkingTicketRepository
                 .findByHouseholdAndIssueYearAndIssueMonth(
                         household, today.getYear(), today.getMonthValue());
+
         List<TicketUsage> usages = ticketUsageRepository.findByParkingLog(parkingLog);
 
         return new ParkingSearchResponse(parkingLog, tickets, usages);
     }
 
+    // ─── 차량 조회 (다건 - 차량 선택용) ─────────────────────────
     @Override
     @Transactional(readOnly = true)
     public List<ParkingSearchResponse> searchParkedVehicleList(String keyword, Long householdId) {
         String last4 = keyword.replace(" ", "");
-        if (last4.length() != 4) throw new ParkingException("차량 번호 4자리를 입력해주세요.");
+
+        if (last4.length() != 4) {
+            throw new IllegalArgumentException("차량 번호 4자리를 입력해주세요.");
+        }
 
         List<ParkingLog> logs = parkingLogRepository.findParkedByLast4(last4);
-        if (logs.isEmpty()) throw new ParkingException("주차 중인 차량이 없습니다.");
+
+        if (logs.isEmpty()) {
+            throw new EntityNotFoundException("주차 중인 차량이 없습니다.");
+        }
 
         Household household = householdRepository.findById(householdId)
-                .orElseThrow(() -> new ParkingException("세대를 찾을 수 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("세대를 찾을 수 없습니다."));
 
         LocalDate today = LocalDate.now();
         List<ParkingTicket> tickets = parkingTicketRepository
@@ -73,39 +89,47 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
 
         return logs.stream()
                 .filter(log -> {
-                    if (log.getEntryType() == ParkingLog.EntryType.NORMAL) return false;
-                    if (log.getEntryType() == ParkingLog.EntryType.MANUAL) return true;
+                    if (log.getEntryType() == ParkingLog.EntryType.NORMAL) {
+                        return false;
+                    }
+                    if (log.getEntryType() == ParkingLog.EntryType.MANUAL) {
+                        return true;
+                    }
                     return log.getHousehold() != null &&
                             log.getHousehold().getId().equals(householdId);
                 })
-                .map(log -> new ParkingSearchResponse(
-                        log, tickets, ticketUsageRepository.findByParkingLog(log)))
+                .map(log -> {
+                    List<TicketUsage> usages = ticketUsageRepository.findByParkingLog(log);
+                    return new ParkingSearchResponse(log, tickets, usages);
+                })
                 .collect(Collectors.toList());
     }
 
+    // ─── 티켓 적용 ───────────────────────────────────────────────
     @Override
     public void applyTicket(TicketApplyRequest request, Long householdId) {
         ParkingLog parkingLog = parkingLogRepository.findByIdWithLock(request.getParkingId())
-                .orElseThrow(() -> new ParkingException("주차 기록을 찾을 수 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("주차 기록을 찾을 수 없습니다."));
 
         if (parkingLog.getStatus() != ParkingLog.ParkingStatus.PARKED) {
-            throw new ParkingException("주차 중인 차량이 아닙니다.");
+            throw new IllegalStateException("주차 중인 차량이 아닙니다.");
         }
 
         Household household = householdRepository.findById(householdId)
-                .orElseThrow(() -> new ParkingException("세대를 찾을 수 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("세대를 찾을 수 없습니다."));
 
         ParkingTicket.TicketType ticketType =
                 ParkingTicket.TicketType.valueOf(request.getTicketType());
+
         LocalDate today = LocalDate.now();
 
         ParkingTicket ticket = parkingTicketRepository
                 .findByHouseholdAndTypeAndIssueYearAndIssueMonth(
                         household, ticketType, today.getYear(), today.getMonthValue())
-                .orElseThrow(() -> new ParkingException("보유한 티켓이 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("보유한 티켓이 없습니다."));
 
         if (!ticket.isEnough(request.getCount())) {
-            throw new ParkingException("티켓 잔여 수량이 부족합니다.");
+            throw new IllegalStateException("티켓 잔여 수량이 부족합니다.");
         }
 
         TicketUsage usage = new TicketUsage(parkingLog, ticket, request.getCount());
@@ -120,25 +144,27 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
                 request.getParkingId(), ticketType, request.getCount(), addedMinutes);
     }
 
+    // ─── 티켓 취소 ───────────────────────────────────────────────
     @Override
     public void cancelTicket(TicketCancelRequest request, Long householdId) {
         ParkingLog parkingLog = parkingLogRepository.findByIdWithLock(request.getParkingId())
-                .orElseThrow(() -> new ParkingException("주차 기록을 찾을 수 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("주차 기록을 찾을 수 없습니다."));
 
         if (parkingLog.getStatus() != ParkingLog.ParkingStatus.PARKED) {
-            throw new ParkingException("주차 중인 차량이 아닙니다.");
+            throw new IllegalStateException("주차 중인 차량이 아닙니다.");
         }
 
         ParkingTicket.TicketType ticketType =
                 ParkingTicket.TicketType.valueOf(request.getTicketType());
 
-        List<TicketUsage> targetUsages = ticketUsageRepository.findByParkingLog(parkingLog)
-                .stream()
+        List<TicketUsage> usages = ticketUsageRepository.findByParkingLog(parkingLog);
+
+        List<TicketUsage> targetUsages = usages.stream()
                 .filter(u -> u.getTicket().getType() == ticketType)
                 .collect(Collectors.toList());
 
         if (targetUsages.isEmpty()) {
-            throw new ParkingException("취소할 티켓 사용 내역이 없습니다.");
+            throw new EntityNotFoundException("취소할 티켓 사용 내역이 없습니다.");
         }
 
         int remainCount = request.getCount();
@@ -146,6 +172,7 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
 
         for (TicketUsage usage : targetUsages) {
             if (remainCount <= 0) break;
+
             if (usage.getUsedCount() <= remainCount) {
                 remainCount -= usage.getUsedCount();
                 totalCancelMinutes += ticketType.toMinutes(usage.getUsedCount());
@@ -161,29 +188,10 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
 
         int currentApplied = parkingLog.getAppliedMinutes() != null
                 ? parkingLog.getAppliedMinutes() : 0;
-        parkingLog.updateAppliedMinutes(Math.max(0, currentApplied - totalCancelMinutes));
+        int newApplied = Math.max(0, currentApplied - totalCancelMinutes);
+        parkingLog.updateAppliedMinutes(newApplied);
 
         log.info("티켓 취소 - parkingId: {}, 타입: {}, 복구분: {}",
                 request.getParkingId(), ticketType, totalCancelMinutes);
-    }
-    @Transactional(readOnly = true)
-    public List<ParkingSearchResponse> getMyParkedVehicles(Long householdId) {
-        Household household = householdRepository.findById(householdId)
-                .orElseThrow(() -> new ParkingException("세대를 찾을 수 없습니다."));
-
-        LocalDate today = LocalDate.now();
-        List<ParkingTicket> tickets = parkingTicketRepository
-                .findByHouseholdAndIssueYearAndIssueMonth(
-                        household, today.getYear(), today.getMonthValue());
-
-        List<ParkingLog> logs = parkingLogRepository.findByStatus(ParkingLog.ParkingStatus.PARKED);
-
-        return logs.stream()
-                .filter(log -> log.getEntryType() != ParkingLog.EntryType.NORMAL)
-                .filter(log -> log.getEntryType() == ParkingLog.EntryType.MANUAL && log.getHousehold() != null ||
-                        (log.getHousehold() != null && log.getHousehold().getId().equals(householdId)))
-                .map(log -> new ParkingSearchResponse(
-                        log, tickets, ticketUsageRepository.findByParkingLog(log)))
-                .collect(Collectors.toList());
     }
 }

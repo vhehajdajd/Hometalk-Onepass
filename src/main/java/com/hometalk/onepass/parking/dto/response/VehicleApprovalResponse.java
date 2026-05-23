@@ -4,10 +4,6 @@ import com.hometalk.onepass.parking.entity.VehicleApproval;
 import lombok.Getter;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Getter
 public class VehicleApprovalResponse {
@@ -19,12 +15,11 @@ public class VehicleApprovalResponse {
     private String vehicleType;
     private String userName;
     private String household;
-    private List<String> documentPaths; // 증빙 서류 경로 목록
+    private String documentPath;
     private String status;
     private String rejectReason;
     private LocalDateTime processedAt;
-    private String createdAt;
-    private int approvedCount; // 해당 세대 승인된 차량 수
+    private LocalDateTime createdAt;
 
     public VehicleApprovalResponse(VehicleApproval approval) {
         this.approvalId = approval.getApprovalId();
@@ -35,23 +30,12 @@ public class VehicleApprovalResponse {
         this.userName = approval.getVehicle().getUser().getName();
         this.household = approval.getVehicle().getHousehold().getDong() + " "
                 + approval.getVehicle().getHousehold().getHo();
-
-        // 증빙 서류 경로 목록 (콤마로 구분된 경로를 파일명만 추출하여 리스트로 변환)
-        this.documentPaths = approval.getDocumentPath() != null
-                ? Arrays.stream(approval.getDocumentPath().split(","))
-                .map(path -> "/hometop/uploads/" + Paths.get(path.trim()).getFileName().toString())
-                .collect(Collectors.toList())
-                : List.of();
-
+        this.documentPath = approval.getDocumentPath() != null
+                ? "/hometop/uploads/" + Paths.get(approval.getDocumentPath()).getFileName().toString()
+                : null;
         this.status = approval.getStatus().name();
         this.rejectReason = approval.getRejectReason();
         this.processedAt = approval.getProcessedAt();
-        this.createdAt = approval.getCreatedAt() != null
-                ? approval.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"))
-                : "-";
-    }
-
-    public void setApprovedCount(int approvedCount) {
-        this.approvedCount = approvedCount;
+        this.createdAt = approval.getCreatedAt();
     }
 }

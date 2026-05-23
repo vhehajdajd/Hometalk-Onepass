@@ -6,15 +6,11 @@ import com.hometalk.onepass.notification.event.NotificationEvent;
 
 import lombok.RequiredArgsConstructor;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class NotificationPublisher {
 
     private final ApplicationEventPublisher eventPublisher;
@@ -47,26 +43,5 @@ public class NotificationPublisher {
         eventPublisher.publishEvent(
                 new NotificationEvent(null, role, type, title, message, link, null)
         );
-    }
-
-    // ✅ 롤백 영향 없이 즉시 발행 (예외 발생 전 알림 발송용 - 주차티켓부족 알림)
-    @Async("notificationExecutor")
-    @Transactional
-    public void publishAsync(Long userId,
-                             NotificationTargetRole role,
-                             NotificationType type,
-                             String title,
-                             String message,
-                             String link,
-                             Long referenceId) {
-        try {
-            log.info("[publishAsync] 호출 - userId:{}, type:{}", userId, type); // ✅ 추가
-            eventPublisher.publishEvent(
-                    new NotificationEvent(userId, role, type, title, message, link, referenceId)
-            );
-            log.info("[publishAsync] 이벤트 발행 완료"); // ✅ 추가
-        } catch (Exception e) {
-            log.error("[publishAsync] 오류 발생", e); // ✅ 추가
-        }
     }
 }

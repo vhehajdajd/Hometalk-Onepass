@@ -8,21 +8,20 @@
     <meta name="_csrf_header" th:content="${_csrf?.headerName}" />
     <link rel="stylesheet" th:href="@{/css/dashboard/style.css}" />
     <link rel="stylesheet" th:href="@{/css/billing/billing_common.css}" />
+    <link rel="stylesheet" th:href="@{/css/billing/billing_admin_upload.css}" />
     <link rel="stylesheet" th:href="@{/css/billing/billing_resident.css}" />
-
-    <!--✅ 알림 추가 -->
-    <meta name="ctx" th:content="@{/}">
-    <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
-    <script th:src="@{/js/notification/notification-sse.js}"></script>
-    <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
 <body>
 
-<div class="main-layout">
+<div class="main-layout" style="display:flex; min-height:100vh;">
+
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='billing')}"></div>
-    <div class="main-wrapper">
-        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='billing')}"></div>
-        <div th:replace="~{fragments/headerCategoryMenu :: billing}"></div>
+
+    <div class="main-wrapper" style="flex:1; display:flex; flex-direction:column;">
+
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'billing'} })}"></div>
+
+        <header class="category-menu-bar">&nbsp;</header>
 
         <div class="container">
 
@@ -32,12 +31,13 @@
             <!-- 미납 배너 (미납 시만 노출) -->
             <div class="bp-alert-box" th:if="${unpaidList != null and !unpaidList.isEmpty()}">
                 <div class="bp-alert-inner">
+                    <div class="bp-alert-icon">!</div>
                     <div class="bp-alert-title">
                         <span th:each="b, stat : ${unpaidList}">
                             <th:block th:text="${b.billingMonth}"></th:block>
                             <th:block th:if="!${stat.last}">, </th:block>
                         </span>
-                        관리비가 미납 상태입니다. 관리사무소로 연락 바랍니다. ☎️02-1111-2222
+                        관리비가 미납 상태입니다. 관리사무소로 연락 바랍니다. ☎️02-888-9999
                     </div>
                 </div>
             </div>
@@ -174,7 +174,6 @@
         </div>
     </div>
 </div>
-
 
 <script th:inline="javascript">
     /*<![CDATA[*/

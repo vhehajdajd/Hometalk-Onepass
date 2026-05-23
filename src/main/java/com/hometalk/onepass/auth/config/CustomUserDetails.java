@@ -15,26 +15,20 @@ public class CustomUserDetails implements UserDetails {
     private final Long householdId;
     private final String postNum;       // 관리자의 경우에도 post_num이 필요하여 추가
     private final String name;
-    private final String nickname;
     private final User.UserRole role;
-    private final User.UserStatus status;
-    private final boolean approvalNoticeShown;
     private final String loginId;
     private final String password;
 
     public CustomUserDetails(Long userId, Long householdId, String postNum,
-    String name, User.UserRole role, User.UserStatus status, boolean approvalNoticeShown,
-    String loginId, String password, String nickname) {
+    String name, User.UserRole role,
+    String loginId, String password) {
         this.userId      = userId;
         this.householdId = householdId;
         this.postNum     = postNum;     // 관리자의 경우에도 post_num이 필요하여 추가
         this.name        = name;
         this.role        = role;
-        this.status      = status;
-        this.approvalNoticeShown = approvalNoticeShown;
         this.loginId     = loginId;
         this.password    = password;
-        this.nickname    = nickname;
     }
 
     @Override

@@ -60,7 +60,7 @@
     padding: 15px 10px;
     color: var(--color-main);
     font-weight: 600;
-    font-size: 15px;
+    font-size: 16px;
     text-align: center;
     background: white;
 }
@@ -94,28 +94,24 @@
 
 .title-cell a {
     color: var(--color-main);
-    font-size: 15px;
-    font-weight: 400;
+    font-size: 16px;
+    font-weight: 600;
     text-decoration: none;
 }
-
 
 .title-cell a:hover {
     text-decoration: underline;
     color: var(--color-btn-point);
 }
 
-.title-cell a.pinned-title {
-    font-weight: 700; /* 상단 고정만 굵게 */
-}
 
 /* ── 페이지네이션 ──────────────────────────────────────────────────────────── */
 .page-footer {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 50px;
-    padding-top: 0px;
+    margin-top: 60px;
+    padding-top: 25px;
     padding-bottom: 10px;
     position: relative;
 }
@@ -151,7 +147,6 @@
     gap: 10px;
     justify-content: flex-end;
     align-items: center;
-    margin-bottom: 30px;
 }
 
 .select-wrapper select.search-select {

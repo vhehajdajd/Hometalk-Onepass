@@ -31,18 +31,3 @@ spring:
       max-file-size: 10MB   # 파일 업로드 용량 제한 설정
       max-request-size: 10MB
 
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: hometalkonepass@gmail.com
-    password: pymn jnjv iykl spaz
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-
-app:
-  mail:
-    from: ${MAIL_FROM:${spring.mail.username}}

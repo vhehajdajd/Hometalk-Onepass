@@ -1,10 +1,7 @@
 package com.hometalk.onepass.auth.config;
 
-import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.entity.SocialAccount;
 import com.hometalk.onepass.auth.repository.SocialAccountRepository;
-import com.hometalk.onepass.auth.util.ApprovalStatusRedirectUtils;
-import com.hometalk.onepass.auth.util.LoginRedirectUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +27,6 @@ public class CustomOAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSucc
 
     // 소셜 로그인 성공 직후, 우리 서비스 기준으로 이미 가입된 사용자인지 판별한다.
     private final SocialAccountRepository socialAccountRepository;
-    private final RememberMeServices rememberMeServices;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -83,24 +78,13 @@ public class CustomOAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSucc
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
             return; // 더 이상 아래 코드가 실행되지 않도록 종료
         } else {
-            // 이미 가입된 소셜 계정이면 로그인 전 요청했던 화면으로 이동하고,
-            // 별도 목적지가 없으면 역할별 분기 대시보드로 이동한다.
+            // 이미 가입된 소셜 계정이면 메인 화면으로 바로 이동시킨다.
             log.info("기존 유저 -> 메인 페이지로 이동");
-            if (Boolean.TRUE.equals(request.getSession().getAttribute(RememberMeConfig.OAUTH2_REMEMBER_ME_SESSION_KEY))) {
-                request.getSession().removeAttribute(RememberMeConfig.OAUTH2_REMEMBER_ME_SESSION_KEY);
-                rememberMeServices.loginSuccess(request, response, authentication);
-            }
-
-            String approvalStatusRedirect = getApprovalStatusRedirect(socialAccount.get().getUser(), request)
-                    .orElse(null);
-            if (approvalStatusRedirect != null) {
-                getRedirectStrategy().sendRedirect(request, response, approvalStatusRedirect);
-                return;
-            }
-
-            // 로컬 로그인과 동일하게 기본 목적지는 /dashboard로 두고, 컨트롤러에서 role별 화면으로 분기한다.
-            String redirectUrl = LoginRedirectUtils.consumeRedirectUrl(request)
-                    .orElse("/dashboard");
+            String redirectUrl = UriComponentsBuilder.fromUriString(getBaseUrl(request))
+                    .path(request.getContextPath())
+                    .path("/dashboard")
+                    .build()
+                    .toUriString();
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
             return;
         }
@@ -109,23 +93,5 @@ public class CustomOAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSucc
     private String getBaseUrl(HttpServletRequest request) {
         // 절대 경로 리다이렉트가 필요한 OAuth2 흐름에서 현재 접속 호스트를 기준 URL 로 사용한다.
         return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
-    }
-
-    private Optional<String> getApprovalStatusRedirect(User user, HttpServletRequest request) {
-        if (user.getStatus() == User.UserStatus.PENDING) {
-            return Optional.of("/auth/approval/pending");
-        }
-
-        if (user.getStatus() == User.UserStatus.REJECTED) {
-            return Optional.of("/auth/approval/rejected");
-        }
-
-        if (user.getStatus() == User.UserStatus.APPROVED
-                && !user.isApprovalNoticeShown()
-                && !Boolean.TRUE.equals(request.getSession().getAttribute(ApprovalStatusRedirectUtils.APPROVAL_NOTICE_ACKED_SESSION_KEY))) {
-            return Optional.of("/auth/approval/approved");
-        }
-
-        return Optional.empty();
     }
 }
