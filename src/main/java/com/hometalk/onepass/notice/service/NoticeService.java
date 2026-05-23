@@ -14,6 +14,10 @@ import com.hometalk.onepass.notice.exception.NoticeNotFoundException;
 import com.hometalk.onepass.notice.repository.AttachmentRepository;
 import com.hometalk.onepass.notice.repository.NoticeRepository;
 import com.hometalk.onepass.notice.repository.ReadLogRepository;
+import com.hometalk.onepass.notification.entity.NotificationTargetRole;
+import com.hometalk.onepass.notification.entity.NotificationType;
+import com.hometalk.onepass.notification.publisher.NotificationPublisher;
+import com.hometalk.onepass.schedule.entity.Schedule;
 import com.hometalk.onepass.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,6 +48,7 @@ public class NoticeService {
     private final LocalAccountRepository localAccountRepository;
     private final ScheduleRepository scheduleRepository;
     private final ReadLogRepository readLogRepository;
+    private final NotificationPublisher notificationPublisher;
 
     @Value("${file.upload.path}")
     private String uploadPath;
@@ -99,6 +104,18 @@ public class NoticeService {
                 if (!file.isEmpty()) saveFile(file, notice);
             }
         }
+
+        // ✅ 알림 — PUBLISHED 상태일 때만 전체 입주민 발송
+        if (NoticeStatus.PUBLISHED.equals(notice.getStatus())) {
+            notificationPublisher.publishToAll(
+                    NotificationTargetRole.RESIDENT,
+                    NotificationType.NOTICE_NEW,
+                    notice.getTitle(),  // "새 공지사항"(모든 공지가 같은 제목) → 수정
+                    "새 공지가 등록되었습니다.",
+                    "/notice/" + notice.getId()
+            );
+        }
+
         return notice.getId();
     }
 
@@ -162,8 +179,9 @@ public class NoticeService {
                 .orElseThrow(() -> new NoticeNotFoundException(id));
 
         // 연결된 일정 먼저 삭제
-        scheduleRepository.findFirstByNotice(notice)
-                .ifPresent(scheduleRepository::delete);
+        // 연결된 일정 전체 삭제
+        List<Schedule> schedules = scheduleRepository.findByNotice(notice);
+        scheduleRepository.deleteAll(schedules);
 
         readLogRepository.deleteByNotice(notice);
 

@@ -1,58 +1,77 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>월별 주차 기록</title>
-  <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
-  <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
-</head>
+<head th:replace="~{fragments/head :: head('월별 주차 기록')}"></head>
+<link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+<link rel="stylesheet" th:href="@{/css/parking/parking-resident.css}">
 <body>
 
-<div class="container">
-  <h2 class="page-title">월별 주차 기록</h2>
+<div class="main-layout" style="display: flex; min-height: 100vh;">
 
-  <!-- 년/월 필터 -->
-  <div class="pk-filter-group">
-    <div class="pk-dropdown-wrapper">
-      <button type="button" class="pk-dropdown-btn" onclick="toggleYearDropdown()">
-        <span id="selectedYear"></span> ▼
-      </button>
-      <div id="yearDropdown" class="pk-dropdown-menu" style="display:none;">
-        <ul id="yearList"></ul>
-      </div>
-    </div>
+  <!-- 1. 사이드바 -->
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
-    <div class="pk-dropdown-wrapper">
-      <button type="button" class="pk-dropdown-btn" onclick="toggleMonthDropdown()">
-        <span id="selectedMonth"></span> ▼
-      </button>
-      <div id="monthDropdown" class="pk-dropdown-menu" style="display:none;">
-        <ul id="monthList"></ul>
+  <!-- 2. 오른쪽 영역 -->
+  <div class="main-wrapper">
+
+    <!-- 상단 헤더 -->
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='parking')}"></div>
+
+    <!-- 상단 메뉴 -->
+    <div th:replace="~{fragments/headerCategoryMenu :: parking}"></div>
+
+    <!-- 본문 -->
+    <main class="content" style="flex: 1;">
+      <div class="container">
+        <h2 class="page-title">월별 주차 기록</h2>
+
+        <!-- 년/월 필터 -->
+        <div class="pk-filter-group">
+          <div class="pk-dropdown-wrapper">
+            <button type="button" class="pk-dropdown-btn" onclick="toggleYearDropdown()">
+              <span id="selectedYear"></span> ▼
+            </button>
+            <div id="yearDropdown" class="pk-dropdown-menu" style="display:none;">
+              <ul id="yearList"></ul>
+            </div>
+          </div>
+
+          <div class="pk-dropdown-wrapper">
+            <button type="button" class="pk-dropdown-btn" onclick="toggleMonthDropdown()">
+              <span id="selectedMonth"></span> ▼
+            </button>
+            <div id="monthDropdown" class="pk-dropdown-menu" style="display:none;">
+              <ul id="monthList"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 주차 기록 테이블 -->
+        <table class="park-table">
+          <thead>
+          <tr>
+            <th>차량 번호</th>
+            <th>구분</th>
+            <th>입차 시간</th>
+            <th>출차 시간</th>
+            <th>정산 내역</th>
+          </tr>
+          </thead>
+          <tbody id="parkingList">
+          <tr>
+            <td colspan="5" class="pk-empty">주차 기록이 없습니다.</td>
+          </tr>
+          </tbody>
+        </table>
+
+        <!-- 페이지네이션 -->
+        <ul class="pk-pagination" id="pagination"></ul>
+
       </div>
-    </div>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
   </div>
-
-  <!-- 주차 기록 테이블 -->
-  <table class="park-table">
-    <thead>
-    <tr>
-      <th>차량 번호</th>
-      <th>구분</th>
-      <th>입차 시간</th>
-      <th>출차 시간</th>
-      <th>정산 내역</th>
-    </tr>
-    </thead>
-    <tbody id="parkingList">
-    <tr>
-      <td colspan="5" class="pk-empty">주차 기록이 없습니다.</td>
-    </tr>
-    </tbody>
-  </table>
-
-  <!-- 페이지네이션 -->
-  <ul class="pk-pagination" id="pagination" style="display:flex; flex-direction:row; justify-content:center;"></ul>
 </div>
 
 <script th:inline="javascript">
@@ -69,7 +88,6 @@
   document.getElementById('selectedYear').textContent  = `${selectedYear}년`;
   document.getElementById('selectedMonth').textContent = `${selectedMonth}월`;
 
-  // 년 목록 생성
   const yearList = document.getElementById('yearList');
   YEARS.forEach(y => {
     const li = document.createElement('li');
@@ -84,7 +102,6 @@
     yearList.appendChild(li);
   });
 
-  // 월 목록 생성
   const monthList = document.getElementById('monthList');
   MONTHS.forEach((m, index) => {
     const li = document.createElement('li');
@@ -124,18 +141,18 @@
 
   function loadParkingLogs() {
     fetch(`${contextPath}parking/logs/data?year=${selectedYear}&month=${selectedMonth}&page=${currentPage}&size=${PAGE_SIZE}`)
-      .then(res => {
-        if (!res.ok) throw new Error('서버 오류');
-        return res.json();
-      })
-      .then(data => {
-        renderTable(data.content);
-        renderPagination(data.page.totalPages);
-      })
-      .catch(err => {
-        console.error(err);
-        alert('데이터 조회 중 오류가 발생했습니다.');
-      });
+            .then(res => {
+              if (!res.ok) throw new Error('서버 오류');
+              return res.json();
+            })
+            .then(data => {
+              renderTable(data.content);
+              renderPagination(data.page.totalPages);
+            })
+            .catch(err => {
+              console.error(err);
+              alert('데이터 조회 중 오류가 발생했습니다.');
+            });
   }
 
   function renderTable(content) {

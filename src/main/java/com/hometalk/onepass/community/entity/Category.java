@@ -25,7 +25,8 @@ public class Category {
     @Column(nullable = false, updatable = false)
     private String code;
 
-    private String color;
+    private String bgColor;
+    private String textColor;
 
     @Column(name = "is_system")
     private boolean system = false; // 기본값 false, 초기 데이터만 true로 설정
@@ -35,10 +36,12 @@ public class Category {
     private Board board;
 
     // 변경 method
-    public void rename(String newName) {
+    public void rename(String newName, String bgColor, String textColor) {
         if (newName == null || newName.isBlank()) {
             throw new IllegalArgumentException("카테고리 이름은 필수입니다.");
         }
         this.name = newName;
+        this.bgColor = bgColor;
+        this.textColor = textColor;
     }
 }

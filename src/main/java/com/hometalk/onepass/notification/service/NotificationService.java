@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +28,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class NotificationService {
 
-    private final NotificationRepository     notificationRepository;
+    private final NotificationRepository notificationRepository;
     private final NotificationReadRepository notificationReadRepository;
 
     // ─────────────────── 조회 ───────────────────
@@ -61,6 +62,18 @@ public class NotificationService {
                             );
                         }
                 );
+    }
+
+    // ─────────────────── 전체삭제 버튼 클릭 -> 전체읽음+삭제 ───────────────────
+    @Transactional
+    public void deleteAll(Long userId, NotificationTargetRole role) {
+        // 읽음 이력 먼저 삭제
+        List<Long> notificationIds = notificationRepository
+                .findAllMyNotificationIds(userId, role);
+        if (!notificationIds.isEmpty()) {
+            notificationReadRepository.deleteByNotificationIdIn(notificationIds);
+            notificationRepository.deleteAllByIdIn(notificationIds);
+        }
     }
 
     @Transactional
@@ -158,6 +171,13 @@ public class NotificationService {
      */
     @Transactional
     public void deleteByTypeAndUser(NotificationType type, Long userId) {
+        // 1. notification_read 먼저 삭제 (FK 제약 해제)
+        List<Long> notificationIds = notificationRepository
+                .findIdsByTypeAndUserId(type, userId);
+        if (!notificationIds.isEmpty()) {
+            notificationReadRepository.deleteByNotificationIdIn(notificationIds);
+        }
+        // 2. notification 삭제
         notificationRepository.deleteByTypeAndUserId(type, userId);
     }
 
@@ -169,9 +189,9 @@ public class NotificationService {
         return LocalDateTime.now().plusDays(days);
     }
 
-    @Transactional
-    @Scheduled(cron = "0 0 3 * * *")
-    public void deleteExpiredNotifications() {
-        notificationRepository.deleteExpiredNotifications();
+        @Transactional
+        @Scheduled(cron = "0 0 3 * * *")
+        public void deleteExpiredNotifications() {
+            notificationRepository.deleteExpiredNotifications();
     }
 }

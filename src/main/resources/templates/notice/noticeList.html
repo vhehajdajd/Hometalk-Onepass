@@ -12,17 +12,24 @@
     <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
     <link rel="stylesheet" th:href="@{/css/notice/notice-common.css}">
     <link rel="stylesheet" th:href="@{/css/notice/noticeList.css}">
+    <meta name="ctx" th:content="@{/}">
+    <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
+    <script th:src="@{/js/notification/notification-sse.js}"></script>
+    <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
 
 <body>
 
-<div class="main-layout" style="display: flex; min-height: 100vh;">
+<div class="main-layout">
 
     <div th:replace="~{fragments/sidebar :: sidebar(currentPage='notice')}"></div>
 
     <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column;">
+        <!-- 상단 헤더 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='notice')}"></div>
 
-        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=#{'notice'})}"></div>
+        <!-- 카테고리바 -->
+        <div th:replace="~{fragments/headerCategoryMenu :: notice}"></div>
 
         <div class="container">
 
@@ -96,7 +103,10 @@
                         <span th:text="${notice.badge.label}">분류</span>
                     </td>
                     <td class="title-cell">
-                        <a th:href="@{/notice/{id}(id=${notice.id})}" th:text="${notice.title}">제목</a>
+                        <a th:href="@{/notice/{id}(id=${notice.id})}"
+                           th:text="${notice.title}"
+                           th:classappend="${notice.isPinned} ? 'pinned-title' : ''">
+                        </a>
                     </td>
                     <td th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd')}"></td>
                     <td th:text="${notice.updatedAt != null ? #temporals.format(notice.updatedAt, 'yyyy-MM-dd') : '-'}"></td>

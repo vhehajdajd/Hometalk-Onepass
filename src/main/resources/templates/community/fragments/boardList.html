@@ -2,34 +2,41 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
 <div th:fragment="boardList">
-    <table class="admin-management-table">
+    <table class="admin-management-table board-table">
         <thead>
-        <tr>
-            <th>게시판 명</th>
-            <th>카테고리 수</th>
-            <th>관리</th>
-        </tr>
+            <tr>
+                <th>게시판 명</th>
+                <th>카테고리 수</th>
+                <th>노출 게시글</th>
+                <th>숨김/삭제 게시글</th>
+                <th>관리</th>
+            </tr>
         </thead>
         <tbody>
-        <tr th:if="${#lists.isEmpty(boards)}">
-            <td colspan="6" class="no-data">등록된 게시판이 없습니다.</td>
-        </tr>
+            <tr th:if="${#lists.isEmpty(boards)}">
+                <td colspan="7" class="no-data">등록된 게시판이 없습니다.</td>
+            </tr>
 
-        <tr th:each="board : ${boards}">
-            <td class="board-name">
-                <strong th:text="${board.name}">광장</strong>
-            </td>
-            <td>
-                <span class="badge-count" th:text="${#lists.size(board.categories)} + '개'">3개</span>
-            </td>
-            <td class="action-btns">
-                <a th:href="@{/community/admin/board/detail/{id}(id=${board.id})}"
-                   class="btn-detail"
-                   style="text-decoration: none; padding: 6px 12px; background: #4e73df; color: white; border-radius: 4px;">
-                    상세
-                </a>
-            </td>
-        </tr>
+            <tr th:each="board : ${boards}">
+                <td class="board-name">
+                    <strong th:text="${board.name}">광장</strong>
+                </td>
+                <td>
+                    <span class="badge-count" th:text="${#lists.size(board.categories)} + '개'">3개</span>
+                </td>
+                <td>
+                    <span class="text-blue" th:text="${board.visiblePostCount} ?: '0'">10</span>
+                </td>
+                <td>
+                    <span class="text-orange" th:text="${board.hiddenPostCount} ?: '0'">2</span>
+                </td>
+                <td class="action-btns">
+                    <a th:href="@{/community/admin/board/detail/{id}(id=${board.id})}"
+                       class="btn btn-detail">
+                        상세
+                    </a>
+                </td>
+            </tr>
         </tbody>
     </table>
 

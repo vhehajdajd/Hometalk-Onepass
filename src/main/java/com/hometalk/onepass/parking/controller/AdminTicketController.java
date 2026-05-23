@@ -2,6 +2,7 @@ package com.hometalk.onepass.parking.controller;
 
 import com.hometalk.onepass.auth.entity.Household;
 import com.hometalk.onepass.auth.repository.HouseholdRepository;
+import com.hometalk.onepass.parking.dto.request.BulkTicketIssueRequest;
 import com.hometalk.onepass.parking.entity.ParkingTicket;
 import com.hometalk.onepass.parking.service.TicketService;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,19 @@ public class AdminTicketController {
     @ResponseBody
     public ResponseEntity<Void> issueMonthlyTickets() {
         ticketService.issueMonthlyTickets();
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/ticket/issue/bulk")
+    @ResponseBody
+    public ResponseEntity<Void> issueBulkTicket(
+            @RequestBody BulkTicketIssueRequest request) {
+        ticketService.issueBulkTickets(
+                request.householdIds(),
+                request.type(),
+                request.totalCount(),
+                LocalDate.now()
+        );
         return ResponseEntity.ok().build();
     }
 }

@@ -10,4 +10,6 @@ public interface LocalAccountRepository extends JpaRepository<LocalAccount, Long
     Long user(User user);
 
     Optional<LocalAccount> findByLoginId(String loginId);
+
+    boolean existsByLoginId(String loginId);
 }

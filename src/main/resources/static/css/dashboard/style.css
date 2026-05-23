@@ -21,14 +21,14 @@
     --badge-normal-font:     #2a9da4;
     --badge-default:         #c9c9c9;
     --badge-default-font:    #5b5b5b;
-    --sidebar-width:         180px;
+    --sidebar-width:         170px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
-    background: #eef1f8;
+    background: white;
     color: var(--color-text);
     font-size: 14px;
     line-height: 1.6;
@@ -52,7 +52,7 @@ body {
 
 .sidebar-logo {
     width: 100%;
-    padding: 20px 10px 16px;
+    padding: 14px 10px 14px;
     border-bottom: 1px solid rgba(255,255,255,0.2);
     margin-bottom: 12px;
     display: flex;
@@ -70,10 +70,10 @@ body {
 
 .sidebar-item {
     width: 100%;
-    padding: 10px 12px;
+    padding: 14px 12px;
     border-radius: 8px;
     color: rgba(255,255,255,0.8);
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     text-decoration: none;
     text-align: center;
@@ -115,7 +115,7 @@ body {
 .s-logout:hover { background: rgba(255,255,255,0.25); }
 
 /* ── 메인 래퍼 ── */
-.main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.main-wrapper { flex: 1; display: flex; flex-direction: column; }
 
 /* ── 헤더 ── */
 .header {
@@ -158,14 +158,14 @@ body {
     transition: color 0.2s;
 }
 
-.category-item:hover { color: var(--color-main); }
+.category-item:hover { color: var(--color-main); font-weight: 700;}
 .category-item.active { color: var(--color-main); font-weight: 700; border-bottom: 2px solid var(--color-main); }
 
 /* ── 콘텐츠 ── */
 .dashboard-content { flex: 1; padding: 20px 24px; overflow-y: auto; }
 
 /* ── 그리드 ── */
-.dashboard-grid { display: flex; flex-direction: column; gap: 14px; max-width: 1300px; margin: 0 auto; }
+.dashboard-grid { display: flex; flex-direction: column; gap: 14px; max-width: 1400px; margin: 0 auto; }
 .row-1 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .row-2 { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 14px; }
 .row-3 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
@@ -247,14 +247,22 @@ body {
     color: var(--badge-default-font);
     white-space: nowrap;
     flex-shrink: 0;
+    min-width: 64px;
+    text-align: center;
 }
 
 .community-title { flex: 1; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ── 달력 ── */
-.cal-nav { display: flex; align-items: center; gap: 8px; }
+.community-badge.list-category.free   { background-color: #E6F7FF; color: #1890FF; }
+.community-badge.list-category.debate { background-color: #F3E5F5; color: #7B1FA2; }
+.community-badge.list-category.share  { background-color: #FFF7E6; color: #FA8C16; }
+.community-badge.list-category.lost   { background-color: #FFE5E5; color: #FF4D4F; }
+.community-badge.list-category.survey { background-color: #F6FFED; color: #52C41A; }
 
-.cal-nav button {
+/* ── 달력 ── */
+.dashboard-content .cal-nav { display: flex; align-items: center; gap: 8px; }
+
+.dashboard-content .cal-nav button {
     background: none;
     border: 1px solid var(--border-color);
     border-radius: 4px;
@@ -265,16 +273,16 @@ body {
     transition: background 0.2s;
 }
 
-.cal-nav button:hover { background: var(--color-bg-white-btn); }
-.cal-nav-title { font-size: 14px; font-weight: 700; color: var(--color-main); }
+.dashboard-content .cal-nav button:hover { background: var(--color-bg-white-btn); }
+.dashboard-content .cal-nav-title { font-size: 14px; font-weight: 700; color: var(--color-main); }
 
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-top: 4px; }
+.dashboard-content .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-top: 4px; }
 
-.cal-day-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--color-text-muted); padding: 4px 0; }
-.cal-day-header.sun { color: #e74c3c; }
-.cal-day-header.sat { color: var(--color-sub); }
+.dashboard-content .cal-day-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--color-text-muted); padding: 4px 0; }
+.dashboard-content .cal-day-header.sun { color: #e74c3c; }
+.dashboard-content .cal-day-header.sat { color: var(--color-sub); }
 
-.cal-cell {
+.dashboard-content .cal-cell {
     text-align: center;
     padding: 3px 1px;
     font-size: 11px;
@@ -287,17 +295,17 @@ body {
     gap: 2px;
 }
 
-.cal-cell.other-month { color: #c8d0da; }
-.cal-cell.today .cal-date { background: var(--color-btn); color: white; border-radius: 50%; }
+.dashboard-content .cal-cell.other-month { color: #c8d0da; }
+.dashboard-content .cal-cell.today .cal-date { background: var(--color-btn); color: white; border-radius: 50%; }
 
-.cal-date { font-size: 11px; font-weight: 600; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+.dashboard-content .cal-date { font-size: 11px; font-weight: 600; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
 
-.cal-dots { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
-.cal-dot { width: 4px; height: 4px; border-radius: 50%; }
-.cal-dot.FACILITY { background: var(--badge-facility-font); }
-.cal-dot.SAFETY   { background: var(--badge-safety-font); }
-.cal-dot.NORMAL   { background: var(--badge-normal-font); }
-.cal-dot.DEFAULT  { background: var(--badge-default-font); }
+.dashboard-content .cal-dots { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
+.dashboard-content .cal-dot { width: 4px; height: 4px; border-radius: 50%; }
+.dashboard-content .cal-dot.FACILITY { background: #46d64b; }
+.dashboard-content .cal-dot.SAFETY   { background:  #f8d058; }
+.dashboard-content .cal-dot.NORMAL   { background:  #46d8eb; }
+.dashboard-content .cal-dot.DEFAULT  {background: #8c8c8c; }
 
 /* ── 오늘의 일정 ── */
 .today-schedule-item {
@@ -326,9 +334,10 @@ body {
 .today-schedule-badge.DEFAULT  { background: var(--badge-default);  color: var(--badge-default-font); }
 
 /* ── 주차 ── */
-.parking-section { margin-bottom: 14px; }
-.parking-section:last-child { margin-bottom: 0; }
-.parking-section-title { font-size: 12px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 6px; }
+.parking-section { margin-bottom: 0px; }
+.parking-section:last-child {margin-top: 8px; }
+.parking-section-title { font-size: 14px; font-weight: 600; color: var(--color-text-muted);  }
+
 
 .parking-vehicle-item {
     display: flex;
@@ -336,30 +345,103 @@ body {
     align-items: center;
     padding: 7px 0;
     border-bottom: 1px solid var(--color-modal-line);
-    font-size: 13px;
+    font-size: 14px;
 }
 
-.parking-vehicle-item:last-child { border-bottom: none; }
+
+/* ── 관리자 주차 현황 ── */
+.parking-stat-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+    flex: 1;
+}
+
+.parking-stat-box {
+    flex: 1;
+    border-radius: 10px;
+    padding: 16px 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.parking-stat-box.blue {
+    background: #e8eef8;
+    color: var(--color-main);
+}
+
+.parking-stat-box.yellow {
+    background: #fff8e1;
+    color: #b8860b;
+}
+
+.parking-stat-count {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.parking-stat-unit {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.parking-stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 4px;
+}
 
 .parking-status { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
-.parking-status.approved { background: var(--badge-facility); color: var(--badge-facility-font); }
-.parking-status.pending  { background: var(--badge-safety);   color: var(--badge-safety-font); }
-.parking-status.rejected { background: #fde8e8; color: #c0392b; }
+.parking-status.badge-approved { background: #e6f4f5; color: #2a9da4; }
+.parking-status.badge-pending  { background: #fff8e1; color: #b8860b; }
+.parking-status.badge-rejected { background: #fdecea; color: var(--color-btn-point); }
 
-.ticket-row { display: flex; gap: 8px; margin-top: 4px; }
+.ticket-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    justify-content: center;
+}
 
 .ticket-box {
     flex: 1;
-    background: var(--color-bg-white-btn);
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    padding: 10px 8px;
-    text-align: center;
+    background: none;
+    border: none;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.ticket-label { font-size: 11px; color: var(--color-text-muted); margin-bottom: 4px; }
-.ticket-count { font-size: 20px; font-weight: 700; color: var(--color-main); }
-.ticket-unit  { font-size: 11px; color: var(--color-text-muted); }
+.ticket-label {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 8px;
+}
+
+.ticket-count-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 8px;
+    min-width: 60px;
+    justify-content: center;
+}
+
+.ticket-count {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-main);
+}
+
+.ticket-unit {
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
 
 /* ── 하단 카드 ── */
 .small-item {
@@ -379,15 +461,42 @@ body {
 .s-pending    { background: var(--badge-safety);   color: var(--badge-safety-font); }
 .s-confirmed  { background: var(--badge-facility); color: var(--badge-facility-font); }
 .s-unanswered { background: #fde8e8; color: #c0392b; }
-.s-processing { background: #e8eaf6; color: #3949ab; }
+.s-processing { background: #FFF8E1; color: #BA7517; }
 .s-received   { background: var(--badge-default);  color: var(--badge-default-font); }
 
 /* ── 관리비 ── */
-.billing-month  { font-size: 13px; color: var(--color-text-muted); margin-bottom: 4px; }
-.billing-amount { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-.billing-amount.UNPAID { color: var(--color-btn-point); }
-.billing-amount.PAID   { color: var(--color-btn); }
-.billing-due { font-size: 12px; color: var(--color-text-muted); margin-bottom: 14px; }
+
+.billing-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 14px;
+}
+.billing-card-left { display: flex; align-items: center; gap: 10px; }
+.billing-card-label { font-size: 15px; font-weight: 700; color: var(--color-main); }
+.billing-status-badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+}
+.billing-card-row-wrap {
+    margin-top: 16px;
+}
+.billing-status-badge.UNPAID { background: #fde8e8; color: var(--color-btn-point); }
+.billing-status-badge.PAID   { background: #e6f4f5; color: var(--badge-normal-font); }
+.billing-card-row { display: flex; justify-content: space-between; padding: 15px 0; font-size: 14px; }
+.billing-card-row-label { color: var(--color-text-muted); }
+.billing-card-row-value { font-weight: 600; color: var(--color-text); }
+
+#billingContent {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
 
 .btn-detail {
     display: inline-block;
@@ -421,4 +530,23 @@ body {
     position: sticky;
     bottom: 0;
     z-index: 100;
+}
+
+/* ── 대시보드 상태 배지 ── */
+.dash-status-badge {
+    border-radius: 20px;
+    padding: 3px 0;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    width: 54px;
+    text-align: center;
+}
+
+#todayScheduleList {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
 }

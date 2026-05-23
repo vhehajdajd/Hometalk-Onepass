@@ -1,28 +1,108 @@
 /* ================================================
     [1] 페이지 초기화 & 이벤트 바인딩
 =================================================== */
+let quill;
+let isSubmitting = false;
+
 /* 안전장치로 DOMContentLoaded로 묶음 */
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. 제목 글자 수 카운트
+
+    const editorElement = document.getElementById('editor');
+    if (editorElement && !quill) { // quill이 아직 없을 때만 초기화
+        initQuill();
+    }
+
+    const postForm = document.getElementById('postForm');
+    const contentInput = document.getElementById('content');
+
+    if (postForm) {
+        postForm.addEventListener('submit', (e) => {
+            const categorySelect = document.querySelector('.category-select');
+            const tradeBox = document.getElementById('tradeBox');
+            const tradeType = document.querySelector('select[name="tradeType"]');
+            if (categorySelect && tradeBox) {
+                const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+                const categoryCode = selectedOption.dataset.code;
+
+                const isTrade = categoryCode === 'TRADE';
+
+                if (isTrade) {
+                    if (!tradeType || !tradeType.value) {
+                        alert("거래 유형을 선택해주세요.");
+                        tradeType?.focus();
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+            if (quill) {
+                const htmlContent = quill.root.innerHTML;
+                if (htmlContent === '<p><br></p>' || htmlContent.trim() === '') {
+                    alert("내용을 입력해주세요.");
+                    e.preventDefault();
+                    return false;
+                }
+                document.getElementById('content').value = htmlContent;
+            }
+            isSubmitting = true;
+        });
+    }
+
+    window.addEventListener('beforeunload', (event) => {
+        if (isSubmitting) return;
+        const editorElement = document.getElementById('editor');
+        if (editorElement) {
+            const hasContent = quill && quill.root.innerText.trim().length > 0;
+            if (hasContent) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        }
+    });
+
+    // 제목 글자 수 카운트 (기존 로직)
     const titleInput = document.getElementById('title');
     if (titleInput) {
         titleInput.addEventListener('input', updateCharCount);
         document.getElementById('charCount').innerText = titleInput.value.length;
     }
 
-/*    // 2. Quill 에디터 초기화
-    if (document.getElementById('editor')) {
-        initQuill();
+    // 카테고리 변경 → 거래박스 제어
+    const categorySelect = document.querySelector('.category-select');
+    const tradeBox = document.getElementById('tradeBox');
+
+    function onCategoryChange() {
+        if (!categorySelect) return;
+        const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+        const categoryCode = selectedOption.dataset.code?.trim().toLowerCase();
+
+        const isTrade = categoryCode === 'trade';
+        const tradeType = document.querySelector('select[name="tradeType"]');
+
+        if (tradeBox) {
+            tradeBox.style.display = isTrade ? 'block' : 'none';
+        }
+
+        if (tradeType) {
+            tradeType.required = isTrade;
+            tradeType.disabled = !isTrade;
+            if (!isTrade) {
+                tradeType.value = "";
+                tradeType.setCustomValidity(""); // 중요
+            }
+        }
+        console.log({
+            categoryCode,
+            isTrade,
+            required: tradeType?.required,
+            display: tradeBox?.style.display
+        });
     }
 
-    // 2-1. 폼 제출 시 Quill 내용 처리
-    document.getElementById('postForm')?.addEventListener('submit', () => {
-        const contentInput = document.getElementById('content');
-        if (quill) {
-            contentInput.value = quill.root.innerHTML;
-        }
-    });
-*/
+    if (categorySelect && tradeBox) {
+        categorySelect.addEventListener('change', onCategoryChange);
+        onCategoryChange();
+    }
 
     // 3. 임시저장 목록 모달 열기
     const btnLoadTemp = document.getElementById('btnLoadTemp');
@@ -58,15 +138,10 @@ document.addEventListener('DOMContentLoaded', () => {
     [2] Quill 에디터 설정 & 이미지 업로드
 =================================================== */
 
-let quill;
-
-document.addEventListener('DOMContentLoaded', () => {
-    initQuill();
-});
-
 function initQuill() {
     const editor = document.getElementById('editor');
     if (!editor) return;
+
     quill = new Quill('#editor', {
         theme: 'snow',
         modules: {
@@ -78,16 +153,18 @@ function initQuill() {
                     [{ 'color': [] }],
                     ['link', 'image']
                 ],
-                handlers: {
-                    image: imageHandler
-                }
-            }
+                handlers: { image: imageHandler }
+            },
+            imageResize: { displaySize: true }
         }
     });
     const content = document.getElementById('content')?.value;
     if (content && content.trim() !== '') {
         quill.root.innerHTML = content;
     }
+
+    quill.root.addEventListener('paste', handlePaste, false);
+    quill.root.addEventListener('drop', handleDrop, false);
 }
 
 function imageHandler() {
@@ -121,6 +198,54 @@ function imageHandler() {
     };
 }
 
+// 붙여넣기
+function handlePaste(e) {
+    const clipboard = e.clipboardData;
+    if (clipboard && clipboard.files && clipboard.files.length) {
+        e.preventDefault();
+        [...clipboard.files].forEach(file => {
+            if (file.type.match(/^image\//)) {
+                uploadImageFile(file);
+            }
+        });
+    }
+}
+
+// 드래그 드롭
+function handleDrop(e) {
+    e.preventDefault();
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        [...e.dataTransfer.files].forEach(file => {
+            if (file.type.match(/^image\//)) {
+                uploadImageFile(file);
+            }
+        });
+    }
+}
+
+// 공통 업로드 함수
+async function uploadImageFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    try {
+        const res = await fetch('/hometop/community/image-upload', {
+            method: 'POST',
+
+            headers: { [header]: token },
+            body: formData
+        });
+        const data = await res.json();
+        const range = quill.getSelection() || { index: quill.getLength() };
+        quill.insertEmbed(range.index, 'image', data.url);
+    } catch (err) {
+        console.error("이미지 업로드 실패:", err);
+    }
+}
+
 
 /* ================================================
     [3] 게시글 작성 & 임시저장 기능
@@ -145,14 +270,63 @@ function saveTemp() {
     }
 
     if (confirm("임시저장하시겠습니까?")) {
+        isSubmitting = true;
         const contentInput = document.getElementById('content');
-        if (quill && contentInput) {
+        if (typeof quill !== 'undefined' && contentInput) {
             contentInput.value = quill.root.innerHTML;
         }
-        // 임시저장 시 상태값 세팅
-        document.getElementById('isTemp').value = "true";
-        document.getElementById('postForm').submit();
+
+        const form = document.getElementById('postForm');
+        const formData = new FormData(form);
+        const boardCode = window.location.pathname.split('/')[3];
+
+        const token = document.querySelector('meta[name="_csrf"]')?.content;
+        const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+        fetch(`/hometop/community/${boardCode}/save-temp`, {
+            method: 'POST',
+            headers: { [header]: token },
+            body: formData
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("임시저장 실패");
+                return res.json();
+            })
+            .then(data => {
+                if (data.id) {
+                    alert(data.message);
+                    ensureIdInput(form, data.id);
+                    updateTempCount(boardCode);
+                }
+                isSubmitting = false;
+            })
+            .catch(err => {
+                isSubmitting = false;
+                console.error("임시저장 에러:", err);
+                alert("임시저장 중 오류가 발생했습니다.");
+            });
     }
+}
+
+function updateTempCount(boardCode) {
+    fetch(`/hometop/community/${boardCode}/temp-count`)
+        .then(res => res.text())
+        .then(count => {
+        const display = document.getElementById('temp-count-display');
+        if (display) display.innerText = count;
+    })
+        .catch(err => console.error("카운트 업데이트 실패:", err));
+}
+
+function ensureIdInput(form, id) {
+    let idInput = form.querySelector('input[name="id"]');
+    if (!idInput) {
+        idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'id';
+        form.appendChild(idInput);
+    }
+    idInput.value = id;
 }
 
 // 날짜 포맷팅
@@ -188,7 +362,7 @@ function loadTempList(boardCode) {
                 listArea.innerHTML = '<li class="no-data">임시저장된 글이 없습니다.</li>';
             } else {
                 const html = data.map(post => `
-                        <li onclick="location.href='/hometop/community/${boardCode}/edit/${post.id}'" style="cursor:pointer;">
+                        <li onclick="isSubmitting=true; location.href='/hometop/community/${boardCode}/edit/${post.id}'" style="cursor:pointer;">
                             <div>
                                 <span class="temp-category">[${post.categoryName || '미지정'}]</span>
                                 <span class="temp-title">${post.title || '제목 없음'}</span>
@@ -243,9 +417,16 @@ function deleteTempPost(event, id, boardCode) {
 // 임시저장한 글을 등록 후 목록에서 지우기
 // 게시글 등록 버튼 클릭 시
 function submitPost() {
-    const formData = new FormData(document.getElementById('postForm'));
+    const form = document.getElementById('postForm');
+    if (!form) return;
+    const formData = new FormData(form);
+    const boardCode = window.location.pathname.split('/')[3];
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
 
-    fetch(`/community/${boardCode}/save`, {
+    isSubmitting = true;
+
+    fetch(`/hometop/community/${boardCode}/save`, {
         method: 'POST',
         body: formData,
         headers: { [header]: token }
@@ -267,7 +448,11 @@ function submitPost() {
 =================================================== */
 // 취소 버튼 컨펌
 function confirmCancel() {
-    return confirm("작성 중인 내용을 중단하고 목록으로 돌아가시겠습니까?\n(임시저장된 내용은 보존됩니다.)");
+    const result = confirm("작성 중인 내용을 중단하고 목록으로 돌아가시겠습니까?\n(임시저장된 내용은 보존됩니다.)");
+    if(result) {
+        isSubmitting = true;
+    }
+    return result;
 }
 
 // 게시글 삭제 (Soft Delete)
@@ -352,6 +537,31 @@ function hidePost(postId) {
         .catch(err => console.error("Error:", err));
 }
 
+// 숨김 해제
+function unhidePost(postId) {
+    if (!confirm("이 게시글을 다시 노출하시겠습니까?")) return;
+
+    const token = document.querySelector('meta[name="_csrf"]').content;
+    const header = document.querySelector('meta[name="_csrf_header"]').content;
+
+    fetch(`/hometop/api/posts/${postId}/unhide`, {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+            [header]: token
+        }
+    })
+        .then(response => {
+        if (response.ok) {
+            alert("숨김이 해제되었습니다.");
+            location.reload();
+        } else {
+            alert("처리 중 오류가 발생했습니다.");
+        }
+    })
+        .catch(err => console.error("Error:", err));
+}
+
 /* ================================================
     [5] 목록 조회 & 페이징 기능
 =================================================== */
@@ -362,22 +572,52 @@ function changePage(pageNumber) {
     location.href = window.location.pathname + "?" + urlParams.toString();
 }
 
-// 상태 변경 함수 (post.js)
+// 상태 변경 함수
 function updateStatus(postId, status) {
     const token = document.querySelector('meta[name="_csrf"]')?.content;
     const header = document.querySelector('meta[name="_csrf_header"]')?.content;
 
-    fetch(`/hometop/api/posts/${postId}/status`, {
+    fetch(`/hometop/api/resident/${postId}/status`, {
         method: 'POST',
         headers: {
             "Content-Type": "application/json",
             [header]: token
         },
-        body: JSON.stringify({ status: status })
+        body: JSON.stringify({ marketStatus: status })
     }).then(res => {
-        if (res.ok) alert("상태가 변경되었습니다.");
-        else alert("오류가 발생했습니다.");
+        if (res.ok) {
+            alert("상태가 변경되었습니다.");
+            location.reload();
+        } else {
+            console.error("Error Status:", res.status);
+            alert("변경 실패. 컨트롤러 주소를 확인하세요.");
+        }
     });
+}
+
+function updateTradeStatus(postId, status) {
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    fetch(`/hometop/api/resident/${postId}/trade/status`, {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+            [header]: token
+        },
+        body: JSON.stringify({
+            tradeStatus: status
+        })
+    })
+        .then(res => {
+        if (res.ok) {
+            alert("거래 상태가 변경되었습니다.");
+            location.reload();
+        } else {
+            alert("변경 실패");
+        }
+    })
+        .catch(err => console.error("Error:", err));
 }
 
 /* ================================================
@@ -386,6 +626,7 @@ function updateStatus(postId, status) {
 const tagInput = document.querySelector('#tagInput');
 const tagList = document.querySelector('#tag-list');
 const hiddenTags = document.querySelector('#hidden-tags');
+const tagMsgContainer = document.querySelector('#tag-message-container');
 let tags = window.initialTags || [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -395,14 +636,92 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+/* ================================================
+    [6-1] 태그 자동완성
+=================================================== */
+const suggestions = document.getElementById('tagSuggestions');
+
+if (tagInput) {
+    // 1. 입력 시 자동완성 목록 조회
+    tagInput.addEventListener('keyup', (e) => {
+        // 엔터키일 때는 자동완성 로직 건너뛰기 (기존 keydown 로직이 처리)
+        if (e.key === 'Enter') return;
+
+        const keyword = tagInput.value.trim();
+
+        if (keyword.length < 1) {
+            if (suggestions) suggestions.style.display = 'none';
+            return;
+        }
+
+        fetch(`/hometop/api/resident/tags/search?keyword=${encodeURIComponent(keyword)}`)
+            .then(res => res.json())
+            .then(data => {
+            if (data && data.length > 0) {
+                // 데이터가 있을 경우 목록 생성
+                suggestions.innerHTML = data.map(name =>
+                `<li style="cursor:pointer; padding:8px 12px; border-bottom:1px solid #eee;"
+                     onclick="selectTag('${name}')">${name}</li>`
+                ).join('');
+                suggestions.style.display = 'block';
+            } else {
+                suggestions.style.display = 'none';
+            }
+        })
+            .catch(err => console.error("태그 검색 에러:", err));
+    });
+
+    // 2. 입력창 외부 클릭 시 목록 닫기
+    document.addEventListener('click', (e) => {
+        if (e.target !== tagInput && e.target !== suggestions) {
+            if (suggestions) suggestions.style.display = 'none';
+        }
+    });
+}
+
+// 3. 자동완성 목록에서 태그 선택 시
+function selectTag(name) {
+    if (tagInput && suggestions) {
+        // 이미 추가된 태그인지 확인 (기존 tags 배열 활용)
+        if (!tags.includes(name)) {
+            tags.push(name);
+            renderTags();
+        }
+        tagInput.value = '';
+        suggestions.style.display = 'none';
+        tagInput.focus();
+    }
+}
+
+/* ================================================
+    [6-2] 태그 제한 로직 (엔터 시 실행)
+=================================================== */
+function showTagMessage(message) {
+    if (!tagMsgContainer) return;
+    tagMsgContainer.innerHTML = `
+        <div style="color: #ff4d4f; font-size: 0.82rem; font-weight: 600;
+                    display: flex; align-items: center; gap: 4px; animation: fadeIn 0.3s;">
+            <span>⚠️</span> ${message}
+        </div>`;
+
+    setTimeout(() => {
+        tagMsgContainer.innerHTML = '';
+    }, 2500);
+}
+
 if (tagInput) {
     tagInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             const tagName = tagInput.value.trim();
 
-            if (tagName.length > 15) {
-                alert("태그는 최대 20자까지만 입력 가능합니다.");
+            if (tagName.length > 5) {
+                showTagMessage("태그는 최대 5자까지만 입력 가능합니다.");
+                return;
+            }
+            if (tags.length >= 5) {
+                showTagMessage("태그는 최대 5개까지만 등록 가능합니다.");
+                tagInput.value = '';
                 return;
             }
 
@@ -423,13 +742,11 @@ function renderTags() {
     hiddenTags.innerHTML = '';
 
     tags.forEach((tag, index) => {
-        // 1. 화면 표시용 배지 생성
         const span = document.createElement('span');
         span.className = 'tag-badge';
         span.innerHTML = `${tag} <i class="remove-tag" onclick="removeTag(${index})">&times;</i>`;
         tagList.appendChild(span);
 
-        // 2. 서버 전송용 hidden input 생성 (name="tags"로 맞춰야 DTO로 들어감)
         const input = document.createElement('input');
         input.type = 'hidden';
         input.name = 'tags';

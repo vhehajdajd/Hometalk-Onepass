@@ -3,140 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>인증 페이지</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        .logo-image {
-            max-width: 250px;
-            max-height: 180px;
-            margin-bottom: 10px;
-        }
-
-        body {
-            margin: 0;
-            background: #9EBFDB;
-        }
-
-        .auth-container {
-            background: #fefefe;
-            width: 400px;
-            margin: 75px auto 20px;
-            min-height: 600px;
-            padding: 30px;
-            text-align: center;
-            border: 1px solid #bdbaba;
-            border-radius: 8px;
-            background: #ffffff;
-        }
-
-        p {margin: 8px auto; font-size: 14px;}
-
-        .input-group {
-            margin-bottom: 10px;
-            width: 100%;
-        }
-
-        input {
-            width: 250px;
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        button {
-            width: 250px;
-            padding: 10px;
-            background-color: #3C6ABC;
-            color: white;
-            border: none;
-            cursor: pointer;
-            height: 40px;
-            border-radius: 8px;
-            margin-top: 5px;
-        }
-
-        button:hover {
-            background-color: #4073c9;
-        }
-
-        hr {
-            width: 100%;
-            margin: 14px auto;
-            border: 0;
-            border-top: 1px solid #a7b3c5;
-        }
-
-        .other-contain {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-
-        .social-login-list {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
-            margin-top: 8px;
-        }
-
-        .kakao-btn-container,
-        .naver-btn-container,
-        .google-btn-container
-         {
-            margin-top: 0;
-        }
-
-        .kakao-btn-container img,
-        .naver-btn-container img,
-        .google-btn-container img
-        {
-            width: 36px;
-            height: 36px;
-            display: block;
-            margin: 0;
-        }
-    </style>
+    <title>로그인 : Hometop</title>
+    <link rel="stylesheet" th:href="@{/css/auth/auth.css}">
 </head>
-<body>
+<body class="auth-page auth-login-page">
 
 <div class="auth-container">
     <!-- 일반 로그인과 소셜 로그인을 한 화면에 배치해 인증 진입점을 단순화한다. -->
-    <img th:src="@{/auth/loginimage/logo.png}" alt="로그인 로고 이미지" class="logo-image">
+    <img th:src="@{/auth/loginimage/logo.png}" alt="로그인 로고 이미지" class="auth-logo">
 
-    <form th:action="@{/auth/login}" method="post">
+    <form th:action="@{/auth/login}" method="post" class="auth-form login-form">
         <div class="input-group">
-            <input type="text" name="loginId" placeholder="👤 아이디를 입력하세요." required>
+            <input class="auth-input" type="text" name="loginId" placeholder="아이디를 입력하세요." required>
         </div>
         <div class="input-group">
-            <input type="password" name="password" placeholder="🔒️ 비밀번호를 입력하세요.">
+            <input class="auth-input" type="password" name="password" placeholder="비밀번호를 입력하세요.">
         </div>
-        <button type="submit">로그인</button>
+        <label class="remember-row">
+            <input type="checkbox" name="remember-me" id="remember-me">
+            <span>자동 로그인</span>
+        </label>
+        <button type="submit" class="auth-btn auth-btn-fixed">로그인</button>
     </form>
 
-    <div class="other-contain">
-        <p>계정이 없으신가요? <a th:href="@{/auth/register}">회원가입</a></p>
+    <div>
+        <p class="auth-note">계정이 없으신가요? <a class="auth-link" th:href="@{/auth/register}">회원가입</a></p>
 
-        <hr>
+        <hr class="auth-divider">
 
         <!-- 버튼은 Spring Security OAuth2 인가 엔드포인트로 직접 이동한다. -->
-        <p>소셜 로그인</p>
+        <p class="auth-note">소셜 로그인</p>
         <div class="social-login-list">
-            <div class="kakao-btn-container">
-                <a th:href="@{/oauth2/authorization/kakao}">
+            <div>
+                <a th:href="@{/oauth2/authorization/kakao}" class="social-login-link">
                     <img th:src="@{/auth/loginimage/kakao_login.png}" alt="카카오 로그인">
                 </a>
             </div>
-            <div class="naver-btn-container">
-                <a th:href="@{/oauth2/authorization/naver}">
+            <div>
+                <a th:href="@{/oauth2/authorization/naver}" class="social-login-link">
                     <img th:src="@{/auth/loginimage/naver_login.png}" alt="네이버 로그인">
                 </a>
             </div>
-            <div class="google-btn-container">
-                <a th:href="@{/oauth2/authorization/google}">
+            <div>
+                <a th:href="@{/oauth2/authorization/google}" class="social-login-link">
                     <img th:src="@{/auth/loginimage/google_login.png}" alt="구글 로그인">
                 </a>
             </div>
@@ -148,6 +57,21 @@
         // 안내 후 현재 path 로 다시 이동해 URL 을 정리한다.
         alert("아이디 또는 비밀번호가 일치하지 않습니다.");
         window.location.href = window.location.pathname;
+    </script>
+    <script>
+        document.querySelectorAll('.social-login-link').forEach(function (link) {
+            link.addEventListener('click', function (event) {
+                const rememberMe = document.getElementById('remember-me');
+                if (!rememberMe || !rememberMe.checked) {
+                    return;
+                }
+
+                event.preventDefault();
+                const url = new URL(link.href, window.location.origin);
+                url.searchParams.set('remember-me', 'on');
+                window.location.href = url.toString();
+            });
+        });
     </script>
 </div>
 

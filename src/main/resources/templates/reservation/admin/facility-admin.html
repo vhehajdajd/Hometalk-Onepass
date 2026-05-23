@@ -1,0 +1,147 @@
+<!--/* @thymesVar id="facilities" type="java.util.List<com.hometalk.onepass.facility.dto.FacilityResponseDto>" */-->
+<!--/* @thymesVar id="facility" type="com.hometalk.onepass.facility.dto.FacilityResponseDto" */-->
+<!--/* @thymesVar id="isEdit" type="boolean" */-->
+
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <th:block th:replace="~{inquiry/fragments/head :: inqHead(pageTitle='시설 관리')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/reservation/reservation.css}">
+</head>
+<body>
+<div class="main-layout" sec:authorize="hasRole('ADMIN')">
+    <div th:replace="~{fragments/sidebar :: sidebar(currentPage='reservation')}"></div>
+    <div class="main-wrapper">
+        <!-- 상단 메뉴 -->
+        <div th:replace="~{fragments/headerCurrentMenuView :: path(paths=${ {'reservation'} })}"></div>
+        <div th:replace="~{fragments/headerCategoryMenu :: reservationAdmin}"></div>
+
+        <!-- 메인 콘텐츠 -->
+        <div class="dashboard-content">
+
+            <main class="container">
+                <div class="mb-xl">
+                    <h1 class="module-title title" th:text="${isEdit} ? '시설 정보 수정' : '시설 설정 및 관리'">시설 설정 및 관리</h1>
+                    <small style="font-size: 0.5em; color: var(--color-sub);"
+                           sec:authentication="principal.name">관리자명</small>
+                    <p class="file-hint" th:text="${isEdit} ? '기존에 등록된 시설 정보를 수정합니다.' : '입주민이 이용할 새로운 시설을 등록합니다.'"></p>
+                </div>
+
+                <section class="write-form">
+                    <form th:action="${isEdit}
+                                     ? @{/reservation/admin/facilities/update/{id}(id=${facility.id})}
+                                     : @{/reservation/admin/facilities/register}"
+                          method="post"
+                          enctype="multipart/form-data">
+
+                        <div class="attachment-list mb-lg" style="display: flex; gap: 20px;">
+                            <div class="form-group" style="flex: 2; margin-bottom: 0;">
+                                <label class="form-label">시설 명칭</label>
+                                <input type="text" name="name" class="input-field"
+                                       th:value="${facility?.name}"
+                                       placeholder="예: 테니스장 A코트" required>
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label class="form-label">수용 인원 (명)</label>
+                                <input type="number" name="maxCapacity" class="input-field"
+                                       th:value="${facility?.maxCapacity ?: 1}"
+                                       min="1" required>
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label class="form-label">대표 아이콘</label>
+                                <select class="input-field select-field" name="iconType">
+                                    <option value="DUMBBELL" th:selected="${facility != null and facility.iconType == 'DUMBBELL'}">🏋️ 헬스/운동</option>
+                                    <option value="BOOK" th:selected="${facility != null and facility.iconType == 'BOOK'}">📖 공부/도서</option>
+                                    <option value="TENNIS" th:selected="${facility != null and facility.iconType == 'TENNIS'}">🎾 스포츠/테니스</option>
+                                    <option value="HOUSE" th:selected="${facility != null and facility.iconType == 'HOUSE'}">🏠 숙박/게스트</option>
+                                    <option value="COFFEE" th:selected="${facility != null and facility.iconType == 'COFFEE'}">☕ 커뮤니티/카페</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 시설 사진 업로드 -->
+                        <div class="form-group">
+                            <label class="form-label">시설 대표 사진</label>
+                            <div class="file-upload-wrapper">
+                                <div th:if="${isEdit and facility.imagePath != null}" class="mb-sm">
+                                    <img th:src="${facility.imagePath}" alt="현재 시설 사진"
+                                         style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
+                                </div>
+
+                                <input type="file" name="imageFile" class="input-field" accept="image/*" style="border: none; padding: 0;">
+                                <p class="file-hint" th:if="${isEdit and facility.imagePath != null}"
+                                   th:text="|※ 현재 파일: ${facility.imagePath}|"></p>
+                                <p class="file-hint">※ 가로/세로 1:1 비율의 깔끔한 사진을 권장합니다.</p>
+                            </div>
+                        </div>
+
+                        <!-- 운영 시간 설정 -->
+                        <div class="attachment-list" style="display: flex; gap: 20px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">운영 시작</label>
+                                <select class="input-field select-field" name="openTime">
+                                    <option th:each="hour : ${#numbers.sequence(0, 23)}"
+                                            th:value="${#numbers.formatInteger(hour, 2) + ':00'}"
+                                            th:text="${#numbers.formatInteger(hour, 2) + ':00'}"
+                                            th:selected="${facility != null and facility.openTime == (#numbers.formatInteger(hour, 2) + ':00')}">
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">운영 종료</label>
+                                <select class="input-field select-field" name="closeTime">
+                                    <option th:each="hour : ${#numbers.sequence(0, 23)}"
+                                            th:value="${#numbers.formatInteger(hour, 2) + ':00'}"
+                                            th:text="${#numbers.formatInteger(hour, 2) + ':00'}"
+                                            th:selected="${facility != null and facility.closeTime == (#numbers.formatInteger(hour, 2) + ':00')}">
+                                    </option>
+                                </select>
+                            </div>
+                            <!-- 예약 시간 단위 설정 -->
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">최대 예약 가능 시간</label>
+                                <select class="input-field select-field" name="maxReservationTime">
+                                    <option th:each="hour : ${#numbers.sequence(1, 12)}"
+                                            th:value="${hour}"
+                                            th:text="|${hour}시간|"
+                                            th:selected="${facility != null and facility.maxReservationTime == hour}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <p class="file-hint" style="margin-top: -10px; margin-bottom: 20px;">※ 시설의 운영 시간과 1회 예약 시 가능한 최대 시간을 설정합니다.</p>
+
+                        <!-- 하단 버튼 영역 -->
+                        <div class="mt-xl" style="display: flex; gap: 10px;">
+                            <button type="submit" class="status-badge" style="flex: 1; padding: 15px; background-color: var(--color-main) !important; color: white !important; cursor: pointer;"
+                                    th:text="${isEdit} ? '정보 수정하기' : '새 시설 등록하기'">시설 등록</button>
+
+                            <a th:href="@{/reservation/admin/list}" class="status-badge"
+                               style="padding: 15px 30px; background-color: #f1f5f9 !important; color: #64748b !important; text-decoration: none;">
+                                시설 목록
+                            </a>
+                        </div>
+                    </form>
+                </section>
+            </main>
+        </div>
+        <footer th:replace="~{fragments/footer :: footer}"></footer>
+    </div>
+</div>
+
+<div sec:authorize="!hasRole('ADMIN')">
+    <script>
+        alert("관리자 권한이 필요합니다.");
+        location.href = "/";
+    </script>
+</div>
+
+<script th:inline="javascript">
+    document.querySelector('form').addEventListener('submit', function() {
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerText = '처리 중...';
+    });
+</script>
+</body>
+</html>

@@ -8,63 +8,81 @@
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
   <link rel="stylesheet" th:href="@{/css/dashboard/style.css}">
   <link rel="stylesheet" th:href="@{/css/parking/parking-common.css}">
+  <meta name="ctx" th:content="@{/}">
+  <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
+  <script th:src="@{/js/notification/notification-sse.js}"></script>
+  <script th:src="@{/js/notification/notification-bell.js}"></script>
 </head>
-
 <body>
 
-<main class="content" style="flex: 1;">
-  <div class="container">
-    <h2 class="page-title">차량 승인 관리</h2>
+<div class="main-layout">
 
-    <!-- 탭 버튼 -->
-    <div class="tab-group">
-      <button type="button" class="tab-btn active" onclick="switchTab('PENDING', event)">대기</button>
-      <button type="button" class="tab-btn" onclick="switchTab('APPROVED', event)">승인</button>
-      <button type="button" class="tab-btn" onclick="switchTab('REJECTED', event)">반려</button>
-    </div>
+  <!-- 1. 사이드바 -->
+  <div th:replace="~{fragments/sidebar :: sidebar(currentPage='parking')}"></div>
 
-    <!-- 차량 목록 테이블 -->
-    <table class="park-table">
-      <thead>
-      <tr>
-        <th>차량 번호</th>
-        <th>모델</th>
-        <th>종류</th>
-        <th>등록자</th>
-        <th>세대</th>
-        <th>등록일</th>
-        <th>서류</th>
-        <th>관리</th>
-      </tr>
-      </thead>
-      <tbody id="vehicleList">
-      <tr>
-        <td colspan="8" class="pk-empty">로딩 중...</td>
-      </tr>
-      </tbody>
-    </table>
+  <!-- 2. 오른쪽 영역 -->
+  <div class="main-wrapper">
 
-    <!-- 페이지네이션 -->
-    <ul class="pk-pagination" id="pagination" style="display:flex; flex-direction:row; justify-content:center;"></ul>
+    <!-- 상단 헤더 -->
+    <div th:replace="~{fragments/headerCurrentMenuView :: path(paths='parking')}"></div>
+
+    <!-- 상단 메뉴 -->
+    <div th:replace="~{fragments/headerCategoryMenu :: parkingAdmin}"></div>
+
+    <!-- 본문 -->
+    <main class="content" style="flex:1;">
+      <div class="container">
+        <h2 class="page-title">차량 승인 관리</h2>
+
+        <div class="tab-group">
+          <button type="button" class="tab-btn active" onclick="switchTab('PENDING', event)">대기</button>
+          <button type="button" class="tab-btn" onclick="switchTab('APPROVED', event)">승인</button>
+          <button type="button" class="tab-btn" onclick="switchTab('REJECTED', event)">반려</button>
+        </div>
+
+        <table class="park-table">
+          <thead>
+          <tr>
+            <th>차량 번호</th>
+            <th>모델</th>
+            <th>종류</th>
+            <th>등록자</th>
+            <th>세대</th>
+            <th>등록일</th>
+            <th>서류</th>
+            <th>관리</th>
+          </tr>
+          </thead>
+          <tbody id="vehicleList">
+          <tr>
+            <td colspan="8" class="pk-empty">로딩 중...</td>
+          </tr>
+          </tbody>
+        </table>
+
+        <ul class="pk-pagination" id="pagination"></ul>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
   </div>
-</main>
-
-<footer th:replace="~{fragments/footer :: footer}"></footer>
-
 </div>
-</div>
+
 
 <!-- 서류 모달 -->
 <div id="documentModal" style="display:none; position:fixed; inset:0; background:rgba(3,33,84,0.45); z-index:1000; align-items:center; justify-content:center;">
   <div class="modal-content">
-    <h3>증빙 서류</h3>
+    <h3>증빙 서류 <span id="documentIndex" style="font-size:13px; color:#888;"></span></h3>
     <img id="documentImage"
          src=""
          alt="서류 이미지"
          style="max-width: 100%; border-radius: 8px;"
          onerror="this.style.display='none'; document.getElementById('documentError').style.display='block'">
     <p id="documentError" style="display:none; color: var(--color-btn-point);">서류를 불러올 수 없습니다.</p>
-    <div class="modal-actions" style="margin-top: 16px;">
+    <div class="document-modal-actions">
+      <div class="nav-btns">
+        <button type="button" id="prevBtn" class="btn-ghost" onclick="prevDocument()">‹</button>
+        <button type="button" id="nextBtn" class="btn-ghost" onclick="nextDocument()">›</button>
+      </div>
       <button type="button" class="btn-ghost" onclick="closeDocumentModal()">닫기</button>
     </div>
   </div>
@@ -87,15 +105,20 @@
   </div>
 </div>
 
+<!-- contextPath, csrf만 Thymeleaf로 처리 -->
 <script th:inline="javascript">
   const contextPath = /*[[@{/}]]*/ '/';
   const csrfToken  = document.querySelector('meta[name="_csrf"]').content;
   const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+</script>
 
+<script>
   let currentStatus = 'PENDING';
   let currentPage   = 0;
   const PAGE_SIZE   = 10;
   let selectedApprovalId = null;
+  let currentDocPaths = [];
+  let currentDocIndex = 0;
 
   function postFetch(url, body) {
     return fetch(url, {
@@ -116,35 +139,42 @@
     loadVehicleList();
   }
 
-function loadVehicleList() {
+  function loadVehicleList() {
     const tbody = document.getElementById('vehicleList');
     tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">로딩 중...</td></tr>`;
 
     fetch(`${contextPath}admin/vehicle/approval/list?status=${currentStatus}&page=${currentPage}&size=${PAGE_SIZE}`)
-      .then(res => res.json())
-      .then(data => {
-        tbody.innerHTML = '';
+            .then(res => res.json())
+            .then(data => {
+              tbody.innerHTML = '';
 
-        if (!data || !data.content || data.content.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">데이터가 없습니다.</td></tr>`;
-          renderPagination(0);
-          return;
-        }
+              if (!data || !data.content || data.content.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">데이터가 없습니다.</td></tr>`;
+                renderPagination(0);
+                return;
+              }
 
-        data.content.forEach(v => {
-          const docPath = v.documentPath ? v.documentPath.replace(/\\/g, '/') : null;
-          const row = `
+              data.content.forEach(v => {
+                const overQuota = v.approvedCount > 1;
+                const row = `
             <tr>
               <td>${v.vehicleNumber}</td>
               <td>${v.model ?? '-'}</td>
               <td>${v.vehicleType ?? '-'}</td>
               <td>${v.userName}</td>
-              <td>${v.household}</td>
+              <td>
+                ${v.household}
+                ${overQuota ? `<br><span style="font-size:11px; color:var(--color-btn-point); font-weight:600;">⚠ 무료 차량(1대) 초과</span>` : ''}
+              </td>
               <td>${v.createdAt}</td>
               <td>
-                ${docPath
-                  ? `<button class="pk-btn pk-btn-primary" onclick="viewDocument('${docPath}')">보기</button>`
-                  : '없음'}
+                ${v.documentPaths && v.documentPaths.length > 0
+                        ? `<button class="pk-btn pk-btn-primary"
+                             onclick="viewDocument(this)"
+                             data-paths='${JSON.stringify(v.documentPaths).replace(/'/g, "&apos;")}'>
+                       보기 (${v.documentPaths.length}장)
+                     </button>`
+                        : '없음'}
               </td>
               <td>
                 ${currentStatus === 'PENDING' ? `
@@ -157,15 +187,15 @@ function loadVehicleList() {
               </td>
             </tr>
           `;
-          tbody.innerHTML += row;
-        });
+                tbody.innerHTML += row;
+              });
 
-        renderPagination(data.page.totalPages);
-      })
-      .catch(err => {
-        console.error(err);
-        tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">데이터 조회 실패</td></tr>`;
-      });
+              renderPagination(data.page.totalPages);
+            })
+            .catch(err => {
+              console.error(err);
+              tbody.innerHTML = `<tr><td colspan="8" class="pk-empty">데이터 조회 실패</td></tr>`;
+            });
   }
 
   function renderPagination(totalPages) {
@@ -217,13 +247,37 @@ function loadVehicleList() {
     pagination.appendChild(nextLi);
   }
 
-  function viewDocument(path) {
+  function viewDocument(btn) {
+    currentDocPaths = JSON.parse(btn.dataset.paths);
+    currentDocIndex = 0;
+    showDocument();
+    document.getElementById('documentModal').style.display = 'flex';
+  }
+
+  function showDocument() {
     const img = document.getElementById('documentImage');
     const err = document.getElementById('documentError');
+    const idx = document.getElementById('documentIndex');
     img.style.display = 'block';
     err.style.display = 'none';
-    img.src = encodeURI(path);
-    document.getElementById('documentModal').style.display = 'flex';
+    img.src = encodeURI(currentDocPaths[currentDocIndex]);
+    idx.textContent = `(${currentDocIndex + 1} / ${currentDocPaths.length})`;
+    document.getElementById('prevBtn').disabled = currentDocIndex === 0;
+    document.getElementById('nextBtn').disabled = currentDocIndex === currentDocPaths.length - 1;
+  }
+
+  function prevDocument() {
+    if (currentDocIndex > 0) {
+      currentDocIndex--;
+      showDocument();
+    }
+  }
+
+  function nextDocument() {
+    if (currentDocIndex < currentDocPaths.length - 1) {
+      currentDocIndex++;
+      showDocument();
+    }
   }
 
   function closeDocumentModal() {
@@ -234,14 +288,14 @@ function loadVehicleList() {
     if (!confirm('승인하시겠습니까?')) return;
 
     postFetch(`${contextPath}admin/vehicle/approval/approve`, { approvalId })
-      .then(() => {
-        alert('승인 완료');
-        loadVehicleList();
-      })
-      .catch(err => {
-        console.error(err);
-        alert('승인 실패');
-      });
+            .then(() => {
+              alert('승인 완료');
+              loadVehicleList();
+            })
+            .catch(err => {
+              console.error(err);
+              alert('승인 실패');
+            });
   }
 
   function openRejectModal(approvalId) {
@@ -267,33 +321,33 @@ function loadVehicleList() {
       approvalId: selectedApprovalId,
       rejectReason: reason
     })
-      .then(() => {
-        alert('반려 완료');
-        closeRejectModal();
-        loadVehicleList();
-      })
-      .catch(err => {
-        console.error(err);
-        alert('반려 실패');
-      });
+            .then(() => {
+              alert('반려 완료');
+              closeRejectModal();
+              loadVehicleList();
+            })
+            .catch(err => {
+              console.error(err);
+              alert('반려 실패');
+            });
   }
 
   function adminDeleteVehicle(vehicleId) {
     if (!confirm('차량을 삭제하시겠습니까?')) return;
 
     postFetch(`${contextPath}admin/vehicle/approval/delete/${vehicleId}`, {})
-      .then(async res => {
-        if (!res.ok) {
-          const msg = await res.text();
-          throw new Error(msg || '서버 오류');
-        }
-        alert('삭제되었습니다.');
-        loadVehicleList();
-      })
-      .catch(err => {
-        console.error(err);
-        alert('삭제 중 오류가 발생했습니다: ' + err.message);
-      });
+            .then(async res => {
+              if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || '서버 오류');
+              }
+              alert('삭제되었습니다.');
+              loadVehicleList();
+            })
+            .catch(err => {
+              console.error(err);
+              alert('삭제 중 오류가 발생했습니다: ' + err.message);
+            });
   }
 
   loadVehicleList();

@@ -1,13 +1,23 @@
 package com.hometalk.onepass.inquiry.controller;
 
+import com.hometalk.onepass.complaint.config.FileProperties;
 import com.hometalk.onepass.inquiry.dto.InquiryDto;
-import com.hometalk.onepass.inquiry.entity.Inquiry;
 import com.hometalk.onepass.inquiry.service.InquiryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
@@ -16,47 +26,96 @@ import java.util.List;
 public class InquiryController {
 
     private final InquiryService inquiryService;
+    private final FileProperties fileProperties;
 
+    @GetMapping("/my-recent")
+    public ResponseEntity<List<InquiryDto>> myRecent(Authentication authentication) {
+        return ResponseEntity.ok(inquiryService.findMyRecent(authentication));
+    }
 
-    /*
-     * 민원 등록 (POST) - 파일 업로드 통합 버전
-     * 주소: POST http://localhost:8090/api/inquiries
-     * consumes 설정을 통해 파일 전송(multipart/form-data)을 허용합니다.
-     */
     @PostMapping(consumes = {"multipart/form-data"})
-    public Long register(
-            @RequestPart("dto") InquiryDto inquiryDto,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) throws IOException {
+    public ResponseEntity<?> registerInquiry(
+            @ModelAttribute InquiryDto inquiryDto,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            Authentication authentication) throws IOException {
 
-        // 통합된 서비스 메서드 호출 (dto와 files를 같이 넘겨줌)
-        return inquiryService.register(inquiryDto, files);
+        inquiryService.register(inquiryDto, files, authentication);
+        return ResponseEntity.ok().build();
     }
 
-    /*
-        전체 민원 목록 조회 (GET)
-        관리자나 본인이 작성한 리스트를 볼 때 사용
-     */
-    @GetMapping
-    public List<InquiryDto> list() {
-        return inquiryService.findAll();
+    @GetMapping("/file/display")
+    public ResponseEntity<Resource> displayFile(@RequestParam String fileName)
+            throws MalformedURLException {
+
+        String uploadPath = fileProperties.getPath();
+
+        Path filePath = Paths.get(uploadPath).resolve(fileName).normalize();
+        Resource resource = new UrlResource(filePath.toUri());
+
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(resource);
     }
 
-    /*
-        상세 조회 (GET)
+    @GetMapping("/file/download")
+    public ResponseEntity<Resource> downloadFile(
+            @RequestParam String fileName,
+            @RequestParam String originName) throws MalformedURLException {
 
-     */
-    @GetMapping("/{id}")
-    public InquiryDto detail(@PathVariable("id") Long id) { // 괄호 오타 수정
-        Inquiry inquiry = inquiryService.findOne(id);
-        return InquiryDto.fromEntity(inquiry);
+        String uploadPath = fileProperties.getPath();
+
+        Path filePath = Paths.get(uploadPath).resolve(fileName).normalize();
+        Resource resource = new UrlResource(filePath.toUri());
+
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" +
+                                java.net.URLEncoder.encode(
+                                        originName,
+                                        java.nio.charset.StandardCharsets.UTF_8
+                                ) + "\""
+                )
+                .body(resource);
     }
 
-    /*
-        삭제 (DELETE)
+    @PostMapping("/{id}/respond")
+    public ResponseEntity<String> respond(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> body,
+            Authentication authentication) {
 
-     */
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String answer = body.get("answer");
+
+        if (answer == null || answer.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("답변 내용을 입력해주세요.");
+        }
+
+        inquiryService.answer(id, answer, authentication);
+
+        return ResponseEntity.ok("답변 등록 완료");
+    }
+
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable("id") Long id) {
-        inquiryService.deleteInquiry(id);
+    public ResponseEntity<Void> deleteInquiry(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        inquiryService.deleteInquiry(id, authentication);
+        return ResponseEntity.noContent().build();
     }
+
+
 }

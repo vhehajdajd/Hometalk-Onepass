@@ -75,11 +75,12 @@ public class CommunityAdminController {
     public String createCategory(@RequestParam Long boardId,
                                  @RequestParam String name,
                                  @RequestParam String code,
-                                 @RequestParam String color,
+                                 @RequestParam String bgColor,
+                                 @RequestParam String textColor,
                                  RedirectAttributes redirectAttributes) {
         try {
             // 서비스 호출 (수정된 파라미터 포함)
-            communityAdminService.addCategory(boardId, name, code, color);
+            communityAdminService.addCategory(boardId, name, code, bgColor, textColor);
             redirectAttributes.addFlashAttribute("message", "카테고리가 성공적으로 추가되었습니다.");
         } catch (IllegalStateException e) {
             // "카테고리는 최대 5개까지만..." 등의 메시지를 화면으로 전달
@@ -94,8 +95,10 @@ public class CommunityAdminController {
     @GetMapping("/category/update/{id}")
     public String updateCategory(@PathVariable Long id,
                                  @RequestParam("name") String newName,
+                                 @RequestParam("bgColor") String bgColor,
+                                 @RequestParam("textColor") String textColor,
                                  @RequestParam Long boardId) {
-        communityAdminService.updateCategory(id, newName);
+        communityAdminService.updateCategory(id, newName, bgColor, textColor);
         return "redirect:/community/admin/board/detail/" + boardId;
     }
 
@@ -119,7 +122,7 @@ public class CommunityAdminController {
     public String hardDeletePost(@PathVariable Long id, RedirectAttributes rttr) {
         try {
             communityAdminService.hardDeletePost(id);
-            rttr.addFlashAttribute("message", "게시글이 DB에서 영구 삭제되었습니다.");
+            rttr.addFlashAttribute("message", "성공적으로 삭제되었습니다.");
         } catch (Exception e) {
             rttr.addFlashAttribute("errorMessage", "삭제 중 오류 발생: " + e.getMessage());
         }

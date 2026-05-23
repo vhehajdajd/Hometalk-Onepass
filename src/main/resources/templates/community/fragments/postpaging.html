@@ -2,78 +2,22 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
 <div th:fragment="pagination(page, boardCode, categoryCode)">
-    <style>
-        .pagination-container {
-            display: grid;
-            /* 1fr(왼쪽비움) : auto(페이지네이션) : 1fr(오른쪽버튼자리) */
-            grid-template-columns: 1fr auto 1fr;
-            align-items: center;
-            width: 100% !important;
-            margin-top: 2rem;
-            position: relative;
-        }
-
-        /* nav 태그를 2번째 칸으로 지정 */
-        .pagination-nav {
-            grid-column: 2;
-            display: flex;
-            justify-content: center;
-        }
-
-        .pagination {
-            display: flex;
-            list-style: none;
-            gap: 8px;
-            padding: 0;
-            margin: 0;
-        }
-
-        .pagination li a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 35px;
-            height: 35px;
-            background-color: transparent;
-            border: 1px solid transparent;
-            color: #94a3b8;
-            font-size: 14px;
-            text-decoration: none; /* 밑줄 방지 */
-            transition: all 0.2s ease;
-        }
-
-        /* 활성화 상태 */
-        .pagination li.active a {
-            color: #E67E73;
-            font-weight: 800;
-            border-radius: 0;
-        }
-
-        /* 비활성화 상태 (처음/끝 페이지일 때) */
-        .pagination li.disabled a {
-            opacity: 0.3;
-            pointer-events: none;
-        }
-
-        /* 글 작성 버튼이나 여백을 위한 설정 */
-        .action-wrapper {
-            grid-column: 3;
-            display: flex;
-            justify-content: flex-end;
-        }
-    </style>
-
-
-    <div class="pagination-container">
-        <div class="left-wing" style="grid-column: 1;"></div>
+    <div class="pagination-container"
+         th:with="
+            pageSize = 10,
+            currentPage = ${page.number + 1},
+            startPage = ${((currentPage - 1) / pageSize) * pageSize + 1},
+            endPage = ${(page.totalPages == 0) ? 1 : (startPage + pageSize - 1 < page.totalPages ? startPage + pageSize - 1 : page.totalPages)}
+         ">
+        <div class="left-wing"></div>
 
         <nav aria-label="Page navigation" class="pagination-nav" th:if="${!page.isEmpty()}">
             <ul class="pagination">
 
-                <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+                <li class="page-item" th:classappend="${startPage <= 1} ? 'disabled'">
                     <a class="page-link"
-                       th:href="${page.hasPrevious()}
-                               ? @{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${page.number})}
+                       th:href="${startPage > 1}
+                               ? @{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${startPage - 1})}
                                : '#'"
                        aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
@@ -81,17 +25,18 @@
                 </li>
 
                 <li class="page-item"
-                    th:each="pageNumber : ${#numbers.sequence(1, page.totalPages)}"
-                    th:classappend="${pageNumber == page.number + 1} ? 'active'">
+                    th:each="pageNumber : ${#numbers.sequence(startPage, endPage)}"
+                    th:classappend="${pageNumber == currentPage} ? 'active'">
                     <a class="page-link"
                        th:href="@{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${pageNumber})}"
-                       th:text="${pageNumber}">1</a>
+                       th:text="${pageNumber}">
+                    </a>
                 </li>
 
-                <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+                <li class="page-item" th:classappend="${endPage >= page.totalPages} ? 'disabled'">
                     <a class="page-link"
-                       th:href="${page.hasNext()}
-                          ? @{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${page.number + 2})}
+                       th:href="${endPage < page.totalPages}
+                          ? @{/community/{boardCode}/{categoryCode}(boardCode=${boardCode}, categoryCode=${categoryCode}, page=${endPage + 1})}
                           : '#'"
                        aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
@@ -101,7 +46,7 @@
             </ul>
         </nav>
         <div class="action-wrapper">
-            <a th:href="@{/community/{code}/write(code=${board.code})}" class="btn add-post-btn">글 작성</a>
+            <a th:href="@{/community/{code}/write(code=${board.code})}" class="btn btn-primary">글 작성</a>
         </div>
     </div>
 

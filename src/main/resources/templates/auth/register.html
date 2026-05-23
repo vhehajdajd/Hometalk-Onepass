@@ -2,71 +2,83 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>회원가입 - Home Talk One Pass</title>
-    <style>
-        .auth-container { width: 400px; margin: 20px auto; text-align: center; border: 1px solid #bdbaba; padding: 30px; border-radius: 8px; }
-        .input-group { margin-bottom: 15px; text-align: left; }
-        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #bdbaba; border-radius: 4px; height: 50px; }
-        button { width: 100%; padding: 12px; background-color: #376abc; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #4073c9; }
-
-        .address-group label {margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        .address-group input{width: 65%; margin-right: 10px;}
-        .address-group button{width: 30%;}
-        .address-detail{ display: flex; justify-content: left; margin-bottom: 10px; font-weight: bold; font-size: 14px;  }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/auth/auth.css}">
 </head>
-<body>
+<body class="auth-page auth-register-page">
 
 <div class="auth-container">
-    <h2>회원가입</h2>
-    <p>서비스 이용을 위해 정보를 입력해주세요.</p>
+    <a class="auth-back-link" th:href="@{/auth}" aria-label="로그인 화면으로 돌아가기">&larr;</a>
+    <h1 class="auth-title" th:text="${editMode == true} ? '회원정보 수정' : '회원가입'">회원가입</h1>
+    <p class="auth-description" th:text="${editMode == true} ? '관리자 승인을 위해 정보를 다시 확인해주세요.' : '서비스 이용을 위해 추가 정보를 입력해주세요.'">서비스 이용을 위해 추가 정보를 입력해주세요.</p>
 
     <!-- *{} = 객체를 전달받은 경우 매핑    -->
-    <form method="post" th:action="@{/auth/register/signup}" th:object="${signUpDTO}">
+    <form class="auth-form" method="post" th:action="${editMode == true} ? @{/auth/register/edit} : @{/auth/register/signup}" th:object="${signUpDTO}" onsubmit="return validateForm()">
         <input name="currentStep" th:value="${step}" type="hidden"/>
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <input id="editMode" type="hidden" th:value="${editMode}">
+        <input id="originalEmail" type="hidden" th:value="*{email}">
+        <input id="originalLoginId" type="hidden" th:value="*{loginId}">
 
         <div th:if="${step == 1}">
             <div class="input-group">
                 <label for="email">이메일</label>
-                <input placeholder="example@hometalk.com" required th:field="*{email}" type="email">
+                <div class="email-check-row">
+                    <input class="auth-input" placeholder="example@hometop.com" required th:field="*{email}" type="email">
+                    <button class="auth-btn" id="send-email-code-btn" type="button" onclick="sendEmailVerificationCode()">인증 메일 발송</button>
+                </div>
+                <div class="email-check-row email-code-row" id="email-code-row" style="display: none;">
+                    <input class="auth-input" id="emailVerificationCode" inputmode="numeric" maxlength="6" placeholder="인증 코드 6자리" type="text">
+                    <button class="auth-btn" type="button" onclick="verifyEmailCode()">인증 확인</button>
+                </div>
+                <p id="email-timer" class="auth-message auth-email-timer" style="display: none;"></p>
+                <p id="email-check-msg" class="auth-message auth-message-error"
+                   th:text="${signupError}"></p>
+                <input type="hidden" id="isEmailVerified" th:value="${editMode == true} ? 'true' : 'false'">
             </div>
 
             <div class="input-group">
                 <label for="loginId">아이디</label>
-                <input placeholder="아이디를 입력하세요" required th:field="*{loginId}" type="text">
+                <div class="id-check-row">
+                    <input class="auth-input" placeholder="아이디를 입력하세요" required th:field="*{loginId}" type="text">
+                    <button class="auth-btn" type="button" onclick="checkIdDuplicate()">중복 확인</button>
+                </div>
+                <p id="id-check-msg" class="auth-message auth-message-error"
+                   th:text="${idError}"></p>
+                <!-- 중복 확인 여부를 저장할 숨겨진 필드 (선택 사항: 가입 방지용) -->
+                <input type="hidden" id="isIdChecked" th:value="${editMode == true} ? 'true' : 'false'">
             </div>
 
             <div class="input-group">
                 <label for="phoneNumber">연락처</label>
-                <input placeholder="휴대폰 번호(-)제외" required th:field="*{phoneNumber}" type="text">
+                <input class="auth-input" placeholder="휴대폰 번호(-)제외" required th:field="*{phoneNumber}" type="text">
             </div>
 
             <div class="input-group">
                 <label for="password">비밀번호</label>
-                <input id="pw1" pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$" placeholder="비밀번호를 입력하세요" required th:field="*{password}"
+                <input class="auth-input" id="pw1" pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$" th:placeholder="${editMode == true} ? '변경할 비밀번호를 입력하세요' : '비밀번호를 입력하세요'" th:required="${editMode != true}" th:field="*{password}"
                        title="8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다."
                        type="password">
             </div>
 
             <div class="input-group">
                 <label>비밀번호 확인</label>
-                <input type="password" id="pw2" placeholder="비밀번호 재입력">
-                <p id="match-msg" style="font-size: 12px; margin-top: 5px;"></p>
+                <input class="auth-input" type="password" id="pw2" placeholder="비밀번호 재입력">
+                <p id="match-msg" class="auth-message"></p>
             </div>
 
             <div class="input-group">
                 <label for="name">이름</label>
-                <input placeholder="이름을 입력하세요" required th:field="*{name}" type="text">
+                <input class="auth-input" placeholder="이름을 입력하세요" required th:field="*{name}" type="text">
             </div>
 
             <div class="input-group">
                 <label for="nickname">별명</label>
-                <input placeholder="별명을 입력해주세요" required th:field="*{nickname}" type="text">
+                <input class="auth-input" placeholder="별명을 입력해주세요" required th:field="*{nickname}" type="text">
             </div>
 
-            <button name="action" type="submit" value="next">다음</button>
+            <button class="auth-btn auth-btn-block" name="action" type="submit" value="next">다음</button>
         </div>
 
         <div th:if="${step == 2}">
@@ -80,15 +92,15 @@
             <div class="input-group">
                 <label for="postNum">주소</label>
                 <div class="address-group">
-                    <input id="postNum" placeholder="우편 번호를 입력하세요" th:field="*{postNum}" type="text">
-                    <button onclick="execDaumPostcode()" type="button"> 우편번호 찾기</button>
+                    <input class="auth-input" id="postNum" placeholder="우편 번호를 입력하세요" th:field="*{postNum}" type="text">
+                    <button class="auth-btn" onclick="execDaumPostcode()" type="button">우편번호 찾기</button>
                 </div>
             </div>
 
 
             <div class="input-group">
                 <label for="buildingName"></label>
-                <input id="buildingName" placeholder="주소를 입력하세요" th:field="*{buildingName}" type="text">
+                <input class="auth-input" id="buildingName" placeholder="주소를 입력하세요" th:field="*{buildingName}" type="text">
             </div>
 
             <span class="address-detail">
@@ -97,79 +109,73 @@
 
             <div class="input-group">
                 <label for="dong">동</label>
-                <input placeholder="동을 입력하세요 (ex 102동 -> 102)" th:field="*{dong}" type="text">
+                <input class="auth-input" placeholder="동을 입력하세요 (ex 102동 -> 102)" th:field="*{dong}" type="text">
             </div>
 
             <div class="input-group">
                 <label for="ho">호</label>
-                <input placeholder="호를 입력하세요 (ex 201호 -> 201)" th:field="*{ho}" type="text">
+                <input class="auth-input" placeholder="호를 입력하세요 (ex 201호 -> 201)" th:field="*{ho}" type="text">
             </div>
 
-            <div style="display: flex; gap: 10px;">
-                <button name="action" type="submit" value="prev">이전</button>
-                <button name="action" type="submit" value="complete">가입 완료</button>
+            <div class="auth-row">
+                <button class="auth-btn auth-btn-block" name="action" type="submit" value="prev">이전</button>
+                <button class="auth-btn auth-btn-block" name="action" type="submit" value="complete" th:text="${editMode == true} ? '수정 완료' : '가입 완료'">가입 완료</button>
             </div>
         </div>
     </form>
 </div>
 
-
 <script src="//t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
-<script>
+<script th:inline="javascript">
+    let emailTimerInterval = null;
+    const EMAIL_TIMER_SECONDS = 5 * 60;
+    const EMAIL_SEND_BUTTON_TEXT = "인증 메일 발송";
+
+    // 1. 카카오 주소 API 관련 함수
     function execDaumPostcode() {
         new kakao.Postcode({
             oncomplete: function(data) {
-                // 팝업에서 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+                var addr = '';
+                var extraAddr = '';
 
-                // 각 주소의 노출 규칙에 따라 주소를 조합한다.
-                // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
-                var addr = ''; // 주소 변수
-                var extraAddr = ''; // 참고항목 변수
-
-                //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
-                if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+                if (data.userSelectedType === 'R') {
                     addr = data.roadAddress;
-                } else { // 사용자가 지번 주소를 선택했을 경우(J)
+                } else {
                     addr = data.jibunAddress;
                 }
 
-                // 사용자가 선택한 주소가 도로명 타입일때 참고항목을 조합한다.
                 if(data.userSelectedType === 'R') {
-                    // 법정동명이 있을 경우 추가한다. (법정리는 제외)
-                    // 법정동의 경우 마지막 문자가 "동/로/가"로 끝난다.
                     if (data.bname !== '' && /[동로가]$/.test(data.bname)) {
                         extraAddr += data.bname;
                     }
-                    // 건물명이 있고, 공동주택일 경우 추가한다.
                     if (data.buildingName !== '' && data.apartment === 'Y') {
                         extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
                     }
-                    // 표시할 참고항목이 있을 경우, 괄호까지 추가한 최종 문자열을 만든다.
                     if (extraAddr !== '') {
                         extraAddr = ' (' + extraAddr + ')';
                     }
                 }
 
-                // 우편번호와 주소 정보를 해당 필드에 넣는다.
                 document.getElementById('postNum').value = data.zonecode;
                 document.getElementById('buildingName').value = addr + extraAddr;
 
-                // 주소 입력 후 바로 '동' 입력창으로 포커스 이동 (사용자 편의)
-                document.getElementsByName('dong')[0].focus();
+                // 동 입력창 포커스 (id가 아닌 name으로 접근 시 주의)
+                const dongInput = document.querySelector('input[name="dong"]');
+                if(dongInput) dongInput.focus();
             }
         }).open();
     }
 
-
-
-
-    // 2. 페이지 로드 시 비밀번호 체크 이벤트 연결
-    window.onload = function() {
+    // 2. 페이지 로드 시 이벤트 연결 (비밀번호 체크 및 아이디 리셋)
+    window.addEventListener('DOMContentLoaded', function() {
         const pw1 = document.getElementById('pw1');
         const pw2 = document.getElementById('pw2');
         const msg = document.getElementById('match-msg');
+        const loginIdInput = document.getElementById('loginId');
+        const emailInput = document.getElementById('email');
+        const emailCodeRow = document.getElementById('email-code-row');
 
-        // 요소가 존재할 때만(Step 1일 때만) 실행
+        // 비밀번호 실시간 일치 확인
         if (pw1 && pw2 && msg) {
             const checkMatch = function() {
                 const val1 = pw1.value;
@@ -177,19 +183,295 @@
 
                 if (val1 === "" || val2 === "") {
                     msg.textContent = "";
+                    msg.className = "auth-message";
                 } else if (val1 === val2) {
-                    msg.textContent = "✅ 비밀번호가 일치합니다.";
-                    msg.style.color = "green";
+                    msg.textContent = "비밀번호가 일치합니다.";
+                    msg.className = "auth-message auth-message-success";
                 } else {
-                    msg.textContent = "❌ 비밀번호가 일치하지 않습니다.";
-                    msg.style.color = "red";
+                    msg.textContent = "비밀번호가 일치하지 않습니다.";
+                    msg.className = "auth-message auth-message-error";
                 }
             };
-
             pw1.addEventListener('input', checkMatch);
             pw2.addEventListener('input', checkMatch);
         }
-    };
+
+        // 아이디 입력값이 바뀌면 중복확인 상태 초기화
+        if (loginIdInput) {
+            loginIdInput.addEventListener('input', function() {
+                const isCheckedInput = document.getElementById('isIdChecked');
+                const idMsg = document.getElementById('id-check-msg');
+                const editMode = document.getElementById('editMode')?.value === "true";
+                const originalLoginId = document.getElementById('originalLoginId')?.value || "";
+                const isOriginalLoginId = editMode && loginIdInput.value.trim() === originalLoginId.trim();
+                if (isCheckedInput) isCheckedInput.value = isOriginalLoginId ? "true" : "false";
+                if (idMsg) idMsg.innerText = "";
+            });
+        }
+
+        if (emailInput) {
+            emailInput.addEventListener('input', function() {
+                const isEmailVerified = document.getElementById('isEmailVerified');
+                const emailMsg = document.getElementById('email-check-msg');
+                const emailCodeInput = document.getElementById('emailVerificationCode');
+                const editMode = document.getElementById('editMode')?.value === "true";
+                const originalEmail = document.getElementById('originalEmail')?.value || "";
+                const isOriginalEmail = editMode && emailInput.value.trim() === originalEmail.trim();
+                if (isEmailVerified) isEmailVerified.value = isOriginalEmail ? "true" : "false";
+                if (isOriginalEmail) {
+                    stopEmailTimer();
+                    if (emailCodeRow) emailCodeRow.style.display = "none";
+                    if (emailCodeInput) emailCodeInput.value = "";
+                } else if (!emailTimerInterval) {
+                    if (emailCodeRow) emailCodeRow.style.display = "none";
+                    if (emailCodeInput) emailCodeInput.value = "";
+                }
+                if (emailMsg) {
+                    emailMsg.innerText = "";
+                    emailMsg.className = "auth-message";
+                }
+            });
+        }
+    });
+
+    async function sendEmailVerificationCode() {
+        const sendButton = document.getElementById('send-email-code-btn');
+        if (sendButton && sendButton.disabled) {
+            return;
+        }
+
+        const email = document.getElementById('email').value.trim();
+        const isEmailVerified = document.getElementById('isEmailVerified');
+        const emailCodeRow = document.getElementById('email-code-row');
+        const emailCodeInput = document.getElementById('emailVerificationCode');
+
+        if (!email) {
+            alert("이메일을 입력해주세요.");
+            return;
+        }
+
+        if (isEmailVerified) isEmailVerified.value = "false";
+        if (emailCodeRow) emailCodeRow.style.display = "flex";
+        if (emailCodeInput) emailCodeInput.focus();
+        setEmailSendButtonLocked(true);
+        setEmailMessage("인증 코드를 입력해주세요.", true);
+
+        const sendEmailCodeUrl = /*[[@{/auth/register/email/send}]]*/ '/auth/register/email/send';
+
+        try {
+            setEmailMessage("인증 코드를 발송 중입니다. 잠시만 기다려주세요.", false);
+
+            const response = await fetch(sendEmailCodeUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                },
+                body: new URLSearchParams({ email })
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "인증 코드 발송에 실패했습니다.");
+            }
+
+            if (isEmailVerified) isEmailVerified.value = "false";
+            alert("인증메일이 발송되었습니다.");
+            startEmailTimer(EMAIL_TIMER_SECONDS);
+            setEmailMessage(data.message, true);
+        } catch (error) {
+            console.error("Error:", error);
+            if (isEmailVerified) isEmailVerified.value = "false";
+            setEmailSendButtonLocked(false);
+            stopEmailTimer();
+            setEmailMessage(error.message, false);
+        }
+    }
+
+    async function verifyEmailCode() {
+        const email = document.getElementById('email').value.trim();
+        const code = document.getElementById('emailVerificationCode').value.trim();
+        const isEmailVerified = document.getElementById('isEmailVerified');
+
+        if (!email || !code) {
+            alert("이메일과 인증 코드를 입력해주세요.");
+            return;
+        }
+
+        const verifyEmailCodeUrl = /*[[@{/auth/register/email/verify}]]*/ '/auth/register/email/verify';
+
+        try {
+            const response = await fetch(verifyEmailCodeUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                },
+                body: new URLSearchParams({ email, code })
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "이메일 인증에 실패했습니다.");
+            }
+
+            isEmailVerified.value = "true";
+            stopEmailTimer();
+            setEmailMessage(data.message, true);
+        } catch (error) {
+            console.error("Error:", error);
+            isEmailVerified.value = "false";
+            setEmailMessage(error.message, false);
+        }
+    }
+
+    function setEmailMessage(message, success) {
+        const msgElement = document.getElementById('email-check-msg');
+        if (!msgElement) return;
+
+        msgElement.innerText = message;
+        msgElement.className = success
+            ? "auth-message auth-message-success"
+            : "auth-message auth-message-error";
+    }
+
+    function startEmailTimer(totalSeconds) {
+        const timerElement = document.getElementById('email-timer');
+        if (!timerElement) return;
+
+        stopEmailTimer();
+
+        let remainingSeconds = totalSeconds;
+        timerElement.style.display = "block";
+        renderEmailTimer(timerElement, remainingSeconds);
+
+        emailTimerInterval = setInterval(function() {
+            remainingSeconds -= 1;
+
+            if (remainingSeconds <= 0) {
+                stopEmailTimer();
+                setEmailMessage("인증 시간이 만료되었습니다. 인증 메일을 다시 발송해주세요.", false);
+                const isEmailVerified = document.getElementById('isEmailVerified');
+                if (isEmailVerified) isEmailVerified.value = "false";
+                return;
+            }
+
+            renderEmailTimer(timerElement, remainingSeconds);
+        }, 1000);
+    }
+
+    function renderEmailTimer(timerElement, remainingSeconds) {
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = String(remainingSeconds % 60).padStart(2, '0');
+        timerElement.innerText = "인증 유효시간 " + minutes + ":" + seconds;
+        setEmailSendButtonLocked(true, minutes + ":" + seconds);
+    }
+
+    function stopEmailTimer() {
+        if (emailTimerInterval) {
+            clearInterval(emailTimerInterval);
+            emailTimerInterval = null;
+        }
+
+        const timerElement = document.getElementById('email-timer');
+        if (timerElement) {
+            timerElement.style.display = "none";
+            timerElement.innerText = "";
+        }
+
+        setEmailSendButtonLocked(false);
+    }
+
+    function setEmailSendButtonLocked(locked, remainingText) {
+        const sendButton = document.getElementById('send-email-code-btn');
+        if (!sendButton) return;
+
+        sendButton.disabled = locked;
+        sendButton.innerText = locked && remainingText
+            ? "재발송 " + remainingText
+            : EMAIL_SEND_BUTTON_TEXT;
+    }
+
+    // 3. 아이디 중복 확인 함수 (비동기)
+    async function checkIdDuplicate() {
+        const loginId = document.getElementById('loginId').value.trim();
+        const msgElement = document.getElementById('id-check-msg');
+        const isCheckedInput = document.getElementById('isIdChecked');
+        const editMode = document.getElementById('editMode')?.value === "true";
+        const originalLoginId = document.getElementById('originalLoginId')?.value || "";
+        const checkIdUrl = /*[[@{/auth/api/check-id-duplication}]]*/ '/auth/api/check-id-duplication';
+
+        if (!loginId) {
+            alert("아이디를 입력해주세요.");
+            return;
+        }
+
+        if (editMode && loginId === originalLoginId.trim()) {
+            msgElement.innerText = "현재 사용 중인 아이디입니다.";
+            msgElement.className = "auth-message auth-message-success";
+            isCheckedInput.value = "true";
+            return;
+        }
+
+        try {
+            // 타임리프의 @{}를 사용하여 서버 context-path 자동 반영
+            const response = await fetch(`${checkIdUrl}?loginId=${encodeURIComponent(loginId)}`);
+
+            if (!response.ok) {
+                throw new Error("서버 응답 에러 (상태코드: " + response.status + ")");
+            }
+
+            const isDuplicate = await response.json(); // true: 중복, false: 사용가능
+
+            if (isDuplicate) {
+                msgElement.innerText = "이미 사용 중인 아이디입니다.";
+                msgElement.className = "auth-message auth-message-error";
+                isCheckedInput.value = "false";
+            } else {
+                msgElement.innerText = "사용 가능한 아이디입니다.";
+                msgElement.className = "auth-message auth-message-success";
+                isCheckedInput.value = "true";
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("중복 확인 중 오류가 발생했습니다. ");
+        }
+    }
+
+    // 4. 폼 전송 전 전체 유효성 검사
+    function validateForm() {
+        const currentStepInput = document.querySelector('input[name="currentStep"]');
+        if (!currentStepInput) return true;
+
+        const currentStep = currentStepInput.value;
+
+        if (currentStep === "1") {
+            const editMode = document.getElementById('editMode')?.value === "true";
+            const isIdChecked = document.getElementById('isIdChecked').value;
+            const isEmailVerified = document.getElementById('isEmailVerified').value;
+            const pw1 = document.getElementById('pw1').value;
+            const pw2 = document.getElementById('pw2').value;
+
+            if (isEmailVerified !== "true") {
+                alert("이메일 인증을 완료해 주세요.");
+                document.getElementById('email').focus();
+                return false;
+            }
+
+            // 중복 확인 여부 체크
+            if (isIdChecked !== "true") {
+                alert("아이디 중복 확인을 완료해 주세요.");
+                document.getElementById('loginId').focus();
+                return false;
+            }
+
+            // 비밀번호 일치 여부 체크
+            if ((!editMode && pw1 === "") || pw1 !== pw2) {
+                alert("비밀번호가 일치하지 않거나 입력되지 않았습니다.");
+                document.getElementById('pw2').focus();
+                return false;
+            }
+        }
+        return true;
+    }
 </script>
 </body>
 </html>

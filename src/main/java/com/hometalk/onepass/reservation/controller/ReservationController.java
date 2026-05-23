@@ -1,15 +1,20 @@
 package com.hometalk.onepass.reservation.controller;
 
-import com.hometalk.onepass.facility.dto.FacilityRequestDto;
-import com.hometalk.onepass.facility.service.FacilityService;
+import com.hometalk.onepass.auth.config.CustomUserDetails;
+import com.hometalk.onepass.reservation.dto.ReservationCalendarDto;
 import com.hometalk.onepass.reservation.dto.ReservationRequestDto;
 import com.hometalk.onepass.reservation.dto.ReservationResponseDto;
 import com.hometalk.onepass.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,67 +22,150 @@ import java.util.List;
 public class ReservationController {
 
     private final ReservationService reservationService;
-    private final FacilityService facilityService;
 
-    /**
-     * 시설 예약 등록
-        */
+    /*
+       시설 예약 등록
+     */
     @PostMapping
-    public Long register(@RequestBody ReservationRequestDto dto) {
-        return reservationService.register(dto);
+    public Long register(@RequestBody ReservationRequestDto dto,
+                         Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("로그인 정보가 유효하지 않습니다. 다시 로그인해주세요.");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return reservationService.register(dto, userDetails.getUserId());
     }
 
-    /**
-     * 특정 예약 상세 조회
-     *
+    /*
+       특정 예약 상세 조회
      */
     @GetMapping("/{id}")
-    public ReservationResponseDto findOne(@PathVariable Long id) {
-        // 서비스에서 엔티티를 가져온 뒤 DTO로 변환해서 반환
-        return ReservationResponseDto.fromEntity(reservationService.findOne(id));
+    public ReservationResponseDto findOne(@PathVariable Long id,
+                                          Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("인증 정보가 없습니다.");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return reservationService.findOne(id, userDetails.getUserId(), userDetails.getRole());
     }
 
-    /**
-     * 모든 예약 조회
+    /*
+       모든 예약 조회
      */
     @GetMapping
     public List<ReservationResponseDto> list() {
         return reservationService.findAll();
     }
 
-    /**
-     * 예약 취소
+    /*
+        특정 시설의 특정 날짜 시간대별 예약 현황(인원수) 조회
+     */
+    @GetMapping("/capacity")
+    public ResponseEntity<Map<Integer, Integer>> getCapacity(
+            @RequestParam Long facilityId,
+            @RequestParam String date) {
+        java.time.LocalDate localDate = java.time.LocalDate.parse(date);
+        Map<Integer, Integer> capacityMap = reservationService.getHourlyCapacity(facilityId, localDate);
+
+        return ResponseEntity.ok(capacityMap);
+    }
+
+    @GetMapping("/user-booked-times")
+    public ResponseEntity<List<Integer>> getUserBookedTimes(@RequestParam String date,
+                                                            Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            return ResponseEntity.status(401).build();
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        java.time.LocalDate localDate = java.time.LocalDate.parse(date);
+        List<Integer> bookedHours = reservationService.getUserReservedHours(userDetails.getUserId(), localDate);
+        return ResponseEntity.ok(bookedHours);
+    }
+
+    /*
+       특정 시설에 대해 현재 '이용 종료/취소됨' 상태가 아닌 예약이 있는지 확인
+     */
+    @GetMapping("/check-active/{facilityId}")
+    public ResponseEntity<?> checkActiveReservation(@PathVariable Long facilityId,
+                                                    Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            return ResponseEntity.status(401).body("인증 정보가 없습니다.");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        boolean hasActive = reservationService.hasActiveReservation(userDetails.getUserId(), facilityId);
+        if (hasActive) {
+            return ResponseEntity.ok(Map.of(
+                    "hasActive", true,
+                    "message", "해당 시설에 이미 예약 또는 이용 중인 내역이 존재합니다. 이용 종료 후 다시 예약해주세요."
+            ));
+        }
+        return ResponseEntity.ok(Map.of("hasActive", false));
+    }
+
+    /*
+        예약 승인 [관리자]
+     */
+    @PostMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> approveReservation(@PathVariable Long id) {
+        reservationService.approve(id); // 서비스의 approve 메서드 호출
+        return ResponseEntity.ok().build();
+    }
+
+    /*
+       예약 취소 [사용자/관리자 공용]
      */
     @PatchMapping("/{id}/cancel")
-    public void cancel(@PathVariable("id") Long id) {
-        reservationService.cancel(id);
-    }
+    public void cancel(@PathVariable("id") Long id,
+                       @RequestBody(required = false) Map<String, String> body,
+                       Authentication authentication) {
 
-    /**
-     * [스태프용] 신규 시설 등록 (이미지 포함)
-     */
-    @PostMapping("/admin/facilities")
-    public String registerFacility(@ModelAttribute FacilityRequestDto dto,
-                                   @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) {
-        // 1. 이미지 업로드 처리 (기존 Inquiry 시스템에서 사용한 로직 활용)
-        if (imageFile != null && !imageFile.isEmpty()) {
-            // String saveName = fileService.upload(imageFile);
-            // dto.setImagePath(saveName);
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("인증 정보가 없습니다.");
         }
 
-        // 2. 시설 저장
-        facilityService.register(dto);
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        // 3. 다시 관리 목록 페이지로 이동
-        return "redirect:/reservation/admin/facilities";
+        String reason = null;
+
+        if (body != null) {
+            reason = body.get("reason");
+        }
+
+        reservationService.cancel(
+                id,
+                userDetails.getUserId(),
+                userDetails.getRole(),
+                reason
+        );
     }
 
-    /**
-     * [스태프용] 시설 삭제
+    /*
+        이용 종료
      */
-    @PostMapping("/admin/facilities/{id}/delete")
-    public String deleteFacility(@PathVariable Long id) {
-        facilityService.delete(id);
-        return "redirect:/reservation/admin/facilities";
+    @PatchMapping("/{id}/finish")
+    public ResponseEntity<?> finish(@PathVariable Long id,
+                                    Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("인증 정보가 없습니다.");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        try {
+            reservationService.finishUsage(id, userDetails.getUserId());
+            return ResponseEntity.ok().body("이용 종료 처리가 완료되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
+    // 캘린더 전용
+    @GetMapping("/calendar")
+    public List<ReservationCalendarDto> calendar(
+            @RequestParam Long facilityId,
+            @RequestParam int year,
+            @RequestParam int month
+    ) {
+        return reservationService.getCalendar(facilityId, year, month);
     }
 }

@@ -19,7 +19,7 @@ import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    int countByBoardCodeAndPostStatus(String boardCode, PostStatus status);
+    int countByBoardCodeAndPostStatusAndWriterId(String boardCode, PostStatus status, Long writerId);
 
 
     // --- [사용자용 조회] : @SQLRestriction ("deleted_at IS NULL") 자동 적용 ---
@@ -30,14 +30,21 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // 임시저장은 목록 숨기기
     // 게시판 전체 글 조회
     @EntityGraph(attributePaths = {"category", "board", "writer", "postTags.tag"})
-    @Query("SELECT p FROM Post p WHERE p.board.id = :boardId AND p.postStatus = :status")
+    @Query("SELECT p FROM Post p " +
+            "WHERE p.board.id = :boardId AND p.postStatus = :status " +
+            "ORDER BY p.pinned DESC, " +                        // 1순위: 고정글 우선
+            "CASE WHEN p.pinned = true THEN p.id END ASC, " +   // 2순위: 고정글은 등록순
+            "CASE WHEN p.pinned = false THEN p.id END DESC")    // 3순위: 일반글은 최신순
     Page<Post> findActivePosts(@Param("boardId") Long boardId,
                                @Param("status") PostStatus status,
                                Pageable pageable);
 
     // 특정 게시판 내 특정 카테고리 글 조회
     @EntityGraph(attributePaths = {"category", "board", "writer", "postTags.tag"})
-    @Query("SELECT p FROM Post p WHERE p.board.id = :boardId AND p.category.id = :catId AND p.postStatus = :status")
+    @Query("SELECT p FROM Post p WHERE p.board.id = :boardId AND p.category.id = :catId AND p.postStatus = :status " +
+            "ORDER BY p.pinned DESC, " +
+            "CASE WHEN p.pinned = true THEN p.id END ASC, " +
+            "CASE WHEN p.pinned = false THEN p.id END DESC")
     Page<Post> findCategoryPosts(@Param("boardId") Long boardId,
                                  @Param("catId") Long catId,
                                  @Param("status") PostStatus status,
@@ -104,6 +111,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
 
     // --- [관리자용 영구 삭제 (Hard Delete)] ---
+    // 0. 게시글-태그 관계를 먼저 영구 삭제 (제약 조건 해결용)
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM post_tags WHERE post_id = :postId", nativeQuery = true)
+    void hardDeletePostTagsByPostId(@Param("postId") Long postId);
+
     // 1. 댓글을 먼저 영구 삭제 (Native Query로 Soft Delete 우회)
     @Modifying
     @Transactional
@@ -119,7 +132,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     // -- API --
     // 최신순 상위 3개
-    List<Post> findTop3ByPostStatusOrderByCreatedAtDesc(PostStatus status);
+    List<Post> findTop5ByPostStatusOrderByCreatedAtDesc(PostStatus status);
 
     // 조회수 정렬
     List<Post> findTop5ByPostStatusOrderByViewCountDesc(PostStatus status);
@@ -129,8 +142,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findAllByPostStatusInOrderByUpdatedAtDesc(List<PostStatus> targetStatuses);
 
     // --- [기타/스케줄러] ---
-    // 스케줄러용: @SQLRestriction 때문에 Native Query 권장
     @Query(value = "SELECT * FROM posts WHERE post_status = :status AND updated_at < :dateTime", nativeQuery = true)
     List<Post> findOldDeletedPosts(@Param("status") String status, @Param("dateTime") LocalDateTime dateTime);
 
+    // 게시글 수
+    long countByBoardAndPostStatus(Board board, PostStatus status);
+    long countByBoardAndPostStatusIn(Board board, List<PostStatus> statuses);
 }

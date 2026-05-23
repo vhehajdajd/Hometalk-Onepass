@@ -12,7 +12,7 @@
     'use strict';
 
     // 컨텍스트 패스를 meta 태그에서 읽어옴 (HTML에 <meta name="ctx" content="/hometop"> 필수)
-    const CTX = document.querySelector('meta[name="ctx"]')?.content || '';
+    const CTX = (document.querySelector('meta[name="ctx"]')?.content || '').replace(/\/$/, '');
 
     class NotificationSSE {
         constructor(options = {}) {

@@ -173,7 +173,6 @@ function renderTableBody(items) {
             <td>${checkbox}</td>
             <td>${num}</td>
             <td>${item.unit || '—'}</td>
-            <td>${item.residentName || '—'}</td>
             <td>${item.billingMonth || '—'}</td>
             <td>${Number(item.totalAmount).toLocaleString()}원</td>
             <td>${item.dueDate ? item.dueDate.replace(/-/g,'.') : '—'}</td>
@@ -351,6 +350,29 @@ async function refreshStats() {
         if (el('statUnpaid'))  el('statUnpaid').textContent  = data.unpaidCount     ?? '—';
         if (el('statRate'))    el('statRate').textContent    =
             data.paidRate != null ? data.paidRate.toFixed(1) + '%' : '—';
+        if (el('statUnpaidAmount')) el('statUnpaidAmount').textContent =
+            data.unpaidAmount != null
+                ? Number(data.unpaidAmount).toLocaleString() + '원'
+                : '—';
+        if (el('statUnpaidAmountLabel')) {
+            let labelMonth;
+            if (selMonth) {
+                // 월 필터 선택 시 해당 월
+                labelMonth = parseInt(selMonth);
+            } else {
+                // 필터 없을 때: 납부기한(익월 10일) 기준
+                // 오늘이 10일 이후면 당월, 이전이면 전월
+                const today = new Date();
+                if (today.getDate() > 10) {
+                    labelMonth = today.getMonth() + 1; // 당월
+                } else {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() - 1);
+                    labelMonth = d.getMonth() + 1;     // 전월
+                }
+            }
+            el('statUnpaidAmountLabel').textContent = `${labelMonth}월 미납 총액`;
+        }
 
         // 필터 라벨 갱신
         const labelParts = [];
@@ -361,6 +383,12 @@ async function refreshStats() {
             ? labelParts.join(' · ') + ' 기준'
             : '전체 기간 기준';
         if (el('statFilterLabel')) el('statFilterLabel').textContent = label;
+        if (el('statFilterLabel')) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - 1);
+            el('statFilterLabel').textContent =
+                `${d.getFullYear()}년 ${d.getMonth() + 1}월 기준`;
+        }
 
         // 아랫줄: 전체 고정 통계
         if (el('statGlobalBillings'))   el('statGlobalBillings').textContent   =
@@ -369,6 +397,7 @@ async function refreshStats() {
             (data.globalUnpaidHouseholds  ?? '—') + '세대';
         if (el('statGlobalOverdue'))     el('statGlobalOverdue').textContent     =
             (data.globalOverdueHouseholds ?? '—') + '세대';
+
 
     } catch (err) {
         console.error('통계 갱신 실패', err);
@@ -390,7 +419,7 @@ function showToast(msg) {
     const t = document.createElement('div');
     t.textContent = msg;
     t.style.cssText = `
-        position:fixed; top:20px; right:20px;
+        position:fixed; top:100px; right:20px;
         background:#2c8a3e; color:white;
         padding:12px 20px; border-radius:6px;
         box-shadow:0 2px 8px rgba(0,0,0,.15);

@@ -1,0 +1,230 @@
+:root {
+    --fc-event-border-color: transparent !important;
+    --fc-event-text-color: #444444 !important;
+}
+
+/* =========================
+   1. LAYOUT & CONTAINER
+========================= */
+.container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 30px 40px;
+    background: #ffffff;
+}
+
+/* 상단 영역: 제목/시설탭(왼쪽) vs 예약신청 버튼(오른쪽) */
+.header-with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* 바닥 라인 정렬 */
+    margin-bottom: var(--spacing-lg); /* 캘린더와의 간격 24px */
+}
+
+.title-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md); /* 제목과 시설버튼 사이 16px 여백 확보 */
+}
+
+.module-title.title {
+    font-size: var(--font-title);
+    font-weight: 700;
+    color: var(--color-main);
+    margin: 0; /* gap으로 조절하므로 마진 제거 */
+}
+
+/* =========================
+   2. 시설 선택 탭 (FACILITY TABS)
+========================= */
+.facility-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm); /* 버튼들 사이 8px 간격 */
+}
+
+.facility-btn {
+    padding: 8px 18px;
+    border: 1px solid var(--border-color);
+    background: #fff;
+    border-radius: 30px; /* 알약 모양 */
+    font-size: var(--font-small);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.facility-btn:hover {
+    background-color: var(--color-bg-white-btn);
+}
+
+.facility-btn.active {
+    background-color: var(--color-main);
+    color: #fff;
+    border-color: var(--color-main);
+    box-shadow: 0 4px 10px rgba(3, 33, 84, 0.2);
+}
+
+/* =========================
+   CALENDAR CONTAINER
+========================= */
+#calendar-container {
+    background: #fff;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+}
+
+/* =========================
+   TOOLBAR
+========================= */
+#calendar-container .fc .fc-toolbar {
+    margin-bottom: 20px;
+}
+
+#calendar-container .fc .fc-toolbar-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+/* 버튼 */
+#calendar-container .fc .fc-button-primary {
+    background: #fff;
+    border: 1px solid #dbe2ea;
+    color: #475569;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    box-shadow: none;
+    transition: all 0.15s ease;
+}
+
+/* active */
+#calendar-container .fc .fc-button-primary.fc-button-active {
+    background-color: #edf2f7;
+    border-color: #d8e1eb;
+    color: #0f172a;
+    box-shadow: none;
+}
+
+/* activce hover */
+#calendar-container .fc .fc-button-primary.fc-button-active:hover {
+    background-color: #e2e8f0;
+    border-color: #cbd5e1;
+}
+
+/* hover */
+#calendar-container .fc .fc-button-primary:hover {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+    color: #334155;
+}
+
+/* focus 제거 */
+#calendar-container .fc .fc-button-primary:focus {
+    box-shadow: none;
+}
+
+/* =========================
+   HEADER
+========================= */
+#calendar-container .fc-theme-standard th {
+    border-color: #e5e7eb;
+}
+
+#calendar-container .fc-col-header-cell {
+    background: #f8fafc;
+    padding: 12px 0;
+}
+
+#calendar-container .fc-col-header-cell-cushion {
+    text-decoration: none;
+    color: #64748b;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+/* =========================
+   DAY CELL
+========================= */
+
+#calendar-container .fc-theme-standard td {
+    border-color: #eef2f7;
+}
+
+#calendar-container .fc-daygrid-day {
+    transition: background-color 0.15s ease;
+}
+
+/* 셀 hover */
+#calendar-container .fc-daygrid-day:hover {
+    background: #fafafa;
+}
+
+/* 날짜 숫자 */
+#calendar-container .fc-daygrid-day-number {
+    padding: 8px 10px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #334155;
+    text-decoration: none;
+}
+
+/* 오늘 셀 */
+#calendar-container .fc-day-today {
+    background: #eff6ff;
+}
+
+/* 오늘 숫자 */
+#calendar-container .fc-day-today .fc-daygrid-day-number {
+    color: var(--color-btn-point);
+    font-weight: 700;
+}
+
+/* =========================
+   EVENT
+========================= */
+
+/* 이벤트 wrapper */
+#calendar-container .fc-h-event,
+.fc-v-event {
+    background: transparent;
+    border: none;
+}
+
+/* 이벤트 본체 */
+#calendar-container .fc-event-main {
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-shadow: none;
+    transition:
+    transform 0.12s ease,
+    filter 0.12s ease;
+}
+
+/* 이벤트 hover */
+#calendar-container .fc-event:hover .fc-event-main {
+    filter: brightness(0.98);
+}
+
+/* =========================
+   MORE LINK
+========================= */
+
+#calendar-container .fc-daygrid-more-link {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+}

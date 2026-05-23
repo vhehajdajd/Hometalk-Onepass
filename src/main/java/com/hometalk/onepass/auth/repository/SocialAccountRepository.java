@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface SocialAccountRepository extends JpaRepository <SocialAccount, Long> {
     // 플랫폼 별
     Optional<SocialAccount> findByPlatformAndPlatformId(SocialAccount.Platform platform, String platformId);
+
+    Optional<SocialAccount> findFirstByUser_Id(Long userId);
 }

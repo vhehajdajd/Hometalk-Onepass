@@ -30,25 +30,41 @@ public class DataInitializer implements CommandLineRunner {
             log.info("기존 서비스 로직 방식으로 더미 데이터 생성을 시작합니다...");
 
             // 1. 관리자 계정 생성
-            createDummySet("test1", "1234", "홍길동", "gildong@test.com", "010-0000-0000",
+            createDummySet("test1", "1234", "홍길동", "길동", "gildong@test.com", "010-0000-0000",
                     "123456", "홈톡아파트", "101동", "101호",
                     User.UserRole.ADMIN, User.UserStatus.APPROVED);
 
             // 2. 거주자 계정 생성
-            createDummySet("test2", "1234", "김철수", "chulsu@test.com", "010-1111-1111",
+            createDummySet("test2", "1234", "김철수", "철수", "chulsu@test.com", "010-1111-1111",
                     "345678", "홈톡아파트", "102동", "505호",
                     User.UserRole.RESIDENT, User.UserStatus.APPROVED);
 
             // 3. 승인 대기 멤버 계정 생성
-            createDummySet("test3", "1234", "김영희", "younghee@test.com", "010-2222-2222",
+            createDummySet("test3", "1234", "김영희", "영희", "younghee@test.com", "010-2222-2222",
                     "112233", "홈톡아파트", "103동", "909호",
                     User.UserRole.MEMBER, User.UserStatus.PENDING);
 
-            log.info("더미 데이터 3세트 저장 완료");
+            // 관리자 계정 v2
+            createDummySet("admin", "1234", "관리자", "어드민", "admin@hometop.com", "010-1111-2222",
+                    "223344 ", "포레스트 리움", "0", "0",
+                    User.UserRole.ADMIN, User.UserStatus.APPROVED);
+
+            // 거주자 계정 v2
+            createDummySet("resident", "1234", "홍길동", "길동", "gildong@hometop.com", "010-2222-3333",
+                    "223344", "프레스트 리움", "101동", "1101호",
+                    User.UserRole.RESIDENT, User.UserStatus.APPROVED);
+
+            // 스태프 계정 v2
+            createDummySet("staff", "1234", "김철수", "철수", "chulsoo@hometop.com", "010-5555-6666",
+                    "223344", "포레스트 리움", "0", "0",
+                    User.UserRole.MEMBER, User.UserStatus.APPROVED);
+
+
+            log.info("더미 데이터 저장 완료");
         }
     }
 
-    private void createDummySet(String loginId, String password, String name, String email, String phone,
+    private void createDummySet(String loginId, String password, String name, String nickname, String email, String phone,
                                 String postNum, String building, String dong, String ho,
                                 User.UserRole role, User.UserStatus status) {
 
@@ -65,7 +81,7 @@ public class DataInitializer implements CommandLineRunner {
         User user = User.builder()
                 .name(name)
                 .email(email)
-                .nickname(name + "닉네임")
+                .nickname(nickname)
                 .phoneNumber(phone)
                 .household(savedHousehold) // 세대 연결
                 .role(role)
