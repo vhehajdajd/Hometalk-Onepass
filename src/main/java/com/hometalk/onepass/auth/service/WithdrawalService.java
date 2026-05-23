@@ -15,7 +15,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 @Service
@@ -41,9 +40,7 @@ public class WithdrawalService {
         // 로컬 계정은 loginId 이력 보존을 위해 남겨두고,
         // 소셜 계정은 제거해서 같은 공급자 계정으로 재가입할 수 있게 한다.
         // user 자체는 소프트 삭제 성격으로 남기고, 재연결 충돌 가능성이 있는 소셜 계정만 제거한다.
-        if (!user.getSocialAccounts().isEmpty()) {
-            socialAccountRepository.deleteAll(new ArrayList<>(user.getSocialAccounts()));
-        }
+        user.getSocialAccounts().forEach(SocialAccount::softDelete);
 
         Household household = user.getHousehold();
         user.withdraw();

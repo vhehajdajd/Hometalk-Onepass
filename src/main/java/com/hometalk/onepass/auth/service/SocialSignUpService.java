@@ -103,18 +103,30 @@ public class SocialSignUpService {
         socialAccountRepository.findFirstByUser_Id(userId)
                 .orElseThrow(() -> new IllegalArgumentException("소셜 계정 정보를 찾을 수 없습니다."));
 
-        Household household = Household.builder()
-                .postNum(dto.getPostNum())
-                .buildingName(dto.getBuildingName())
-                .dong(dto.getDong())
-                .ho(dto.getHo())
-                .build();
-        Household savedHousehold = householdRepository.save(household);
+        Household savedHousehold = updateOrCreateHousehold(user.getHousehold(),
+                dto.getPostNum(), dto.getBuildingName(), dto.getDong(), dto.getHo());
 
         user.updateProfile(dto.getName(), dto.getNickname(), dto.getEmail(), dto.getPhoneNumber());
         user.assignHousehold(savedHousehold);
         user.resubmitForApproval();
 
         return user;
+    }
+
+    private Household updateOrCreateHousehold(
+            Household household, String postNum, String buildingName, String dong, String ho) {
+        if (household != null) {
+            household.updateAddress(postNum, buildingName, dong, ho);
+            return household;
+        }
+
+        Household newHousehold = Household.builder()
+                .postNum(postNum)
+                .buildingName(buildingName)
+                .dong(dong)
+                .ho(ho)
+                .build();
+
+        return householdRepository.save(newHousehold);
     }
 }
