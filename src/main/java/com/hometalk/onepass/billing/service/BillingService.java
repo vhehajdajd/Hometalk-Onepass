@@ -244,16 +244,17 @@ public class BillingService {
 
         if (billings.isEmpty()) return 0;
 
+        // ✅ 삭제 전 각 billing에 대해 로그 기록
         for (Billing b : billings) {
+            billingLogRepository.save(BillingLog.builder()
+                    .billing(b)          // ✅ null → 실제 billing 참조
+                    .userId(adminId)
+                    .actionType(BillingActionType.DELETE)  // ✅ UPLOAD → DELETE
+                    .build());
             billingDetailRepository.deleteByBilling_Id(b.getId());
         }
-        billingRepository.deleteAll(billings);
 
-        billingLogRepository.save(BillingLog.builder()
-                .billing(null)
-                .userId(adminId)
-                .actionType(BillingActionType.UPLOAD)
-                .build());
+        billingRepository.deleteAll(billings);
 
         return billings.size();
     }

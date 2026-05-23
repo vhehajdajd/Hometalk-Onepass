@@ -50,10 +50,6 @@ public class SseEmitterManager {
         });
         emitter.onError(e -> removeEmitter.run());
 
-        // Last-Event-ID 처리 (④번에서 구현)
-        if (lastEventId != null && !lastEventId.isBlank()) {
-            // TODO: ④ Last-Event-ID 기반 누락 알림 재전송
-        }
 
         sendEvent(emitter, "connect", "connected");
         return emitter;

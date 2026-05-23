@@ -20,7 +20,6 @@ import com.hometalk.onepass.notification.publisher.NotificationPublisher;
 import com.hometalk.onepass.schedule.entity.Schedule;
 import com.hometalk.onepass.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -39,7 +38,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -112,7 +110,7 @@ public class NoticeService {
             notificationPublisher.publishToAll(
                     NotificationTargetRole.RESIDENT,
                     NotificationType.NOTICE_NEW,
-                    "새 공지사항",
+                    notice.getTitle(),  // "새 공지사항"(모든 공지가 같은 제목) → 수정
                     "새 공지가 등록되었습니다.",
                     "/notice/" + notice.getId()
             );
@@ -215,7 +213,7 @@ public class NoticeService {
                 }
             }
         } catch (Exception e) {
-            log.warn("읽음 처리 중 오류 발생. noticeId={}, error={}", id, e.getMessage());
+            // 읽음 처리 실패해도 공지 조회는 정상 동작
         }
 
         return new NoticeDetailResponseDto(
@@ -361,17 +359,12 @@ public class NoticeService {
             LocalDateTime since = LocalDateTime.now().minusDays(7);
             return readLogRepository.findUnreadRecentNotices(user, since);
         } catch (Exception e) {
-            log.warn("미읽음 공지 조회 중 오류 발생. error={}", e.getMessage());
             return List.of();
         }
     }
 
-    // ✅ 수정 후 — limit을 실제로 사용
-    @Transactional(readOnly = true)
     public List<NoticeListResponseDto> getRecentNotices(int limit) {
-        Pageable pageable = PageRequest.of(0, limit, Sort.by("createdAt").descending());
-        return noticeRepository.findByStatus(NoticeStatus.PUBLISHED, pageable)
-                .getContent()
+        return noticeRepository.findTop5ByStatusOrderByCreatedAtDesc(NoticeStatus.PUBLISHED)
                 .stream()
                 .map(notice -> new NoticeListResponseDto(
                         notice.getId(),
