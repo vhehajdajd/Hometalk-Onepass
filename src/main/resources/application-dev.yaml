@@ -2,7 +2,7 @@ server:
   port: 8090
 
 spring:
-  datasource:
+  datasource:ode
     url: ${DATASOURCE_URL}
     username: ${DATASOURCE_USERNAME}
     password: ${DATASOURCE_PASSWORD}

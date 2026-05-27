@@ -186,7 +186,7 @@
 
         // 텍스트 데이터 추가
         formData.append("title", title);
-        formData.append("content", content);
+        formData.append("contet", content);
         formData.append("category", category);
 
         // 보관함(selectedFiles)에 있는 파일들을 추가
@@ -196,7 +196,7 @@
 
         // CSRF 토큰 추출
         const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+        const csrfHeader = document.querySnelector('meta[name="_csrf_header"]')?.getAttribute('content');
 
         try {
             const response = await fetch('/hometop/api/inquiries', {
