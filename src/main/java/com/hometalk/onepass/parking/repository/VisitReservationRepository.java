@@ -26,7 +26,16 @@ public interface VisitReservationRepository extends JpaRepository<VisitReservati
 
     List<VisitReservation> findByReservedAtBetweenAndStatus(LocalDateTime start, LocalDateTime end, VisitReservation.ReservationStatus status);
 
+    // 전체 중복 체크 (CANCELLED 포함) - 기존 유지
     boolean existsByVehicleNumberAndReservedAt(String vehicleNumber, LocalDateTime reservedAt);
+
+    // ✅ 수정: CANCELLED 제외한 중복 체크
+    // 취소된 예약과 같은 차량 번호/시간으로 재예약 허용
+    boolean existsByVehicleNumberAndReservedAtAndStatusNot(
+            String vehicleNumber,
+            LocalDateTime reservedAt,
+            VisitReservation.ReservationStatus status
+    );
 
     // 퀵서치 - 공백 제거 후 끝 4자리 비교 (RESERVED만)
     @Query("""

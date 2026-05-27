@@ -94,6 +94,22 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
             throw new ParkingException("주차 중인 차량이 아닙니다.");
         }
 
+        // ✅ 보안 수정: parkingLog 소유권 검증
+        // RESERVATION: 반드시 내 세대 방문 차량이어야 함
+        if (parkingLog.getEntryType() == ParkingLog.EntryType.RESERVATION) {
+            if (parkingLog.getHousehold() == null
+                    || !parkingLog.getHousehold().getId().equals(householdId)) {
+                throw new ParkingException("본인 세대의 방문 차량에만 티켓을 적용할 수 있습니다.");
+            }
+        }
+        // MANUAL: 세대가 매칭된 경우에만 내 세대인지 확인
+        // (household 없는 수동 입차는 아직 세대 미확인 상태 → 통과 허용)
+        if (parkingLog.getEntryType() == ParkingLog.EntryType.MANUAL
+                && parkingLog.getHousehold() != null
+                && !parkingLog.getHousehold().getId().equals(householdId)) {
+            throw new ParkingException("본인 세대의 방문 차량에만 티켓을 적용할 수 있습니다.");
+        }
+
         Household household = householdRepository.findById(householdId)
                 .orElseThrow(() -> new ParkingException("세대를 찾을 수 없습니다."));
 

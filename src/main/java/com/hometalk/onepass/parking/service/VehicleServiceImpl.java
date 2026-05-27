@@ -267,13 +267,25 @@ public class VehicleServiceImpl implements VehicleService {
         return new VehicleResponse(vehicle);
     }
 
+    // 입주자 차량 삭제
+    // ✅ 보안 수정: householdId 파라미터 추가 + 소유권 검증
+    // 다른 세대가 vehicleId를 직접 입력해 삭제하는 것을 방지
     @Override
-    public void delete(Long vehicleId) {
+    public void delete(Long vehicleId, Long householdId) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new ParkingException("차량을 찾을 수 없습니다."));
+
+        // 내 세대 차량인지 확인
+        if (vehicle.getHousehold() == null
+                || !vehicle.getHousehold().getId().equals(householdId)) {
+            throw new ParkingException("본인 세대의 차량만 삭제할 수 있습니다.");
+        }
+
+        // 주차 중인 차량은 삭제 불가
         parkingLogRepository.findByVehicleNumberAndStatus(
                         vehicle.getVehicleNumber(), ParkingLog.ParkingStatus.PARKED)
                 .ifPresent(l -> { throw new ParkingException("주차 중인 차량은 삭제할 수 없습니다."); });
+
         vehicle.softDelete();
     }
 

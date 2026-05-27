@@ -180,19 +180,12 @@ public class StaffEntryService {
         return visitReservationRepository.findTodayReserved(LocalDate.now());
     }
 
+    // ✅ 수정: 전체 로드 후 메모리 필터링 → DB 쿼리에서 직접 처리
+    // 기존: 전체 APPROVED 차량 + 전체 PARKED 기록 메모리 로드 후 filter → 차량 많을수록 성능 저하
+    // 수정: NOT IN 서브쿼리로 DB에서 직접 주차 중이 아닌 차량만 조회
     @Transactional(readOnly = true)
     public List<Vehicle> getResidentVehicleList() {
-        List<Vehicle> approvedVehicles = vehicleRepository
-                .findAllByStatusWithHousehold(Vehicle.VehicleStatus.APPROVED);
-
-        List<String> parkedVehicleNumbers = parkingLogRepository
-                .findByStatus(ParkingLog.ParkingStatus.PARKED)
-                .stream().map(ParkingLog::getVehicleNumber).toList();
-
-        return approvedVehicles.stream()
-                .filter(v -> !parkedVehicleNumbers.contains(
-                        v.getVehicleNumber().replace(" ", "")))
-                .toList();
+        return vehicleRepository.findApprovedNotParked();
     }
 
     private boolean hasText(String str) {

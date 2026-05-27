@@ -22,6 +22,7 @@ public class VisitReservationController {
 
     private final VisitReservationService visitReservationService;
 
+    // 방문 예약 목록 페이지
     @GetMapping("/visit")
     public String visitReservationPage(@AuthenticationPrincipal CustomUserDetails userDetails,
                                        Model model) {
@@ -32,6 +33,7 @@ public class VisitReservationController {
         return "parking/visit-reservation";
     }
 
+    // 방문 예약 등록 페이지
     @GetMapping("/visit/register")
     public String visitReservationRegisterPage(Model model) {
         addDateTimeAttributes(model);
@@ -40,6 +42,7 @@ public class VisitReservationController {
         return "parking/visit-reservation-form";
     }
 
+    // 방문 예약 수정 페이지
     @GetMapping("/visit/update/{reservationId}")
     public String visitReservationUpdatePage(@PathVariable Long reservationId, Model model) {
         VisitReservationResponse reservation = visitReservationService.getReservation(reservationId);
@@ -49,6 +52,7 @@ public class VisitReservationController {
         return "parking/visit-reservation-form";
     }
 
+    // 방문 예약 등록 처리
     @PostMapping("/visit/register")
     @ResponseBody
     public ResponseEntity<VisitReservationResponse> register(
@@ -58,21 +62,31 @@ public class VisitReservationController {
         return ResponseEntity.ok(visitReservationService.register(householdId, request));
     }
 
+    // 방문 예약 수정 처리
+    // ✅ 보안 수정: @AuthenticationPrincipal 추가 → Service에서 내 세대 예약인지 검증
     @PostMapping("/visit/update/{reservationId}")
     @ResponseBody
     public ResponseEntity<VisitReservationResponse> update(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reservationId,
             @RequestBody VisitReservationRequest request) {
-        return ResponseEntity.ok(visitReservationService.update(reservationId, request));
+        Long householdId = userDetails.getHouseholdId();
+        return ResponseEntity.ok(visitReservationService.update(reservationId, request, householdId));
     }
 
+    // 방문 예약 취소
+    // ✅ 보안 수정: @AuthenticationPrincipal 추가 → Service에서 내 세대 예약인지 검증
     @PostMapping("/visit/cancel/{reservationId}")
     @ResponseBody
-    public ResponseEntity<Void> cancel(@PathVariable Long reservationId) {
-        visitReservationService.cancel(reservationId);
+    public ResponseEntity<Void> cancel(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long reservationId) {
+        Long householdId = userDetails.getHouseholdId();
+        visitReservationService.cancel(reservationId, householdId);
         return ResponseEntity.ok().build();
     }
 
+    // 방문 예약 입차 처리 (스태프 입차 시 예약 상태 변경용)
     @PostMapping("/visit/enter/{reservationId}")
     @ResponseBody
     public ResponseEntity<Void> enter(@PathVariable Long reservationId) {
@@ -80,6 +94,7 @@ public class VisitReservationController {
         return ResponseEntity.ok().build();
     }
 
+    // 수동 입차 대기 목록 (PENDING_CONFIRM) - 알림 클릭 시 진입
     @GetMapping("/visit/pending")
     @ResponseBody
     public ResponseEntity<List<VisitReservationResponse>> getPendingConfirm(
@@ -88,6 +103,7 @@ public class VisitReservationController {
         return ResponseEntity.ok(visitReservationService.getPendingConfirmReservations(householdId));
     }
 
+    // 상태별 예약 목록 조회 (AJAX 탭 전환 시)
     @GetMapping("/visit/list")
     @ResponseBody
     public ResponseEntity<List<VisitReservationResponse>> getReservationsByStatus(
@@ -101,6 +117,7 @@ public class VisitReservationController {
         return ResponseEntity.ok(visitReservationService.getHouseholdReservations(householdId));
     }
 
+    // 날짜/시간 select 옵션 데이터 공통 세팅 (등록/수정 폼 공용)
     private void addDateTimeAttributes(Model model) {
         model.addAttribute("years", List.of(2026, 2027, 2028));
         model.addAttribute("months", IntStream.rangeClosed(1, 12).boxed().toList());
@@ -109,6 +126,7 @@ public class VisitReservationController {
         model.addAttribute("minutes", List.of("00", "10", "20", "30", "40", "50"));
     }
 
+    // 방문 차량 관리 페이지 (미등록 차량 세대 등록)
     @GetMapping("/visit/manage")
     public String visitManagePage() {
         return "parking/visit-management";

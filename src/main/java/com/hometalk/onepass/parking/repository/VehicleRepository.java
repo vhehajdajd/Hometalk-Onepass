@@ -53,4 +53,20 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
         GROUP BY v.household.id
         """)
     List<Object[]> countApprovedByHouseholdIds(@Param("householdIds") List<Long> householdIds);
+
+    // ✅ 수정: 주차 중이 아닌 승인 차량만 DB에서 직접 조회
+    // 기존: 전체 APPROVED 로드 + 전체 PARKED 로드 후 메모리 filter → 성능 저하
+    // 수정: NOT IN 서브쿼리로 한 번에 처리
+    @Query("""
+        SELECT v FROM Vehicle v
+        JOIN FETCH v.household h
+        JOIN FETCH v.user u
+        WHERE v.status = 'APPROVED'
+          AND v.deletedAt IS NULL
+          AND v.vehicleNumber NOT IN (
+              SELECT p.vehicleNumber FROM ParkingLog p
+              WHERE p.status = 'PARKED'
+          )
+        """)
+    List<Vehicle> findApprovedNotParked();
 }

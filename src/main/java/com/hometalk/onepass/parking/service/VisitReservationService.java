@@ -14,11 +14,14 @@ public interface VisitReservationService {
     // 방문 예약 단건 조회
     VisitReservationResponse getReservation(Long reservationId);
 
-    // 방문 예약 수정
-    VisitReservationResponse update(Long reservationId, VisitReservationRequest request);
+    // 방문 예약 수정 (소유권 검증 포함)
+    // ✅ 보안 수정: householdId 추가 → 내 세대 예약인지 Service에서 검증
+    VisitReservationResponse update(Long reservationId, VisitReservationRequest request,
+                                    Long householdId);
 
-    // 방문 예약 취소
-    void cancel(Long reservationId);
+    // 방문 예약 취소 (소유권 검증 포함)
+    // ✅ 보안 수정: householdId 추가 → 내 세대 예약인지 Service에서 검증
+    void cancel(Long reservationId, Long householdId);
 
     // 입차 처리
     void enter(Long reservationId);

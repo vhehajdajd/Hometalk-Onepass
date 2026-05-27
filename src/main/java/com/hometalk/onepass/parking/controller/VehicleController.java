@@ -22,9 +22,6 @@ public class VehicleController {
 
     private final VehicleService vehicleService;
 
-
-
-
     // 세대 차량 목록 조회 페이지
     @GetMapping("/vehicle")
     public String vehicleList(@AuthenticationPrincipal CustomUserDetails userDetails,
@@ -101,17 +98,22 @@ public class VehicleController {
     }
 
     // 차량 삭제
+    // ✅ 보안 수정: @AuthenticationPrincipal 추가 → Service에서 내 세대 차량인지 검증
+    // 다른 세대가 URL에 vehicleId를 직접 입력해 삭제하는 것을 방지
     @PostMapping("/vehicle/delete/{vehicleId}")
     @ResponseBody
-    public ResponseEntity<Void> deleteVehicle(@PathVariable Long vehicleId) {
+    public ResponseEntity<Void> deleteVehicle(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long vehicleId) {
         try {
-            vehicleService.delete(vehicleId);
+            vehicleService.delete(vehicleId, userDetails.getHouseholdId());
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
-    // 차량 번호 중복 체크
+
+    // 차량 번호 중복 체크 (실시간 검증용 AJAX)
     @GetMapping("/vehicle/check")
     @ResponseBody
     public ResponseEntity<Map<String, Boolean>> checkVehicleNumber(
