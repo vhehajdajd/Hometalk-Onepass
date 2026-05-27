@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -39,4 +40,17 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
     @Query("SELECT v FROM Vehicle v JOIN FETCH v.household JOIN FETCH v.user WHERE v.status = :status AND v.deletedAt IS NULL")
     List<Vehicle> findAllByStatusWithHousehold(@Param("status") Vehicle.VehicleStatus status);
+
+    // =========================
+    // 🔥 N+1 해결 - 세대별 승인 차량 수 한 번에 집계
+    // =========================
+    @Query("""
+        SELECT v.household.id, COUNT(v)
+        FROM Vehicle v
+        WHERE v.status = 'APPROVED'
+          AND v.deletedAt IS NULL
+          AND v.household.id IN :householdIds
+        GROUP BY v.household.id
+        """)
+    List<Object[]> countApprovedByHouseholdIds(@Param("householdIds") List<Long> householdIds);
 }

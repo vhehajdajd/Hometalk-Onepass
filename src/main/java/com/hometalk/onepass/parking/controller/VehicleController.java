@@ -22,6 +22,9 @@ public class VehicleController {
 
     private final VehicleService vehicleService;
 
+
+
+
     // 세대 차량 목록 조회 페이지
     @GetMapping("/vehicle")
     public String vehicleList(@AuthenticationPrincipal CustomUserDetails userDetails,
