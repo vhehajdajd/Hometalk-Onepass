@@ -36,14 +36,15 @@ public interface VehicleService {
     // 관리자 - 차량 반려
     void reject(Long userId, Long approvalId, String rejectReason);
 
-    // 입주자 차량 삭제
-    void delete(Long vehicleId);
+    // 입주자 차량 삭제 (소유권 검증 포함)
+    // ✅ 보안 수정: householdId 추가 → 내 세대 차량인지 Impl에서 검증
+    void delete(Long vehicleId, Long householdId);
 
-    // 관리자 차량 삭제
+    // 관리자 차량 삭제 (소유권 검증 없음 - 관리자 권한)
     void adminDelete(Long vehicleId);
 
     boolean existsByVehicleNumber(String vehicleNumber);
 
-    //페이지네이션
+    // 페이지네이션
     Page<VehicleApprovalResponse> getApprovalList(Vehicle.VehicleStatus status, int page, int size);
 }

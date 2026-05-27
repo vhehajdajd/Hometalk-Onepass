@@ -46,9 +46,8 @@ public interface ParkingLogRepository extends JpaRepository<ParkingLog, Long> {
             ParkingLog.ParkingStatus status
     );
 
-    // =========================
-    // 🔥 핵심 추가 (주차중 목록용)
-    // =========================
+
+    // 주차중 목록용
     @Query("""
         SELECT p FROM ParkingLog p
         LEFT JOIN FETCH p.vehicle v
@@ -75,12 +74,12 @@ public interface ParkingLogRepository extends JpaRepository<ParkingLog, Long> {
             @Param("month") int month,
             Pageable pageable);
 
-    // 퀵서치
+    // Generated Column 사용으로 인덱스 활용
     @Query("""
     SELECT p FROM ParkingLog p
     LEFT JOIN FETCH p.vehicle v
     WHERE p.status = 'PARKED'
-      AND RIGHT(REPLACE(p.vehicleNumber, ' ', ''), 4) = :last4
+      AND p.vehicleNumberLast4 = :last4
       AND (
            (p.entryType = 'NORMAL' AND v IS NOT NULL AND v.status = 'APPROVED')
            OR p.entryType IN ('RESERVATION', 'MANUAL')
@@ -105,9 +104,8 @@ public interface ParkingLogRepository extends JpaRepository<ParkingLog, Long> {
     Optional<ParkingLog> findByReservationAndStatus(VisitReservation reservation, ParkingLog.ParkingStatus status);
 
 
-    // =========================
-    // 🔥 관리자 조회 (수정 완료)
-    // =========================
+
+    // 관리자 조회 (수정 완료)
     @Query(value = """
             SELECT p FROM ParkingLog p
             LEFT JOIN FETCH p.household h
@@ -160,17 +158,17 @@ public interface ParkingLogRepository extends JpaRepository<ParkingLog, Long> {
             Pageable pageable);
 
 
+    // Generated Column 사용으로 인덱스 활용
     @Query("""
     SELECT COUNT(p) > 0 FROM ParkingLog p
     WHERE p.status = 'PARKED'
       AND p.deletedAt IS NULL
-      AND RIGHT(REPLACE(p.vehicleNumber, ' ', ''), 4) = :last4
+      AND p.vehicleNumberLast4 = :last4
     """)
     boolean existsParkedByLast4(@Param("last4") String last4);
 
-    // =========================
-    // 🔥 출차 취소용 (오늘 출차 기록 조회)
-    // =========================
+
+    // 출차 취소용 (오늘 출차 기록 조회)
     @Query("""
     SELECT p FROM ParkingLog p
     LEFT JOIN FETCH p.vehicle v

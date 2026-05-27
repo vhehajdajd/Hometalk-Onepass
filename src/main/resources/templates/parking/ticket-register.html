@@ -48,7 +48,7 @@
         <div class="form-group">
           <label for="vehicleNumber">차량 번호</label>
           <div class="search-group">
-            <input type="text" id="vehicleNumber" placeholder="차량 번호 4자리 입력" maxlength="4">
+            <input type="text" id="vehicleNumber" placeholder="차량 번호 입력" maxlength="8">
             <button type="button" id="searchBtn" onclick="searchVehicle()">조회</button>
           </div>
           <span class="error-msg" id="searchError"></span>
@@ -100,6 +100,7 @@
             <div class="time-item" id="neededTimeBox" style="flex-direction: column; align-items: center;">
               <span class="time-label" style="color: var(--color-btn-point);">티켓 필요 시간</span>
               <span id="neededTime" class="time-value" style="color: var(--color-btn-point);">-</span>
+              <span id="neededTimeMsg" style="font-size:12px; margin-top:4px;"></span>
             </div>
           </div>
 
@@ -202,9 +203,16 @@
   let cancelType = null;
   let cancelMaxCount = 0;
   let cancelBtn = null;
+  let currentNeededTime = null;
 
   document.getElementById('vehicleNumber').addEventListener('input', (e) => {
-    e.target.value = e.target.value.replace(/\D/g, '');
+    if (e.target.value.length > 8) e.target.value = e.target.value.slice(0, 8);
+    if (e.target.value.trim() === '') {
+      document.getElementById('searchResult').style.display = 'none';
+      document.getElementById('vehicleSelectBox').style.display = 'none';
+      document.getElementById('vehicleSelectList').innerHTML = '';
+      loadMyVehicles();
+    }
   });
 
   document.getElementById('vehicleNumber').addEventListener('keydown', (e) => {
@@ -215,8 +223,8 @@
     const keyword = document.getElementById('vehicleNumber').value.trim();
     const searchError = document.getElementById('searchError');
 
-    if (keyword.length !== 4) {
-      searchError.textContent = '차량 번호 4자리를 입력해주세요.';
+    if (keyword.length < 1) {
+      searchError.textContent = '차량 번호를 입력해주세요.';
       return;
     }
     searchError.textContent = '';
@@ -294,6 +302,7 @@
     document.getElementById('appliedTime').textContent = data.appliedTime;
     document.getElementById('remainingTime').textContent = data.remainingTime;
     document.getElementById('neededTime').textContent = data.neededTime ?? '0분';
+    currentNeededTime = data.neededTime ?? '0분';
 
     dayRemainingCount = data.dayRemaining ?? 0;
     hourRemainingCount = data.hourRemaining ?? 0;
@@ -438,8 +447,19 @@
     const needed = Math.max(0, totalMinutes - newApplied);
     const h = Math.floor(needed / 60);
     const m = needed % 60;
-    const neededText = needed > 0 ? (h > 0 ? `${h}시간 ${m}분` : `${m}분`) : '0분';
-    document.getElementById('neededTime').textContent = neededText;
+
+    const neededEl = document.getElementById('neededTime');
+    const neededMsgEl = document.getElementById('neededTimeMsg');
+    if (needed === 0) {
+      neededEl.textContent = '0분';
+      neededEl.style.color = 'var(--color-sub)';
+      neededMsgEl.textContent = '티켓 적용하면 출차 가능';
+      neededMsgEl.style.color = 'var(--color-sub)';
+    } else {
+      neededEl.textContent = (h > 0 ? `${h}시간 ${m}분` : `${m}분`) + ' 부족';
+      neededEl.style.color = 'var(--color-btn-point)';
+      neededMsgEl.textContent = '';
+    }
   }
 
   function handleCountInput(input) {
@@ -490,6 +510,12 @@
     document.querySelectorAll('input[name="ticketType"]').forEach(r => r.checked = false);
     document.getElementById('applyBtn').disabled = true;
     document.getElementById('ticketHint').textContent = '';
+
+    // neededTime 원래 서버값으로 복구
+    const neededEl = document.getElementById('neededTime');
+    neededEl.textContent = currentNeededTime ?? '0분';
+    neededEl.style.color = 'var(--color-btn-point)';
+    document.getElementById('neededTimeMsg').textContent = '';
   }
 
   function applyTicket(btn) {

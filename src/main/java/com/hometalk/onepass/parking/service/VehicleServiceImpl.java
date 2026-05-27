@@ -26,7 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -55,26 +57,29 @@ public class VehicleServiceImpl implements VehicleService {
             throw new ParkingException("이미 등록된 차량 번호입니다.");
         }
 
-        // 파일 체크를 save() 전으로 이동
         if (documents == null || documents.isEmpty() ||
                 documents.stream().allMatch(MultipartFile::isEmpty)) {
             throw new ParkingException("첨부 서류는 필수입니다.");
         }
 
+        // 파일 저장
         List<String> documentPaths = fileStorageService.saveDocuments(documents);
         if (documentPaths.isEmpty()) {
             throw new ParkingException("서류 저장에 실패했습니다.");
         }
 
-        // 파일 저장 성공 후 vehicle 저장
-        Vehicle vehicle = new Vehicle(household, user, vehicleNumber,
-                request.getModel(), request.getVehicleType());
-        vehicleRepository.save(vehicle);
-
-        vehicleApprovalRepository.save(
-                new VehicleApproval(vehicle, String.join(",", documentPaths)));
-
-        return new VehicleResponse(vehicle);
+        // DB 저장 실패 시 파일 롤백 (1번 수정)
+        try {
+            Vehicle vehicle = new Vehicle(household, user, vehicleNumber,
+                    request.getModel(), request.getVehicleType());
+            vehicleRepository.save(vehicle);
+            vehicleApprovalRepository.save(
+                    new VehicleApproval(vehicle, String.join(",", documentPaths)));
+            return new VehicleResponse(vehicle);
+        } catch (Exception e) {
+            documentPaths.forEach(fileStorageService::deleteFile);
+            throw new ParkingException("차량 등록 중 오류가 발생했습니다.");
+        }
     }
 
     @Override
@@ -109,6 +114,15 @@ public class VehicleServiceImpl implements VehicleService {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new ParkingException("차량을 찾을 수 없습니다."));
 
+        // 기존 서류 파일 삭제 (3번 수정)
+        vehicleApprovalRepository.findTopByVehicleOrderByApprovalIdDesc(vehicle)
+                .ifPresent(existing -> {
+                    if (existing.getDocumentPath() != null) {
+                        Arrays.stream(existing.getDocumentPath().split(","))
+                                .forEach(fileStorageService::deleteFile);
+                    }
+                });
+
         List<String> documentPaths = fileStorageService.saveDocuments(documents);
         if (documentPaths.isEmpty()) {
             throw new ParkingException("첨부 서류는 필수입니다.");
@@ -121,22 +135,38 @@ public class VehicleServiceImpl implements VehicleService {
         return new VehicleResponse(vehicle);
     }
 
+    // 2번 수정 - N+1 해결: 세대별 승인 차량 수를 한 번에 집계
     @Override
     @Transactional(readOnly = true)
     public List<VehicleApprovalResponse> getApprovalList(Vehicle.VehicleStatus status) {
-        return vehicleRepository.findByStatus(status)
+        List<VehicleApproval> approvals = vehicleRepository.findByStatus(status)
                 .stream()
                 .map(vehicle -> vehicleApprovalRepository
                         .findTopByVehicleOrderByApprovalIdDesc(vehicle))
                 .filter(Optional::isPresent)
-                .map(opt -> {
-                    VehicleApprovalResponse response = new VehicleApprovalResponse(opt.get());
-                    int count = (int) vehicleRepository
-                            .findByHousehold(opt.get().getVehicle().getHousehold())
-                            .stream()
-                            .filter(v -> v.getStatus() == Vehicle.VehicleStatus.APPROVED)
-                            .count();
-                    response.setApprovedCount(count);
+                .map(Optional::get)
+                .collect(Collectors.toList());
+
+        // 세대 ID 목록 추출 후 한 번에 집계
+        List<Long> householdIds = approvals.stream()
+                .map(a -> a.getVehicle().getHousehold().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, Integer> approvedCountMap = vehicleRepository
+                .countApprovedByHouseholdIds(householdIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> ((Long) row[1]).intValue()
+                ));
+
+        return approvals.stream()
+                .map(approval -> {
+                    VehicleApprovalResponse response = new VehicleApprovalResponse(approval);
+                    response.setApprovedCount(
+                            approvedCountMap.getOrDefault(
+                                    approval.getVehicle().getHousehold().getId(), 0));
                     return response;
                 })
                 .collect(Collectors.toList());
@@ -149,17 +179,31 @@ public class VehicleServiceImpl implements VehicleService {
         VehicleApproval.ApprovalStatus approvalStatus =
                 VehicleApproval.ApprovalStatus.valueOf(status.name());
         Pageable pageable = PageRequest.of(page, size, Sort.by("approvalId").descending());
-        return vehicleApprovalRepository.findByStatus(approvalStatus, pageable)
-                .map(approval -> {
-                    VehicleApprovalResponse response = new VehicleApprovalResponse(approval);
-                    int count = (int) vehicleRepository
-                            .findByHousehold(approval.getVehicle().getHousehold())
-                            .stream()
-                            .filter(v -> v.getStatus() == Vehicle.VehicleStatus.APPROVED)
-                            .count();
-                    response.setApprovedCount(count);
-                    return response;
-                });
+
+        Page<VehicleApproval> approvalPage = vehicleApprovalRepository
+                .findByStatus(approvalStatus, pageable);
+
+        // 세대 ID 목록 추출 후 한 번에 집계 (페이지네이션도 N+1 해결)
+        List<Long> householdIds = approvalPage.getContent().stream()
+                .map(a -> a.getVehicle().getHousehold().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, Integer> approvedCountMap = vehicleRepository
+                .countApprovedByHouseholdIds(householdIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> ((Long) row[1]).intValue()
+                ));
+
+        return approvalPage.map(approval -> {
+            VehicleApprovalResponse response = new VehicleApprovalResponse(approval);
+            response.setApprovedCount(
+                    approvedCountMap.getOrDefault(
+                            approval.getVehicle().getHousehold().getId(), 0));
+            return response;
+        });
     }
 
     @Override
@@ -223,13 +267,25 @@ public class VehicleServiceImpl implements VehicleService {
         return new VehicleResponse(vehicle);
     }
 
+    // 입주자 차량 삭제
+    // ✅ 보안 수정: householdId 파라미터 추가 + 소유권 검증
+    // 다른 세대가 vehicleId를 직접 입력해 삭제하는 것을 방지
     @Override
-    public void delete(Long vehicleId) {
+    public void delete(Long vehicleId, Long householdId) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new ParkingException("차량을 찾을 수 없습니다."));
+
+        // 내 세대 차량인지 확인
+        if (vehicle.getHousehold() == null
+                || !vehicle.getHousehold().getId().equals(householdId)) {
+            throw new ParkingException("본인 세대의 차량만 삭제할 수 있습니다.");
+        }
+
+        // 주차 중인 차량은 삭제 불가
         parkingLogRepository.findByVehicleNumberAndStatus(
                         vehicle.getVehicleNumber(), ParkingLog.ParkingStatus.PARKED)
                 .ifPresent(l -> { throw new ParkingException("주차 중인 차량은 삭제할 수 없습니다."); });
+
         vehicle.softDelete();
     }
 

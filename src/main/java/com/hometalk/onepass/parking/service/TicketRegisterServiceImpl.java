@@ -35,8 +35,9 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
     @Override
     @Transactional(readOnly = true)
     public ParkingSearchResponse searchParkedVehicle(String keyword, Long householdId) {
-        String last4 = keyword.replace(" ", "");
-        if (last4.length() != 4) throw new ParkingException("차량 번호 4자리를 입력해주세요.");
+        String normalized = keyword.replace(" ", "");
+        if (normalized.length() < 1) throw new ParkingException("차량 번호를 입력해주세요.");
+        String last4 = normalized.length() >= 4 ? normalized.substring(normalized.length() - 4) : normalized;
 
         List<ParkingLog> logs = parkingLogRepository.findParkedByLast4(last4);
         if (logs.isEmpty()) throw new ParkingException("주차 중인 차량이 없습니다.");
@@ -57,8 +58,9 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
     @Override
     @Transactional(readOnly = true)
     public List<ParkingSearchResponse> searchParkedVehicleList(String keyword, Long householdId) {
-        String last4 = keyword.replace(" ", "");
-        if (last4.length() != 4) throw new ParkingException("차량 번호 4자리를 입력해주세요.");
+        String normalized = keyword.replace(" ", "");
+        if (normalized.length() < 1) throw new ParkingException("차량 번호를 입력해주세요.");
+        String last4 = normalized.length() >= 4 ? normalized.substring(normalized.length() - 4) : normalized;
 
         List<ParkingLog> logs = parkingLogRepository.findParkedByLast4(last4);
         if (logs.isEmpty()) throw new ParkingException("주차 중인 차량이 없습니다.");
@@ -90,6 +92,22 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
 
         if (parkingLog.getStatus() != ParkingLog.ParkingStatus.PARKED) {
             throw new ParkingException("주차 중인 차량이 아닙니다.");
+        }
+
+        // ✅ 보안 수정: parkingLog 소유권 검증
+        // RESERVATION: 반드시 내 세대 방문 차량이어야 함
+        if (parkingLog.getEntryType() == ParkingLog.EntryType.RESERVATION) {
+            if (parkingLog.getHousehold() == null
+                    || !parkingLog.getHousehold().getId().equals(householdId)) {
+                throw new ParkingException("본인 세대의 방문 차량에만 티켓을 적용할 수 있습니다.");
+            }
+        }
+        // MANUAL: 세대가 매칭된 경우에만 내 세대인지 확인
+        // (household 없는 수동 입차는 아직 세대 미확인 상태 → 통과 허용)
+        if (parkingLog.getEntryType() == ParkingLog.EntryType.MANUAL
+                && parkingLog.getHousehold() != null
+                && !parkingLog.getHousehold().getId().equals(householdId)) {
+            throw new ParkingException("본인 세대의 방문 차량에만 티켓을 적용할 수 있습니다.");
         }
 
         Household household = householdRepository.findById(householdId)
@@ -181,7 +199,8 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
         List<ParkingLog> logs = parkingLogRepository.findByStatus(ParkingLog.ParkingStatus.PARKED);
 
         return logs.stream()
-                .filter(log -> log.getEntryType() == ParkingLog.EntryType.RESERVATION)
+                .filter(log -> log.getEntryType() == ParkingLog.EntryType.RESERVATION
+                        || log.getEntryType() == ParkingLog.EntryType.MANUAL)
                 .filter(log -> log.getHousehold() != null
                         && log.getHousehold().getId().equals(householdId))
                 .map(log -> new ParkingSearchResponse(

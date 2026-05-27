@@ -25,9 +25,9 @@ public class UnregisteredVehicleService {
     // ─── 미등록 차량 검색 ─────────────────────────────────────────
     @Transactional(readOnly = true)
     public List<UnregisteredVehicleResponse> search(String keyword) {
-        String last4 = keyword.replace(" ", "");
-
-        if (last4.length() != 4) return List.of();
+        String normalized = keyword.replace(" ", "");
+        if (normalized.length() < 1) return List.of();
+        String last4 = normalized.length() >= 4 ? normalized.substring(normalized.length() - 4) : normalized;
 
         return visitReservationRepository.findUnregisteredByLast4(last4)
                 .stream()

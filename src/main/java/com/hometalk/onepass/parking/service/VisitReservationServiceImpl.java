@@ -5,6 +5,7 @@ import com.hometalk.onepass.auth.repository.HouseholdRepository;
 import com.hometalk.onepass.parking.dto.request.VisitReservationRequest;
 import com.hometalk.onepass.parking.dto.response.VisitReservationResponse;
 import com.hometalk.onepass.parking.entity.VisitReservation;
+import com.hometalk.onepass.parking.exception.ParkingException;
 import com.hometalk.onepass.parking.repository.VisitReservationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +38,9 @@ public class VisitReservationServiceImpl implements VisitReservationService {
         // 차량번호 공백 제거 정규화
         String vehicleNumber = request.getVehicleNumber().replace(" ", "");
 
-        if (visitReservationRepository.existsByVehicleNumberAndReservedAt(
-                vehicleNumber, request.getReservedAt())) {
+        if (visitReservationRepository.existsByVehicleNumberAndReservedAtAndStatusNot(
+                vehicleNumber, request.getReservedAt(),
+                VisitReservation.ReservationStatus.CANCELLED)) {
             throw new IllegalArgumentException("이미 같은 시간에 예약된 차량입니다.");
         }
 
@@ -63,31 +65,44 @@ public class VisitReservationServiceImpl implements VisitReservationService {
     }
 
     // 방문 예약 수정
+    // ✅ 보안 수정: householdId 파라미터 추가 + validateOwnership()으로 소유권 검증
+    // 다른 세대가 URL에 reservationId를 직접 입력해 수정하는 것을 방지
     @Override
-    public VisitReservationResponse update(Long reservationId, VisitReservationRequest request) {
+    public VisitReservationResponse update(Long reservationId, VisitReservationRequest request,
+                                           Long householdId) {
         VisitReservation reservation = visitReservationRepository.findById(reservationId)
                 .orElseThrow(() -> new EntityNotFoundException("예약을 찾을 수 없습니다."));
+
+        // 내 세대 예약인지 확인
+        validateOwnership(reservation, householdId);
 
         // 차량번호 공백 제거 정규화
         String vehicleNumber = request.getVehicleNumber() != null
                 ? request.getVehicleNumber().replace(" ", "")
                 : null;
 
+        // dirty checking: save() 없이 Entity 변경 → 트랜잭션 종료 시 자동 UPDATE
         reservation.update(vehicleNumber, request.getPurpose(), request.getReservedAt());
 
         return new VisitReservationResponse(reservation);
     }
 
     // 방문 예약 취소
+    // ✅ 보안 수정: householdId 파라미터 추가 + validateOwnership()으로 소유권 검증
+    // 다른 세대가 URL에 reservationId를 직접 입력해 취소하는 것을 방지
     @Override
-    public void cancel(Long reservationId) {
+    public void cancel(Long reservationId, Long householdId) {
         VisitReservation reservation = visitReservationRepository.findById(reservationId)
                 .orElseThrow(() -> new EntityNotFoundException("예약을 찾을 수 없습니다."));
 
+        // 내 세대 예약인지 확인
+        validateOwnership(reservation, householdId);
+
+        // dirty checking: Entity 상태 변경 → 자동 UPDATE
         reservation.cancel();
     }
 
-    // 입차 처리
+    // 입차 처리 (스태프 화면에서 호출 → 소유권 검증 불필요)
     @Override
     public void enter(Long reservationId) {
         VisitReservation reservation = visitReservationRepository.findById(reservationId)
@@ -134,5 +149,15 @@ public class VisitReservationServiceImpl implements VisitReservationService {
                 .stream()
                 .map(VisitReservationResponse::new)
                 .collect(Collectors.toList());
+    }
+
+    // ─── 소유권 검증 공통 메서드 ──────────────────────────────────
+    // cancel, update 호출 전 반드시 실행
+    // reservation.household가 로그인 사용자의 householdId와 다르면 예외
+    private void validateOwnership(VisitReservation reservation, Long householdId) {
+        if (reservation.getHousehold() == null
+                || !reservation.getHousehold().getId().equals(householdId)) {
+            throw new ParkingException("본인 세대의 예약만 접근할 수 있습니다.");
+        }
     }
 }
