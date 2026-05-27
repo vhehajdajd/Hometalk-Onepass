@@ -39,7 +39,7 @@
                 <div class="form-group">
                     <label for="vehicleNumber">차량 번호</label>
                     <div class="search-group">
-                        <input type="text" id="vehicleNumber" placeholder="차량 번호 4자리 입력" maxlength="4">
+                        <input type="text" id="vehicleNumber" placeholder="차량 번호 입력" maxlength="8">
                         <button type="button" id="searchBtn" onclick="searchVehicle()">조회</button>
                     </div>
                     <span class="error-msg" id="searchError"></span>
@@ -75,15 +75,14 @@
         const vehicleNumber = params.get('vehicleNumber');
         if (vehicleNumber) {
             // 변수 선언 없이 바로 대입하여 72행 경고 해결
-            document.getElementById('vehicleNumber').value = vehicleNumber.replace(/\s/g, '').slice(-4);
+            document.getElementById('vehicleNumber').value = vehicleNumber.replace(/\s/g, '');
             searchVehicle();
         }
     };
 
-    // 숫자만 입력
+    // 최대 8자 제한
     document.getElementById('vehicleNumber').addEventListener('input', (e) => {
-        e.target.value = e.target.value.replace(/\D/g, '');
-        if (e.target.value.length === 4) searchVehicle();
+        if (e.target.value.length > 8) e.target.value = e.target.value.slice(0, 8);
     });
 
     // 엔터키로 조회
@@ -96,8 +95,8 @@
         const keyword = document.getElementById('vehicleNumber').value.trim();
         const searchError = document.getElementById('searchError');
 
-        if (keyword.length !== 4) {
-            searchError.textContent = '차량 번호 4자리를 입력해주세요.';
+        if (keyword.length < 1) {
+            searchError.textContent = '차량 번호를 입력해주세요.';
             return;
         }
         searchError.textContent = '';

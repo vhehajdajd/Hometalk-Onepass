@@ -22,7 +22,7 @@ public class UnregisteredVehicleController {
     public ResponseEntity<List<UnregisteredVehicleResponse>> search(
             @RequestParam String keyword) {
 
-        if (keyword == null || keyword.strip().length() != 4) {
+        if (keyword == null || keyword.strip().isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(unregisteredVehicleService.search(keyword.strip()));

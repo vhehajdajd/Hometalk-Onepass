@@ -4,6 +4,7 @@ import com.hometalk.onepass.parking.entity.ParkingLog;
 import lombok.Getter;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -85,9 +86,9 @@ public class ParkingLogResponse {
             this.canExit = totalMinutes <= 10 || totalMinutes == 0 || applied >= totalMinutes;
         }
 
-        // 출차 취소 가능 여부 (출차 후 10분 이내)
+        // 출차 취소 가능 여부 (당일 출차 건만)
         this.canCancelExit = log.getExitTime() != null
-                && Duration.between(log.getExitTime(), LocalDateTime.now()).toMinutes() <= 10;
+                && log.getExitTime().toLocalDate().equals(LocalDate.now());
     }
 
     public ParkingLogResponse(ParkingLog log) {

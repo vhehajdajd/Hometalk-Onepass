@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -157,8 +157,8 @@ public class ParkingLog extends BaseSoftDeleteEntity {
         if (this.exitTime == null) {
             throw new IllegalStateException("출차 기록이 없습니다.");
         }
-        if (Duration.between(this.exitTime, LocalDateTime.now()).toMinutes() > 10) {
-            throw new IllegalStateException("출차 후 10분이 초과되어 취소할 수 없습니다.");
+        if (!this.exitTime.toLocalDate().equals(LocalDate.now())) {
+            throw new IllegalStateException("당일 출차 건만 취소할 수 있습니다.");
         }
 
         this.exitTime = null;

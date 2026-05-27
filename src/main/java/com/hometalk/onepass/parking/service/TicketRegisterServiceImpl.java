@@ -35,8 +35,9 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
     @Override
     @Transactional(readOnly = true)
     public ParkingSearchResponse searchParkedVehicle(String keyword, Long householdId) {
-        String last4 = keyword.replace(" ", "");
-        if (last4.length() != 4) throw new ParkingException("차량 번호 4자리를 입력해주세요.");
+        String normalized = keyword.replace(" ", "");
+        if (normalized.length() < 1) throw new ParkingException("차량 번호를 입력해주세요.");
+        String last4 = normalized.length() >= 4 ? normalized.substring(normalized.length() - 4) : normalized;
 
         List<ParkingLog> logs = parkingLogRepository.findParkedByLast4(last4);
         if (logs.isEmpty()) throw new ParkingException("주차 중인 차량이 없습니다.");
@@ -57,8 +58,9 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
     @Override
     @Transactional(readOnly = true)
     public List<ParkingSearchResponse> searchParkedVehicleList(String keyword, Long householdId) {
-        String last4 = keyword.replace(" ", "");
-        if (last4.length() != 4) throw new ParkingException("차량 번호 4자리를 입력해주세요.");
+        String normalized = keyword.replace(" ", "");
+        if (normalized.length() < 1) throw new ParkingException("차량 번호를 입력해주세요.");
+        String last4 = normalized.length() >= 4 ? normalized.substring(normalized.length() - 4) : normalized;
 
         List<ParkingLog> logs = parkingLogRepository.findParkedByLast4(last4);
         if (logs.isEmpty()) throw new ParkingException("주차 중인 차량이 없습니다.");
@@ -181,7 +183,8 @@ public class TicketRegisterServiceImpl implements TicketRegisterService {
         List<ParkingLog> logs = parkingLogRepository.findByStatus(ParkingLog.ParkingStatus.PARKED);
 
         return logs.stream()
-                .filter(log -> log.getEntryType() == ParkingLog.EntryType.RESERVATION)
+                .filter(log -> log.getEntryType() == ParkingLog.EntryType.RESERVATION
+                        || log.getEntryType() == ParkingLog.EntryType.MANUAL)
                 .filter(log -> log.getHousehold() != null
                         && log.getHousehold().getId().equals(householdId))
                 .map(log -> new ParkingSearchResponse(
