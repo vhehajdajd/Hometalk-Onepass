@@ -29,6 +29,10 @@ public class Vehicle extends BaseSoftDeleteEntity {
     @Column(name = "vehicle_number", nullable = false, unique = true, length = 20)
     private String vehicleNumber;
 
+    // 4번 수정 - Generated Column (DB에서 자동 계산, 읽기 전용)
+    @Column(name = "vehicle_number_last4", insertable = false, updatable = false, length = 4)
+    private String vehicleNumberLast4;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private VehicleStatus status;

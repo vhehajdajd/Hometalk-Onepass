@@ -26,13 +26,14 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
     boolean existsByVehicleNumberAndDeletedAtIsNull(String vehicleNumber);
 
+    // Generated Column 사용으로 인덱스 활용
     @Query("""
         SELECT v FROM Vehicle v
         JOIN FETCH v.household h
         JOIN FETCH v.user u
         WHERE v.status = 'APPROVED'
           AND v.deletedAt IS NULL
-          AND RIGHT(REPLACE(v.vehicleNumber, ' ', ''), 4) = :last4
+          AND v.vehicleNumberLast4 = :last4
         """)
     List<Vehicle> findApprovedByLast4(@Param("last4") String last4);
 
@@ -41,9 +42,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     @Query("SELECT v FROM Vehicle v JOIN FETCH v.household JOIN FETCH v.user WHERE v.status = :status AND v.deletedAt IS NULL")
     List<Vehicle> findAllByStatusWithHousehold(@Param("status") Vehicle.VehicleStatus status);
 
-    // =========================
-    // 🔥 N+1 해결 - 세대별 승인 차량 수 한 번에 집계
-    // =========================
+
+    // N+1 해결 - 세대별 승인 차량 수 한 번에 집계
     @Query("""
         SELECT v.household.id, COUNT(v)
         FROM Vehicle v
