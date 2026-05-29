@@ -58,6 +58,8 @@ public class SecurityConfig {
                                 "/auth/oauth2/**",
                                 "/auth/register/**",
                                 "/auth/api/check-id-duplication",
+                                // React 로그인 화면에서 호출하는 Spring Security formLogin 처리 URL
+                                "/api/auth/login",
                                 "/oauth2/authorization/**",
                                 "/login/oauth2/**",
                                 "/css/**",
@@ -155,9 +157,14 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginPage("/auth")            // 1. 사용자 정의 로그인 페이지 경로
-                        .loginProcessingUrl("/auth/login") // 2. 로그인 처리 URL
+                        // React 로그인 폼은 이 URL로 form-urlencoded 요청을 보낸다.
+                        // 실제 인증 처리는 기존 Spring Security formLogin 필터가 그대로 담당한다.
+                        .loginProcessingUrl("/api/auth/login") // 2. 로그인 처리 URL
                         .successHandler(customLoginSuccessHandler)   // 3. 로그인 성공 시 이동할 경로
-                        .failureUrl("/auth?error=true")   // 4. 로그인 실패 시 이동할 경로
+                        // API 로그인 실패 시 HTML redirect 대신 React가 처리할 수 있도록 401만 내려준다.
+                        .failureHandler((request, response, exception) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                        })
                         .permitAll()                  // 5. 로그인 페이지는 누구나 접근 가능해야 함
                         .usernameParameter("loginId") // username이 아닌 login_id으로 name 설정
                 )
