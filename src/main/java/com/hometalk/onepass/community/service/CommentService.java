@@ -40,6 +40,14 @@ public class CommentService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<CommentRsDTO> findAllByPostId(Long postId, Long loginUserId) {
+        return commentRepository.findAllByPostIdOrderByCreatedAtAsc(postId)
+                .stream()
+                .map(comment -> CommentRsDTO.from(comment, loginUserId))
+                .toList();
+    }
+
     // 댓글 작성 (C)
     @Transactional
     public void saveComment(Long postId, Long userId, CommentRqDTO dto) {

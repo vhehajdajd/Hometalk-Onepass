@@ -30,16 +30,34 @@ async function saveTempProcess() {
 
     const form = document.getElementById('postForm');
     const formData = new FormData(form);
+
+    if (!formData.get('id')) formData.delete('id');
+
     console.log('temp save id:', formData.get('id'));
     const boardCode = window.location.pathname.split('/')[3];
 
     try {
-        const res = await formDataFetch(`/hometop/community/${boardCode}/save-temp`, {
+        const res = await formDataFetch(`/hometop/api/resident/${boardCode}/save-temp`, {
             method: 'POST',
             body: formData
         });
 
-        if (!res.ok) throw new Error("임시저장 실패");
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error("임시저장 실패 응답:", errorText);
+
+            let message = "임시저장 실패";
+
+            try {
+                const errorData = JSON.parse(errorText);
+                message = errorData.message || message;
+            } catch (e) {
+                message = errorText || message;
+            }
+
+            showAlertModal(message);
+            return;
+        }
 
         const data = await res.json();
         if (data.id) {
@@ -74,7 +92,7 @@ function ensureIdInput(form, id) {
 // ======================
 async function updateTempCount(boardCode) {
     try {
-        const res = await fetch(`/hometop/community/${boardCode}/temp-count`);
+        const res = await apiFetch(`/hometop/api/resident/${boardCode}/temp-count`);
         const count = await res.text();
         const tempCountDisplay = document.getElementById('temp-count-display');
         if (tempCountDisplay) {
@@ -110,7 +128,7 @@ function escapeHtml(str) {
 
 async function loadTempList(boardCode) {
     try {
-        const res = await fetch(`/hometop/community/${boardCode}/temp-list`);
+        const res = await apiFetch(`/hometop/api/resident/${boardCode}/temp-list`);
         if (!res.ok) throw new Error('목록을 불러오는데 실패했습니다.');
         const data = await res.json();
 
@@ -150,7 +168,7 @@ async function deleteTempPost(event, id, boardCode) {
     event.stopPropagation();
     showConfirmModal("삭제하시겠습니까?", async () => {
         try {
-            const res = await fetch(`/hometop/community/${boardCode}/delete-temp/${id}`, {
+            const res = await apiFetch(`/hometop/api/resident/${boardCode}/delete-temp/${id}`, {
                 method: 'POST',
                 headers: getCsrfOnlyHeaders()
             });

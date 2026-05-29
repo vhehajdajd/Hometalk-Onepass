@@ -62,3 +62,8 @@ async function formDataFetch(url, options = {}) {
         }
     });
 }
+
+window.apiFetch = apiFetch;
+window.formDataFetch = formDataFetch;
+window.getCsrfHeaders = getCsrfHeaders;
+window.getCsrfOnlyHeaders = getCsrfOnlyHeaders;

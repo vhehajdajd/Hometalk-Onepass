@@ -52,17 +52,23 @@ public class CommunityApiController {
     public ResponseEntity<?> saveTempApi(@PathVariable("boardCode") String boardCode,
                                          @ModelAttribute PostRequestDTO dto,
                                          Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-        dto.setPostStatus(PostStatus.DRAFT);
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        Long id = postService.postSave(boardCode, dto, userDetails.getUserId());
+        try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+            }
+            dto.setPostStatus(PostStatus.DRAFT);
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            Long id = postService.postSave(boardCode, dto, userDetails.getUserId());
 
-        return ResponseEntity.ok(Map.of(
-                "id", id,
-                "message", "게시글이 임시저장되었습니다."
-        ));
+            return ResponseEntity.ok(Map.of(
+                    "id", id,
+                    "message", "게시글이 임시저장되었습니다."
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", e.getMessage()));
+        }
     }
 
     // 임시저장 개수
