@@ -1,6 +1,6 @@
 import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
-// Spring Boot context-path와 맞춘 API prefix.
 const CONTEXT_PATH = '/hometop'
 
 // Daum 우편번호 스크립트는 사용자가 주소찾기를 실행할 때만 동적으로 로드한다.
@@ -24,23 +24,24 @@ const initialForm = {
   ho: '',
 }
 
-function loadPostcodeScript() {
+async function loadPostcodeScript() {
   // 이미 API가 로드되어 있으면 추가 script 태그를 만들지 않는다.
   if (window.daum?.Postcode || window.kakao?.Postcode) {
-    return Promise.resolve()
+    return
   }
 
   // script 태그는 있지만 아직 로딩 중일 수 있으므로 기존 태그의 이벤트를 기다린다.
   const existingScript = document.getElementById(POSTCODE_SCRIPT_ID)
   if (existingScript) {
-    return new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       existingScript.addEventListener('load', resolve, { once: true })
       existingScript.addEventListener('error', reject, { once: true })
     })
+    return
   }
 
   // 최초 호출 시 script 태그를 만들고, 호출부가 await할 수 있도록 Promise로 감싼다.
-  return new Promise((resolve, reject) => {
+  await new Promise((resolve, reject) => {
     const script = document.createElement('script')
     script.id = POSTCODE_SCRIPT_ID
     script.src = POSTCODE_SCRIPT_SRC
@@ -51,6 +52,7 @@ function loadPostcodeScript() {
 }
 
 function RegisterPage() {
+  const navigate = useNavigate()
   // step 1은 회원 기본 정보, step 2는 세대 주소 정보 입력 화면이다.
   const [step, setStep] = useState(1)
   // 모든 입력값은 React state로 관리하는 controlled input이다.
@@ -176,7 +178,7 @@ function RegisterPage() {
       }
 
       // 회원가입 성공 후 로그인 URL로 이동해 App.jsx가 LoginPage를 다시 렌더링하게 한다.
-      window.location.href = `${CONTEXT_PATH}/auth`
+      navigate('/auth')
     } catch (error) {
       // 네트워크 오류 또는 서버 검증 실패 메시지를 화면 에러 영역에 표시한다.
       setErrorMessage(error.message)
@@ -361,7 +363,7 @@ function RegisterPage() {
         )}
 
         <p className="signup-line">
-          이미 계정이 있으신가요? <a href={`${CONTEXT_PATH}/auth`}>로그인</a>
+          이미 계정이 있으신가요? <Link to="/auth">로그인</Link>
         </p>
       </section>
     </main>

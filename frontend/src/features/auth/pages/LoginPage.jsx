@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 // Spring Boot의 server.servlet.context-path와 맞춘다.
 // API 호출과 백엔드 페이지 이동은 항상 이 prefix를 붙여 요청한다.
@@ -11,6 +12,7 @@ function LoginPage() {
     rememberMe: false,
   })
   const [errorMessage, setErrorMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const updateField = (event) => {
     const { name, value, checked, type } = event.target
@@ -114,7 +116,7 @@ function LoginPage() {
         </form>
 
         <p className="signup-line">
-          계정이 없으신가요? <a href={`${CONTEXT_PATH}/auth/register`}>회원가입</a>
+          계정이 없으신가요? <Link to="/auth/register">회원가입</Link>
         </p>
 
       </section>
