@@ -2,9 +2,14 @@ import { useState } from 'react'
 
 // Spring Boot context-path와 맞춘 API prefix.
 const CONTEXT_PATH = '/hometop'
+
+// Daum 우편번호 스크립트는 사용자가 주소찾기를 실행할 때만 동적으로 로드한다.
+// 고정 id를 사용해 같은 스크립트가 여러 번 삽입되지 않게 한다.
 const POSTCODE_SCRIPT_ID = 'daum-postcode-script'
 const POSTCODE_SCRIPT_SRC = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
 
+// 회원가입 폼의 초기값이다.
+// input name과 객체 key를 맞춰 공통 변경 핸들러에서 값을 갱신한다.
 const initialForm = {
   email: '',
   loginId: '',
@@ -20,10 +25,12 @@ const initialForm = {
 }
 
 function loadPostcodeScript() {
+  // 이미 API가 로드되어 있으면 추가 script 태그를 만들지 않는다.
   if (window.daum?.Postcode || window.kakao?.Postcode) {
     return Promise.resolve()
   }
 
+  // script 태그는 있지만 아직 로딩 중일 수 있으므로 기존 태그의 이벤트를 기다린다.
   const existingScript = document.getElementById(POSTCODE_SCRIPT_ID)
   if (existingScript) {
     return new Promise((resolve, reject) => {
@@ -32,6 +39,7 @@ function loadPostcodeScript() {
     })
   }
 
+  // 최초 호출 시 script 태그를 만들고, 호출부가 await할 수 있도록 Promise로 감싼다.
   return new Promise((resolve, reject) => {
     const script = document.createElement('script')
     script.id = POSTCODE_SCRIPT_ID
@@ -43,13 +51,18 @@ function loadPostcodeScript() {
 }
 
 function RegisterPage() {
+  // step 1은 회원 기본 정보, step 2는 세대 주소 정보 입력 화면이다.
   const [step, setStep] = useState(1)
+  // 모든 입력값은 React state로 관리하는 controlled input이다.
   const [form, setForm] = useState(initialForm)
+  // 클라이언트 검증 실패와 서버 실패 메시지를 같은 위치에 표시한다.
   const [errorMessage, setErrorMessage] = useState('')
+  // 제출 중 버튼 비활성화와 중복 제출 방지를 위한 상태다.
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const updateField = (event) => {
     const { name, value } = event.target
+    // input name을 form key로 사용해 여러 필드를 하나의 핸들러로 갱신한다.
     setForm((current) => ({
       ...current,
       [name]: value,
@@ -57,6 +70,7 @@ function RegisterPage() {
   }
 
   const updateAddress = (address) => {
+    // 우편번호 API에서 받은 주소 일부만 기존 form 상태에 병합한다.
     setForm((current) => ({
       ...current,
       ...address,
@@ -68,8 +82,10 @@ function RegisterPage() {
 
     try {
       // 기존 Thymeleaf 회원가입 화면에서 쓰던 Daum 우편번호 API를 React에서 동적으로 로드한다.
+      // 주소찾기 버튼을 누른 시점에 외부 우편번호 스크립트를 로드한다.
       await loadPostcodeScript()
 
+      // 환경에 따라 Postcode 생성자가 window.daum 또는 window.kakao 아래에 있을 수 있어 둘 다 확인한다.
       const Postcode = window.daum?.Postcode || window.kakao?.Postcode
       if (!Postcode) {
         throw new Error('주소찾기 API를 불러오지 못했습니다.')
@@ -77,6 +93,7 @@ function RegisterPage() {
 
       new Postcode({
         oncomplete: (data) => {
+          // 사용자가 선택한 주소 타입에 따라 도로명 주소 또는 지번 주소를 기본 주소로 사용한다.
           const baseAddress = data.userSelectedType === 'R'
             ? data.roadAddress
             : data.jibunAddress
@@ -94,6 +111,7 @@ function RegisterPage() {
             ? ` (${extraAddressParts.join(', ')})`
             : ''
 
+          // 우편번호와 기본 주소만 자동 입력하고, 동/호수는 사용자가 직접 입력하게 둔다.
           updateAddress({
             postNum: data.zonecode || '',
             buildingName: `${baseAddress}${extraAddress}`,
@@ -108,6 +126,8 @@ function RegisterPage() {
   const goNextStep = () => {
     setErrorMessage('')
 
+    // passwordConfirm은 화면 검증용 필드라 서버로 보내지 않는다.
+    // 다음 단계로 넘어가기 전에 프론트에서 먼저 비밀번호 일치 여부를 확인한다.
     if (form.password !== form.passwordConfirm) {
       setErrorMessage('비밀번호가 일치하지 않습니다.')
       return
@@ -123,12 +143,15 @@ function RegisterPage() {
 
     try {
       // TODO: 백엔드에 /api/auth/register가 준비되면 이 요청을 실제 회원가입 API로 연결한다.
+      // 백엔드 RegisterApiController는 JSON 요청 본문을 SignUpDTO로 받는다.
+      // /hometop/api/auth/register 요청은 Vite proxy를 통해 localhost:8090 백엔드로 전달된다.
       const response = await fetch(`${CONTEXT_PATH}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
+        // key 이름은 SignUpDTO 필드명과 맞춰야 Jackson 역직렬화가 정상 동작한다.
         body: JSON.stringify({
           email: form.email,
           loginId: form.loginId,
@@ -143,12 +166,19 @@ function RegisterPage() {
         }),
       })
 
+      // 성공/실패 응답 모두 JSON message를 내려줄 수 있다.
+      // 보안 필터 오류처럼 body가 비어 있을 수 있어 파싱 실패는 빈 객체로 처리한다.
+      const data = await response.json().catch(() => ({}))
+
+      // 서버가 내려준 검증 메시지가 있으면 우선 표시한다.
       if (!response.ok) {
-        throw new Error('회원가입에 실패했습니다.')
+        throw new Error(data.message || '회원가입에 실패했습니다.')
       }
 
+      // 회원가입 성공 후 로그인 URL로 이동해 App.jsx가 LoginPage를 다시 렌더링하게 한다.
       window.location.href = `${CONTEXT_PATH}/auth`
     } catch (error) {
+      // 네트워크 오류 또는 서버 검증 실패 메시지를 화면 에러 영역에 표시한다.
       setErrorMessage(error.message)
     } finally {
       setIsSubmitting(false)
@@ -162,7 +192,7 @@ function RegisterPage() {
           <div>
             <p className="brand-name">HomeTalk OnePass</p>
             <h1 id="register-title">회원가입</h1>
-            <p>{step === 1 ? '기본 정보를 입력하세요.' : '세대 주소 정보를 입력하세요.'}</p>
+            <p>{step === 1 ? '회원 정보를 입력하세요.' : '세대 주소 정보를 입력하세요.'}</p>
           </div>
         </div>
 

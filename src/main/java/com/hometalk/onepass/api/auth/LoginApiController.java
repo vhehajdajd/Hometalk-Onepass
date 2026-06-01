@@ -13,7 +13,6 @@ public class LoginApiController {
 
     @GetMapping("/login")
     public ResponseEntity<Map<String, String>> loginEndpointInfo() {
-        // POST /api/auth/login is handled by Spring Security formLogin, not by this MVC controller.
         return ResponseEntity.ok(Map.of(
                 "method", "POST",
                 "contentType", "application/x-www-form-urlencoded",

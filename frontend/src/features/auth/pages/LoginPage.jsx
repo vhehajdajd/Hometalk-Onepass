@@ -11,7 +11,6 @@ function LoginPage() {
     rememberMe: false,
   })
   const [errorMessage, setErrorMessage] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const updateField = (event) => {
     const { name, value, checked, type } = event.target
@@ -24,7 +23,6 @@ function LoginPage() {
   const handleSubmit = async (event) => {
     event.preventDefault()
     setErrorMessage('')
-    setIsSubmitting(true)
 
     try {
       // Spring Security formLogin은 JSON body가 아니라 form-urlencoded 파라미터를 읽는다.
@@ -111,8 +109,7 @@ function LoginPage() {
 
           {errorMessage ? <p className="login-message">{errorMessage}</p> : null}
 
-          <button className="login-submit" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? '로그인 중' : '로그인'}
+          <button className="login-submit" type="submit">로그인
           </button>
         </form>
 

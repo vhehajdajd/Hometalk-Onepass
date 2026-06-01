@@ -58,17 +58,10 @@ public class SecurityConfig {
                                 "/auth/oauth2/**",
                                 "/auth/register/**",
                                 "/auth/api/check-id-duplication",
-                                // React 로그인 화면에서 호출하는 Spring Security formLogin 처리 URL
-                                "/api/auth/login",
-                                "/oauth2/authorization/**",
-                                "/login/oauth2/**",
-                                "/css/**",
-                                "/js/**",
-                                "/images/**",
-                                "/uploads/**",
-                                "/notice/api/detail",
-                                "/schedule/api/calendar",
-                                "/api/community/recent"
+
+                                // react api 관련 url 허용
+                                "/api/**"
+
                         ).permitAll()
 
                         // 2. 승인 상태 안내 페이지는 로그인 사용자만 접근
