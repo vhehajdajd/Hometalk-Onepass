@@ -11,14 +11,6 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/staff': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/parking': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
     },
   },
 })
