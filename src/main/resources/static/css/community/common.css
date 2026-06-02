@@ -1,0 +1,226 @@
+:root {
+    --main-navy: #032154;
+    --point-coral: #EB6E57;
+    --soft-mint: #D1E8E4;
+    --bg-gray: #fff;
+    --border-color: #E2E8F0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Arial, Sans-serif;
+    color: #1e293b;
+    line-height: 1.6;
+}
+
+/* 상단 알림 메시지 (Flash Message) */
+.success-message {
+    background-color: var(--main-navy);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    margin: 15px auto;
+    max-width: 1200px;
+    border-left: 5px solid var(--point-coral);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    animation: fadeOut 3.5s forwards;
+    position: relative;
+    z-index: 9999;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 0; transform: translateY(-10px); }
+    10% { opacity: 1; transform: translateY(0); }
+    85% { opacity: 1; }
+    100% { opacity: 0; pointer-events: none; }
+}
+
+/* 페이지 공통 컨테이너 */
+.content-container {
+    width: 100%; /* 모든 페이지 너비 통일 */
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* 제목 스타일 통일 */
+.page-title {
+    font-size: 1.8rem;
+    color: var(--main-navy);
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+/* 하단 버튼 바 통일 */
+.page-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 1px solid #f1f5f9;
+}
+
+/* 모든 버튼 요소 초기화 및 규격화 */
+.btn, .btn-edit, .btn-delete, .btn-submit, .btn-temp, .btn-cancel, #btnSaveTemp {
+    display: inline-flex; /* 내부 텍스트 중앙 정렬 */
+    align-items: center;
+    justify-content: center;
+
+    height: 45px;
+    padding: 0 24px;
+
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    white-space: nowrap;
+    transition: 0.2s;
+    box-sizing: border-box; /* 패딩이 높이에 영향을 주지 않도록 설정 */
+}
+
+/* 목록 버튼처럼 배경이 연한 버튼들 (a 태그일 때) */
+.btn, .btn-cancel {
+    background-color: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+/* 수정 버튼 (Main Navy) */
+.btn-edit, .btn-submit {
+    background-color: var(--main-navy);
+    color: white;
+}
+
+/* 삭제 버튼 (Point Coral) */
+.btn-delete {
+    background-color: var(--point-coral);
+    color: white;
+}
+
+/* 링크의 파란색과 밑줄 제거 */
+a {
+    text-decoration: none;
+    color: inherit; /* 부모 요소의 색상을 따라가게 함 */
+}
+
+/* 리스트의 점(불렛) 제거 */
+ul, li {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* ==========================================
+   UI Components - Category Badges
+   ========================================== */
+.list-category {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-block;
+    text-align: center;
+}
+
+/* 카테고리 공통 스타일 */
+.list-category {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-block;
+}
+
+/* 카테고리별 개별 색상 */
+.list-category.free { background-color: #E6F7FF; color: #1890FF; }
+.list-category.debate { background-color: #F3E5F5; color: #7B1FA2; }
+.list-category.share { background-color: #FFF7E6; color: #FA8C16; }
+.list-category.lost { background-color: #FFE5E5; color: #FF4D4F; }
+.list-category.survey { background-color: #F6FFED; color: #52C41A; }
+
+/* 태그 스타일 */
+
+/* 태그 필터 전체 영역 */
+.tag-filter-wrapper {
+    width: 100%;
+    background: #ffffff; /* 배경을 흰색으로 통일하거나 아주 연한 회색으로 설정 */
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.tag-filter-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 15px 40px; /* 카테고리 배너와 좌우 패딩 일치 */
+    display: flex;
+    align-items: center;
+}
+
+.tag-icon {
+    font-size: 14px;
+    color: #cbd5e1;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+}
+
+/* 태그 리스트 내부 정렬 */
+.tag-list-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag-badge {
+    display: inline-block;
+    background-color: #f8fafc;
+    color: #64748b;
+    padding: 5px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    transition: 0.2s ease;
+}
+.tag-badge:hover {
+    background-color: var(--soft-mint);
+    color: var(--main-navy);
+    border-color: #b2d2cd;
+}
+
+.tag-badge::before {
+    content: "# ";
+}
+
+.remove-tag {
+    margin-left: 5px;
+    cursor: pointer;
+    color: #999;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+.remove-tag:hover {
+    color: #ff4d4f;
+    transform: scale(1.3);
+    font-weight: bold;
+}
+
+/* 에디터 내부 이미지 크기 조절 */
+.ql-editor img {
+    max-width: 500px;
+    height: auto;
+    display: block;
+    margin: 10px 0;
+}
+
+.post-content img {
+    max-width: 100%;
+    height: auto;
+}
+

@@ -3,6 +3,7 @@ package com.hometalk.onepass.community.controller;
 import com.hometalk.onepass.community.dto.AdminBoardRqDTO;
 import com.hometalk.onepass.community.dto.AdminBoardRsDTO;
 import com.hometalk.onepass.community.dto.ReportResponse;
+import com.hometalk.onepass.community.dto.ReportSummaryDTO;
 import com.hometalk.onepass.community.dto.response.PostResponseDTO;
 import com.hometalk.onepass.community.enums.BoardType;
 import com.hometalk.onepass.community.enums.ReportReason;
@@ -177,9 +178,11 @@ public class CommunityAdminController {
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "reason", required = false) String reason,
             Model model) {
-        List<ReportResponse> reports = reportService.findReportsByFilters(status, reason);
+        // 필터링 리스트 & 게시글별 신고 요약 정보
+        List<ReportSummaryDTO> summaries =
+                reportService.getReportSummaryByFilters(status, reason);
 
-        model.addAttribute("reports", reports);
+        model.addAttribute("summaries", summaries);
         model.addAttribute("currentStatus", (status != null && !status.isBlank()) ? status : "ALL");
         model.addAttribute("currentReason", (reason != null && !reason.isBlank()) ? reason : "");
         return "community/reportList";

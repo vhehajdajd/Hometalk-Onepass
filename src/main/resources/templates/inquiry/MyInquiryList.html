@@ -55,7 +55,11 @@
                         </td>
 
                         <td>
-                            <span class="badge" th:text="${my.status}">상태</span>
+                            <span class="badge"
+                                  th:classappend="${my.status == '답변완료'} ? 'status-complete' : 'status-waiting'"
+                                  th:text="${my.status}">
+                                미답변
+                            </span>
                         </td>
 
                         <td class="text-muted"

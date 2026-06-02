@@ -78,8 +78,7 @@
                     <form th:action="@{/reservation/admin/status}" method="get" id="filterForm">
                         <input type="hidden" name="page" value="0">
 
-                        <select name="status" class="form-select" onchange="this.form.submit()"
-                                style="padding: 6px 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; cursor: pointer;">
+                        <select name="status" class="form-select" onchange="this.form.submit()">
                             <option value="">전체 상태 보기</option>
                             <option th:each="s : ${statuses}"
                                     th:value="${s}"
@@ -118,14 +117,15 @@
                                         </span>
                                     </div>
                                 </td>
-                                <td>
+
+                                <td th:id="|reservation-status-${res.id}|">
                                    <span class="status-badge"
                                          th:classappend="${
-                                                        res.status?.toString() == 'CANCELED' ? 'status-canceled' :
-                                                        (res.status?.toString() == 'REJECTED' ? 'status-rejected' :
-                                                        (res.status?.toString() == 'PENDING' ? 'status-pending' :
-                                                        (res.status?.toString() == 'FINISHED' ? 'status-finished' :
-                                                        'status-active')))
+                                                res.status?.toString() == 'CANCELED' ? 'status-canceled' :
+                                                (res.status?.toString() == 'REJECTED' ? 'status-rejected' :
+                                                (res.status?.toString() == 'PENDING' ? 'status-pending' :
+                                                (res.status?.toString() == 'FINISHED' ? 'status-finished' :
+                                                'status-active')))
                                          }">
 
                                          <th:block th:if="${res.status?.toString() == 'CANCELED'}">취소</th:block>
@@ -135,7 +135,8 @@
                                          <th:block th:if="${res.status?.toString() == 'CONFIRMED'}">예약확정</th:block>
                                    </span>
                                 </td>
-                                <td>
+
+<!--                            <td>
                                     <div class="flex-center gap-md" th:if="${res.status?.toString() == 'PENDING'}">
                                         <button type="button" class="btn btn-primary btn-sm"
                                                 th:onclick="|approveReservation('${res.id}')|">
@@ -146,6 +147,11 @@
                                                 th:onclick="|rejectReservation('${res.id}')|">
                                             반려
                                         </button>
+                                    </div>-->
+                                <td th:id="|reservation-action-${res.id}|">
+                                    <div th:if="${res.status?.toString() == 'PENDING'}"
+                                         class="reservation-action-root"
+                                         th:data-id="${res.id}">
                                     </div>
                                     <div th:if="${res.status?.toString() == 'REJECTED' and res.cancelReason != null}"
                                          style="color: #d9534f; margin-top: 2px;">
@@ -204,42 +210,124 @@
     <a th:href="@{/}">홈으로 돌아가기</a>
 </div>
 
-<script th:src="@{/js/community/api.js}"></script>
 
+<script th:src="@{/js/community/api.js}"></script>
 <script defer th:src="@{/js/community/post-modal.js}"></script>
 
+<!-- React Refresh -->
+<script type="module">
+    import RefreshRuntime from "http://localhost:8092/@react-refresh";
+    RefreshRuntime.injectIntoGlobalHook(window);
+    window.$RefreshReg$ = () => {};
+    window.$RefreshSig$ = () => (type) => type;
+    window.__vite_plugin_react_preamble_installed__ = true;
+</script>
+<!-- React mount -->
+<script type="module"
+        src="http://localhost:8092/src/features/reservation/mounts/reservation-action-main.jsx">
+</script>
 
+<!--
 <script th:inline="javascript">
     // [관리자] 예약 반려
-    async function rejectReservation(id) {
-        const reason = prompt("반려 사유를 입력해주세요.");
+    let rejectReservationId = null;
 
-        if (!reason || !reason.trim()) {
-            showAlertModal("반려 사유를 입력해야 합니다.");
-            return;
-        }
+    function rejectReservation(id) {
+        rejectReservationId = id;
 
-        try {
-            const response = await apiFetch(`/hometop/api/reservations/${id}/cancel`, {
-                method: 'PATCH',
-                body: JSON.stringify({
-                    reason: reason
-                })
-            });
+        removeExistingModal();
+        document.getElementById('customRejectModal')?.remove();
 
-            if (response.ok) {
-                showAlertModal("예약이 반려되었습니다.");
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            } else {
-                const errorMsg = await response.text();
-                showAlertModal(errorMsg || "반려 처리 중 오류가 발생했습니다.");
+        const modal = document.createElement('div');
+        modal.id = 'customRejectModal';
+        modal.innerHTML = `
+        <div class="custom-modal-overlay">
+            <div class="custom-modal-box" style="max-width: 420px;">
+                <div class="custom-modal-message" style="text-align: left;">
+                    <strong style="display:block; margin-bottom: 10px; color:#1f2937;">
+                        예약 반려 사유 입력
+                    </strong>
+
+                    <textarea id="rejectReasonInput" rows="5"
+                              placeholder="반려 사유를 입력해주세요."
+                              class="reject-reason-textarea"></textarea>
+                </div>
+
+                <div class="custom-modal-footer">
+                    <button type="button" class="custom-modal-btn cancel-btn">
+                        취소
+                    </button>
+
+                    <button type="button" class="custom-modal-btn confirm-btn">
+                        반려 처리
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+        document.body.appendChild(modal);
+
+        const textarea = modal.querySelector('#rejectReasonInput');
+        const cancelBtn = modal.querySelector('.cancel-btn');
+        const confirmBtn = modal.querySelector('.confirm-btn');
+        const overlay = modal.querySelector('.custom-modal-overlay');
+
+        setTimeout(() => textarea.focus(), 50);
+
+        function escHandler(e) {
+            if (e.key === 'Escape') {
+                closeModal();
             }
-        } catch (error) {
-            console.error(error);
-            showAlertModal("서버 통신 중 오류가 발생했습니다.");
         }
+
+        function closeModal() {
+            modal.remove();
+            rejectReservationId = null;
+            document.removeEventListener('keydown', escHandler);
+        }
+
+        cancelBtn.addEventListener('click', closeModal);
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                closeModal();
+            }
+        });
+
+        confirmBtn.addEventListener('click', async () => {
+            const reason = textarea.value.trim();
+
+            if (!reason) {
+                showAlertModal("반려 사유를 입력해야 합니다.");
+                return;
+            }
+
+            try {
+                const response = await apiFetch(`/hometop/api/reservations/${rejectReservationId}/cancel`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        reason: reason
+                    })
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    showAlertModal("예약이 반려되었습니다.");
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    const errorMsg = await response.text();
+                    showAlertModal(errorMsg || "반려 처리 중 오류가 발생했습니다.");
+                }
+            } catch (error) {
+                console.error(error);
+                showAlertModal("서버 통신 중 오류가 발생했습니다.");
+            }
+        });
+
+        document.addEventListener('keydown', escHandler);
     }
 
     // [관리자] 예약 승인
@@ -266,5 +354,6 @@
         });
     }
 </script>
+-->
 </body>
 </html>

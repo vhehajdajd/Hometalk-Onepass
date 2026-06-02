@@ -922,6 +922,10 @@
 .res-total .res-stat-icon { background: #E7F5FF; color: #228BE6; }
 .res-total .res-stat-label { color: #868E96; }
 
+.form-select {
+    padding: 6px 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; cursor: pointer;
+}
+
 
 .flex-direction-column {
     display: flex;
@@ -1042,6 +1046,17 @@
 .custom-modal-btn.confirm-btn {
     background: var(--color-btn);
     color: #fff;
+}
+
+.reject-reason-textarea {
+    width: 100%;
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px solid #d9dee8;
+    border-radius: 10px;
+    resize: vertical;
+    outline: none;
+    font-size: 14px;
 }
 
 /* =========================

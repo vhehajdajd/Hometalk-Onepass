@@ -52,6 +52,7 @@
 <div th:fragment="communityAdmin" class="category-bar">
     <a class="category-item" th:href="@{/community/admin}">게시판/카테고리 설정</a>
     <a class="category-item" th:href="@{/community/admin/posts}">게시글 숨김/삭제 관리</a>
+    <a class="category-item" th:href="@{/community/admin/reports}">신고 관리</a>
 </div>
 
 <!-- ── 공지 ── -->
@@ -78,7 +79,7 @@
 
 <!-- ── 문의/민원 - 입주민 ── -->
 <div th:fragment="inquiry" class="category-bar">
-    <a class="category-item" th:href="@{/inquiries/list}">문의 목록</a>
+    <a class="category-item" th:href="@{/inquiries/faq}">FAQ</a>
     <a class="category-item" th:href="@{/inquiries/write}">문의 작성</a>
     <a class="category-item" th:href="@{/inquiries/my}">내 문의</a>
     <a class="category-item" th:href="@{/complaints/list}">민원 목록</a>

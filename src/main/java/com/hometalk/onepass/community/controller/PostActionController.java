@@ -1,6 +1,7 @@
 package com.hometalk.onepass.community.controller;
 
 import com.hometalk.onepass.auth.config.CustomUserDetails;
+import com.hometalk.onepass.community.dto.ReportResponse;
 import com.hometalk.onepass.community.exception.UnauthorizedAccessException;
 import com.hometalk.onepass.community.service.PostActionService;
 import com.hometalk.onepass.community.service.PostService;
@@ -9,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /*
     관리자용
@@ -54,23 +57,37 @@ public class PostActionController {
         return ResponseEntity.ok().build();
     }
 
+    // 신고 상세 내역
+    @GetMapping("/reports/details/{postId}")
+    @ResponseBody
+    public List<ReportResponse> getReportDetails(@PathVariable Long postId) {
+        return reportService.getReportsByPostId(postId); // 해당 게시글의 모든 신고 건 반환
+    }
+
+    // 검토중 상태 변경 - 상세 조회 or 신고 게시글 이동 시 REVIEWING 처리
+    @PostMapping("/reports/post/{postId}/review")
+    public ResponseEntity<Void> reviewReport(@PathVariable Long postId) {
+        reportService.markReviewing(postId);
+        return ResponseEntity.ok().build();
+    }
+
     // 신고 승인 및 처리 완료
-    @PostMapping("/reports/{reportId}/resolve")
-    public ResponseEntity<Void> resolveReport(@PathVariable Long reportId,
+    @PostMapping("/reports/{postId}/resolve")
+    public ResponseEntity<Void> resolveReport(@PathVariable Long postId,
                                               Authentication authentication) {
         getLoginCustomUser(authentication);
         // 상태 RESOLVED 변경 + post.softDelete()
-        reportService.resolveReport(reportId);
+        reportService.resolveReport(postId);
         return ResponseEntity.ok().build();
     }
 
     // 신고 반려 (허위 신고 등 처리)
-    @PostMapping("/reports/{reportId}/reject")
-    public ResponseEntity<Void> rejectReport(@PathVariable Long reportId,
+    @PostMapping("/reports/{postId}/reject")
+    public ResponseEntity<Void> rejectReport(@PathVariable Long postId,
                                              Authentication authentication) {
         getLoginCustomUser(authentication);
         // 상태 REJECTED 변경
-        reportService.rejectReport(reportId);
+        reportService.rejectReport(postId);
         return ResponseEntity.ok().build();
     }
 

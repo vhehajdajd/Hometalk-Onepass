@@ -16,13 +16,20 @@ public class CommentRsDTO {
     private String nickname;
     private LocalDateTime createdAt;
 
+    private boolean editable;
+
     public static CommentRsDTO from(Comment comment) {
+        return from(comment, null);
+    }
+
+    public static CommentRsDTO from(Comment comment, Long loginUserId) {
         return CommentRsDTO.builder()
                 .id(comment.getId())
                 .content(comment.getContent())
                 .writerId(comment.getWriter().getId())
                 .nickname(comment.getWriter().getNickname())
                 .createdAt(comment.getCreatedAt())
+                .editable(loginUserId != null && comment.getWriter().getId().equals(loginUserId))
                 .build();
     }
 }

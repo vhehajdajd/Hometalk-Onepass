@@ -129,6 +129,7 @@ async function updateStatus(postId, status) {
     }
 }
 
+/*
 async function updateTradeStatus(postId, status) {
     try {
         const response = await apiFetch(
@@ -151,6 +152,7 @@ async function updateTradeStatus(postId, status) {
         showAlertModal("서버 오류가 발생했습니다.");
     }
 }
+*/
 
 
 // 1. 신고 모달 열기
@@ -253,6 +255,7 @@ function changePage(pageNumber) {
 }
 
 // 좋아요
+/*
 function toggleReaction(buttonElement, type) {
     const postId = buttonElement.dataset.postId;
     const url = type === 'LIKE'
@@ -288,6 +291,7 @@ function toggleReaction(buttonElement, type) {
         })
         .catch(err => console.error('추천 처리 중 오류 발생:', err));
 }
+*/
 
 // HTML의 th:onclick이나 외부 모듈에서 호출 가능하도록 전체 윈도우 객체 바인딩 세트 배치
 window.deletePost = deletePost;
@@ -295,10 +299,10 @@ window.togglePin = togglePin;
 window.hidePost = hidePost;
 window.unhidePost = unhidePost;
 window.updateStatus = updateStatus;
-window.updateTradeStatus = updateTradeStatus;
+// window.updateTradeStatus = updateTradeStatus;
 window.openReportModal = openReportModal;
 window.closeReportModal = closeReportModal;
 window.submitReport = submitReport;
 window.confirmCancel = confirmCancel;
 window.changePage = changePage;
-window.toggleReaction = toggleReaction;
+// window.toggleReaction = toggleReaction;
