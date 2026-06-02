@@ -13,7 +13,7 @@ public class OnepassApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(OnepassApplication.class, args);
-    }
 
+    }
 }
  
