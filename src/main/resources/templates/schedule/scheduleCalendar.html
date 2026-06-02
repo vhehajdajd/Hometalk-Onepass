@@ -47,7 +47,8 @@
                         <div class="cal-today-btns">
                             <button class="cal-today-btn" id="goToday">오늘로 이동</button>
                             <button class="cal-add-btn" id="btnAddSchedule"
-                                    sec:authorize="hasRole('ADMIN')">+ 일정 등록</button>
+                                    sec:authorize="hasRole('ADMIN')">+ 일정 등록
+                            </button>
                             <div class="cal-badge-legend">
                                 <span class="legend-item badge-facility">시설</span>
                                 <span class="legend-item badge-safety">안전</span>
@@ -134,7 +135,12 @@
                         </tr>
                         <tr id="detailNoticeRow">
                             <td class="modal-label">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                     fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round"
+                                     stroke-linejoin="round">
+                                    <path d="M7 7h10v10"/>
+                                    <path d="M7 17 17 7"/>
+                                </svg>
                             </td>
                             <td><a id="detailNoticeLink" href="#" class="detail-link">안내 페이지 이동</a></td>
                         </tr>
@@ -231,7 +237,8 @@
                 <div class="modal-body">
                     <div class="modal-bottom" style="flex-direction:column; gap:8px;">
                         <button class="repeat-delete-btn this" onclick="confirmRepeatDelete('this')">이 일정만 삭제</button>
-                        <button class="repeat-delete-btn danger" onclick="confirmRepeatDelete('all')">이 일정 전체 삭제</button>
+                        <button class="repeat-delete-btn danger" onclick="confirmRepeatDelete('all')">이 일정 전체 삭제
+                        </button>
                         <button class="repeat-delete-btn" onclick="closeRepeatDeleteModal()">취소</button>
                     </div>
                 </div>
@@ -379,6 +386,11 @@
         document.getElementById('detailModalOverlay').addEventListener('click', function(e) {
             if (e.target === this) closeDetailModal();
         });
+
+        document.getElementById('formModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeFormModal();
+        });
+
         document.getElementById('repeatDeleteModalOverlay').addEventListener('click', function(e) {
             if (e.target === this) closeRepeatDeleteModal();
         });
@@ -571,8 +583,18 @@
                        sd.getDate() === item.cell.day;
             });
             daySingles.forEach(function(s) {
+                // placeholder 슬롯이 있으면 거기에 끼워넣기, 없으면 append
+                var slot = 0;
+                while (slot < item.slotContainer.children.length &&
+                       !item.slotContainer.children[slot].classList.contains('cal-badge-placeholder')) {
+                    slot++;
+                }
                 var badge = createBadge(s);
-                item.slotContainer.appendChild(badge);
+                if (slot < item.slotContainer.children.length) {
+                    ensureSlot(item.slotContainer, slot, badge);
+                } else {
+                    item.slotContainer.appendChild(badge);
+                }
             });
         });
 
