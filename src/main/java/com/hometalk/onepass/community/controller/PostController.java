@@ -28,6 +28,7 @@ public class PostController {
     private final BoardService boardService;
     private final CategoryService categoryService;
     private final CommentService commentService;
+    private final ReportService reportService;
     private final FileService fileService;
 
     // 게시판
@@ -189,6 +190,7 @@ public class PostController {
     public String postDetail(@PathVariable String boardCode,
                              @PathVariable String categoryCode,
                              @PathVariable Long id,
+                             @RequestParam(value = "fromReport", required = false) Boolean fromReport,
                              @RequestParam(value = "page", defaultValue = "1") int page,
                              HttpSession session,
                              Model model,
@@ -214,6 +216,13 @@ public class PostController {
 
         BoardResponseDTO board = boardService.findByCode(boardCode);
         addLayoutAttributes(board, category, model, false, authentication);
+
+        if (Boolean.TRUE.equals(fromReport)
+                && authentication != null
+                && authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            reportService.markReviewing(id);
+        }
 
         model.addAttribute("boardCode", boardCode);
         model.addAttribute("currentCategoryCode", categoryCode);

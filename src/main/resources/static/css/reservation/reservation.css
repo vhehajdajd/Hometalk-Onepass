@@ -1044,6 +1044,17 @@
     color: #fff;
 }
 
+.reject-reason-textarea {
+    width: 100%;
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px solid #d9dee8;
+    border-radius: 10px;
+    resize: vertical;
+    outline: none;
+    font-size: 14px;
+}
+
 /* =========================
    FAQ Dashboard
 ========================= */

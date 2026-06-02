@@ -4,6 +4,7 @@ import com.hometalk.onepass.auth.entity.User;
 import com.hometalk.onepass.auth.repository.UserRepository;
 import com.hometalk.onepass.community.dto.ReportRequestDTO;
 import com.hometalk.onepass.community.dto.ReportResponse;
+import com.hometalk.onepass.community.dto.ReportSummaryDTO;
 import com.hometalk.onepass.community.entity.Post;
 import com.hometalk.onepass.community.entity.Report;
 import com.hometalk.onepass.community.enums.ReportReason;
@@ -65,9 +66,7 @@ public class ReportService {
         [관리자용] 신고 상태 필터링
      */
     @Transactional(readOnly = true)
-    public List<ReportResponse> findReportsByFilters(String statusStr, String reasonStr) {
-        List<Report> reports;
-
+    public List<ReportSummaryDTO> getReportSummaryByFilters(String statusStr, String reasonStr) {
         ReportStatus status = null;
         ReportReason reason = null;
 
@@ -75,68 +74,68 @@ public class ReportService {
         if (statusStr != null && !statusStr.isBlank() && !"ALL".equalsIgnoreCase(statusStr)) {
             try {
                 status = ReportStatus.valueOf(statusStr.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                // 이상한 값 들어오면 방어용 null 처리
-            }
+            } catch (IllegalArgumentException ignored) {}
         }
 
         // 2. 신고 유형값 변환 및 안전 검증
         if (reasonStr != null && !reasonStr.isBlank()) {
             try {
                 reason = ReportReason.valueOf(reasonStr.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                // 이상한 값 들어오면 방어용 null 처리
-            }
+            } catch (IllegalArgumentException ignored) {}
         }
+        return reportRepository.getReportSummaryByFilters(status, reason);
+    }
 
-        // 3. 조건 조합
-        if (status != null && reason != null) {
-            // 상태&유형 둘 다 지정
-            reports = reportRepository.findByStatusAndReasonOrderByIdDesc(status, reason);
-        } else if (status != null) {
-            // 상태만 지정
-            if (status == ReportStatus.PENDING) {
-                return reportRepository.findByStatusOrderByIdDesc(ReportStatus.PENDING).stream()
-                        .map(ReportResponse::from)
-                        .collect(Collectors.toList());
-            }
-            reports = reportRepository.findByStatusOrderByIdDesc(status);
-        } else if (reason != null) {
-            // 유형만 지정
-            reports = reportRepository.findByReasonOrderByIdDesc(reason);
-        } else {
-            // 둘 다 전체(ALL)인 경우
-            reports = reportRepository.findAllByOrderByIdDesc();
-        }
-
-        return reports.stream()
+    // 해당 게시글의 모든 신고 내역 조회
+    @Transactional(readOnly = true)
+    public List<ReportResponse> getReportsByPostId(Long postId) {
+        return reportRepository.findByPostIdOrderByIdDesc(postId).stream()
                 .map(ReportResponse::from)
                 .collect(Collectors.toList());
+    }
+
+    /*
+        관리자 상세 내역 조회 시 '검토중' 상태 변경
+     */
+    @Transactional
+    public void markReviewing(Long postId) {
+        List<Report> reports = reportRepository.findByPostIdOrderByIdDesc(postId);
+        if (reports.isEmpty()) return;
+
+        reports.stream()
+                .filter(report -> report.getStatus() == ReportStatus.PENDING)
+                .forEach(report -> report.updateStatus(ReportStatus.REVIEWING));
     }
 
     /*
         [관리자용] 신고 처리 완료 (RESOLVED)
          - 신고 승인되면 해당 게시글 삭제 처리
      */
-    public void resolveReport(Long reportId) {
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 신고 내역입니다: " + reportId));
-
-        report.updateStatus(ReportStatus.RESOLVED);
-        Post post = report.getPost();
-        if (post != null) {
-            post.softDelete();
+    public void resolveReport(Long postId) {
+        List<Report> reports = reportRepository.findByPostIdOrderByIdDesc(postId);
+        if (reports.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 신고 게시글입니다: " + postId);
         }
+
+        reports.forEach(report -> report.updateStatus(ReportStatus.RESOLVED));
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostNotFoundException(postId, "존재하지 않는 게시글입니다."));
+
+        post.softDelete();
     }
 
     /*
         [관리자용] 신고 반려 (REJECTED)
          - 허위 신고이거나 문제가 없다고 판단하여 매칭 취소
      */
-    public void rejectReport(Long reportId) {
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 신고 내역입니다: " + reportId));
+    public void rejectReport(Long postId) {
+        List<Report> reports = reportRepository.findByPostIdOrderByIdDesc(postId);
 
-        report.updateStatus(ReportStatus.REJECTED);
+        if (reports.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 신고 게시글입니다: " + postId);
+        }
+
+        reports.forEach(report -> report.updateStatus(ReportStatus.REJECTED));
     }
 }
