@@ -19,7 +19,6 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class RegisterApiController {
 
-    // 기존 Thymeleaf 회원가입 흐름에서도 사용하는 서비스다.
     // API 컨트롤러도 같은 서비스를 재사용해 비밀번호 암호화, 세대 생성, 계정 생성 로직을 한 곳에 둔다.
     private final SignUpService signUpService;
 

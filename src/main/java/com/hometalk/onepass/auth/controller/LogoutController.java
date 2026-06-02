@@ -1,15 +1,12 @@
 package com.hometalk.onepass.auth.controller;
 
 import com.hometalk.onepass.auth.config.CustomLogoutSuccessHandler;
-import com.hometalk.onepass.auth.config.RememberMeConfig;
+import com.hometalk.onepass.auth.service.AuthLogoutService;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,6 +19,7 @@ import java.io.IOException;
 public class LogoutController {
 
     private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
+    private final AuthLogoutService authLogoutService;
 
     @GetMapping("/auth/oauth2/kakao/logout")
     public void kakaoLogout(@RequestParam("client_id") String clientId,
@@ -43,23 +41,7 @@ public class LogoutController {
     public void logout(HttpServletRequest request,
                        HttpServletResponse response,
                        Authentication authentication) throws IOException, ServletException {
-        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
-        logoutHandler.setInvalidateHttpSession(true);
-        logoutHandler.setClearAuthentication(true);
-        logoutHandler.logout(request, response, authentication);
-        SecurityContextHolder.clearContext();
-        expireCookie(response, "JSESSIONID", request.getContextPath());
-        expireCookie(response, RememberMeConfig.REMEMBER_ME_PARAMETER, request.getContextPath());
-        expireCookie(response, "JSESSIONID", "/");
-        expireCookie(response, RememberMeConfig.REMEMBER_ME_PARAMETER, "/");
+        authLogoutService.logout(request, response, authentication);
         customLogoutSuccessHandler.onLogoutSuccess(request, response, authentication);
-    }
-
-    private void expireCookie(HttpServletResponse response, String name, String path) {
-        Cookie cookie = new Cookie(name, "");
-        cookie.setPath(path == null || path.isBlank() ? "/" : path);
-        cookie.setMaxAge(0);
-        cookie.setHttpOnly(true);
-        response.addCookie(cookie);
     }
 }
