@@ -922,6 +922,10 @@
 .res-total .res-stat-icon { background: #E7F5FF; color: #228BE6; }
 .res-total .res-stat-label { color: #868E96; }
 
+.form-select {
+    padding: 6px 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; cursor: pointer;
+}
+
 
 .flex-direction-column {
     display: flex;

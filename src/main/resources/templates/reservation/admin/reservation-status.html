@@ -78,8 +78,7 @@
                     <form th:action="@{/reservation/admin/status}" method="get" id="filterForm">
                         <input type="hidden" name="page" value="0">
 
-                        <select name="status" class="form-select" onchange="this.form.submit()"
-                                style="padding: 6px 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; cursor: pointer;">
+                        <select name="status" class="form-select" onchange="this.form.submit()">
                             <option value="">전체 상태 보기</option>
                             <option th:each="s : ${statuses}"
                                     th:value="${s}"
@@ -118,14 +117,15 @@
                                         </span>
                                     </div>
                                 </td>
-                                <td>
+
+                                <td th:id="|reservation-status-${res.id}|">
                                    <span class="status-badge"
                                          th:classappend="${
-                                                        res.status?.toString() == 'CANCELED' ? 'status-canceled' :
-                                                        (res.status?.toString() == 'REJECTED' ? 'status-rejected' :
-                                                        (res.status?.toString() == 'PENDING' ? 'status-pending' :
-                                                        (res.status?.toString() == 'FINISHED' ? 'status-finished' :
-                                                        'status-active')))
+                                                res.status?.toString() == 'CANCELED' ? 'status-canceled' :
+                                                (res.status?.toString() == 'REJECTED' ? 'status-rejected' :
+                                                (res.status?.toString() == 'PENDING' ? 'status-pending' :
+                                                (res.status?.toString() == 'FINISHED' ? 'status-finished' :
+                                                'status-active')))
                                          }">
 
                                          <th:block th:if="${res.status?.toString() == 'CANCELED'}">취소</th:block>
@@ -135,7 +135,8 @@
                                          <th:block th:if="${res.status?.toString() == 'CONFIRMED'}">예약확정</th:block>
                                    </span>
                                 </td>
-                                <td>
+
+<!--                            <td>
                                     <div class="flex-center gap-md" th:if="${res.status?.toString() == 'PENDING'}">
                                         <button type="button" class="btn btn-primary btn-sm"
                                                 th:onclick="|approveReservation('${res.id}')|">
@@ -146,6 +147,11 @@
                                                 th:onclick="|rejectReservation('${res.id}')|">
                                             반려
                                         </button>
+                                    </div>-->
+                                <td th:id="|reservation-action-${res.id}|">
+                                    <div th:if="${res.status?.toString() == 'PENDING'}"
+                                         class="reservation-action-root"
+                                         th:data-id="${res.id}">
                                     </div>
                                     <div th:if="${res.status?.toString() == 'REJECTED' and res.cancelReason != null}"
                                          style="color: #d9534f; margin-top: 2px;">
@@ -204,11 +210,24 @@
     <a th:href="@{/}">홈으로 돌아가기</a>
 </div>
 
-<script th:src="@{/js/community/api.js}"></script>
 
+<script th:src="@{/js/community/api.js}"></script>
 <script defer th:src="@{/js/community/post-modal.js}"></script>
 
+<!-- React Refresh -->
+<script type="module">
+    import RefreshRuntime from "http://localhost:8092/@react-refresh";
+    RefreshRuntime.injectIntoGlobalHook(window);
+    window.$RefreshReg$ = () => {};
+    window.$RefreshSig$ = () => (type) => type;
+    window.__vite_plugin_react_preamble_installed__ = true;
+</script>
+<!-- React mount -->
+<script type="module"
+        src="http://localhost:8092/src/features/reservation/mounts/reservation-action-main.jsx">
+</script>
 
+<!--
 <script th:inline="javascript">
     // [관리자] 예약 반려
     let rejectReservationId = null;
@@ -335,5 +354,6 @@
         });
     }
 </script>
+-->
 </body>
 </html>
