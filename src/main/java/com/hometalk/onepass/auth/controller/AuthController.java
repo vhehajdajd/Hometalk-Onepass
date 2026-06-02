@@ -24,6 +24,13 @@ public class AuthController {
         return "auth/login";
     }
 
+    @GetMapping("/login")
+    public String loginAlias(@RequestParam(required = false) String redirectURL,
+                             HttpServletRequest request) {
+        LoginRedirectUtils.saveRedirectUrl(request, redirectURL);
+        return "redirect:/auth";
+    }
+
 
     @GetMapping("/api/check-id-duplication")
     @ResponseBody
