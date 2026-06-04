@@ -7,13 +7,10 @@ export default defineConfig({
   server: {
     port: 8092,
     proxy: {
-      '/hometop/api': {
-        target: 'http://localhost:8090',
-        changeOrigin: true,
-        },
       '/api': {
         target: 'http://localhost:8090',
         changeOrigin: true,
+        rewrite: (path) => `/hometop${path}`,
       },
     },
   },
