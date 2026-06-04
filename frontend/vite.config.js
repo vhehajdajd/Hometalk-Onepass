@@ -8,7 +8,8 @@ export default defineConfig({
     port: 8092,
     proxy: {
       '/hometop/api': {
-        target: 'http://localhost:8090'
+        target: 'http://localhost:8090',
+        changeOrigin: true,
         },
       '/api': {
         target: 'http://localhost:8090',
