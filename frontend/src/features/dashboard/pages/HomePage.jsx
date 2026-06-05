@@ -1,26 +1,39 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import '../styles/home.css'
 import bannerImg from '../../../assets/banner.png'
+import Sidebar from '../../../components/Sidebar'
+import Navbar from '../../../components/Navbar'
+import Footer from '../../../components/Footer'
+
+const CONTEXT_PATH = '/hometop'
 
 function HomePage() {
-  const [isLoggedIn] = useState(false) // 나중에 auth 연동
+  const [role, setRole] = useState(null)
+
+  useEffect(() => {
+    fetch(`${CONTEXT_PATH}/api/auth/mypage`, { credentials: 'include' })
+      .then(res => {
+        if (res.ok) return res.json()
+        throw new Error()
+      })
+      .then(data => setRole(data.role))
+      .catch(() => setRole(null))
+  }, [])
 
   const goService = (serviceKey) => {
-    if (!isLoggedIn) {
+    if (!role) {
       alert('로그인이 필요한 서비스입니다.')
+      window.location.href = `${CONTEXT_PATH}/auth`
       return
     }
-    window.location.href = `/hometop/service/${serviceKey}`
+    window.location.href = `${CONTEXT_PATH}/service/${serviceKey}`
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column' }}>
-      
-      {/* 사이드바 자리 - 나중에 Sidebar 컴포넌트 연결 */}
-
+    <div className="main-layout" style={{ display: 'flex', minHeight: '100vh' }}>
+      <Sidebar currentPage="home" role={role} />
       <div className="main-wrapper" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-
-        {/* 네브바 자리 - 나중에 Navbar 컴포넌트 연결 */}
+        <Navbar currentPage="home" />
 
         {/* 배너 */}
         <section className="banner">
@@ -98,7 +111,6 @@ function HomePage() {
           <p className="section-title">주요 서비스</p>
           <div className="service-grid">
 
-            {/* 입주민지원 */}
             <div className="service-card" onClick={() => goService('civil')} style={{ cursor: 'pointer' }}>
               <div className="service-icon icon-civil">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -112,7 +124,6 @@ function HomePage() {
               <span className="service-desc">민원 신청 및 처리 현황을<br />확인하세요.</span>
             </div>
 
-            {/* 시설예약 */}
             <div className="service-card" onClick={() => goService('facility')} style={{ cursor: 'pointer' }}>
               <div className="service-icon icon-facility">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -126,7 +137,6 @@ function HomePage() {
               <span className="service-desc">단지 내 다양한 시설을<br />예약할 수 있어요.</span>
             </div>
 
-            {/* 관리비 - 클릭 안되게 */}
             <div className="service-card" style={{ opacity: 0.5, cursor: 'not-allowed' }}>
               <div className="service-icon icon-billing">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -140,7 +150,6 @@ function HomePage() {
               <span className="service-desc">관리비 내역을<br />간편하게 조회하세요.</span>
             </div>
 
-            {/* 주차 */}
             <div className="service-card" onClick={() => goService('parking')} style={{ cursor: 'pointer' }}>
               <div className="service-icon icon-parking">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -154,7 +163,6 @@ function HomePage() {
               <span className="service-desc">주차 등록 및 방문 차량<br />이용을 확인하세요.</span>
             </div>
 
-            {/* 커뮤니티 */}
             <div className="service-card" onClick={() => goService('community')} style={{ cursor: 'pointer' }}>
               <div className="service-icon icon-community">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -168,8 +176,7 @@ function HomePage() {
           </div>
         </div>
 
-        {/* 푸터 자리 - 나중에 Footer 컴포넌트 연결 */}
-
+        <Footer />
       </div>
     </div>
   )
