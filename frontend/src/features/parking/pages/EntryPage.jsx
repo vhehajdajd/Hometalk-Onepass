@@ -23,7 +23,7 @@ function EntryPage() {
     setSearchError('')
 
     try {
-      const res = await fetch(`/staff/vehicle/search?keyword=${keyword}`)
+      const res = await fetch(`/api/staff/vehicle/search?keyword=${keyword}`)
       if (!res.ok) {
         const data = await res.json()
         throw new Error(data.message || '서버 오류')
@@ -40,7 +40,7 @@ function EntryPage() {
     setIsProcessing(true)
 
     try {
-      const res = await fetch('/staff/vehicle/entry', {
+      const res = await fetch('/api/staff/vehicle/entry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, type })
@@ -62,11 +62,11 @@ function EntryPage() {
 
   const loadTodayList = async () => {
     try {
-      const visitRes = await fetch('/staff/entry/list/visit')
+      const visitRes = await fetch('/api/staff/entry/list/visit')
       const visitData = await visitRes.json()
       setVisitList(visitData)
 
-      const residentRes = await fetch('/staff/entry/list/resident')
+      const residentRes = await fetch('/api/staff/entry/list/resident')
       const residentData = await residentRes.json()
       setResidentList(residentData)
     } catch (err) {

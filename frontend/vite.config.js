@@ -10,10 +10,11 @@ export default defineConfig({
       '/hometop/api': {
         target: 'http://localhost:8090',
         changeOrigin: true,
-        },
+      },
       '/api': {
         target: 'http://localhost:8090',
         changeOrigin: true,
+        rewrite: (path) => '/hometop' + path,
       },
     },
   },
