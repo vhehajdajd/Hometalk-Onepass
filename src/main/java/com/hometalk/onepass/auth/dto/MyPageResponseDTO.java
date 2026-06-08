@@ -9,6 +9,7 @@ public class MyPageResponseDTO {
 
     private final String authType;
     private final String socialPlatform;
+    private final String role;
     private final String name;
     private final String nickname;
     private final String email;

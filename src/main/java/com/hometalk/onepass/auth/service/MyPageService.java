@@ -54,6 +54,7 @@ public class MyPageService {
         return MyPageResponseDTO.builder()
                 .authType(authType)
                 .socialPlatform(socialPlatform)
+                .role(user.getRole().name())
                 .name(user.getName())
                 .nickname(user.getNickname())
                 .email(user.getEmail())

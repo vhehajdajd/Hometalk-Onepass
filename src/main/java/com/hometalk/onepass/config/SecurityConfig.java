@@ -13,9 +13,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 
@@ -36,11 +38,13 @@ public class SecurityConfig {
     private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
     private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
     private final CustomUserDetailsService customUserDetailsService;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final PersistentTokenRepository persistentTokenRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .authenticationProvider(daoAuthenticationProvider())
                 // ★ 여기에 추가
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**")
@@ -206,6 +210,13 @@ public class SecurityConfig {
     }
 
     // fetch/API 요청은 HTML 리다이렉트가 섞이지 않도록 401/403 상태 코드만 내려준다.
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
+        provider.setPasswordEncoder(bCryptPasswordEncoder);
+        return provider;
+    }
+
     private boolean isApiRequest(String requestUri, String contextPath) {
         String path = requestUri;
         if (contextPath != null && !contextPath.isBlank() && path.startsWith(contextPath)) {
