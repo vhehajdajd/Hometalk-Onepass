@@ -58,6 +58,7 @@ public class CustomLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             path = path.substring(contextPath.length());
         }
 
-        return "/api/auth/login".equals(path);
+        return "/api/auth/login".equals(path)
+                || path.endsWith("/api/auth/login");
     }
 }

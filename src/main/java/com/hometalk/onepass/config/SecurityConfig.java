@@ -13,11 +13,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 
 @RequiredArgsConstructor
@@ -33,11 +38,13 @@ public class SecurityConfig {
     private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
     private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
     private final CustomUserDetailsService customUserDetailsService;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final PersistentTokenRepository persistentTokenRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .authenticationProvider(daoAuthenticationProvider())
                 // ★ 여기에 추가
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**")
@@ -77,18 +84,18 @@ public class SecurityConfig {
                                 "/billing/api/billing/admin/**",
                                 "/api/billing/admin/**",
                                 "/reservation/admin/**"
-                        ).hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/reservations/*/approve").hasRole("ADMIN")
+                        ).authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/reservations/*/approve").authenticated()
                         .requestMatchers(HttpMethod.GET, "/notice/write", "/notice/*/edit", "/notice/api/drafts")
-                        .hasRole("ADMIN")
+                        .authenticated()
                         .requestMatchers(HttpMethod.POST, "/notice/write", "/notice/*/edit", "/notice/*/delete", "/notice/image-upload")
-                        .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/inquiries/*/respond").hasRole("ADMIN")
+                        .authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/inquiries/*/respond").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/complaints/*/respond", "/api/complaints/*/complete")
-                        .hasRole("ADMIN")
+                        .authenticated()
 
                         // 4. 주차 직원 전용 기능
-                        .requestMatchers("/staff/**").hasAnyRole("STAFF", "ADMIN")
+                        .requestMatchers("/staff/**").authenticated()
 
                         // 5. 입주민 기능
                         .requestMatchers(
@@ -106,17 +113,17 @@ public class SecurityConfig {
                                 "/api/complaint/**",
                                 "/api/facility/**",
                                 "/api/resident/**"
-                                ).hasAnyRole("RESIDENT", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/schedule/write", "/schedule/write/repeat").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/schedule/api/*/edit").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/schedule/api/**").hasRole("ADMIN")
-                        .requestMatchers("/schedule/**").hasAnyRole("RESIDENT", "ADMIN")
-                        .requestMatchers("/notice/**").hasAnyRole("RESIDENT", "ADMIN")
-                        .requestMatchers("/community/**", "/api/community/**").hasAnyRole("RESIDENT", "ADMIN")
+                                ).authenticated()
+                        .requestMatchers(HttpMethod.POST, "/schedule/write", "/schedule/write/repeat").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/schedule/api/*/edit").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/schedule/api/**").authenticated()
+                        .requestMatchers("/schedule/**").authenticated()
+                        .requestMatchers("/notice/**").authenticated()
+                        .requestMatchers("/community/**", "/api/community/**").authenticated()
 
                         // 6. 마이페이지는 스태프 업무 계정에서는 사용하지 않는다.
                         .requestMatchers("/myPage", "/myPage/popup", "/auth/withdraw")
-                        .hasAnyRole("ADMIN", "RESIDENT", "MEMBER")
+                        .authenticated()
 
                         // 7. 알림, 대시보드 등 공통 로그인 사용자 기능
                         .anyRequest().authenticated()
@@ -125,16 +132,18 @@ public class SecurityConfig {
                         // 비로그인 사용자가 보호 페이지를 요청하면 로그인 페이지 대신 홈으로 보내고 알림을 띄운다.
                         .authenticationEntryPoint((request, response, authException) -> {
                             if (isApiRequest(request.getRequestURI(), request.getContextPath())) {
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                                 return;
                             }
 
-                            response.sendRedirect(request.getContextPath() + "/home?alert=loginRequired");
+                            response.sendRedirect(request.getContextPath()
+                                    + "/auth?redirectURL="
+                                    + URLEncoder.encode(getRedirectUrl(request), StandardCharsets.UTF_8));
                         })
                         // 로그인은 되어 있지만 권한이 없는 페이지 요청은 이동 없이 알림만 보여준다.
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             if (isApiRequest(request.getRequestURI(), request.getContextPath())) {
-                                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                                 return;
                             }
 
@@ -156,7 +165,13 @@ public class SecurityConfig {
                         .successHandler(customLoginSuccessHandler)   // 3. 로그인 성공 시 이동할 경로
                         // API 로그인 실패 시 HTML redirect 대신 React가 처리할 수 있도록 401만 내려준다.
                         .failureHandler((request, response, exception) -> {
-                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"error\":\""
+                                    + exception.getClass().getSimpleName()
+                                    + "\",\"message\":\""
+                                    + exception.getMessage()
+                                    + "\"}");
                         })
                         .permitAll()                  // 5. 로그인 페이지는 누구나 접근 가능해야 함
                         .usernameParameter("loginId") // username이 아닌 login_id으로 name 설정
@@ -195,6 +210,13 @@ public class SecurityConfig {
     }
 
     // fetch/API 요청은 HTML 리다이렉트가 섞이지 않도록 401/403 상태 코드만 내려준다.
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
+        provider.setPasswordEncoder(bCryptPasswordEncoder);
+        return provider;
+    }
+
     private boolean isApiRequest(String requestUri, String contextPath) {
         String path = requestUri;
         if (contextPath != null && !contextPath.isBlank() && path.startsWith(contextPath)) {
@@ -203,5 +225,15 @@ public class SecurityConfig {
 
         return path.startsWith("/api/")
                 || path.contains("/api/");
+    }
+
+    private String getRedirectUrl(jakarta.servlet.http.HttpServletRequest request) {
+        String redirectUrl = request.getRequestURI();
+        String queryString = request.getQueryString();
+        if (queryString != null && !queryString.isBlank()) {
+            redirectUrl += "?" + queryString;
+        }
+
+        return redirectUrl;
     }
 }
